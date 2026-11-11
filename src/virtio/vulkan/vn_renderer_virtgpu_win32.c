@@ -24,6 +24,9 @@ struct virtgpu;
 struct virtgpu_shmem {
    struct vn_renderer_shmem base;
    D3DKMT_HANDLE alloc;
+   /* non-NULL: CPU window the KMD mapped into this process (RES_INFO.UserVa);
+    * D3DKMTLock and the MAP_BLOB/UNMAP_BLOB packets are not used then */
+   void *user_va;
    union {
       D3DKMT_HANDLE kmt;
       HANDLE h;
@@ -42,6 +45,9 @@ struct virtgpu_bo {
       HANDLE h;
    } /* resource */;
    uint32_t blob_flags;
+   /* see virtgpu_shmem::user_va */
+   void *user_va;
+   uint64_t cookie;
 };
 
 struct virtgpu_sync {
@@ -131,6 +137,12 @@ struct virtgpu {
 
    uint32_t shmem_blob_mem;
    uint32_t bo_blob_mem;
+
+   /* Gunyah protected VM (VIOGPU_ADAPTERINFO.Flags.GuestVram): the host cannot
+    * reach ordinary guest memory, so Venus device memory is allocated as
+    * VIOGPU_BLOB_FLAG_GUEST_VRAM blobs in the KMD's shared pool and every
+    * mappable blob is mapped by the KMD (RES_INFO.UserVa). */
+   bool guest_vram;
 
    struct util_sparse_array syncobj_array;
    /* note that we use kmt_handle instead of res_id to index because
@@ -934,19 +946,33 @@ virtgpu_ioctl_resource_create_blob(struct virtgpu *gpu,
                                    D3DKMT_HANDLE *alloc_handle,
                                    D3DKMT_HANDLE *res_kmt_local,
                                    D3DKMT_HANDLE *res_kmt_global,
-                                   HANDLE *res_h)
+                                   HANDLE *res_h,
+                                   void **out_user_va,
+                                   uint64_t *out_cookie)
 {
    blob_size = align64(blob_size, 4096);
 
-   VIOGPU_CREATE_ALLOCATION_EXCHANGE alloc_priv = {
-       .Type = VIOGPU_RESOURCE_TYPE_BLOB,
-       .OptionsBlob = {
-           .blob_mem = blob_mem,
-           .blob_flags = blob_flags,
-           .blob_id = blob_id,
+   if (out_user_va)
+      *out_user_va = NULL;
+
+   /* The lookup cookie is the authoritative identity of the allocation for the
+    * KMD's RES_INFO escape (handle based resolution races handle reuse). */
+   static volatile LONG cookie_counter;
+   VIOGPU_CREATE_ALLOCATION_EXCHANGE_EX alloc_priv = {
+       .Base = {
+          .Type = VIOGPU_RESOURCE_TYPE_BLOB,
+          .OptionsBlob = {
+              .blob_mem = blob_mem,
+              .blob_flags = blob_flags,
+              .blob_id = blob_id,
+          },
+          .Size = blob_size,
        },
-       .Size = blob_size,
+       .LookupCookie = ((uint64_t)GetCurrentProcessId() << 32) |
+                       (uint32_t)InterlockedIncrement(&cookie_counter),
    };
+   if (out_cookie)
+      *out_cookie = alloc_priv.LookupCookie;
 
    VIOGPU_CREATE_RESOURCE_EXCHANGE res_priv = { 0 };
 
@@ -1008,19 +1034,34 @@ virtgpu_ioctl_resource_create_blob(struct virtgpu *gpu,
       .DataLength = sizeof(res_info.ResourceInfo),
       .ResourceInfo = {
          .ResHandle = *alloc_handle,
+         .LookupCookie = alloc_priv.LookupCookie,
       },
    };
 
-   NTSTATUS status = virtgpu_ioctl_escape(gpu, &res_info);
-   if (!NT_SUCCESS(status)) {
-      return status;
-   }
-
-   if (!res_info.ResourceInfo.IsBlob || !res_info.ResourceInfo.IsCreated) {
-      return STATUS_INVALID_PARAMETER;
+   /* The KMD creates the blob from the in-create open, but be tolerant of a
+    * create that is still pending on the asynchronous control queue. */
+   NTSTATUS status;
+   for (int attempt = 0;; attempt++) {
+      status = virtgpu_ioctl_escape(gpu, &res_info);
+      if (!NT_SUCCESS(status)) {
+         return status;
+      }
+      if (res_info.ResourceInfo.IsBlob && res_info.ResourceInfo.IsCreated)
+         break;
+      if (attempt >= 100)
+         return STATUS_INVALID_PARAMETER;
+      Sleep(1);
    }
 
    *res_id = res_info.ResourceInfo.Id;
+
+   /* A KMD-owned window (UserVa != 0, protected VM / WDDM2 KMD) arrives already
+    * backed: RES_INFO mapped the blob host-side and waited for the host.  There
+    * is no MAP_BLOB packet to submit and D3DKMTLock must not be used. */
+   if (out_user_va)
+      *out_user_va = (void *)(uintptr_t)res_info.ResourceInfo.UserVa;
+   if (res_info.ResourceInfo.UserVa)
+      return STATUS_SUCCESS;
 
    return is_mappable ? virtgpu_ioctl_init_map(gpu, *alloc_handle)
                       : STATUS_SUCCESS;
@@ -1238,6 +1279,7 @@ virtgpu_init_params(struct virtgpu *gpu)
 
    /* Don't care for VIRTGPU_BLOB_MEM_GUEST_VRAM since this driver is mainly
     * developed for QEMU, but whoever needs it may feel free to implement this */
+   gpu->guest_vram = !!info.Flags.GuestVram;
    if (info.Flags.HasShmem) {
       gpu->bo_blob_mem = VIOGPU_BLOB_MEM_HOST3D;
    } else {
@@ -1404,6 +1446,10 @@ virtgpu_bo_blob_flags(struct virtgpu *gpu,
       blob_flags |= VIOGPU_BLOB_FLAG_USE_MAPPABLE;
    if (external_handles)
       blob_flags |= VIOGPU_BLOB_FLAG_USE_SHAREABLE;
+   /* Protected VM: the pages come from the KMD's shared pool (the host builds
+    * a udmabuf over them at RESOURCE_CREATE_BLOB), always CPU mapped by the KMD. */
+   if (gpu->guest_vram)
+      blob_flags |= VIOGPU_BLOB_FLAG_GUEST_VRAM | VIOGPU_BLOB_FLAG_USE_MAPPABLE;
    // if (external_handles & VK_EXTERNAL_MEMORY_HANDLE_TYPE_DMA_BUF_BIT_EXT) {
    //    if (gpu->supports_cross_device)
    //       blob_flags |= VIOGPU_BLOB_FLAG_USE_CROSS_DEVICE;
@@ -1624,6 +1670,8 @@ virtgpu_bo_create_from_handle(struct vn_renderer *renderer,
          },
          .alloc = alloc,
          .blob_flags = blob_flags,
+         /* protected VM: the KMD mapped the window into this process */
+         .user_va = (void *)(uintptr_t)res_info.UserVa,
       };
    }
    if (gpu->ddicb != NULL) {
@@ -1668,9 +1716,11 @@ virtgpu_bo_create_from_device_memory(
    }
 
    D3DKMT_HANDLE alloc, kmt_local, kmt_global;
+   void *user_va = NULL;
+   uint64_t cookie = 0;
    NTSTATUS status = virtgpu_ioctl_resource_create_blob(
       gpu, gpu->bo_blob_mem, blob_flags, size, mem_id, &res_id, &alloc,
-      &kmt_local, &kmt_global, &h);
+      &kmt_local, &kmt_global, &h, &user_va, &cookie);
    if (!NT_SUCCESS(status)) {
       vn_log(gpu->instance,
              "RESOURCE_CREATE_BLOB failed: type=%u, flags=%u, size=%zu, "
@@ -1692,6 +1742,7 @@ virtgpu_bo_create_from_device_memory(
          .DataLength = sizeof(res_info.ResourceInfo),
          .ResourceInfo = {
             .ResHandle = alloc,
+            .LookupCookie = cookie,
          },
       };
 
@@ -1725,6 +1776,8 @@ virtgpu_bo_create_from_device_memory(
       },
       .alloc = alloc,
       .blob_flags = blob_flags,
+      .user_va = user_va,
+      .cookie = cookie,
    };
 
    if (gpu->ddicb != NULL) {
@@ -1770,7 +1823,10 @@ virtgpu_bo_map(struct vn_renderer *renderer,
    const bool mappable = bo->blob_flags & VIOGPU_BLOB_FLAG_USE_MAPPABLE;
 
    /* not thread-safe but is fine */
-   if (!bo->base.mmap_ptr && mappable) {
+   if (!bo->base.mmap_ptr && mappable && bo->user_va) {
+      /* KMD-owned window (protected VM): already mapped and backed */
+      bo->base.mmap_ptr = bo->user_va;
+   } else if (!bo->base.mmap_ptr && mappable) {
       NTSTATUS status =
          virtgpu_ioctl_lock(gpu, bo->alloc, &bo->base.mmap_ptr);
       if (!NT_SUCCESS(status)) {
@@ -1817,7 +1873,7 @@ virtgpu_bo_destroy(struct vn_renderer *renderer, struct vn_renderer_bo *_bo)
       return false;
    }
 
-   if (bo->base.mmap_ptr) {
+   if (bo->base.mmap_ptr && !bo->user_va) {
       virtgpu_ioctl_unlock(gpu, bo->alloc);
       virtgpu_ioctl_destroy_map(gpu, bo->alloc);
    }
@@ -1981,8 +2037,10 @@ virtgpu_shmem_destroy_now(struct vn_renderer *renderer,
    struct virtgpu *gpu = (struct virtgpu *)renderer;
    struct virtgpu_shmem *shmem = (struct virtgpu_shmem *)_shmem;
 
-   virtgpu_ioctl_unlock(gpu, shmem->alloc);
-   virtgpu_ioctl_destroy_map(gpu, shmem->alloc);
+   if (!shmem->user_va) {
+      virtgpu_ioctl_unlock(gpu, shmem->alloc);
+      virtgpu_ioctl_destroy_map(gpu, shmem->alloc);
+   }
    virtgpu_ioctl_resource_destroy_blob(gpu, shmem->alloc, shmem->kmt,
                                        shmem->h);
 }
@@ -2015,18 +2073,23 @@ virtgpu_shmem_create(struct vn_renderer *renderer, size_t size)
    HANDLE h = NULL; /* This is a device allocation */
    D3DKMT_HANDLE alloc, kmt;
 
+   void *user_va = NULL;
    NTSTATUS status = virtgpu_ioctl_resource_create_blob(
       gpu, gpu->shmem_blob_mem, VIOGPU_BLOB_FLAG_USE_MAPPABLE, size, 0,
-      &res_id, &alloc, &kmt, NULL, &h);
+      &res_id, &alloc, &kmt, NULL, &h, &user_va, NULL);
    if (!NT_SUCCESS(status))
       return NULL;
 
-   void *ptr = NULL;
-   status = virtgpu_ioctl_lock(gpu, alloc, &ptr);
-   if (!NT_SUCCESS(status)) {
-      virtgpu_ioctl_resource_destroy_blob(gpu, alloc, kmt, h);
-      vn_log(gpu->instance, "failed to map blob resource: 0x%lx", status);
-      return NULL;
+   /* Transport shmem (HOST3D, blob_id 0): in a protected VM the host places it in
+    * its VENUS_HOST pool and the KMD maps that window (RES_INFO.UserVa). */
+   void *ptr = user_va;
+   if (!ptr) {
+      status = virtgpu_ioctl_lock(gpu, alloc, &ptr);
+      if (!NT_SUCCESS(status)) {
+         virtgpu_ioctl_resource_destroy_blob(gpu, alloc, kmt, h);
+         vn_log(gpu->instance, "failed to map blob resource: 0x%lx", status);
+         return NULL;
+      }
    }
 
    struct virtgpu_shmem *shmem =
@@ -2039,6 +2102,7 @@ virtgpu_shmem_create(struct vn_renderer *renderer, size_t size)
          .mmap_ptr = ptr,
       },
       .alloc = alloc,
+      .user_va = user_va,
    };
 
    if (gpu->ddicb != NULL) {
@@ -2111,7 +2175,15 @@ virtgpu_init_renderer_info(struct virtgpu *gpu)
    /* Use guest blob allocations from dedicated heap (Host visible memory) */
    //if (gpu->bo_blob_mem == VIOGPU_BLOB_MEM_HOST3D && capset->use_guest_vram)
    //   info->has_guest_vram = true;
-   info->has_guest_vram = false;
+   /* Protected VM: the KMD reports GuestVram when the shared pools are active and the
+    * host's venus capset says use_guest_vram (host memory cannot be injected, so every
+    * host-visible / exportable VkDeviceMemory is a guest-allocated blob). */
+   info->has_guest_vram = gpu->guest_vram && capset->use_guest_vram;
+   if (gpu->guest_vram != !!capset->use_guest_vram) {
+      vn_log(gpu->instance,
+             "guest vram mismatch: KMD GuestVram=%d, venus capset use_guest_vram=%u",
+             gpu->guest_vram, capset->use_guest_vram);
+   }
 
    if (gpu->ddicb != NULL) {
       info->id.has_luid = true;
