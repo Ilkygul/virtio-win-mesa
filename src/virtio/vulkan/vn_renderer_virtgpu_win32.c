@@ -71,6 +71,12 @@ struct virtgpu_sync {
    uint32_t syncobj_handle;
 };
 
+/* KMD SHMEM_GPU_BASE_VA: reserved in every process's GPU VA space.
+ * D3DKMTSubmitCommand requires a nonzero Commands GPU VA, but the KMD
+ * recovers the command body from the submission private data and never
+ * dereferences it. */
+#define VIRTGPU_SHMEM_GPU_BASE_VA 0x700000000ull
+
 struct virtgpu {
    struct vn_renderer base;
 
@@ -99,8 +105,31 @@ struct virtgpu {
          PFND3DKMT_DESTROYDEVICE destroyDevice;
          PFND3DKMT_OPENADAPTERFROMHDC openAdapterFromHdc;
          PFND3DKMT_CLOSEADAPTER closeAdapter;
+         /* WDDM2 (GpuMmu) native submission set */
+         PFND3DKMT_CREATECONTEXTVIRTUAL createContextVirtual;
+         PFND3DKMT_SUBMITCOMMAND submitCommand;
+         PFND3DKMT_CREATESYNCHRONIZATIONOBJECT2 createSynchronizationObject2;
+         PFND3DKMT_DESTROYSYNCHRONIZATIONOBJECT destroySynchronizationObject;
+         PFND3DKMT_SIGNALSYNCHRONIZATIONOBJECTFROMGPU
+            signalSynchronizationObjectFromGpu;
+         PFND3DKMT_WAITFORSYNCHRONIZATIONOBJECTFROMCPU
+            waitForSynchronizationObjectFromCpu;
       } cb;
    } d3dkmt;
+
+   /* Standalone path only: KMD reports GpuMmu (VIOGPU_ADAPTERINFO.Flags.Wddm2)
+    * and the kernel context is virtual (D3DKMTCreateContextVirtual).  Commands
+    * then ride D3DKMTSubmitCommand private data, there is no kernel command
+    * buffer / allocation list, and completion is tracked with a monitored
+    * fence (drain). */
+   bool wddm2;
+   bool virtual_ctx;
+   struct {
+      D3DKMT_HANDLE fence;
+      mtx_t lock; /* mints values + queues the GPU signal in value order */
+      UINT64 value;
+      volatile const UINT64 *cpu_va;
+   } drain;
 
    struct {
       mtx_t lock;
@@ -562,6 +591,144 @@ sim_submit_signal_syncs(struct virtgpu *gpu,
    return VK_SUCCESS;
 }
 
+/* Virtual-addressing context + monitored drain fence, as Neptune does.  No
+ * create-time private data.  All-or-nothing so the caller can fall back to
+ * the legacy context. */
+static bool
+virtgpu_create_context_virtual(struct virtgpu *gpu)
+{
+   const __typeof__(gpu->d3dkmt.cb) *cb = &gpu->d3dkmt.cb;
+   if (!cb->createContextVirtual || !cb->submitCommand ||
+       !cb->createSynchronizationObject2 || !cb->destroySynchronizationObject ||
+       !cb->signalSynchronizationObjectFromGpu ||
+       !cb->waitForSynchronizationObjectFromCpu) {
+      vn_log(gpu->instance, "pvm: WDDM2 entry points missing");
+      return false;
+   }
+
+   D3DKMT_CREATECONTEXTVIRTUAL create = {
+      .hDevice = gpu->d3dkmt.device,
+      .ClientHint = D3DKMT_CLIENTHINT_VULKAN,
+   };
+   NTSTATUS status = cb->createContextVirtual(&create);
+   if (!NT_SUCCESS(status)) {
+      vn_log(gpu->instance, "pvm: D3DKMTCreateContextVirtual failed 0x%lx",
+             status);
+      return false;
+   }
+   gpu->ctx.kmt = create.hContext;
+
+   D3DKMT_CREATESYNCHRONIZATIONOBJECT2 fence = {
+      .hDevice = gpu->d3dkmt.device,
+      .Info = { .Type = D3DDDI_MONITORED_FENCE },
+   };
+   status = cb->createSynchronizationObject2(&fence);
+   if (!NT_SUCCESS(status)) {
+      vn_log(gpu->instance, "pvm: monitored fence create failed 0x%lx",
+             status);
+      D3DKMT_DESTROYCONTEXT destroy = { .hContext = gpu->ctx.kmt };
+      gpu->d3dkmt.cb.destroyContext(&destroy);
+      gpu->ctx.kmt = 0;
+      return false;
+   }
+   gpu->drain.fence = fence.hSyncObject;
+   gpu->drain.cpu_va = (volatile const UINT64 *)
+      fence.Info.MonitoredFence.FenceValueCPUVirtualAddress;
+   mtx_init(&gpu->drain.lock, mtx_plain);
+   gpu->ctx.cmd_buf = NULL;
+   gpu->ctx.cmd_size = 0;
+   gpu->ctx.alloc_list = NULL;
+   gpu->ctx.alloc_size = 0;
+   gpu->ctx.patch_list = NULL;
+   gpu->ctx.patch_size = 0;
+   return true;
+}
+
+/* Queue a GPU signal of the monitored fence behind everything already
+ * submitted on the context, and arrange for `event` (manual-reset) to be set
+ * when it retires.  Non-blocking; the wait is armed with hAsyncEvent. */
+static NTSTATUS
+virtgpu_drain_async(struct virtgpu *gpu, HANDLE event)
+{
+   mtx_lock(&gpu->drain.lock);
+   const UINT64 value = ++gpu->drain.value;
+   D3DKMT_SIGNALSYNCHRONIZATIONOBJECTFROMGPU signal = {
+      .hContext = gpu->ctx.kmt,
+      .ObjectCount = 1,
+      .ObjectHandleArray = &gpu->drain.fence,
+      .MonitoredFenceValueArray = &value,
+   };
+   NTSTATUS status =
+      gpu->d3dkmt.cb.signalSynchronizationObjectFromGpu(&signal);
+   mtx_unlock(&gpu->drain.lock);
+   if (!NT_SUCCESS(status)) {
+      vn_log(gpu->instance, "pvm: SignalFromGpu failed 0x%lx (value=%llu)",
+             status, (unsigned long long)value);
+      return status;
+   }
+
+   if (gpu->drain.cpu_va && *gpu->drain.cpu_va >= value) {
+      SetEvent(event);
+      return STATUS_SUCCESS;
+   }
+
+   D3DKMT_WAITFORSYNCHRONIZATIONOBJECTFROMCPU wait = {
+      .hDevice = gpu->d3dkmt.device,
+      .ObjectCount = 1,
+      .ObjectHandleArray = &gpu->drain.fence,
+      .FenceValueArray = &value,
+      .hAsyncEvent = event,
+   };
+   status = gpu->d3dkmt.cb.waitForSynchronizationObjectFromCpu(&wait);
+   if (!NT_SUCCESS(status))
+      vn_log(gpu->instance, "pvm: WaitFromCpu(async) failed 0x%lx", status);
+   return status;
+}
+
+/* WDDM2 submission: the command body travels by value in the DMA packet's
+ * private data (virtual contexts have no kernel-mapped command buffer).  A
+ * wrong magic or oversized body makes the KMD execute the packet fence-only,
+ * so the size is hard-checked.  Caller holds ctx.lock. */
+static NTSTATUS
+virtgpu_submit_virtual_locked(struct virtgpu *gpu,
+                              UINT type,
+                              UINT flags,
+                              UINT ring_idx,
+                              const void *payload,
+                              size_t payload_size)
+{
+   const size_t total = sizeof(VIOGPU_COMMAND_HDR) + payload_size;
+   if (total > VIOGPU_DMA_PRIV_BODY_MAX) {
+      vn_log(gpu->instance,
+             "pvm: cmd %u too large for DMA private body (%zu > %u)", type,
+             total, VIOGPU_DMA_PRIV_BODY_MAX);
+      return STATUS_BUFFER_TOO_SMALL;
+   }
+
+   VIOGPU_DMA_PRIVATE priv;
+   priv.cmdRaw = 0;
+   priv.magic = VIOGPU_DMA_PRIV_MAGIC;
+   priv.bodySize = (ULONG)total;
+
+   VIOGPU_COMMAND_HDR *hdr = (VIOGPU_COMMAND_HDR *)priv.body;
+   hdr->type = type;
+   hdr->size = (UINT)payload_size;
+   hdr->flags = flags;
+   hdr->ring_idx = ring_idx;
+   if (payload_size && payload)
+      memcpy(hdr + 1, payload, payload_size);
+
+   D3DKMT_SUBMITCOMMAND submit = {
+      .Commands = VIRTGPU_SHMEM_GPU_BASE_VA,
+      .CommandLength = (UINT)total,
+      .BroadcastContextCount = 1,
+      .BroadcastContext = { gpu->ctx.kmt },
+      .pPrivateDriverData = &priv,
+      .PrivateDriverDataSize = sizeof(priv),
+   };
+   return gpu->d3dkmt.cb.submitCommand(&submit);
+}
+
 static NTSTATUS
 virtgpu_ioctl_create_context(struct virtgpu *gpu)
 {
@@ -589,6 +756,12 @@ virtgpu_ioctl_create_context(struct virtgpu *gpu)
 
       return STATUS_SUCCESS;
    } else {
+      if (gpu->wddm2 && virtgpu_create_context_virtual(gpu)) {
+         gpu->virtual_ctx = true;
+         vn_log(gpu->instance, "pvm: kernel context virtual (WDDM2 submit)");
+         return STATUS_SUCCESS;
+      }
+
       D3DKMT_CREATECONTEXT context = {
          .hDevice = gpu->d3dkmt.device,
          .ClientHint = D3DKMT_CLIENTHINT_VULKAN,
@@ -688,6 +861,8 @@ virtgpu_ioctl_signal(struct virtgpu *gpu, HANDLE fence)
       return hr_to_nt(
          gpu, gpu->ddicb->pKTCallbacks->pfnSignalSynchronizationObject2Cb(
                  gpu->ddicb->hRTDevice, &signal));
+   } else if (gpu->virtual_ctx) {
+      return virtgpu_drain_async(gpu, fence);
    } else {
       D3DKMT_SIGNALSYNCHRONIZATIONOBJECT2 signal = {
            .hContext = gpu->ctx.kmt,
@@ -706,13 +881,29 @@ virtgpu_ioctl_signal(struct virtgpu *gpu, HANDLE fence)
 static VkResult
 sim_submit(struct virtgpu *gpu, const struct vn_renderer_submit *submit)
 {
-   assert(submit->bo_count < gpu->ctx.alloc_size);
+   assert(gpu->virtual_ctx || submit->bo_count < gpu->ctx.alloc_size);
    assert(submit->batch_count);
 
    VkResult ret = VK_SUCCESS;
    for (uint32_t i = 0; i < submit->batch_count; i++) {
       const struct vn_renderer_submit_batch *batch = &submit->batches[i];
       mtx_lock(&gpu->ctx.lock);
+
+      if (gpu->virtual_ctx) {
+         /* No allocation list on virtual contexts: blobs are KMD-owned
+          * (guest-vram / res_id based), nothing to reference here. */
+         NTSTATUS status = virtgpu_submit_virtual_locked(
+            gpu, VIOGPU_CMD_SUBMIT, VIOGPU_EXECBUF_RING_IDX, batch->ring_idx,
+            batch->cs_data, batch->cs_size);
+         mtx_unlock(&gpu->ctx.lock);
+         if (!NT_SUCCESS(status)) {
+            vn_log(gpu->instance, "pvm: virtual submit failed: 0x%lx (cs=%zu)",
+                   status, (size_t)batch->cs_size);
+            ret = VK_ERROR_DEVICE_LOST;
+            break;
+         }
+         goto signal_syncs;
+      }
 
       for (uint32_t i = 0; i < submit->bo_count; i++) {
          struct virtgpu_bo *bo = (struct virtgpu_bo *)submit->bos[i];
@@ -738,6 +929,7 @@ sim_submit(struct virtgpu *gpu, const struct vn_renderer_submit *submit)
          break;
       }
 
+signal_syncs:
       if (batch->sync_count > 0) {
          HANDLE fence = CreateEventA(NULL, TRUE, FALSE, NULL);
          // vn_log(gpu->instance, "created handle %p", fence);
@@ -830,10 +1022,25 @@ virtgpu_ioctl_get_caps(struct virtgpu *gpu,
    return virtgpu_ioctl_escape(gpu, &caps);
 }
 
+static NTSTATUS virtgpu_ioctl_wait(struct virtgpu *gpu);
+
 static NTSTATUS
-virtgpu_ioctl_init_map(struct virtgpu *gpu, D3DKMT_HANDLE handle)
+virtgpu_ioctl_init_map(struct virtgpu *gpu,
+                    D3DKMT_HANDLE handle,
+                    uint32_t res_id)
 {
    mtx_lock(&gpu->ctx.lock);
+
+   if (gpu->virtual_ctx) {
+      /* WDDM2: BY_ID wire, no allocation list. */
+      const ULONG payload = res_id;
+      NTSTATUS status = virtgpu_submit_virtual_locked(
+         gpu, VIOGPU_CMD_MAP_BLOB_BY_ID, 0, 0, &payload, sizeof(payload));
+      mtx_unlock(&gpu->ctx.lock);
+      if (!NT_SUCCESS(status))
+         return status;
+      return virtgpu_ioctl_wait(gpu);
+   }
 
    gpu->ctx.alloc_list[0].hAllocation = handle;
    gpu->ctx.patch_list[0].AllocationIndex = 0;
@@ -871,9 +1078,22 @@ virtgpu_ioctl_init_map(struct virtgpu *gpu, D3DKMT_HANDLE handle)
 }
 
 static NTSTATUS
-virtgpu_ioctl_destroy_map(struct virtgpu *gpu, D3DKMT_HANDLE handle)
+virtgpu_ioctl_destroy_map(struct virtgpu *gpu,
+                    D3DKMT_HANDLE handle,
+                    uint32_t res_id)
 {
    mtx_lock(&gpu->ctx.lock);
+
+   if (gpu->virtual_ctx) {
+      /* WDDM2: BY_ID wire, no allocation list. */
+      const ULONG payload = res_id;
+      NTSTATUS status = virtgpu_submit_virtual_locked(
+         gpu, VIOGPU_CMD_UNMAP_BLOB_BY_ID, 0, 0, &payload, sizeof(payload));
+      mtx_unlock(&gpu->ctx.lock);
+      if (!NT_SUCCESS(status))
+         return status;
+      return virtgpu_ioctl_wait(gpu);
+   }
 
    gpu->ctx.alloc_list[0].hAllocation = handle;
    gpu->ctx.patch_list[0].AllocationIndex = 0;
@@ -918,10 +1138,13 @@ virtgpu_ioctl_wait(struct virtgpu *gpu)
    // vn_log(gpu->instance, "created handle %p", fence);
    NTSTATUS status = virtgpu_ioctl_signal(gpu, fence);
    if (!NT_SUCCESS(status)) {
+      CloseHandle(fence);
       return status;
    }
    // vn_log(gpu->instance, "waiting for handle %p", fence);
-   if (WaitForSingleObject(fence, INFINITE) != WAIT_OBJECT_0) {
+   DWORD wr = WaitForSingleObject(fence, INFINITE);
+   CloseHandle(fence);
+   if (wr != WAIT_OBJECT_0) {
       return STATUS_ABANDONED_WAIT_0;
    }
 
@@ -1063,7 +1286,7 @@ virtgpu_ioctl_resource_create_blob(struct virtgpu *gpu,
    if (res_info.ResourceInfo.UserVa)
       return STATUS_SUCCESS;
 
-   return is_mappable ? virtgpu_ioctl_init_map(gpu, *alloc_handle)
+   return is_mappable ? virtgpu_ioctl_init_map(gpu, *alloc_handle, *res_id)
                       : STATUS_SUCCESS;
 }
 
@@ -1280,6 +1503,9 @@ virtgpu_init_params(struct virtgpu *gpu)
    /* Don't care for VIRTGPU_BLOB_MEM_GUEST_VRAM since this driver is mainly
     * developed for QEMU, but whoever needs it may feel free to implement this */
    gpu->guest_vram = !!info.Flags.GuestVram;
+   gpu->wddm2 = !!info.Flags.Wddm2;
+   vn_log(gpu->instance, "pvm: kmd wddm2=%d guest_vram=%d", gpu->wddm2,
+          gpu->guest_vram);
    if (info.Flags.HasShmem) {
       gpu->bo_blob_mem = VIOGPU_BLOB_MEM_HOST3D;
    } else {
@@ -1454,6 +1680,20 @@ virtgpu_open(struct virtgpu *gpu, void *info)
          (void *)GetProcAddress(gdi32lib, "D3DKMTOpenAdapterFromHdc");
       gpu->d3dkmt.cb.closeAdapter =
          (void *)GetProcAddress(gdi32lib, "D3DKMTCloseAdapter");
+      gpu->d3dkmt.cb.createContextVirtual =
+         (void *)GetProcAddress(gdi32lib, "D3DKMTCreateContextVirtual");
+      gpu->d3dkmt.cb.submitCommand =
+         (void *)GetProcAddress(gdi32lib, "D3DKMTSubmitCommand");
+      gpu->d3dkmt.cb.createSynchronizationObject2 = (void *)GetProcAddress(
+         gdi32lib, "D3DKMTCreateSynchronizationObject2");
+      gpu->d3dkmt.cb.destroySynchronizationObject = (void *)GetProcAddress(
+         gdi32lib, "D3DKMTDestroySynchronizationObject");
+      gpu->d3dkmt.cb.signalSynchronizationObjectFromGpu =
+         (void *)GetProcAddress(gdi32lib,
+                                "D3DKMTSignalSynchronizationObjectFromGpu");
+      gpu->d3dkmt.cb.waitForSynchronizationObjectFromCpu =
+         (void *)GetProcAddress(gdi32lib,
+                                "D3DKMTWaitForSynchronizationObjectFromCpu");
 
       NTSTATUS status = virtgpu_find_adapter(gpu);
       if (!NT_SUCCESS(status)) {
@@ -1908,7 +2148,7 @@ virtgpu_bo_destroy(struct vn_renderer *renderer, struct vn_renderer_bo *_bo)
 
    if (bo->base.mmap_ptr && !bo->user_va) {
       virtgpu_ioctl_unlock(gpu, bo->alloc);
-      virtgpu_ioctl_destroy_map(gpu, bo->alloc);
+      virtgpu_ioctl_destroy_map(gpu, bo->alloc, bo->base.res_id);
    }
 
    /* Set alloc and res to 0 to indicate that the bo is invalid. Must be set
@@ -2072,7 +2312,7 @@ virtgpu_shmem_destroy_now(struct vn_renderer *renderer,
 
    if (!shmem->user_va) {
       virtgpu_ioctl_unlock(gpu, shmem->alloc);
-      virtgpu_ioctl_destroy_map(gpu, shmem->alloc);
+      virtgpu_ioctl_destroy_map(gpu, shmem->alloc, shmem->base.res_id);
    }
    virtgpu_ioctl_resource_destroy_blob(gpu, shmem->alloc, shmem->kmt,
                                        shmem->h);
@@ -2275,6 +2515,14 @@ virtgpu_destroy(struct vn_renderer *renderer,
 
    if (gpu->ctx.h)
       virtgpu_ioctl_destroy_context(gpu);
+   /* After the context (no queued signal may outlive it), before the device */
+   if (gpu->drain.fence) {
+      D3DKMT_DESTROYSYNCHRONIZATIONOBJECT destroy = {
+         .hSyncObject = gpu->drain.fence,
+      };
+      gpu->d3dkmt.cb.destroySynchronizationObject(&destroy);
+      mtx_destroy(&gpu->drain.lock);
+   }
    if (gpu->d3dkmt.device)
       virtgpu_ioctl_destroy_device(gpu);
    if (gpu->d3dkmt.adapter)
