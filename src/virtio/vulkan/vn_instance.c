@@ -174,8 +174,10 @@ vn_instance_init_renderer(struct vn_instance *instance, const VkInstanceCreateIn
    const VkAllocationCallbacks *alloc = &instance->base.vk.alloc;
 
    VkResult result = vn_renderer_create(instance, alloc, pCreateInfo, &instance->renderer);
-   if (result != VK_SUCCESS)
+   if (result != VK_SUCCESS) {
+      vn_log(NULL, "pvm: vn_renderer_create failed: %d", result);
       return result;
+   }
 
    struct vn_renderer_info *renderer_info = &instance->renderer->info;
    uint32_t version = vn_info_wire_format_version();

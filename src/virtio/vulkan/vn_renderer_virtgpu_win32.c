@@ -2273,12 +2273,19 @@ virtgpu_init(struct virtgpu *gpu, void *info)
    mtx_init(&gpu->ctx.lock, mtx_plain);
 
    VkResult result = virtgpu_open(gpu, info);
-   if (result == VK_SUCCESS)
+   vn_log(NULL, "pvm: virtgpu_open %d", result);
+   if (result == VK_SUCCESS) {
       result = virtgpu_init_params(gpu);
-   if (result == VK_SUCCESS)
+      vn_log(NULL, "pvm: init_params %d", result);
+   }
+   if (result == VK_SUCCESS) {
       result = virtgpu_init_capset(gpu);
-   if (result == VK_SUCCESS)
+      vn_log(NULL, "pvm: init_capset %d", result);
+   }
+   if (result == VK_SUCCESS) {
       result = virtgpu_init_context(gpu);
+      vn_log(NULL, "pvm: init_context %d", result);
+   }
    if (result != VK_SUCCESS)
       return result;
 
