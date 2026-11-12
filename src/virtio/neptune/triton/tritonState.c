@@ -411,6 +411,8 @@ TR_SAMPLER_SETTER(Cs, CSSetSamplers)
 
 /* ---------- Element layout (lazy ID3D11InputLayout creation) ---------- */
 
+static volatile LONG g_trIlCreateLog, g_trVbLog, g_trIbLog;
+
 TR_CALC_PRIVATE_SIZE(tritonCalcPrivateElementLayoutSize, TRITON_ELEMENTLAYOUT,
                      const D3D10DDIARG_CREATEELEMENTLAYOUT *pArgs)
 
@@ -423,6 +425,15 @@ tritonCreateElementLayout(D3D10DDI_HDEVICE hDevice,
     PTRITON_DEVICE        pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_ELEMENTLAYOUT e  = (PTRITON_ELEMENTLAYOUT)(hLayout.pDrvPrivate);
     if (!e) return;
+    if (InterlockedIncrement(&g_trIlCreateLog) <= 120) {
+        TR_LOG("IA CreateElementLayout %p: %u elements", (void *)e, (UINT)pArgs->NumElements);
+        for (UINT i = 0; i < pArgs->NumElements && i < 16; ++i) {
+            const D3D10DDIARG_INPUT_ELEMENT_DESC *x = &pArgs->pVertexElements[i];
+            TR_LOG("IA   el[%u] reg=%u fmt=%u slot=%u off=%u class=%u stepRate=%u", i, (UINT)x->InputRegister,
+                   (UINT)x->Format, (UINT)x->InputSlot, (UINT)x->AlignedByteOffset, (UINT)x->InputSlotClass,
+                   (UINT)x->InstanceDataStepRate);
+        }
+    }
     e->NumElements     = pArgs->NumElements;
     memset(e->aIl, 0, sizeof(e->aIl));
     e->IlClock         = 0;
@@ -549,6 +560,18 @@ tritonIaSetVertexBuffers(D3D10DDI_HDEVICE hDevice, UINT StartSlot, UINT NumBuffe
             : NULL;
         aBuf[i] = r ? (ID3D11Buffer *)r->pResource : NULL;
     }
+    {
+        LONG n = InterlockedIncrement(&g_trVbLog);
+        if (n <= 100 || ((n % 25) == 0 && n <= 1500)) {
+            TR_LOG("IA SetVertexBuffers #%ld start=%u num=%u", (long)n, StartSlot, NumBuffers);
+            for (UINT i = 0; i < NumBuffers && i < 8; ++i) {
+                PTRITON_RESOURCE r = phBuffers ? (PTRITON_RESOURCE)(phBuffers[i].pDrvPrivate) : NULL;
+                TR_LOG("IA   vb[%u] stride=%u offset=%u res=%p width=%u usage=%u bind=0x%x shared=%d", StartSlot + i,
+                       pStrides ? pStrides[i] : 0, pOffsets ? pOffsets[i] : 0, (void *)r, r ? (UINT)r->Width : 0,
+                       r ? (UINT)r->Usage : 0, r ? (UINT)r->BindFlags : 0, r ? (int)r->IsShared : 0);
+            }
+        }
+    }
     ID3D11DeviceContext1_IASetVertexBuffers(
         pD->pCtx1, StartSlot, NumBuffers, aBuf, pStrides, pOffsets);
 }
@@ -560,6 +583,11 @@ tritonIaSetIndexBuffer(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hBuffer,
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hBuffer.pDrvPrivate);
     if (!pD) return;
+    {
+        LONG n = InterlockedIncrement(&g_trIbLog);
+        if (n <= 60 || ((n % 25) == 0 && n <= 1500))
+            TR_LOG("IA SetIndexBuffer #%ld res=%p fmt=%u offset=%u width=%u", (long)n, (void *)r, (UINT)Format, Offset, r ? (UINT)r->Width : 0);
+    }
     ID3D11DeviceContext1_IASetIndexBuffer(
         pD->pCtx1, r ? (ID3D11Buffer *)r->pResource : NULL, Format, Offset);
 }

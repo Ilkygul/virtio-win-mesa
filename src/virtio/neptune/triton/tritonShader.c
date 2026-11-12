@@ -705,6 +705,8 @@ void tritonUnbindReconVs(PTRITON_DEVICE pD)
         NULL, 0);
 }
 
+static volatile LONG g_trIlResolveLog;
+
 /* Returns TRUE when it bound a layout and, with it, the VS. */
 BOOL tritonResolveInputLayout(PTRITON_DEVICE pD)
 {
@@ -802,6 +804,16 @@ BOOL tritonResolveInputLayout(PTRITON_DEVICE pD)
             sigRegs[cMatched]   = src->InputRegister;
             ++cMatched;
         }
+    }
+
+    if (InterlockedIncrement(&g_trIlResolveLog) <= 150) {
+        TR_LOG("IA ResolveInputLayout layout=%p vsCookie=%llu: VS ISGN has %u entries, layout %u elements, %u matched by register",
+               (void *)e, (unsigned long long)vs->cookie, cSigs, (UINT)e->NumElements, cMatched);
+        for (UINT j = 0; j < cSigs && j < 16; ++j)
+            TR_LOG("IA   isgn[%u] name=%s idx=%u reg=%u mask=0x%x", j, sigs[j].Name, sigs[j].SemanticIndex, sigs[j].Register, sigs[j].Mask);
+        for (UINT i = 0; i < e->NumElements && i < 16; ++i)
+            TR_LOG("IA   -> el[%u] reg=%u => semantic='%s' idx=%u fmt=%u slot=%u off=%u", i, (UINT)e->pElements[i].InputRegister,
+                   descs[i].SemanticName, descs[i].SemanticIndex, (UINT)descs[i].Format, descs[i].InputSlot, descs[i].AlignedByteOffset);
     }
 
     /* The vertex formats are only known here, so derive the component type per
