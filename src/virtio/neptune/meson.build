@@ -108,7 +108,9 @@ if npt_is_windows
     npt_common_src += files(
       'npt_renderer_vtest_protocol.c',
       'npt_renderer_virtgpu_win32.c',
+      'npt_log_win32.c',
     )
+    npt_c_args += ['-DNPT_LOG_FILE']
   endif
 endif
 

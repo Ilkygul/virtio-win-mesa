@@ -20,9 +20,18 @@
 extern "C" {
 #endif
 
+#ifdef NPT_LOG_FILE
+/* npt_log_win32.c: C:\Users\Public\neptune.log + OutputDebugString */
+void npt_log_write(const char *line);
+#endif
+
 static inline void triton_log_raw(const char *line)
 {
+#ifdef NPT_LOG_FILE
+    npt_log_write(line);
+#else
     OutputDebugStringA(line);
+#endif
 }
 
 #define TR_LOG(fmt, ...) do {                                         \

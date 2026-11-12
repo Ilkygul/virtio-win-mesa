@@ -102,6 +102,20 @@ struct npt_virtgpu {
     * selection for blob map/unmap depends on it, see virtgpu_map_blob_op. */
    bool wddm2;
 
+   /* Gunyah protected VM (VIOGPU_ADAPTERINFO.Flags.GuestVram): the host cannot
+    * reach ordinary guest memory.  Every mappable blob is then placed and
+    * mapped by the KMD (RES_INFO.UserVa) -- never D3DKMTLock and never a
+    * MAP_BLOB/UNMAP_BLOB packet -- and the BAR window reclaim is meaningless
+    * (the pool windows are fixed). */
+   bool guest_vram;
+   /* Flags.HasVenusPool: the KMD's VENUS_HOST pool is active, i.e. the host
+    * places a HOST3D blob_id 0 shmem there itself. */
+   bool venus_pool;
+   /* Transport shmems (rings, upload arenas, ...) are created as GUEST_VRAM
+    * blobs (pages in the guest-shared GPU_GUEST pool, handed to the host as
+    * CREATE_GUEST_HANDLE) instead of host-placed VENUS_HOST blobs. */
+   bool shmem_guest_vram;
+
    /* KMD implements the shmem window escapes -- probed once via
     * VIOGPU_SHMEM_INFO (0 unprobed, 1 yes, -1 no).  Racing first probes
     * store the same verdict; last-write-wins is benign. */
@@ -571,6 +585,15 @@ virtgpu_resource_create_blob(struct npt_virtgpu *gpu, uint32_t blob_mem,
     * this blob's RESOURCE_CREATE_BLOB on the FIFO control queue by the
     * time this returns, which is what lets the renderer claim
     * shmem_create_host_visible. */
+   if (is_mappable && !res_info.ResourceInfo.UserVa && gpu->guest_vram) {
+      /* Protected VM: there is no BAR to map and a MAP_BLOB packet is a
+       * no-op in the KMD; a mappable blob without a KMD window is unusable. */
+      npt_log("virtgpu: protected VM: mappable blob (res %u, mem=%u flags=0x%x) "
+              "has no KMD window", res_info.ResourceInfo.Id, blob_mem,
+              blob_flags);
+      status = STATUS_INVALID_PARAMETER;
+      goto fail_destroy;
+   }
    if (is_mappable && !res_info.ResourceInfo.UserVa) {
       status = virtgpu_map_blob_op(gpu, *out_alloc, *out_res_id, VIOGPU_CMD_MAP_BLOB);
       if (!NT_SUCCESS(status))
@@ -707,16 +730,26 @@ npt_vgw32_shmem_create(struct npt_renderer *r, size_t size)
    uint32_t res_id = 0;
    void *kmd_va = NULL;
    uint64_t cookie = 0;
+   uint32_t flags = VIOGPU_BLOB_FLAG_USE_MAPPABLE;
+   if (gpu->shmem_guest_vram)
+      flags |= VIOGPU_BLOB_FLAG_GUEST_VRAM;
    NTSTATUS status = virtgpu_resource_create_blob(
-      gpu, VIOGPU_BLOB_MEM_HOST3D,
-      VIOGPU_BLOB_FLAG_USE_MAPPABLE,
+      gpu, VIOGPU_BLOB_MEM_HOST3D, flags,
       alloc_size, 0, &res_id, &alloc, &res_kmt, &kmd_va, &cookie);
-   if (!NT_SUCCESS(status))
+   if (!NT_SUCCESS(status)) {
+      npt_log("virtgpu: shmem create (%zu bytes%s) failed 0x%lx", alloc_size,
+              gpu->shmem_guest_vram ? ", guest-vram" : "", status);
       return NULL;
+   }
 
    /* WDDM2 KMD hands us its own mapping; on 1.3 fall back to the
     * classic VidMm lock. */
    void *ptr = kmd_va;
+   if (!ptr && gpu->guest_vram) {
+      npt_log("virtgpu: protected VM: shmem res %u has no KMD window", res_id);
+      virtgpu_resource_destroy_blob(gpu, alloc, res_kmt);
+      return NULL;
+   }
    if (!ptr) {
       status = virtgpu_lock(gpu, alloc, &ptr);
       if (!NT_SUCCESS(status)) {
@@ -731,7 +764,8 @@ npt_vgw32_shmem_create(struct npt_renderer *r, size_t size)
    if (!s) {
       if (!kmd_va)
          virtgpu_unlock(gpu, alloc);
-      virtgpu_map_blob_op(gpu, alloc, res_id, VIOGPU_CMD_UNMAP_BLOB);
+      if (!gpu->guest_vram)
+         virtgpu_map_blob_op(gpu, alloc, res_id, VIOGPU_CMD_UNMAP_BLOB);
       virtgpu_resource_destroy_blob(gpu, alloc, res_kmt);
       return NULL;
    }
@@ -747,7 +781,7 @@ npt_vgw32_shmem_create(struct npt_renderer *r, size_t size)
    /* Only KMD-placed BAR windows can be returned to the store; a VidMm
     * lock (1.3 path) frees nothing on unlock. */
    s->base.window_reclaimable =
-      s->kmd_mapped && virtgpu_shmem_reclaim_supported(gpu);
+      s->kmd_mapped && !gpu->guest_vram && virtgpu_shmem_reclaim_supported(gpu);
    return &s->base;
 }
 
@@ -860,7 +894,7 @@ npt_vgw32_shmem_destroy(struct npt_renderer *r, struct npt_renderer_shmem *_s)
     * this; a window the escape will not take (no KMD window, or another
     * process still mapping it) falls back to the packet. */
    if (!s->window_released &&
-       !npt_vgw32_shmem_window_release(r, &s->base))
+       !npt_vgw32_shmem_window_release(r, &s->base) && !gpu->guest_vram)
       virtgpu_map_blob_op(gpu, s->alloc, s->base.res_id, VIOGPU_CMD_UNMAP_BLOB);
    virtgpu_resource_destroy_blob(gpu, s->alloc, s->res_kmt);
    free(s);
@@ -1096,8 +1130,72 @@ virtgpu_find_adapter(struct npt_virtgpu *gpu)
                 open.AdapterLuid.LowPart);
       return true;
    }
-   npt_log("virtgpu: no PCI device matching %s", VIRTGPU_WIN_DEVICE_ID);
-   return false;
+   npt_log("virtgpu: no usable display device matching %s -- trying "
+           "D3DKMTEnumAdapters2", VIRTGPU_WIN_DEVICE_ID);
+
+   /* pVM / headless: the display path may be inactive (no HDC to open: black
+    * or detached desktop, service session).  Enumerate every WDDM adapter and
+    * take the one whose KMD answers the viogpu private query. */
+   typedef NTSTATUS(APIENTRY * PFN_ENUM2)(D3DKMT_ENUMADAPTERS2 *);
+   PFN_ENUM2 enum2 =
+      (PFN_ENUM2)GetProcAddress(gpu->gdi32, "D3DKMTEnumAdapters2");
+   if (!enum2) {
+      npt_log("virtgpu: D3DKMTEnumAdapters2 not available");
+      return false;
+   }
+   D3DKMT_ENUMADAPTERS2 e = { 0 };
+   NTSTATUS status = enum2(&e);
+   if (!NT_SUCCESS(status) || e.NumAdapters == 0) {
+      npt_log("virtgpu: D3DKMTEnumAdapters2 count query failed 0x%lx (n=%lu)",
+              status, (unsigned long)e.NumAdapters);
+      return false;
+   }
+   D3DKMT_ADAPTERINFO *list = calloc(e.NumAdapters + 4, sizeof(*list));
+   if (!list)
+      return false;
+   e.NumAdapters += 4; /* adapters may appear between the two calls */
+   e.pAdapters = list;
+   status = enum2(&e);
+   if (!NT_SUCCESS(status)) {
+      npt_log("virtgpu: D3DKMTEnumAdapters2 failed 0x%lx", status);
+      free(list);
+      return false;
+   }
+   bool found = false;
+   for (ULONG i = 0; i < e.NumAdapters; i++) {
+      if (found || !list[i].hAdapter) {
+         if (list[i].hAdapter) {
+            D3DKMT_CLOSEADAPTER close = { .hAdapter = list[i].hAdapter };
+            gpu->cb.closeAdapter(&close);
+         }
+         continue;
+      }
+      VIOGPU_ADAPTERINFO probe = { 0 };
+      D3DKMT_QUERYADAPTERINFO q = {
+         .hAdapter = list[i].hAdapter,
+         .Type = KMTQAITYPE_UMDRIVERPRIVATE,
+         .pPrivateDriverData = &probe,
+         .PrivateDriverDataSize = sizeof(probe),
+      };
+      NTSTATUS qs = gpu->cb.queryAdapterInfo(&q);
+      if (NT_SUCCESS(qs) && probe.IamVioGPU == VIOGPU_IAM) {
+         gpu->adapter = list[i].hAdapter;
+         gpu->luid = list[i].AdapterLuid;
+         npt_log("virtgpu: using adapter %lu from D3DKMTEnumAdapters2 "
+                 "(LUID %lx-%lx)", (unsigned long)i,
+                 (unsigned long)list[i].AdapterLuid.HighPart,
+                 (unsigned long)list[i].AdapterLuid.LowPart);
+         found = true;
+      } else {
+         /* not ours: release the handle EnumAdapters2 opened */
+         D3DKMT_CLOSEADAPTER close = { .hAdapter = list[i].hAdapter };
+         gpu->cb.closeAdapter(&close);
+      }
+   }
+   free(list);
+   if (!found)
+      npt_log("virtgpu: no viogpu adapter among the enumerated adapters");
+   return found;
 }
 
 static bool
@@ -1218,6 +1316,28 @@ virtgpu_open(struct npt_virtgpu *gpu, struct npt_capset *capset)
       return VIRTGPU_OPEN_FAILED;
    }
    gpu->wddm2 = info.Flags.Wddm2 != 0;
+   gpu->guest_vram = info.Flags.GuestVram != 0;
+   gpu->venus_pool = info.Flags.HasVenusPool != 0;
+   /* Protected VM shmem placement.  Default: the host-placed VENUS_HOST pool
+    * when the KMD has it (same as Venus' transport shmem), else a guest-vram
+    * blob.  NPT_SHMEM_GUEST_VRAM=1 / 0 forces one or the other. */
+   gpu->shmem_guest_vram = gpu->guest_vram && !gpu->venus_pool;
+   if (gpu->guest_vram) {
+      const char *o = getenv("NPT_SHMEM_GUEST_VRAM");
+      if (o && o[0] == '1')
+         gpu->shmem_guest_vram = true;
+      else if (o && o[0] == '0' && gpu->venus_pool)
+         gpu->shmem_guest_vram = false;
+      npt_log("virtgpu: protected VM: GuestVram=1 HasVenusPool=%d -> shmem as %s",
+              gpu->venus_pool,
+              gpu->shmem_guest_vram ? "GUEST_VRAM blobs (GPU_GUEST pool)"
+                                    : "HOST3D blob_id 0 (VENUS_HOST pool)");
+   }
+   npt_log("virtgpu: adapter flags: 3d=%u shmem=%u wddm2=%u guest_vram=%u "
+           "venus_pool=%u capsets=0x%llx",
+           info.Flags.Supports3d, info.Flags.HasShmem, info.Flags.Wddm2,
+           info.Flags.GuestVram, info.Flags.HasVenusPool,
+           (unsigned long long)info.SupportedCapsetIDs);
 
    memset(capset, 0, sizeof(*capset));
    status = virtgpu_get_caps(gpu, NPT_CAPSET_ID, 0, capset, sizeof(*capset));
@@ -1249,6 +1369,7 @@ npt_adapter_probe_impl(void)
 
    struct npt_capset capset;
    const enum virtgpu_open_result r = virtgpu_open(gpu, &capset);
+   npt_log("virtgpu: adapter probe result %d", (int)r);
    if (r >= VIRTGPU_OPEN_VIOGPU) {
       g_adapter_probe.viogpu = true;
       g_adapter_probe.wddm2 = gpu->wddm2;
@@ -1279,8 +1400,13 @@ npt_renderer_create_virtgpu(void)
    InitializeCriticalSection(&gpu->drain_cs);
 
    struct npt_capset capset;
-   if (virtgpu_open(gpu, &capset) != VIRTGPU_OPEN_HOST_OK)
+   npt_log("virtgpu: creating renderer");
+   const enum virtgpu_open_result open_result = virtgpu_open(gpu, &capset);
+   if (open_result != VIRTGPU_OPEN_HOST_OK) {
+      npt_log("virtgpu: open failed (stage %d: 0=adapter/KMD, 1=host capset)",
+              (int)open_result);
       goto fail;
+   }
    npt_log("virtgpu: KMD mode %s", gpu->wddm2 ? "WDDM2 (GpuMmu)" : "WDDM 1.3");
 
    VIOGPU_ESCAPE ctx_init = {
@@ -1300,6 +1426,7 @@ npt_renderer_create_virtgpu(void)
       npt_log("virtgpu: CTX_INIT failed 0x%lx", status);
       goto fail;
    }
+   npt_log("virtgpu: CTX_INIT ok (ctx %u)", ctx_init.CtxInit.CtxId);
 
    npt_env_init();
    if (gpu->wddm2 && virtgpu_create_context_virtual(gpu)) {

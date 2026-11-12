@@ -165,6 +165,18 @@ struct npt_capset {
 void npt_log_impl(const char *fmt, ...);
 #define npt_log(fmt, ...) npt_log_impl("neptune: " fmt "\n", ##__VA_ARGS__)
 #define npt_debug(fmt, ...) npt_log_impl("neptune: " fmt "\n", ##__VA_ARGS__)
+#elif defined(NPT_LOG_FILE)
+/* Native Windows (no Wine): npt_log_win32.c appends to
+ * C:\Users\Public\neptune.log (and OutputDebugString).  A UMD loaded into
+ * an arbitrary process has no usable stderr. */
+void npt_log_impl(const char *fmt, ...);
+void npt_log_write(const char *line);
+#define npt_log(fmt, ...) npt_log_impl("neptune: " fmt "\n", ##__VA_ARGS__)
+#ifdef NDEBUG
+#define npt_debug(fmt, ...) ((void)0)
+#else
+#define npt_debug(fmt, ...) npt_log_impl("neptune: " fmt "\n", ##__VA_ARGS__)
+#endif
 #else
 #define npt_log(fmt, ...)                                                    \
    fprintf(stderr, "neptune: " fmt "\n", ##__VA_ARGS__)
