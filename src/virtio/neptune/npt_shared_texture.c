@@ -115,6 +115,20 @@ npt_shared_texture_virgl_format(uint32_t dxgi_format)
    case DXGI_FORMAT_B8G8R8A8_UNORM: return VIRGL_FORMAT_B8G8R8A8_UNORM;
    case DXGI_FORMAT_B8G8R8X8_UNORM: return VIRGL_FORMAT_B8G8R8X8_UNORM;
    case DXGI_FORMAT_R8G8B8A8_UNORM: return VIRGL_FORMAT_R8G8B8A8_UNORM;
+   /* Shell/DirectWrite share single-channel glyph and mask surfaces across
+    * processes; tagging them BGRA8 made every consumer read 4 bytes per
+    * texel, so text in the taskbar and Start rendered as white boxes. */
+   case DXGI_FORMAT_A8_UNORM:            return VIRGL_FORMAT_A8_UNORM;
+   case DXGI_FORMAT_R8_UNORM:            return VIRGL_FORMAT_R8_UNORM;
+   case DXGI_FORMAT_R8G8_UNORM:          return VIRGL_FORMAT_R8G8_UNORM;
+   case DXGI_FORMAT_R16_UNORM:           return VIRGL_FORMAT_R16_UNORM;
+   case DXGI_FORMAT_R16G16_UNORM:        return VIRGL_FORMAT_R16G16_UNORM;
+   case DXGI_FORMAT_R32_FLOAT:           return VIRGL_FORMAT_R32_FLOAT;
+   case DXGI_FORMAT_B5G6R5_UNORM:        return VIRGL_FORMAT_B5G6R5_UNORM;
+   case DXGI_FORMAT_R10G10B10A2_UNORM:   return VIRGL_FORMAT_R10G10B10A2_UNORM;
+   case DXGI_FORMAT_R16G16B16A16_FLOAT:  return VIRGL_FORMAT_R16G16B16A16_FLOAT;
+   case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB: return VIRGL_FORMAT_B8G8R8A8_SRGB;
+   case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB: return VIRGL_FORMAT_R8G8B8A8_UNORM;
    default:
       npt_log("shared texture: unmapped DXGI format %u, assuming BGRA8",
               dxgi_format);
