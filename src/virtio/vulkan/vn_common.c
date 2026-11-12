@@ -97,6 +97,18 @@ vn_log(struct vn_instance *instance, const char *format, ...)
    mesa_log_v(MESA_LOG_DEBUG, "MESA-VIRTIO", format, ap);
    va_end(ap);
 
+#ifdef _WIN32
+   /* pVM bring-up: a release build drops MESA_LOG_DEBUG; keep every Venus log line in a file */
+   FILE *f = fopen("C:\\Users\\Public\\venus.log", "a");
+   if (f) {
+      va_start(ap, format);
+      vfprintf(f, format, ap);
+      va_end(ap);
+      fputc('\n', f);
+      fclose(f);
+   }
+#endif
+
    /* instance may be NULL or partially initialized */
 }
 
