@@ -7,6 +7,7 @@
  * and End/GetData with shared-memory query feedback.
  */
 
+#include <stdio.h>
 #include "npt_com.h"
 #include "npt_overrides_d3d11_feedback.h"
 #include "npt_device.h"
@@ -410,6 +411,38 @@ ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
    npt_d3d11_buffer_map_close(b, key, ring, seqno);
 }
 
+
+/* A8/R8 Map(WRITE) trace (white-text chase): FNV-1a 64 + first 16 bytes of what the
+ * app wrote, at Unmap, plus the rowPitch of the Map.  Compare with the host's
+ * "FMT unmap-write" line (same n and fnv).  Rate-limited to 300 lines/process. */
+static volatile LONG npt_fmt_unmap_trace_count;
+
+static void
+npt_trace_guest_unmap(struct npt_d3d11_texture *t, uint32_t subresource,
+                      const struct npt_d3d_map_record *rec)
+{
+   const DXGI_FORMAT f = npt_d3d11_texture_get_format(t);
+   if (!(f == 65 || (f >= 60 && f <= 64)))
+      return;
+   if (InterlockedIncrement(&npt_fmt_unmap_trace_count) > 300)
+      return;
+   const uint8_t *p = npt_d3d11_texture_slot_ptr(t, rec->slot);
+   const uint32_t n = rec->byte_size;
+   uint64_t h = 1469598103934665603ull;
+   for (uint32_t i = 0; p && i < n; i++) { h ^= p[i]; h *= 1099511628211ull; }
+   char hex[40] = "";
+   for (uint32_t i = 0; p && i < 16 && i < n; i++) snprintf(hex + i * 2, 3, "%02x", p[i]);
+   uint32_t rows = 0, depth = 0;
+   npt_d3d11_texture_get_map_extent(t, subresource, &rows, &depth);
+   npt_log("FMT guest unmap[%s] res=0x%llx sub=%u fmt=%u access=0x%x slot=%u n=%u "
+           "rowPitch(cached)=%u rows=%u fnv=%016llx first16=%s",
+           rec->access_flags ? "rename" : "sync",
+           (unsigned long long)((struct npt_com_base *)t)->base.id, subresource,
+           (unsigned)f, rec->access_flags, rec->slot, n,
+           npt_d3d11_texture_get_cached_row_pitch(t), rows,
+           (unsigned long long)h, hex);
+}
+
 static void
 ctx_Unmap_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource)
 {
@@ -417,6 +450,8 @@ ctx_Unmap_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource)
    struct npt_d3d_map_record rec;
    if (!npt_d3d11_texture_map_find(t, key, Subresource, &rec))
       return;
+
+   npt_trace_guest_unmap(t, rec.subresource, &rec);
 
    /* A sync Map's slot goes in flight too: the host copies out of it
     * at Unmap, after this returns. */
