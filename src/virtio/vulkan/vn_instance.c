@@ -334,12 +334,16 @@ vn_CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
                                &instance->reply_shmem_pool, 1u << 20);
 
    result = vn_instance_init_ring(instance);
-   if (result != VK_SUCCESS)
+   if (result != VK_SUCCESS) {
+      vn_log(NULL, "pvm: %s failed: %d", "init_ring", result);
       goto out_shmem_pool_fini;
+   }
 
    result = vn_instance_init_renderer_versions(instance);
-   if (result != VK_SUCCESS)
+   if (result != VK_SUCCESS) {
+      vn_log(NULL, "pvm: %s failed: %d", "init_renderer_versions", result);
       goto out_ring_fini;
+   }
 
    VkInstanceCreateInfo local_create_info = *pCreateInfo;
    local_create_info.ppEnabledExtensionNames = NULL;
@@ -363,8 +367,10 @@ vn_CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
 
    result = vn_call_vkCreateInstance(instance->ring.ring, pCreateInfo, NULL,
                                      &instance_handle);
-   if (result != VK_SUCCESS)
+   if (result != VK_SUCCESS) {
+      vn_log(NULL, "pvm: %s failed: %d", "host vkCreateInstance", result);
       goto out_ring_fini;
+   }
 
    driParseOptionInfo(&instance->available_dri_options, vn_dri_options,
                       ARRAY_SIZE(vn_dri_options));
