@@ -205,6 +205,13 @@ tritonRegisterSharedBlob(PTRITON_DEVICE pD, PTRITON_RESOURCE r,
                (unsigned long long)ax.Size);
         return FALSE;
     }
+    {
+        static volatile LONG s_okLogs;
+        if (InterlockedIncrement(&s_okLogs) <= 16)
+            TR_LOG("shared: pfnAllocateCb ok hKMResource=0x%x hAllocation=0x%x %ux%u dxgiFmt=%u primary=%d",
+                   cb.hKMResource, ai.hAllocation, (unsigned)r->Width,
+                   (unsigned)r->Height, (unsigned)hostFmt, primary);
+    }
     r->hKMAllocation = ai.hAllocation;
     r->IsShared      = pTex == r->pResource;
     tritonKmRequestResidency(&pD->Km, ai.hAllocation);
