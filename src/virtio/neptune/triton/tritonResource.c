@@ -9,6 +9,8 @@
 
 #include "triton.h"
 #include "triton_log.h"
+
+volatile LONG g_tritonFmtLogCount = 0;
 #include "tritonPresent.h"
 #include "tritonSharedBridge.h"
 #include "npt_shared_texture.h"          /* shared format + export helpers */
@@ -371,6 +373,16 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
     D3D11_USAGE usage;
     UINT cpuAccess, bind, misc;
     tritonTranslateUsage(pArgs, &usage, &cpuAccess, &bind, &misc);
+    if (triton_fmt_traced((UINT)pArgs->Format))
+        TR_FMT_LOG("CreateResource dim=%d fmt=%u %ux%u mips=%u arr=%u samples=%u "
+                   "ddiBind=0x%x ddiMisc=0x%x ddiUsage=%u -> hostBind=0x%x hostMisc=0x%x "
+                   "hostUsage=%d cpu=0x%x shared=%d presentable=%d initData=%d",
+                   (int)pArgs->ResourceDimension, (UINT)pArgs->Format,
+                   (UINT)r->Width, (UINT)r->Height, (UINT)pArgs->MipLevels,
+                   (UINT)pArgs->ArraySize, (UINT)pArgs->SampleDesc.Count,
+                   (UINT)pArgs->BindFlags, (UINT)pArgs->MiscFlags, (UINT)pArgs->Usage,
+                   (UINT)bind, (UINT)misc, (int)usage, (UINT)cpuAccess,
+                   (int)isShared, (int)r->IsPresentable, pArgs->pInitialDataUP != NULL);
 
     /* Cross-process sharing is carried by the virtio res_id bound to the KM
      * allocation, not by Win32 shared handles: keep MISC_SHARED so the host
@@ -492,6 +504,9 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
         return;
     }
 
+    if (triton_fmt_traced((UINT)r->Format))
+        TR_FMT_LOG("CreateResource host texture created fmt=%u (sent to host as fmt=%u) shared=%d",
+                   (UINT)r->Format, (UINT)r->Format, (int)isShared);
     if (isShared) {
         if (!tritonRegisterSharedBlob(pD, r, r->pResource, (UINT)usage, bind,
                                       cpuAccess, misc, r->Format, FALSE))
@@ -672,6 +687,13 @@ tritonOpenResource(D3D10DDI_HDEVICE hDevice, const D3D10DDIARG_OPENRESOURCE *pAr
     r->SampleDesc.Count   = so->sample_count ? so->sample_count : 1;
     r->SampleDesc.Quality = 0;
     r->IsShared           = TRUE;
+    if (triton_fmt_traced((UINT)so->format))
+        TR_FMT_LOG("OpenResource imported fmt=%u %ux%u mips=%u arr=%u bind=0x%x misc=0x%x usage=%u "
+                   "planes=%u pitch0=%llu allocSize=%llu type3d=%d",
+                   (UINT)so->format, (UINT)so->width, (UINT)so->height, (UINT)so->mip_levels,
+                   (UINT)so->array_size, (UINT)so->bind_flags, (UINT)so->misc_flags, (UINT)so->usage,
+                   (UINT)so->plane_count, (unsigned long long)so->planes[0].pitch,
+                   (unsigned long long)so->allocation_size, (int)(ax->Type == VIOGPU_RESOURCE_TYPE_3D));
     /* Consumer: the runtime owns the opened KM allocation, so leave
      * hKMAllocation 0 and DestroyResource won't try to free it. */
 
@@ -783,6 +805,10 @@ tritonResourceMap(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hResource,
         pMapped->RowPitch = pMapped->DepthPitch = 0;
         return;
     }
+    if (triton_fmt_traced((UINT)r->Format))
+        TR_FMT_LOG("Map fmt=%u res=%ux%u sub=%u type=%u rowPitch=%u depthPitch=%u shared=%d",
+                   (UINT)r->Format, (UINT)r->Width, (UINT)r->Height, Subresource,
+                   (unsigned)DDIMap, (UINT)m.RowPitch, (UINT)m.DepthPitch, (int)r->IsShared);
     pMapped->pData      = m.pData;
     pMapped->RowPitch   = m.RowPitch;
     pMapped->DepthPitch = m.DepthPitch;
@@ -819,6 +845,12 @@ tritonResourceUpdateSubresourceUP(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE h
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    if (triton_fmt_traced((UINT)r->Format))
+        TR_FMT_LOG("UpdateSubresource fmt=%u res=%ux%u sub=%u box=%s(%u,%u,%u,%u) rowPitch=%u depthPitch=%u shared=%d",
+                   (UINT)r->Format, (UINT)r->Width, (UINT)r->Height, DstSubresource,
+                   pDstBox ? "yes" : "no", pDstBox ? pDstBox->left : 0, pDstBox ? pDstBox->top : 0,
+                   pDstBox ? pDstBox->right : 0, pDstBox ? pDstBox->bottom : 0,
+                   SrcRowPitch, SrcDepthPitch, (int)r->IsShared);
     ID3D11DeviceContext1_UpdateSubresource(
         pD->pCtx1, r->pResource, DstSubresource,
         (const D3D11_BOX *)(pDstBox), pSrc, SrcRowPitch, SrcDepthPitch);
@@ -833,6 +865,12 @@ tritonResourceUpdateSubresourceUP_11_1(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOU
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    if (triton_fmt_traced((UINT)r->Format))
+        TR_FMT_LOG("UpdateSubresource1 fmt=%u res=%ux%u sub=%u box=%s(%u,%u,%u,%u) rowPitch=%u depthPitch=%u flags=0x%x shared=%d",
+                   (UINT)r->Format, (UINT)r->Width, (UINT)r->Height, DstSubresource,
+                   pDstBox ? "yes" : "no", pDstBox ? pDstBox->left : 0, pDstBox ? pDstBox->top : 0,
+                   pDstBox ? pDstBox->right : 0, pDstBox ? pDstBox->bottom : 0,
+                   SrcRowPitch, SrcDepthPitch, CopyFlags, (int)r->IsShared);
     ID3D11DeviceContext1_UpdateSubresource1(
         pD->pCtx1, r->pResource, DstSubresource,
         (const D3D11_BOX *)(pDstBox), pSrc, SrcRowPitch, SrcDepthPitch, CopyFlags);
@@ -846,6 +884,11 @@ tritonResourceCopy(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDst.pDrvPrivate);
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
+    if (triton_fmt_traced((UINT)d->Format) || triton_fmt_traced((UINT)s->Format))
+        TR_FMT_LOG("CopyResource dst fmt=%u %ux%u shared=%d <- src fmt=%u %ux%u shared=%d%s",
+                   (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, (int)d->IsShared,
+                   (UINT)s->Format, (UINT)s->Width, (UINT)s->Height, (int)s->IsShared,
+                   d->Format != s->Format ? " FORMAT-MISMATCH" : "");
     ID3D11DeviceContext1_CopyResource(pD->pCtx1, d->pResource, s->pResource);
 }
 
@@ -860,6 +903,11 @@ tritonResourceCopyRegion(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDst.pDrvPrivate);
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
+    if (triton_fmt_traced((UINT)d->Format) || triton_fmt_traced((UINT)s->Format))
+        TR_FMT_LOG("CopySubresourceRegion dst fmt=%u %ux%u (%u,%u) shared=%d <- src fmt=%u %ux%u box=%s shared=%d%s",
+                   (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, DstX, DstY, (int)d->IsShared,
+                   (UINT)s->Format, (UINT)s->Width, (UINT)s->Height, pSrcBox ? "yes" : "no", (int)s->IsShared,
+                   d->Format != s->Format ? " FORMAT-MISMATCH" : "");
     ID3D11DeviceContext1_CopySubresourceRegion(
         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox));
@@ -876,6 +924,11 @@ tritonResourceCopyRegion_11_1(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDst.pDrvPrivate);
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
+    if (triton_fmt_traced((UINT)d->Format) || triton_fmt_traced((UINT)s->Format))
+        TR_FMT_LOG("CopySubresourceRegion1 dst fmt=%u %ux%u (%u,%u) shared=%d <- src fmt=%u %ux%u box=%s shared=%d%s",
+                   (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, DstX, DstY, (int)d->IsShared,
+                   (UINT)s->Format, (UINT)s->Width, (UINT)s->Height, pSrcBox ? "yes" : "no", (int)s->IsShared,
+                   d->Format != s->Format ? " FORMAT-MISMATCH" : "");
     ID3D11DeviceContext1_CopySubresourceRegion1(
         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox), CopyFlags);

@@ -64,6 +64,21 @@ static inline void triton_log_raw(const char *line)
             TR_LOG_HOT(fmt, ##__VA_ARGS__);                           \
     } while (0)
 
+/* Trace for single-channel / alpha / block-compressed formats (A8, R8*, R8G8,
+ * BC*): rate-limited to the first 200 lines per process.  Used to chase the
+ * "text renders as white boxes" problem (A8 glyph masks). */
+extern volatile LONG g_tritonFmtLogCount;
+static inline BOOL triton_fmt_traced(UINT f)
+{
+    return f == 65 /*A8_UNORM*/ || (f >= 60 && f <= 64) /*R8_*/ ||
+           (f >= 48 && f <= 52) /*R8G8_**/ || (f >= 70 && f <= 84) /*BC1..BC5*/ ||
+           (f >= 94 && f <= 99) /*BC6H,BC7*/;
+}
+#define TR_FMT_LOG(fmt, ...) do {                                     \
+        if (InterlockedIncrement(&g_tritonFmtLogCount) <= 200)        \
+            TR_LOG("FMT " fmt, ##__VA_ARGS__);                        \
+    } while (0)
+
 #define TR_STUB(name) do {                                            \
         static LONG _seen = 0;                                        \
         if (InterlockedExchange(&_seen, 1) == 0)                      \

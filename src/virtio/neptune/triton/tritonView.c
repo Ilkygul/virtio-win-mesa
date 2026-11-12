@@ -224,6 +224,11 @@ tritonCreateRtvCommon(PTRITON_DEVICE pD, TRITON_RTVIEW *v, const D3DWDDM2_0DDIAR
         tritonSetCreateError(pD, E_INVALIDARG);
         return;
     }
+    if (triton_fmt_traced((UINT)d.Format) || triton_fmt_traced((UINT)r->Format))
+        TR_FMT_LOG("RTV view fmt=%u (host view fmt=%u) resource fmt=%u %ux%u shared=%d%s%s",
+                   (UINT)a->Format, (UINT)d.Format, (UINT)r->Format, (UINT)r->Width, (UINT)r->Height,
+                   (int)r->IsShared, d.Format != r->Format ? " VIEW!=RESOURCE" : "",
+                   d.Format == DXGI_FORMAT_UNKNOWN ? " VIEW-FORMAT-UNKNOWN" : "");
     HRESULT hr;
     if (pD->pDev3) {
         ID3D11RenderTargetView1 *p1 = NULL;
@@ -513,6 +518,11 @@ tritonCreateSrvCommon(PTRITON_DEVICE pD, TRITON_SRVIEW *v, const D3DWDDM2_0DDIAR
         tritonSetCreateError(pD, E_INVALIDARG);
         return;
     }
+    if (triton_fmt_traced((UINT)d.Format) || triton_fmt_traced((UINT)r->Format))
+        TR_FMT_LOG("SRV view fmt=%u (host view fmt=%u) resource fmt=%u %ux%u shared=%d%s%s",
+                   (UINT)a->Format, (UINT)d.Format, (UINT)r->Format, (UINT)r->Width, (UINT)r->Height,
+                   (int)r->IsShared, d.Format != r->Format ? " VIEW!=RESOURCE" : "",
+                   d.Format == DXGI_FORMAT_UNKNOWN ? " VIEW-FORMAT-UNKNOWN" : "");
     HRESULT hr;
     if (pD->pDev3) {
         ID3D11ShaderResourceView1 *p1 = NULL;
