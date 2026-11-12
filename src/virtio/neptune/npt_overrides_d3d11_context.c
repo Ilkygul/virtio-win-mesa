@@ -381,6 +381,32 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
    return NPT_S_OK;
 }
 
+
+/* Buffer trace (white-text chase, R8_UINT glyph buffers): for buffers with BIND_SHADER_RESOURCE
+ * (and not CONSTANT_BUFFER), log FNV-1a 64 of the whole slot at Unmap / of the update payload at
+ * UpdateSubresource, plus nonzero count and last nonzero index.  Compare with host "FMT buf-unmap" /
+ * "FMT buf-update".  Rate-limited to 400 lines/process. */
+static volatile LONG npt_fmt_buf_trace_count;
+
+static bool
+npt_trace_buf_wanted(struct npt_d3d11_buffer *b)
+{
+   D3D11_BUFFER_DESC d;
+   if (!npt_d3d11_buffer_fill_desc(b, &d)) return false;
+   if (!(d.BindFlags & D3D11_BIND_SHADER_RESOURCE) || (d.BindFlags & D3D11_BIND_CONSTANT_BUFFER)) return false;
+   return InterlockedIncrement(&npt_fmt_buf_trace_count) <= 400;
+}
+
+static void
+npt_trace_buf_summary(const uint8_t *p, uint32_t n, uint64_t *fnv, uint32_t *nz, uint32_t *last, char *hex)
+{
+   uint64_t h = 1469598103934665603ull; uint32_t z = 0, l = 0;
+   for (uint32_t i = 0; p && i < n; i++) { h ^= p[i]; h *= 1099511628211ull; if (p[i]) { z++; l = i; } }
+   hex[0] = 0;
+   for (uint32_t i = 0; p && i < 16 && i < n; i++) snprintf(hex + i * 2, 3, "%02x", p[i]);
+   *fnv = h; *nz = z; *last = l;
+}
+
 static void
 ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
 {
@@ -391,6 +417,15 @@ ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
    if (rec.in_place) {
       npt_d3d11_buffer_map_close(b, key, NULL, 0);
       return;
+   }
+
+   if (npt_trace_buf_wanted(b)) {
+      uint64_t h; uint32_t nz, last; char hex[40];
+      const uint32_t n = npt_d3d11_buffer_get_byte_width(b);
+      npt_trace_buf_summary(npt_d3d11_buffer_slot_ptr(b, rec.slot), n, &h, &nz, &last, hex);
+      npt_log("FMT guest buf-unmap res=0x%llx sub=%u slot=%u access=0x%x n=%u fnv=%016llx nonzero=%u lastNonzero=%u first16=%s",
+              (unsigned long long)((struct npt_com_base *)b)->base.id, Subresource, rec.slot,
+              rec.access_flags, n, (unsigned long long)h, nz, last, hex);
    }
 
    struct npt_ring *ring = npt_com_self_ring(self);
@@ -621,6 +656,15 @@ ctx_UpdateSubresource_override(void *self, ID3D11Resource *pDstResource,
                &split, &split_ok);
          }
       }
+   }
+
+   if (b && byte_size && npt_trace_buf_wanted(b)) {
+      uint64_t h; uint32_t nz, last; char hex[40];
+      npt_trace_buf_summary(pSrcData, (uint32_t)copy_size, &h, &nz, &last, hex);
+      npt_log("FMT guest buf-update res=0x%llx box=%s[%u,%u) payload n=%llu fnv=%016llx nonzero=%u lastNonzero=%u first16=%s",
+              (unsigned long long)resource_id, pDstBox ? "yes" : "no", pDstBox ? pDstBox->left : 0,
+              pDstBox ? pDstBox->right : npt_d3d11_buffer_get_byte_width(b),
+              (unsigned long long)copy_size, (unsigned long long)h, nz, last, hex);
    }
 
    if (!byte_size || !copy_size) {
