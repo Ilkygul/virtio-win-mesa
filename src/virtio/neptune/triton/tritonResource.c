@@ -160,15 +160,49 @@ tritonRegisterSharedBlob(PTRITON_DEVICE pD, PTRITON_RESOURCE r,
         ai.VidPnSourceId = 0;
     }
 
+    /* Resource-level private driver data.  A D3D10/11 shared resource is
+     * re-opened by another process through the runtime, which hands the
+     * kernel resource's private data to the opener's pfnOpenResource; the
+     * runtime/dxgkrnl therefore expect a shared resource's pfnAllocateCb to
+     * carry resource private data of its own, separate from the
+     * per-allocation data.  This was the one thing this call lacked compared
+     * with the Vulkan path's D3DKMTCreateAllocation(CreateResource|
+     * CreateShared), which does supply it and is accepted for shareable
+     * blobs.  Without it pfnAllocateCb failed with E_INVALIDARG before the
+     * KMD's DxgkDdiCreateAllocation was even called (the KMD's "hostblob:"
+     * registry-log line never appeared).  The KMD ignores the contents. */
+    VIOGPU_CREATE_RESOURCE_EXCHANGE rx;
+    memset(&rx, 0, sizeof(rx));
+    rx.magic = 0x5254504eu; /* 'NPTR' */
+
     D3DDDICB_ALLOCATE cb;
     memset(&cb, 0, sizeof(cb));
+    cb.pPrivateDriverData    = &rx;
+    cb.PrivateDriverDataSize = sizeof(rx);
     cb.hResource        = r->hRTResource.handle;
     cb.NumAllocations   = 1;
     cb.pAllocationInfo2 = &ai;
 
     HRESULT hr = pD->KTCallbacks.pfnAllocateCb(pD->hRTDevice.handle, &cb);
     if (FAILED(hr) || !ai.hAllocation) {
-        TR_LOG("shared: pfnAllocateCb failed hr=0x%08lx", hr);
+        /* Everything the runtime/dxgkrnl validate on this call, so a failure
+         * that survives the fix names its culprit.  If the KMD log has no
+         * "createalloc:" line for this call, the rejection happened before
+         * DxgkDdiCreateAllocation (runtime/dxgkrnl front checks); if it has
+         * one, the KMD's own result is on that line. */
+        TR_LOG("shared: pfnAllocateCb failed hr=0x%08lx hKM=0x%x hAlloc=0x%x "
+               "hRTResource=%p resPrivSize=%u allocPrivSize=%u "
+               "primary=%d %ux%u dxgiFmt=%u misc=0x%x bind=0x%x usage=%u "
+               "blob_id=0x%llx ctx=%u allocation_size=%llu ax.Size=%llu",
+               (unsigned long)hr, cb.hKMResource, ai.hAllocation,
+               r->hRTResource.handle, (unsigned)cb.PrivateDriverDataSize,
+               (unsigned)ai.PrivateDriverDataSize, primary,
+               (unsigned)r->Width, (unsigned)r->Height, (unsigned)hostFmt,
+               d3d11Misc, d3d11Bind, d3d11Usage,
+               (unsigned long long)ax.OptionsShared.blob_id,
+               (unsigned)ax.OptionsShared.create_ctx_id,
+               (unsigned long long)ax.OptionsShared.allocation_size,
+               (unsigned long long)ax.Size);
         return FALSE;
     }
     r->hKMAllocation = ai.hAllocation;
