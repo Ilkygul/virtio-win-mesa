@@ -184,6 +184,8 @@ npt_upload_texture_initial_data(struct npt_device *dev,
 
 /* Shared post-Create for CreateTexture{1,2,3}D{,1}; only the desc-fill
  * differs.  out_resource=NULL = MSDN validation-only path. */
+static volatile LONG npt_fmt_init_trace_count;
+
 static void
 finish_create_texture(void *self,
                       const GUID *iid, void *raw,
@@ -197,6 +199,23 @@ finish_create_texture(void *self,
    }
    struct npt_device *dev = npt_com_self_device(self);
    const uint64_t raw_id  = (uint64_t)(uintptr_t)raw;
+
+   if (pInitialData && pInitialData[0].pSysMem && desc->width <= 1024 && desc->height <= 64 &&
+       desc->depth <= 1 && InterlockedIncrement(&npt_fmt_init_trace_count) <= 300) {
+      /* init-data trace (LUT / small textures, any format): FNV-1a 64 over the tight rows of sub 0,
+       * to compare with the host's "FMT host tex-update" line. */
+      const uint32_t rb = npt_dxgi_format_row_bytes(desc->format, desc->width);
+      const uint32_t rows = npt_dxgi_format_block_rows(desc->format, desc->height);
+      uint64_t h = 1469598103934665603ull; uint32_t nz = 0;
+      const uint8_t *p0 = (const uint8_t *)pInitialData[0].pSysMem;
+      for (uint32_t y = 0; y < rows && rb; y++)
+         for (uint32_t x = 0; x < rb; x++) { uint8_t v = p0[(uint64_t)y * pInitialData[0].SysMemPitch + x]; h ^= v; h *= 1099511628211ull; nz += v != 0; }
+      npt_log("FMT guest tex-init id=0x%llx fmt=%u %ux%u mips=%u arr=%u usage=%u bind=0x%x misc=0x%x "
+              "sysMemPitch=%u rowBytes=%u rows=%u tightFnv=%016llx nonzero=%u",
+              (unsigned long long)raw_id, (unsigned)desc->format, desc->width, desc->height,
+              desc->mip_levels, desc->array_size, (unsigned)desc->usage, desc->bind_flags, desc->misc_flags,
+              pInitialData[0].SysMemPitch, rb, rows, (unsigned long long)h, nz);
+   }
 
    if (pInitialData) {
       const uint32_t mips = npt_d3d11_texture_desc_mip_levels(desc);
