@@ -25,6 +25,11 @@ extern "C" {
 void tritonInstallDXGIFuncs(PTRITON_DEVICE pD,
                             const D3D10DDIARG_CREATEDEVICE *pArgs);
 
+/* Close the present-event table at device teardown (caller holds presentLock);
+ * returns the number of events left open because their GPU-completion
+ * registration is still outstanding. */
+UINT tritonPresentEventsDestroyLocked(PTRITON_DEVICE pD);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

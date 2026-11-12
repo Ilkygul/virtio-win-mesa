@@ -163,10 +163,21 @@ typedef struct TRITON_DEVICE {
      * shared auto-reset event releases only one waiter per signal, so one
      * present thread would consume another's completion and strand it until
      * the timeout. */
+/* Idle (reusable) events kept; surplus idle ones are closed.  Events with a
+ * SetEventOnCompletion registration still outstanding ("armed") are always
+ * kept in the table until the registration fires -- they cannot be closed
+ * (the fence would later signal a recycled handle value) and must not be
+ * dropped (that leaks the handle), so the table grows with them and is
+ * reaped on every push.  TRITON_PRESENT_EVENT_MAX bounds a pathological
+ * GPU stall. */
 #define TRITON_PRESENT_EVENT_POOL 8
-    HANDLE                          presentEventPool[TRITON_PRESENT_EVENT_POOL];
-    UINT                            presentEventPoolCount;
-    BOOL                            presentEventPoolArmed[TRITON_PRESENT_EVENT_POOL];
+#define TRITON_PRESENT_EVENT_MAX  1024
+    struct {
+       HANDLE h;
+       BOOL   armed;
+    }                              *presentEvents;   /* malloc'd, presentLock */
+    UINT                            presentEventCount;
+    UINT                            presentEventCap;
     /* Serialises the present-fence protocol and every use of the shared
      * internal immediate context (lazy fence init/teardown, the fence-value
      * increment, Signal/Flush, SetEventOnCompletion, the event pool): DWM

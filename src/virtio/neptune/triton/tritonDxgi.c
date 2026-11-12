@@ -18,6 +18,7 @@
 #include "tritonPresentTiming.h"
 #include "npt_shared_texture.h"   /* host format of a primary */
 
+#include <stdlib.h>
 #include <dxgiddi.h>
 
 #include "tritonBlitShaders.h"
@@ -65,6 +66,41 @@ tritonPresentEnsureFenceLocked(PTRITON_DEVICE pD)
    return TRUE;
 }
 
+/* An armed event whose registration has fired: the zero-timeout wait both
+ * tests that and drains the (auto-reset) signal, after which the event has
+ * no outstanding registration and is as good as idle. */
+static BOOL
+tritonPresentEventFired(HANDLE h)
+{
+   return WaitForSingleObject(h, 0) == WAIT_OBJECT_0;
+}
+
+/* Retire fired registrations and close surplus idle events (caller holds
+ * presentLock).  Armed events whose registration has not fired yet stay in
+ * the table: this is what keeps the table from leaking handles when dwm has
+ * more flips in flight than TRITON_PRESENT_EVENT_POOL -- they are picked up
+ * here once the GPU retires them, instead of being abandoned the moment the
+ * pool is full. */
+static void
+tritonPresentReapEvents(PTRITON_DEVICE pD)
+{
+   UINT idle = 0;
+   for (UINT i = 0; i < pD->presentEventCount;) {
+      if (pD->presentEvents[i].armed &&
+          tritonPresentEventFired(pD->presentEvents[i].h))
+         pD->presentEvents[i].armed = FALSE;
+      if (!pD->presentEvents[i].armed) {
+         if (idle >= TRITON_PRESENT_EVENT_POOL) {
+            CloseHandle(pD->presentEvents[i].h);
+            pD->presentEvents[i] = pD->presentEvents[--pD->presentEventCount];
+            continue;
+         }
+         idle++;
+      }
+      i++;
+   }
+}
+
 /* Pop a reusable auto-reset event for one GPU-done wait (caller holds
  * presentLock).  Every concurrent waiter takes its own event, for the reason
  * given with the pool in triton.h.  The KMD signals it (via npt_event's
@@ -77,18 +113,14 @@ tritonPresentPopEvent(PTRITON_DEVICE pD)
     * the old registration would wake a NEWER frame's wait early (the
     * black-frame bug).  Retirement is not judged by
     * ID3D11Fence_GetCompletedValue: that reads a periodically-published
-    * feedback copy that lags real completion, so the pop would create (and,
-    * once the pool fills, leak) a fresh event almost every frame. */
-   for (UINT i = 0; i < pD->presentEventPoolCount; i++) {
-      HANDLE h = pD->presentEventPool[i];
+    * feedback copy that lags real completion. */
+   for (UINT i = 0; i < pD->presentEventCount; i++) {
+      HANDLE h = pD->presentEvents[i].h;
       /* Reusable when no registration is outstanding (nothing can signal it
-       * spuriously), or when the outstanding one has already fired -- the
-       * WaitForSingleObject below both tests AND drains that signal. */
-      if (!pD->presentEventPoolArmed[i] ||
-          WaitForSingleObject(h, 0) == WAIT_OBJECT_0) {
-         UINT last = --pD->presentEventPoolCount;
-         pD->presentEventPool[i] = pD->presentEventPool[last];
-         pD->presentEventPoolArmed[i] = pD->presentEventPoolArmed[last];
+       * spuriously), or when the outstanding one has already fired. */
+      if (!pD->presentEvents[i].armed ||
+          tritonPresentEventFired(h)) {
+         pD->presentEvents[i] = pD->presentEvents[--pD->presentEventCount];
          return h;
       }
    }
@@ -109,24 +141,70 @@ tritonPresentDrainEvent(HANDLE hEvt)
 
 /* Return an event after use (caller holds presentLock).  armed: a
  * SetEventOnCompletion registration is still outstanding on this event, so
- * on pool overflow it must be leaked rather than closed — the fence could
- * otherwise later signal a recycled handle value. */
+ * it can only be closed once that registration has fired -- the fence could
+ * otherwise later signal a recycled handle value.  Such events are kept in
+ * the table and closed by tritonPresentReapEvents when they fire; nothing is
+ * abandoned unless the table cannot grow. */
 static void
 tritonPresentPushEvent(PTRITON_DEVICE pD, HANDLE hEvt, BOOL armed)
 {
    if (!hEvt)
       return;
-   if (pD->presentEventPoolCount < TRITON_PRESENT_EVENT_POOL) {
-      pD->presentEventPoolArmed[pD->presentEventPoolCount] = armed;
-      pD->presentEventPool[pD->presentEventPoolCount++] = hEvt;
-   } else if (!armed) {
-      CloseHandle(hEvt);
-   } else {
-      static LONG leakN;
-      LONG n = InterlockedIncrement(&leakN);
-      if (n == 1 || (n & 255) == 0)
-         TR_LOG("present-fence: event pool overflow on armed event #%ld (leaking)", n);
+   if (pD->presentEventCount == pD->presentEventCap) {
+      /* Make room by retiring what already fired before growing. */
+      tritonPresentReapEvents(pD);
    }
+   if (pD->presentEventCount == pD->presentEventCap) {
+      UINT ncap = pD->presentEventCap ? pD->presentEventCap * 2 : 2 * TRITON_PRESENT_EVENT_POOL;
+      void *p = NULL;
+      if (ncap <= TRITON_PRESENT_EVENT_MAX)
+         p = realloc(pD->presentEvents, ncap * sizeof(pD->presentEvents[0]));
+      if (!p) {
+         if (!armed) {
+            CloseHandle(hEvt);
+         } else {
+            /* Table cannot grow (MAX stalled registrations or no memory):
+             * the registration is still live, so the handle has to stay
+             * open.  Only reachable when the GPU stopped retiring fences. */
+            static LONG leakN;
+            LONG n = InterlockedIncrement(&leakN);
+            if (n == 1 || (n & 255) == 0)
+               TR_LOG("present-fence: event table full (%u armed events), leaking armed event #%ld",
+                      pD->presentEventCount, n);
+         }
+         return;
+      }
+      pD->presentEvents = p;
+      pD->presentEventCap = ncap;
+   }
+   pD->presentEvents[pD->presentEventCount].h = hEvt;
+   pD->presentEvents[pD->presentEventCount].armed = armed;
+   pD->presentEventCount++;
+   tritonPresentReapEvents(pD);
+}
+
+/* Tear the event table down (caller holds presentLock): idle and fired
+ * events are closed; an event whose registration is still outstanding is
+ * left open on purpose.  SetEventOnCompletion is serviced by npt_event's
+ * waiter thread, which belongs to the process-wide device singleton and
+ * outlives this Triton device, and releasing the fence does not reach it;
+ * closing the handle would let that waiter signal whatever object later
+ * inherits the handle value.  Returns the number left open. */
+UINT
+tritonPresentEventsDestroyLocked(PTRITON_DEVICE pD)
+{
+   UINT leaked = 0;
+   for (UINT i = 0; i < pD->presentEventCount; i++) {
+      if (pD->presentEvents[i].armed &&
+          !tritonPresentEventFired(pD->presentEvents[i].h))
+         leaked++;
+      else
+         CloseHandle(pD->presentEvents[i].h);
+   }
+   free(pD->presentEvents);
+   pD->presentEvents = NULL;
+   pD->presentEventCount = pD->presentEventCap = 0;
+   return leaked;
 }
 
 /* Take/drop presentLock where the caller tolerates it not existing yet: the

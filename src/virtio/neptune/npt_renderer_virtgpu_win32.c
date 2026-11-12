@@ -469,6 +469,31 @@ static NTSTATUS
 virtgpu_resource_destroy_blob(struct npt_virtgpu *gpu,
                              D3DKMT_HANDLE alloc, D3DKMT_HANDLE res_kmt);
 
+/* Statuses the KMD's RES_INFO escape returns when the host map of a
+ * VENUS_HOST-pool blob fails.  They are told apart on purpose: a full pool
+ * is a capacity problem, a missing map-response a transport problem. */
+#define VGW32_STATUS_DEVICE_NOT_READY        ((NTSTATUS)0xC00000A3L)
+#define VGW32_STATUS_INSUFFICIENT_RESOURCES  ((NTSTATUS)0xC000009AL)
+#define VGW32_STATUS_IO_TIMEOUT              ((NTSTATUS)0xC00000B5L)
+#define VGW32_STATUS_DEVICE_PROTOCOL_ERROR   ((NTSTATUS)0xC000038DL)
+
+static const char *
+virtgpu_status_hint(NTSTATUS status)
+{
+   switch (status) {
+   case VGW32_STATUS_DEVICE_NOT_READY:
+      return "host map-response missing (map command not delivered)";
+   case VGW32_STATUS_INSUFFICIENT_RESOURCES:
+      return "host VENUS_HOST pool full";
+   case VGW32_STATUS_IO_TIMEOUT:
+      return "host did not answer the map within 10 s";
+   case VGW32_STATUS_DEVICE_PROTOCOL_ERROR:
+      return "host rejected the map / unusable pool window";
+   default:
+      return "see KMD registry log (venuspool:)";
+   }
+}
+
 /* Create a virtio blob via D3DKMTCreateAllocation, look up the host
  * res_id via the RES_INFO escape, and (for mappable blobs) issue the
  * MAP_BLOB ring command so the kernel maps the host backing into the
@@ -552,10 +577,23 @@ virtgpu_resource_create_blob(struct npt_virtgpu *gpu, uint32_t blob_mem,
     * legitimately still be pending.  Retry briefly instead of failing the
     * whole device create, which otherwise fails nondeterministically
     * with "failed to create ring". */
+   int not_ready = 0;
    for (int attempt = 0;; attempt++) {
       status = virtgpu_escape(gpu, &res_info);
+      if (status == VGW32_STATUS_DEVICE_NOT_READY && not_ready < 5) {
+         /* The KMD already retried the host map for ~3 s before giving up
+          * with DEVICE_NOT_READY (map command not delivered / no response);
+          * one more short round covers a ring that was momentarily jammed. */
+         if (not_ready == 0)
+            npt_log("virtgpu: RES_INFO 0x%lx (%s) -- retrying", status,
+                    virtgpu_status_hint(status));
+         Sleep(10u << not_ready++);
+         continue;
+      }
       if (!NT_SUCCESS(status)) {
-         npt_log("virtgpu: RES_INFO escape failed 0x%lx", status);
+         npt_log("virtgpu: RES_INFO escape failed 0x%lx: %s (blob %zu bytes, "
+                 "mem=%u flags=0x%x)", status, virtgpu_status_hint(status),
+                 blob_size, blob_mem, blob_flags);
          goto fail_destroy;
       }
       if (res_info.ResourceInfo.IsBlob && res_info.ResourceInfo.IsCreated)
@@ -737,8 +775,9 @@ npt_vgw32_shmem_create(struct npt_renderer *r, size_t size)
       gpu, VIOGPU_BLOB_MEM_HOST3D, flags,
       alloc_size, 0, &res_id, &alloc, &res_kmt, &kmd_va, &cookie);
    if (!NT_SUCCESS(status)) {
-      npt_log("virtgpu: shmem create (%zu bytes%s) failed 0x%lx", alloc_size,
-              gpu->shmem_guest_vram ? ", guest-vram" : "", status);
+      npt_log("virtgpu: shmem create (%zu bytes%s) failed 0x%lx: %s", alloc_size,
+              gpu->shmem_guest_vram ? ", guest-vram" : "", status,
+              virtgpu_status_hint(status));
       return NULL;
    }
 

@@ -717,14 +717,13 @@ static void APIENTRY tritonDestroyDevice(D3D10DDI_HDEVICE hDevice)
         if (p->pBlitPS)      { ID3D11PixelShader_Release(p->pBlitPS);       p->pBlitPS = NULL; }
         if (p->pBlitSampler) { ID3D11SamplerState_Release(p->pBlitSampler); p->pBlitSampler = NULL; }
         if (p->pBlitCB)      { ID3D11Buffer_Release(p->pBlitCB);            p->pBlitCB = NULL; }
-        /* Drop the pooled events without closing them.  A pooled event can
-         * still carry an outstanding arm: SetEventOnCompletion is serviced by
-         * npt_event's waiter thread, which belongs to the process-wide device
-         * singleton and outlives this Triton device, and releasing the fence
-         * does not reach it.  Closing the handle would let that waiter signal
-         * whatever object later inherits the handle value.  The leak is
-         * bounded to TRITON_PRESENT_EVENT_POOL handles per device teardown. */
-        p->presentEventPoolCount = 0;
+        /* Close the pooled events; any still carrying an outstanding arm stay
+         * open (see tritonPresentEventsDestroyLocked). */
+        {
+            UINT leaked = tritonPresentEventsDestroyLocked(p);
+            if (leaked)
+                TR_LOG("DestroyDevice: %u present events left open (registration outstanding)", leaked);
+        }
         LeaveCriticalSection(&p->presentLock);
         DeleteCriticalSection(&p->presentLock);
         DeleteCriticalSection(&p->kmCtxLock);
