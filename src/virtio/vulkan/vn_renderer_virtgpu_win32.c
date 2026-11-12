@@ -1355,6 +1355,39 @@ virtgpu_find_adapter(struct virtgpu *gpu)
          return VK_SUCCESS;
       }
    }
+
+   /* pVM / headless: the display path may be inactive (no HDC to open, e.g. a black or detached
+    * desktop, or a service session). Enumerate every WDDM adapter and take the one whose KMD
+    * answers the viogpu private query. */
+   typedef NTSTATUS(APIENTRY * PFN_ENUM2)(D3DKMT_ENUMADAPTERS2 *);
+   PFN_ENUM2 enum2 = (PFN_ENUM2)GetProcAddress(gpu->d3dkmt.lib, "D3DKMTEnumAdapters2");
+   if (enum2 != NULL) {
+      D3DKMT_ENUMADAPTERS2 e = { 0 };
+      if (NT_SUCCESS(enum2(&e)) && e.NumAdapters > 0) {
+         D3DKMT_ADAPTERINFO *list = calloc(e.NumAdapters, sizeof(*list));
+         e.pAdapters = list;
+         if (list != NULL && NT_SUCCESS(enum2(&e))) {
+            for (ULONG i = 0; i < e.NumAdapters; i++) {
+               VIOGPU_ADAPTERINFO probe = { 0 };
+               D3DKMT_QUERYADAPTERINFO q = {
+                  .hAdapter = list[i].hAdapter,
+                  .Type = KMTQAITYPE_UMDRIVERPRIVATE,
+                  .pPrivateDriverData = &probe,
+                  .PrivateDriverDataSize = sizeof(probe),
+               };
+               if (NT_SUCCESS(gpu->d3dkmt.cb.queryAdapterInfo(&q)) &&
+                   probe.IamVioGPU == VIOGPU_IAM) {
+                  gpu->d3dkmt.adapter = list[i].hAdapter;
+                  gpu->d3dkmt.luid = list[i].AdapterLuid;
+                  vn_log(gpu->instance, "pvm: using adapter %lu from D3DKMTEnumAdapters2", i);
+                  free(list);
+                  return VK_SUCCESS;
+               }
+            }
+         }
+         free(list);
+      }
+   }
    return VK_ERROR_INCOMPATIBLE_DRIVER;
 }
 
