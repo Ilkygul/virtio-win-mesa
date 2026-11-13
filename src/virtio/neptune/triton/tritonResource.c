@@ -52,6 +52,42 @@ void tritonSyncShared(PTRITON_DEVICE pD, const char *why)
                (long)k, why, (unsigned long)(GetTickCount() - t0), (unsigned)seqno);
 }
 
+
+static void tritonWaitHostNow(PTRITON_DEVICE pD, const char *op, BOOL perWrite)
+{
+    if (!pD || !pD->pCtx1) return;
+    UINT32 seqno = 0;
+    struct npt_ring *ring = npt_com_object_ring_seqno(pD->pCtx1, &seqno);
+    if (!ring) return;
+    const DWORD t0 = GetTickCount();
+    npt_ring_wait_seqno(ring, seqno);
+    static volatile LONG n;
+    LONG k = InterlockedIncrement(&n);
+    if (k <= 40 || (k % 2000) == 0) {
+        char exe[MAX_PATH] = "?";
+        GetModuleFileNameA(NULL, exe, sizeof(exe));
+        const char *base = strrchr(exe, '\\'); base = base ? base + 1 : exe;
+        TR_LOG("SYNC write #%ld process=%s op=%s%s waited %lu ms (ring seqno %u)", (long)k, base, op,
+               perWrite ? "" : " (flush)", (unsigned long)(GetTickCount() - t0), (unsigned)seqno);
+    }
+}
+
+void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pRes, const char *op)
+{
+    const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+    if (!pD) return;
+    if (pRes && !(r->IsShared || r->IsPresentable || r->pPresentCompanion)) return;
+    if (tritonSwitch("triton-nosharedwritesync")) return;
+    tritonWaitHostNow(pD, op, TRUE);
+    InterlockedExchange(&pD->SharedDirty, 0);
+}
+
+void tritonSharedDrawDone(PTRITON_DEVICE pD, const char *op)
+{
+    if (!pD || !pD->OmShared) return;
+    tritonSharedWriteDone(pD, NULL, op);
+}
+
 TR_CALC_PRIVATE_SIZE(tritonCalcPrivateResourceSize, TRITON_RESOURCE,
                      const D3D11DDIARG_CREATERESOURCE *pArgs)
 
@@ -888,6 +924,7 @@ tritonResourceUpdateSubresourceUP(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE h
     ID3D11DeviceContext1_UpdateSubresource(
         pD->pCtx1, r->pResource, DstSubresource,
         (const D3D11_BOX *)(pDstBox), pSrc, SrcRowPitch, SrcDepthPitch);
+    tritonSharedWriteDone(pD, r, "UpdateSubresource");
 }
 
 void APIENTRY
@@ -909,6 +946,7 @@ tritonResourceUpdateSubresourceUP_11_1(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOU
     ID3D11DeviceContext1_UpdateSubresource1(
         pD->pCtx1, r->pResource, DstSubresource,
         (const D3D11_BOX *)(pDstBox), pSrc, SrcRowPitch, SrcDepthPitch, CopyFlags);
+    tritonSharedWriteDone(pD, r, "UpdateSubresource1");
 }
 
 void APIENTRY
@@ -926,6 +964,7 @@ tritonResourceCopy(D3D10DDI_HDEVICE hDevice,
                    (UINT)s->Format, (UINT)s->Width, (UINT)s->Height, (int)s->IsShared,
                    d->Format != s->Format ? " FORMAT-MISMATCH" : "");
     ID3D11DeviceContext1_CopyResource(pD->pCtx1, d->pResource, s->pResource);
+    tritonSharedWriteDone(pD, d, "CopyResource");
 }
 
 void APIENTRY
@@ -948,6 +987,7 @@ tritonResourceCopyRegion(D3D10DDI_HDEVICE hDevice,
     ID3D11DeviceContext1_CopySubresourceRegion(
         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox));
+    tritonSharedWriteDone(pD, d, "CopySubresourceRegion");
 }
 
 void APIENTRY
@@ -970,6 +1010,7 @@ tritonResourceCopyRegion_11_1(D3D10DDI_HDEVICE hDevice,
     ID3D11DeviceContext1_CopySubresourceRegion1(
         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox), CopyFlags);
+    tritonSharedWriteDone(pD, d, "CopySubresourceRegion1");
 }
 
 void APIENTRY
@@ -985,6 +1026,7 @@ tritonResourceResolveSubresource(D3D10DDI_HDEVICE hDevice,
     tritonMarkSharedWrite(pD, d);
     ID3D11DeviceContext1_ResolveSubresource(
         pD->pCtx1, d->pResource, DstSubresource, s->pResource, SrcSubresource, Format);
+    tritonSharedWriteDone(pD, d, "ResolveSubresource");
 }
 
 /* D3D11 tracks hazards on the immediate context; nothing to do here. */

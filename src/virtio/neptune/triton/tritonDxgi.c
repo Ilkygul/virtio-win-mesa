@@ -1189,7 +1189,7 @@ tritonDxgiBltStretch(PTRITON_DEVICE pD,
 /* Shared body for Blt and Blt1.  Blt has no explicit source rectangle
  * (the whole source subresource is the implied src); Blt1 passes one. */
 static HRESULT
-tritonDxgiBltCommon(DXGI_DDI_HDEVICE hDevice,
+tritonDxgiBltCommon0(DXGI_DDI_HDEVICE hDevice,
                     DXGI_DDI_HRESOURCE hDst, UINT DstSubresource,
                     UINT DstLeft, UINT DstTop, UINT DstRight, UINT DstBottom,
                     DXGI_DDI_HRESOURCE hSrc, UINT SrcSubresource,
@@ -1286,6 +1286,22 @@ tritonDxgiBltCommon(DXGI_DDI_HDEVICE hDevice,
       tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */);
    InterlockedDecrement(&pD->presentInFlight);
    return S_OK;
+}
+
+
+/* Blt writes to the destination (often a shared surface dwm consumes): hand off synchronously. */
+static HRESULT
+tritonDxgiBltCommon(DXGI_DDI_HDEVICE hDevice,
+                    DXGI_DDI_HRESOURCE hDst, UINT DstSubresource,
+                    UINT DstLeft, UINT DstTop, UINT DstRight, UINT DstBottom,
+                    DXGI_DDI_HRESOURCE hSrc, UINT SrcSubresource,
+                    UINT SrcLeft, UINT SrcTop, UINT SrcRight, UINT SrcBottom,
+                    DXGI_DDI_ARG_BLT_FLAGS Flags)
+{
+   HRESULT hr = tritonDxgiBltCommon0(hDevice, hDst, DstSubresource, DstLeft, DstTop, DstRight, DstBottom,
+                                     hSrc, SrcSubresource, SrcLeft, SrcTop, SrcRight, SrcBottom, Flags);
+   tritonSharedWriteDone((PTRITON_DEVICE)(uintptr_t)hDevice, (const void *)(uintptr_t)hDst, "DxgiBlt");
+   return hr;
 }
 
 static HRESULT APIENTRY

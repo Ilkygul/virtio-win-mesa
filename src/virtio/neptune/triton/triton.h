@@ -527,4 +527,10 @@ struct _TRITON_RESOURCE_FWD;
 void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE */);
 void tritonSyncShared(PTRITON_DEVICE pD, const char *why);
 
+
+/* Per-write hand-off: right after a shared write, wait (ring seqno) until the host has executed it (and, with the host's
+ * NPT_SHARED_DRAW_SYNC, until the GPU finished).  File C:\\Users\\Public\\triton-nosharedwritesync disables it. */
+void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE, NULL = unconditional */, const char *op);
+void tritonSharedDrawDone(PTRITON_DEVICE pD, const char *op);
+
 #endif /* TRITON_H_INCLUDED */

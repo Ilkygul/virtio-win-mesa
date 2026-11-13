@@ -292,6 +292,7 @@ tritonClearRenderTargetView(D3D10DDI_HDEVICE hDevice,
     if (!pD || !v || !v->pRTV) return;
     tritonMarkSharedWrite(pD, v->pResource);
     ID3D11DeviceContext1_ClearRenderTargetView(pD->pCtx1, v->pRTV, color);
+    tritonSharedWriteDone(pD, v->pResource, "ClearRenderTargetView");
 }
 
 void APIENTRY
@@ -821,6 +822,7 @@ tritonClearUAVUint(D3D10DDI_HDEVICE hDevice, D3D11DDI_HUNORDEREDACCESSVIEW hUAV,
     if (!pD || !v || !v->pUAV) return;
     tritonMarkSharedWrite(pD, v->pResource);
     ID3D11DeviceContext1_ClearUnorderedAccessViewUint(pD->pCtx1, v->pUAV, Values);
+    tritonSharedWriteDone(pD, v->pResource, "ClearUAVUint");
 }
 
 void APIENTRY
@@ -832,6 +834,7 @@ tritonClearUAVFloat(D3D10DDI_HDEVICE hDevice, D3D11DDI_HUNORDEREDACCESSVIEW hUAV
     if (!pD || !v || !v->pUAV) return;
     tritonMarkSharedWrite(pD, v->pResource);
     ID3D11DeviceContext1_ClearUnorderedAccessViewFloat(pD->pCtx1, v->pUAV, Values);
+    tritonSharedWriteDone(pD, v->pResource, "ClearUAVFloat");
 }
 
 void APIENTRY
@@ -902,6 +905,7 @@ tritonGenerateMips(D3D10DDI_HDEVICE hDevice, D3D10DDI_HSHADERRESOURCEVIEW hSRV)
     PTRITON_SRVIEW v  = (PTRITON_SRVIEW)(hSRV.pDrvPrivate);
     if (!pD || !v || !v->pSRV) return;
     ID3D11DeviceContext1_GenerateMips(pD->pCtx1, v->pSRV);
+    tritonSharedWriteDone(pD, v->pResource, "GenerateMips");
 }
 
 /* ---------- WDDM 2.0 view sizes (creates are above) ---------- */

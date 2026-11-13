@@ -738,6 +738,13 @@ tritonClearView(D3D10DDI_HDEVICE hDevice, D3D11DDI_HANDLETYPE HandleType,
     if (pView) {
         ID3D11DeviceContext1_ClearView(pD->pCtx1, pView, Color,
                                        (const D3D11_RECT *)(pRect), NumRects);
+
+        {
+            PTRITON_RESOURCE rr = NULL;
+            if (HandleType == D3D10DDI_HT_RENDERTARGETVIEW) rr = ((PTRITON_RTVIEW)hView)->pResource;
+            else if (HandleType == D3D11DDI_HT_UNORDEREDACCESSVIEW) rr = ((PTRITON_UAVIEW)hView)->pResource;
+            tritonSharedWriteDone(pD, rr, "ClearView");
+        }
     }
 }
 
