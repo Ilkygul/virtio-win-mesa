@@ -73,12 +73,34 @@ static void tritonWaitHostNow(PTRITON_DEVICE pD, const char *op, BOOL perWrite)
     }
 }
 
+/* dwm is the CONSUMER of the shared surfaces the per-write hand-off protects.  Its own writes go to its swapchain
+ * back buffers, which reach the screen only through Present: that keeps one hand-off per frame (SharedDirty stays
+ * set below, so tritonSyncShared waits at Present/Flush), and the KMD scans a flip out only after its present-fence
+ * token retired.  A host round trip after EVERY dwm draw (~1.6 ms each, 8-10 per frame) made a composition take
+ * 14-17 ms, so every other flip missed its vsync: the VM showed 30 fps while apps rendered 60.  File
+ * C:\Users\Public\triton-dwmwritesync turns the per-write wait back on for dwm. */
+static BOOL tritonProcessIsDwm(void)
+{
+    static volatile LONG state; /* 0 = unknown, 1 = no, 2 = yes */
+    LONG s = state;
+    if (!s) {
+        char path[MAX_PATH];
+        DWORD n = GetModuleFileNameA(NULL, path, sizeof(path));
+        const char *exe = (n && n < sizeof(path)) ? strrchr(path, '\\') : NULL;
+        exe = exe ? exe + 1 : path;
+        s = (n && n < sizeof(path) && !_stricmp(exe, "dwm.exe")) ? 2 : 1;
+        InterlockedExchange(&state, s);
+    }
+    return s == 2;
+}
+
 void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pRes, const char *op)
 {
     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
     if (!pD) return;
     if (pRes && !(r->IsShared || r->IsPresentable || r->pPresentCompanion)) return;
     if (tritonSwitch("triton-nosharedwritesync")) return;
+    if (tritonProcessIsDwm() && !tritonSwitch("triton-dwmwritesync")) return;
     tritonWaitHostNow(pD, op, TRUE);
     InterlockedExchange(&pD->SharedDirty, 0);
 }
