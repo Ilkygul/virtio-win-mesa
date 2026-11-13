@@ -12,6 +12,8 @@
  */
 
 #include "triton.h"
+#include <stdio.h>
+#include <string.h>
 #include "triton_log.h"
 /* npt_log for the DestroyDevice drain timeout: unbuffered WriteFile, so the
  * report survives a run with no debugger attached and output redirected. */
@@ -1283,11 +1285,57 @@ static HRESULT APIENTRY tritonGetCaps(D3D10DDI_HADAPTER hAdapter,
 
 /* ---------- OpenAdapter10_2 ---------- */
 
+/* Shell processes whose D2D/DirectWrite text races on shared surfaces with
+ * dwm (white boxes in the taskbar/Start).  Refusing the hardware adapter
+ * makes them fall back to WARP, which renders their few small surfaces
+ * correctly; dwm and applications stay on the GPU.  The list can be
+ * replaced with C:\Users\Public\triton-warp.txt (one exe name per line);
+ * C:\Users\Public\triton-nowarp disables the fallback entirely. */
+static const char *const tritonWarpDefault[] = {
+    "explorer.exe", "shellhost.exe", "startmenuexperiencehost.exe",
+    "searchhost.exe", "textinputhost.exe", "shellexperiencehost.exe",
+    "lockapp.exe", "logonui.exe", NULL,
+};
+
+static BOOL tritonProcessWantsWarp(void)
+{
+    if (GetFileAttributesA("C:\\Users\\Public\\triton-nowarp") != INVALID_FILE_ATTRIBUTES)
+        return FALSE;
+
+    char path[MAX_PATH];
+    DWORD n = GetModuleFileNameA(NULL, path, sizeof(path));
+    if (!n || n >= sizeof(path)) return FALSE;
+    const char *exe = strrchr(path, '\\');
+    exe = exe ? exe + 1 : path;
+
+    FILE *f = NULL;
+    if (fopen_s(&f, "C:\\Users\\Public\\triton-warp.txt", "r") == 0 && f) {
+        char line[MAX_PATH];
+        BOOL hit = FALSE;
+        while (!hit && fgets(line, sizeof(line), f)) {
+            size_t l = strlen(line);
+            while (l && (line[l - 1] == '\n' || line[l - 1] == '\r' || line[l - 1] == ' '))
+                line[--l] = 0;
+            if (l && !_stricmp(line, exe)) hit = TRUE;
+        }
+        fclose(f);
+        return hit;
+    }
+    for (int i = 0; tritonWarpDefault[i]; i++)
+        if (!_stricmp(tritonWarpDefault[i], exe)) return TRUE;
+    return FALSE;
+}
+
 __declspec(dllexport)
 HRESULT APIENTRY OpenAdapter10_2(D3D10DDIARG_OPENADAPTER *pOpenData)
 {
     TR_LOG("OpenAdapter10_2: Interface=0x%08x Version=0x%08x",
            pOpenData->Interface, pOpenData->Version);
+
+    if (tritonProcessWantsWarp()) {
+        TR_LOG("OpenAdapter10_2: shell process on the WARP list, refusing the hardware adapter");
+        return E_FAIL;
+    }
 
     PTRITON_ADAPTER pAdapter = (PTRITON_ADAPTER)(
         HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(TRITON_ADAPTER)));
