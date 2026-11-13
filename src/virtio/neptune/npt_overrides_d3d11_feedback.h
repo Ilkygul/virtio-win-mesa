@@ -43,6 +43,9 @@ struct npt_d3d11_query_aux {
     * an earlier End sees a mismatch and returns S_FALSE. */
    _Atomic uint32_t local_version;
 
+   /* Diagnosis: consecutive not-ready GetData calls for the current End. */
+   uint32_t diag_notready;
+
    /* local_version for which a not-ready GetData without DONOTFLUSH has
     * already sent the host its (reply-less) GetData, i.e. the flush the
     * flag asks for.  One per End, however often the app polls. */

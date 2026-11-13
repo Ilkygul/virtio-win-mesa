@@ -19,6 +19,8 @@
 
 #include "neptune-protocol/npt_protocol_client_id3d11devicecontext.h"
 #include "neptune-protocol/npt_protocol_guest_id3d11devicecontext.h"
+#include "neptune-protocol/npt_protocol_client_id3d11videocontext.h"
+#include "neptune-protocol/npt_protocol_guest_id3d11videocontext.h"
 
 static const GUID *const context_tiers[] = {
    &NPT_IID_ID3D11DeviceContext,  &NPT_IID_ID3D11DeviceContext1,
@@ -788,6 +790,7 @@ ctx_GetData_override(void *self, ID3D11Asynchronous *pAsync, void *pData,
       atomic_load_explicit(&aux->local_version, memory_order_relaxed);
 
    if (flag == NPT_QUERY_FEEDBACK_FLAG_READY && version == expected) {
+      aux->diag_notready = 0;
       if (pData && DataSize) {
          const UINT copy = DataSize <= aux->query_data_size ?
                            DataSize : aux->query_data_size;
@@ -795,6 +798,14 @@ ctx_GetData_override(void *self, ID3D11Asynchronous *pAsync, void *pData,
       }
       return NPT_S_OK;
    }
+
+   /* Diagnosis: a query polled many times without becoming ready. */
+   if (++aux->diag_notready == 600 || aux->diag_notready % 60000 == 0)
+      npt_log("query %p not ready after %u GetData: slot flag %u version %u, "
+              "expected %u, flushed %u, flags 0x%x, registered %d",
+              pAsync, aux->diag_notready, flag, version, expected,
+              atomic_load_explicit(&aux->flushed_version, memory_order_relaxed),
+              GetDataFlags, (int)aux->base.registered);
 
    /* Not ready.  DONOTFLUSH: caller polls; S_FALSE locally.  Without
     * it the spec lets GetData flush the immediate context, and S_FALSE
@@ -844,9 +855,31 @@ ctx_UpdateSubresource1_override(void *self, ID3D11Resource *pDstResource,
                                   SrcDepthPitch);
 }
 
+/* Triton's inline decoder-buffer submit (DecoderExtension function 'NPVD',
+ * input blob only): send it async.  The generated default is a call with a
+ * reply, which made the app's decode thread wait for a ring round trip --
+ * and behind the host still decoding the previous frame -- every frame.
+ * The blob is copied into the ring command, so the caller may reuse it. */
+static APP_DEPRECATED_HRESULT NPT_STDMETHODCALLTYPE
+vctx_DecoderExtension_override(void *self, ID3D11VideoDecoder *pDecoder,
+                               const D3D11_VIDEO_DECODER_EXTENSION *pExt)
+{
+   if (pExt && pExt->Function == 0x4e505644u /* 'NPVD' */ &&
+       !pExt->pPrivateOutputData && !pExt->PrivateOutputDataSize &&
+       !pExt->ResourceCount) {
+      npt_async_ID3D11VideoContext_DecoderExtension(npt_com_self_ring(self),
+                                                    npt_com_self_id(self),
+                                                    pDecoder, pExt);
+      return (APP_DEPRECATED_HRESULT)0 /* S_OK */;
+   }
+   return npt_id3d11videocontext_default_DecoderExtension(self, pDecoder, pExt);
+}
+
 void
 npt_overrides_d3d11_context_init(void)
 {
+   NPT_REGISTER_OVERRIDE(id3d11videocontext, DecoderExtension,
+                                             vctx_DecoderExtension_override);
    NPT_REGISTER_OVERRIDE(id3d11devicecontext, Map,   ctx_Map_override);
    NPT_REGISTER_OVERRIDE(id3d11devicecontext, Unmap, ctx_Unmap_override);
    NPT_REGISTER_OVERRIDE(id3d11devicecontext, UpdateSubresource,
