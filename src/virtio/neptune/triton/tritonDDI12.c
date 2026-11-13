@@ -663,6 +663,7 @@ triton12GetCaps(D3D12DDI_HADAPTER hAdapter, const D3D12DDIARG_GETCAPS *pArgs)
              * d3d12-minprec-test (host). */
             CAP12_HOST("SHADER.MinPrecision", pCaps->MinPrecision, OPTIONS,
                        hc->options.MinPrecisionSupport);
+            if (!tritonSwitch("triton-minprec")) pCaps->MinPrecision = 0; /* see tritonDDI.c: fp16 paths break shell text */
             CAP12_HOST("SHADER.Doubles", pCaps->Doubles, OPTIONS,
                        hc->options.DoublePrecisionFloatShaderOps);
             CAP12_HOST("SHADER.ShaderSpecifiedStencilRef",

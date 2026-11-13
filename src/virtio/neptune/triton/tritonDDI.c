@@ -1156,7 +1156,11 @@ static HRESULT APIENTRY tritonGetCaps(D3D10DDI_HADAPTER hAdapter,
                    MINPREC, hc->minPrec.PixelShaderMinPrecision);
         CAP11_HOST("SHADER_MIN_PRECISION.AllOtherStages", pCaps->AllOtherStagesMinPrecision,
                    MINPREC, hc->minPrec.AllOtherShaderStagesMinPrecision);
-        if (tritonSwitch("triton-nominprec")) { pCaps->PixelShaderMinPrecision = 0; pCaps->AllOtherStagesMinPrecision = 0; }
+        /* Min-precision shaders (min16float -> fp16 SV_Target) render D2D/
+         * DirectWrite text and shell masks as solid white boxes on the
+         * DXVK/Turnip host.  Report none so the runtime promotes them to
+         * fp32; C:\Users\Public\triton-minprec opts back in for testing. */
+        if (!tritonSwitch("triton-minprec")) { pCaps->PixelShaderMinPrecision = 0; pCaps->AllOtherStagesMinPrecision = 0; }
         break;
     }
     case D3D11DDICAPS_3DPIPELINESUPPORT: {

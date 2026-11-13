@@ -511,7 +511,7 @@ void tritonResourceSyncPresentCompanion(PTRITON_DEVICE pD, PTRITON_RESOURCE r);
  *   triton-nor8rt    R8_UNORM reports no RENDER_TARGET / BLENDABLE / MULTISAMPLE_RENDERTARGET
  *   triton-noa8      A8_UNORM reports no support at all (CreateResource refuses it)
  *   triton-tbdr      ARCHITECTURE_INFO.TileBasedDeferredRenderer = TRUE (D3D11 and D3D12)
- *   triton-nominprec shader minimum precision = none (runtime promotes min16float to fp32)
+ *   triton-minprec   opt back IN to min-precision (fp16) shaders; default is none (fp32), fp16 breaks shell text
  * Default (no file) = current behaviour. */
 BOOL tritonSwitch(const char *name);
 
