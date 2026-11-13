@@ -1139,6 +1139,7 @@ static HRESULT APIENTRY tritonGetCaps(D3D10DDI_HADAPTER hAdapter,
         TRITON_CAP_TODO("d3d11", "ARCHITECTURE_INFO.TileBasedDeferredRenderer",
                         pCaps->TileBasedDeferredRenderer, TRUE, hostTbdr, FALSE,
                         "validate tile-deferred D2D/DWM/XAML paths before reporting TRUE");
+        if (tritonSwitch("triton-tbdr")) pCaps->TileBasedDeferredRenderer = TRUE;
         break;
     }
     case D3D11_1DDICAPS_SHADER_MIN_PRECISION_SUPPORT: {
@@ -1155,6 +1156,7 @@ static HRESULT APIENTRY tritonGetCaps(D3D10DDI_HADAPTER hAdapter,
                    MINPREC, hc->minPrec.PixelShaderMinPrecision);
         CAP11_HOST("SHADER_MIN_PRECISION.AllOtherStages", pCaps->AllOtherStagesMinPrecision,
                    MINPREC, hc->minPrec.AllOtherShaderStagesMinPrecision);
+        if (tritonSwitch("triton-nominprec")) { pCaps->PixelShaderMinPrecision = 0; pCaps->AllOtherStagesMinPrecision = 0; }
         break;
     }
     case D3D11DDICAPS_3DPIPELINESUPPORT: {

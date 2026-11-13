@@ -448,6 +448,32 @@ static UINT tritonMsaaFamilyQuality(PTRITON_DEVICE pD, DXGI_FORMAT Format,
     return famMax;
 }
 
+
+/* ---------- experiment switches (see triton.h) ---------- */
+#define TRITON_SWITCH_MAX 8
+BOOL tritonSwitch(const char *name)
+{
+    static struct { char name[32]; volatile LONG state; volatile LONG tick; volatile LONG logged; } sw[TRITON_SWITCH_MAX];
+    int slot = -1;
+    for (int i = 0; i < TRITON_SWITCH_MAX; i++) {
+        if (sw[i].name[0] && !strcmp(sw[i].name, name)) { slot = i; break; }
+        if (!sw[i].name[0] && slot < 0) slot = i;
+    }
+    if (slot < 0) return FALSE;
+    if (!sw[slot].name[0]) strncpy_s(sw[slot].name, sizeof(sw[slot].name), name, _TRUNCATE);
+    const LONG now = (LONG)GetTickCount();
+    if (sw[slot].tick == 0 || (now - sw[slot].tick) > 5000) {
+        char path[MAX_PATH];
+        _snprintf_s(path, sizeof(path), _TRUNCATE, "C:\\Users\\Public\\%s", name);
+        const BOOL on = GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+        sw[slot].state = on;
+        sw[slot].tick = now ? now : 1;
+        if (on && !InterlockedExchange(&sw[slot].logged, 1))
+            TR_LOG("SWITCH %s is ON (C:\\Users\\Public\\%s exists)", name, name);
+    }
+    return sw[slot].state != 0;
+}
+
 static UINT tritonTranslateFormatSupport(UINT s1, UINT s2)
 {
     UINT caps = 0;
@@ -584,6 +610,14 @@ tritonCheckFormatSupport(D3D10DDI_HDEVICE hDevice, DXGI_FORMAT Format, UINT *pOu
 
     TR_LOG_HOT("CheckFormatSupport fmt=%u -> ddi=0x%08x (host s1=0x%08x s2=0x%08x)",
            (UINT)Format, *pOut, s1, s2);
+    /* Experiment switches (triton.h). */
+    if (Format == DXGI_FORMAT_A8_UNORM && tritonSwitch("triton-noa8")) {
+        *pOut = 0;
+    } else if ((Format == DXGI_FORMAT_A8_UNORM && tritonSwitch("triton-noa8rt")) ||
+               (Format == DXGI_FORMAT_R8_UNORM && tritonSwitch("triton-nor8rt"))) {
+        *pOut &= ~(UINT)(D3D10_DDI_FORMAT_SUPPORT_RENDERTARGET | D3D10_DDI_FORMAT_SUPPORT_BLENDABLE |
+                         D3D10_DDI_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET);
+    }
     if (answered && (UINT)Format < 256u)
         InterlockedExchange64(&s_fmtCache[Format],
                               TRITON_CACHE_VALID | (LONG64)*pOut);

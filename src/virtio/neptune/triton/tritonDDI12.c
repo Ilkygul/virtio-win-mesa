@@ -422,6 +422,7 @@ triton12GetCaps(D3D12DDI_HADAPTER hAdapter, const D3D12DDIARG_GETCAPS *pArgs)
         TRITON_CAP_TODO("d3d12", "ARCHITECTURE_INFO.TileBasedDeferredRenderer",
                         pCaps->TileBasedDeferredRenderer, TRUE, hostTbdr, FALSE,
                         "validate tile-deferred D2D/DWM/XAML paths before reporting TRUE");
+        if (tritonSwitch("triton-tbdr")) pCaps->TileBasedDeferredRenderer = TRUE;
         break;
     }
     case D3D12DDICAPS_TYPE_D3D12_OPTIONS: {

@@ -505,4 +505,14 @@ void tritonResourceSyncPresentCompanion(PTRITON_DEVICE pD, PTRITON_RESOURCE r);
 } /* extern "C" */
 #endif
 
+
+/* Experiment switches: a file C:\Users\Public\<name> (any content) enables the switch; re-checked every 5 s.
+ *   triton-noa8rt    A8_UNORM reports no RENDER_TARGET / BLENDABLE / MULTISAMPLE_RENDERTARGET
+ *   triton-nor8rt    R8_UNORM reports no RENDER_TARGET / BLENDABLE / MULTISAMPLE_RENDERTARGET
+ *   triton-noa8      A8_UNORM reports no support at all (CreateResource refuses it)
+ *   triton-tbdr      ARCHITECTURE_INFO.TileBasedDeferredRenderer = TRUE (D3D11 and D3D12)
+ *   triton-nominprec shader minimum precision = none (runtime promotes min16float to fp32)
+ * Default (no file) = current behaviour. */
+BOOL tritonSwitch(const char *name);
+
 #endif /* TRITON_H_INCLUDED */
