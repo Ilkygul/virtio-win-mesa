@@ -9,6 +9,7 @@
 
 #include "triton.h"
 #include "triton_log.h"
+#include "tritonVideo.h"
 
 volatile LONG g_tritonFmtLogCount = 0;
 #include "tritonPresent.h"
@@ -328,6 +329,21 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
     r->IsShared         = FALSE;
     r->hImportAlloc     = 0;
     r->hImportResKmt    = 0;
+    r->pSysMem          = NULL;
+    r->SysMemSize       = 0;
+    r->DecoderBufferType = 0;
+
+    /* Video decoder buffers live in guest memory (tritonVideo.c). */
+    if (pD->uIfVersion != D3D11_0_DDI_INTERFACE_VERSION &&
+        pArgs->DecoderBufferType != D3D11_1DDI_VIDEO_DECODER_BUFFER_UNKNOWN &&
+        pArgs->ResourceDimension == D3D10DDIRESOURCE_BUFFER) {
+        UINT size = pArgs->pMipInfoList ? pArgs->pMipInfoList[0].TexelWidth : 0;
+        r->Width = size;
+        r->Height = r->Depth = 1;
+        if (!tritonVideoCreateDecoderBuffer(r, size, (UINT)pArgs->DecoderBufferType))
+            tritonSetCreateError(pD, E_OUTOFMEMORY);
+        return;
+    }
 
     /* Non-primary TEXTURE2D with MISC_SHARED: emulate the shared handle.
      * Display primaries take the host-swapchain route below.
@@ -632,6 +648,12 @@ tritonDestroyResource(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hResource)
     if (!r) return;
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
 
+    if (r->pSysMem) {
+        free(r->pSysMem);
+        r->pSysMem = NULL;
+        return;
+    }
+
     /* Consumer: drop the transport-context attach rig before the host
      * texture; the imported texture keeps the dmabuf alive on its own. */
     if ((r->hImportAlloc || r->hImportResKmt) && pD && pD->pDev1) {
@@ -846,6 +868,12 @@ tritonResourceMap(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hResource,
 {
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
+    if (r && r->pSysMem && pMapped) {
+        pMapped->pData      = r->pSysMem;
+        pMapped->RowPitch   = r->SysMemSize;
+        pMapped->DepthPitch = r->SysMemSize;
+        return;
+    }
     if (!pD || !r || !r->pResource || !pMapped) return;
 
     UINT mapFlags = 0;

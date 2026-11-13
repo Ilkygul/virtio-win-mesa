@@ -23,6 +23,7 @@ triton_src = files(
   'tritonKm.c',
   'tritonSharedBridge.c',
   'tritonHostCaps.c',
+  'tritonVideo.c',
 )
 
 triton_incs = [

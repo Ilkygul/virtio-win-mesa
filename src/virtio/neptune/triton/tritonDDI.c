@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "triton_log.h"
+#include "tritonVideo.h"
 /* npt_log for the DestroyDevice drain timeout: unbuffered WriteFile, so the
  * report survives a run with no debugger attached and output redirected. */
 #include "npt_common.h"
@@ -684,6 +685,7 @@ static void APIENTRY tritonDestroyDevice(D3D10DDI_HDEVICE hDevice)
         }
     }
 
+    tritonVideoDestroyDevice(p);
     if (p->pCtx1)
         ID3D11DeviceContext1_Flush(p->pCtx1);
     /* Tear down the present kernel context before the device goes away, under
@@ -796,6 +798,11 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
         TR_LOG("CreateDevice: unsupported interface 0x%08x", pArgs->Interface);
         return E_FAIL;
     }
+
+    /* Video device functions (decode/process) come through the sub-object
+     * retrieval entry point (11.1 and up). */
+    if (pArgs->Interface != D3D11_0_DDI_INTERFACE_VERSION && pArgs->ppfnRetrieveSubObject)
+        *pArgs->ppfnRetrieveSubObject = tritonRetrieveSubObject;
 
     p->hRTDevice    = pArgs->hRTDevice;
     p->uIfVersion   = pArgs->Interface;

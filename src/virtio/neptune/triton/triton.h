@@ -76,6 +76,11 @@ typedef struct TRITON_DEVICE {
     ID3D11DeviceContext1           *pCtx1;
     ID3D11DeviceContext3           *pCtx3;
 
+    /* Host video device/context (tritonVideo.c), QI'd on first video DDI. */
+    ID3D11VideoDevice              *pVidDev;
+    ID3D11VideoContext             *pVidCtx;
+    BOOL                            bVidFailed;
+
     /* Currently-bound VS and element layout. Used to lazily create the
      * ID3D11InputLayout the first time both are known. Weak refs: the
      * owning TRITON_SHADER / TRITON_ELEMENTLAYOUT may be destroyed while
@@ -356,6 +361,12 @@ typedef struct TRITON_RESOURCE {
 
     /* Head of the intrusive list of live views wrapping this resource. */
     TRITON_VIEWLINK       *pViewList;
+
+    /* Video decoder buffer (DecoderBufferType != 0): guest memory only, no
+     * host resource; tritonVideo.c sends the contents with SubmitBuffers. */
+    void                  *pSysMem;
+    UINT                   SysMemSize;
+    UINT                   DecoderBufferType;
 } TRITON_RESOURCE, *PTRITON_RESOURCE;
 
 /* Views keep the host desc they were created with, so recreating them after
