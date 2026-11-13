@@ -8,6 +8,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "npt_com.h"
 #include "npt_overrides_d3d11_feedback.h"
 #include "npt_device.h"
@@ -407,6 +408,22 @@ npt_trace_buf_summary(const uint8_t *p, uint32_t n, uint64_t *fnv, uint32_t *nz,
    *fnv = h; *nz = z; *last = l;
 }
 
+
+/* Vertex-buffer (rename-ring) trace: for dynamic VBs >= 16 KiB log, at Unmap, the byte range that changed since the
+ * previous Unmap of the same buffer ("dirty", from a shadow copy), FNV of the whole slot sent, slot index, access flags
+ * and the host seqno of the Unmap.  Compare with the host "FMT host vb-unmap-*" line (shmem_fnv must equal fnv here). */
+static volatile LONG npt_fmt_vb_trace_count;
+static struct { const void *b; uint8_t *shadow; uint32_t n; } npt_vb_shadow[4];
+
+static bool
+npt_trace_vb_wanted(struct npt_d3d11_buffer *b)
+{
+   D3D11_BUFFER_DESC d;
+   if (!npt_d3d11_buffer_fill_desc(b, &d)) return false;
+   if (!(d.BindFlags & D3D11_BIND_VERTEX_BUFFER) || d.ByteWidth < 16384 || d.ByteWidth > (4u << 20)) return false;
+   return InterlockedIncrement(&npt_fmt_vb_trace_count) <= 300;
+}
+
 static void
 ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
 {
@@ -431,6 +448,22 @@ ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
    struct npt_ring *ring = npt_com_self_ring(self);
    npt_d3d11_buffer_slot_visible(b, rec.slot, ring);
    uint32_t seqno = 0;
+   const bool vbtrace = npt_trace_vb_wanted(b);
+   uint32_t vb_dirty_lo = 0, vb_dirty_hi = 0; uint64_t vb_fnv = 1469598103934665603ull;
+   if (vbtrace) {
+      const uint8_t *sp = npt_d3d11_buffer_slot_ptr(b, rec.slot);
+      const uint32_t n = npt_d3d11_buffer_get_byte_width(b);
+      int si = -1;
+      for (int i = 0; i < 4; i++) if (npt_vb_shadow[i].b == b) si = i;
+      if (si < 0) for (int i = 0; i < 4; i++) if (!npt_vb_shadow[i].b) { si = i; npt_vb_shadow[i].b = b; npt_vb_shadow[i].shadow = (uint8_t *)calloc(1, n); npt_vb_shadow[i].n = n; break; }
+      if (si >= 0 && npt_vb_shadow[si].shadow && npt_vb_shadow[si].n == n && sp) {
+         uint32_t lo = n, hi = 0;
+         for (uint32_t i = 0; i < n; i++) { if (sp[i] != npt_vb_shadow[si].shadow[i]) { if (i < lo) lo = i; hi = i + 1; } }
+         vb_dirty_lo = lo == n ? 0 : lo; vb_dirty_hi = hi;
+         memcpy(npt_vb_shadow[si].shadow, sp, n);
+      }
+      for (uint32_t i = 0; sp && i < n; i++) { vb_fnv ^= sp[i]; vb_fnv *= 1099511628211ull; }
+   }
    npt_dispatch_resource_unmap_seqno(ring,
       ((struct npt_com_base *)self)->base.id,
       ((struct npt_com_base *)b)->base.id,
@@ -440,6 +473,10 @@ ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
       npt_d3d11_buffer_slot_offset(b, rec.slot),
       rec.access_flags,
       &seqno);
+   if (vbtrace)
+      npt_log("FMT guest vb-unmap res=0x%llx slot=%u access=0x%x n=%u dirty=[%u,%u) (changed since previous Unmap) slotFnv=%016llx seqno=%u",
+              (unsigned long long)((struct npt_com_base *)b)->base.id, rec.slot, rec.access_flags,
+              npt_d3d11_buffer_get_byte_width(b), vb_dirty_lo, vb_dirty_hi, (unsigned long long)vb_fnv, seqno);
 
    /* Slot 0 of a sync Map goes in flight too: a DYNAMIC buffer's DISCARD
     * on the map ring rotates through it. */
