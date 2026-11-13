@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "scope": "Indicative single hardware/software decode comparison; this does not isolate the CPU effect of the C4 video-view patch.",
+  "video": {
+    "public_url": "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    "name": "Big Buck Bunny",
+    "codec": "AV1",
+    "profile": "Main",
+    "width": 1920,
+    "height": 1080,
+    "nominal_fps": 60,
+    "observed_media_interval_seconds": [
+      70,
+      95
+    ]
+  },
+  "method": {
+    "cpu_sample_seconds": 20,
+    "samples_per_mode": 1,
+    "logical_vcpus": 6,
+    "warmup_before_measurement": true,
+    "same_video_resolution_framerate_codec_and_fragment": true,
+    "stable_process_set_both_samples": true,
+    "edge_scope": "Isolated test-browser process tree only",
+    "vm_scope": "Whole Windows guest CPU; excludes host-side CPU",
+    "edge_percent_normalization": "100 * process CPU seconds / elapsed seconds / logical vCPUs",
+    "vm_counter": "GetSystemTimes delta: (kernel + user - idle) / (kernel + user)",
+    "recording_during_cpu_measurement": false,
+    "frame_telemetry": "Nearest one-second playback observations around the CPU window; longer playback observation spans approximately media 70-95 s."
+  },
+  "hardware": {
+    "decoder": "D3D11VideoDecoder",
+    "platform_decoder": true,
+    "edge_cpu_percent": 6.645584,
+    "whole_vm_cpu_percent": 11.020249,
+    "presented_fps_approx": 59.1,
+    "dropped_frames_percent_approx": 1.5,
+    "android_hardware_decoder_component": "c2.qti.av1.decoder",
+    "active_component_interval_covers_cpu_sample": true
+  },
+  "software": {
+    "decoder": "Dav1dVideoDecoder",
+    "platform_decoder": false,
+    "launch_flag": "--disable-accelerated-video-decode",
+    "edge_cpu_percent": 22.438113,
+    "whole_vm_cpu_percent": 28.52689,
+    "presented_fps_approx": 59.1,
+    "dropped_frames_percent_approx": 1.5
+  },
+  "reduction_relative_to_software_percent": {
+    "edge_cpu": 70.382607,
+    "whole_vm_cpu": 61.368908
+  },
+  "restoration": {
+    "hardware_launch_flags_restored": true,
+    "isolated_test_browser_closed_afterward": true
+  },
+  "limits": [
+    "One sequential 20-second sample per mode; background activity, cache order and thermal state can affect results.",
+    "Browser progress/drop counters do not establish physical pixel correctness or absence of visual glitches.",
+    "Reported CPU savings concern the browser and Windows guest; host decoder CPU and power were not measured."
+  ]
+}

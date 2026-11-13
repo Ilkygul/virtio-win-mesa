@@ -31,7 +31,10 @@ typedef struct TRITON_VDECODER {
 } TRITON_VDECODER, *PTRITON_VDECODER;
 
 typedef struct TRITON_VDOV {
-    ID3D11VideoDecoderOutputView  *pView;
+    ID3D11VideoDecoderOutputView *pView;
+    PTRITON_RESOURCE pResource; /* borrowed runtime owner, as for ordinary views */
+    ID3D11Resource *pBacking;   /* retained: identity must not be pointer-recycled */
+    D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC Desc;
 } TRITON_VDOV, *PTRITON_VDOV;
 
 typedef struct TRITON_VPENUM {
@@ -44,13 +47,134 @@ typedef struct TRITON_VP {
 
 typedef struct TRITON_VPIV {
     ID3D11VideoProcessorInputView *pView;
+    PTRITON_RESOURCE pResource; /* borrowed runtime owner, as for ordinary views */
+    ID3D11Resource *pBacking;   /* retained: identity must not be pointer-recycled */
+    ID3D11VideoProcessorEnumerator *pEnum; /* retained independently of enum wrapper */
+    D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC Desc;
 } TRITON_VPIV, *PTRITON_VPIV;
 
 typedef struct TRITON_VPOV {
     ID3D11VideoProcessorOutputView *pView;
+    PTRITON_RESOURCE pResource; /* borrowed runtime owner, as for ordinary views */
+    ID3D11Resource *pBacking;   /* retained: identity must not be pointer-recycled */
+    ID3D11VideoProcessorEnumerator *pEnum; /* retained independently of enum wrapper */
+    D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC Desc;
 } TRITON_VPOV, *PTRITON_VPOV;
 
 #define TR_DEV(h)   ((PTRITON_DEVICE)(h).pDrvPrivate)
+
+/* RotateResourceIdentities replaces TRITON_RESOURCE::pResource. Video views
+ * are passed explicitly to each operation rather than rebound by a state
+ * callback, so refresh lazily before every use. Never issue work with the
+ * stale view when replacement creation fails. */
+static HRESULT
+trVideoViewError(PTRITON_DEVICE pD, HRESULT hr)
+{
+    /* These operation errors are valid CoreLayer callback reports. Other
+     * HRESULT failures propagate directly without inventing device removal. */
+    if (hr == E_OUTOFMEMORY || hr == D3DDDIERR_DEVICEREMOVED)
+        tritonSetError(pD, hr);
+    return hr;
+}
+
+static HRESULT
+trRefreshVDOV(PTRITON_DEVICE pD, PTRITON_VDOV v)
+{
+    if (!pD || !pD->pVidDev || !v || !v->pResource || !v->pResource->pResource)
+        return E_INVALIDARG;
+    ID3D11Resource *backing = v->pResource->pResource;
+    if (v->pView && v->pBacking == backing)
+        return S_OK;
+
+    ID3D11Resource_AddRef(backing);
+    ID3D11VideoDecoderOutputView *replacement = NULL;
+    HRESULT hr = ID3D11VideoDevice_CreateVideoDecoderOutputView(pD->pVidDev, backing, &v->Desc, &replacement);
+    if (FAILED(hr) || !replacement) {
+        if (replacement) ID3D11VideoDecoderOutputView_Release(replacement);
+        ID3D11Resource_Release(backing);
+        return FAILED(hr) ? hr : E_FAIL;
+    }
+
+    ID3D11VideoDecoderOutputView *old = v->pView;
+    ID3D11Resource *oldBacking = v->pBacking;
+    v->pView = replacement;
+    v->pBacking = backing;
+    if (old) {
+        static LONG n;
+        if (InterlockedIncrement(&n) <= 128)
+            TR_LOG("video: refresh VDOV owner=%p oldBacking=%p newBacking=%p oldView=%p newView=%p",
+                   v->pResource, oldBacking, backing, old, replacement);
+        ID3D11VideoDecoderOutputView_Release(old);
+    }
+    if (oldBacking) ID3D11Resource_Release(oldBacking);
+    return S_OK;
+}
+
+static HRESULT
+trRefreshVPIV(PTRITON_DEVICE pD, PTRITON_VPIV v)
+{
+    if (!pD || !pD->pVidDev || !v || !v->pResource || !v->pResource->pResource || !v->pEnum)
+        return E_INVALIDARG;
+    ID3D11Resource *backing = v->pResource->pResource;
+    if (v->pView && v->pBacking == backing)
+        return S_OK;
+
+    ID3D11Resource_AddRef(backing);
+    ID3D11VideoProcessorInputView *replacement = NULL;
+    HRESULT hr = ID3D11VideoDevice_CreateVideoProcessorInputView(pD->pVidDev, backing, v->pEnum, &v->Desc, &replacement);
+    if (FAILED(hr) || !replacement) {
+        if (replacement) ID3D11VideoProcessorInputView_Release(replacement);
+        ID3D11Resource_Release(backing);
+        return FAILED(hr) ? hr : E_FAIL;
+    }
+
+    ID3D11VideoProcessorInputView *old = v->pView;
+    ID3D11Resource *oldBacking = v->pBacking;
+    v->pView = replacement;
+    v->pBacking = backing;
+    if (old) {
+        static LONG n;
+        if (InterlockedIncrement(&n) <= 128)
+            TR_LOG("video: refresh VPIV owner=%p oldBacking=%p newBacking=%p oldView=%p newView=%p",
+                   v->pResource, oldBacking, backing, old, replacement);
+        ID3D11VideoProcessorInputView_Release(old);
+    }
+    if (oldBacking) ID3D11Resource_Release(oldBacking);
+    return S_OK;
+}
+
+static HRESULT
+trRefreshVPOV(PTRITON_DEVICE pD, PTRITON_VPOV v)
+{
+    if (!pD || !pD->pVidDev || !v || !v->pResource || !v->pResource->pResource || !v->pEnum)
+        return E_INVALIDARG;
+    ID3D11Resource *backing = v->pResource->pResource;
+    if (v->pView && v->pBacking == backing)
+        return S_OK;
+
+    ID3D11Resource_AddRef(backing);
+    ID3D11VideoProcessorOutputView *replacement = NULL;
+    HRESULT hr = ID3D11VideoDevice_CreateVideoProcessorOutputView(pD->pVidDev, backing, v->pEnum, &v->Desc, &replacement);
+    if (FAILED(hr) || !replacement) {
+        if (replacement) ID3D11VideoProcessorOutputView_Release(replacement);
+        ID3D11Resource_Release(backing);
+        return FAILED(hr) ? hr : E_FAIL;
+    }
+
+    ID3D11VideoProcessorOutputView *old = v->pView;
+    ID3D11Resource *oldBacking = v->pBacking;
+    v->pView = replacement;
+    v->pBacking = backing;
+    if (old) {
+        static LONG n;
+        if (InterlockedIncrement(&n) <= 128)
+            TR_LOG("video: refresh VPOV owner=%p oldBacking=%p newBacking=%p oldView=%p newView=%p",
+                   v->pResource, oldBacking, backing, old, replacement);
+        ID3D11VideoProcessorOutputView_Release(old);
+    }
+    if (oldBacking) ID3D11Resource_Release(oldBacking);
+    return S_OK;
+}
 
 static BOOL
 trVideoEnsure(PTRITON_DEVICE pD)
@@ -234,9 +358,11 @@ trVideoDecoderBeginFrame(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HDECODE hDecode,
 {
     PTRITON_DEVICE pD = TR_DEV(hDevice);
     PTRITON_VDECODER d = (PTRITON_VDECODER)hDecode.pDrvPrivate;
-    PTRITON_VDOV v = (PTRITON_VDOV)pArgs->hOutputView.pDrvPrivate;
-    if (!d->pDecoder || !v || !v->pView || !trVideoEnsure(pD))
+    if (!pD || !d || !d->pDecoder || !pArgs || !trVideoEnsure(pD))
         return E_INVALIDARG;
+    PTRITON_VDOV v = (PTRITON_VDOV)pArgs->hOutputView.pDrvPrivate;
+    HRESULT hr = trRefreshVDOV(pD, v);
+    if (FAILED(hr)) return trVideoViewError(pD, hr);
     return ID3D11VideoContext_DecoderBeginFrame(pD->pVidCtx, d->pDecoder, v->pView, 0, NULL);
 }
 
@@ -361,8 +487,9 @@ trCreateVideoDecoderOutputView(D3D10DDI_HDEVICE hDevice, const D3D11_1DDIARG_CRE
     (void)hRT;
     PTRITON_DEVICE pD = TR_DEV(hDevice);
     PTRITON_VDOV v = (PTRITON_VDOV)hView.pDrvPrivate;
+    if (!pD || !v || !pArgs) return E_INVALIDARG;
+    memset(v, 0, sizeof(*v));
     PTRITON_RESOURCE r = (PTRITON_RESOURCE)pArgs->hDrvResource.pDrvPrivate;
-    v->pView = NULL;
     if (!r || !r->pResource || !trVideoEnsure(pD))
         return E_INVALIDARG;
     D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC desc;
@@ -370,7 +497,10 @@ trCreateVideoDecoderOutputView(D3D10DDI_HDEVICE hDevice, const D3D11_1DDIARG_CRE
     desc.DecodeProfile = pArgs->DecodeProfile;
     desc.ViewDimension = D3D11_VDOV_DIMENSION_TEXTURE2D;
     desc.Texture2D.ArraySlice = pArgs->FirstArraySlice;
-    HRESULT hr = ID3D11VideoDevice_CreateVideoDecoderOutputView(pD->pVidDev, r->pResource, &desc, &v->pView);
+    v->pResource = r;
+    v->Desc = desc;
+    HRESULT hr = trRefreshVDOV(pD, v);
+    if (FAILED(hr)) v->pResource = NULL;
     if (FAILED(hr))
         TR_LOG("video: CreateVideoDecoderOutputView slice %u -> 0x%08lx", pArgs->FirstArraySlice, hr);
     return hr;
@@ -381,9 +511,10 @@ trDestroyVideoDecoderOutputView(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HVIDEODECOD
 {
     (void)hDevice;
     PTRITON_VDOV v = (PTRITON_VDOV)hView.pDrvPrivate;
-    if (v->pView)
-        ID3D11VideoDecoderOutputView_Release(v->pView);
-    v->pView = NULL;
+    if (!v) return;
+    if (v->pView) ID3D11VideoDecoderOutputView_Release(v->pView);
+    if (v->pBacking) ID3D11Resource_Release(v->pBacking);
+    memset(v, 0, sizeof(*v));
 }
 
 /* ------------------------------------------------------------------ */
@@ -665,11 +796,15 @@ trVPStreamExtension(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HVIDEOPROCESSOR hVP, UI
     return E_NOTIMPL;
 }
 
-static ID3D11VideoProcessorInputView *
-trVPIV(D3D11_1DDI_HVIDEOPROCESSORINPUTVIEW h)
+static HRESULT
+trVPIV(PTRITON_DEVICE pD, D3D11_1DDI_HVIDEOPROCESSORINPUTVIEW h,
+       ID3D11VideoProcessorInputView **out)
 {
+    *out = NULL;
     PTRITON_VPIV v = (PTRITON_VPIV)h.pDrvPrivate;
-    return v ? v->pView : NULL;
+    HRESULT hr = trRefreshVPIV(pD, v);
+    if (SUCCEEDED(hr)) *out = v->pView;
+    return hr;
 }
 
 static HRESULT APIENTRY
@@ -679,27 +814,57 @@ trVideoProcessorBlt(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HVIDEOPROCESSOR hVP, D3
     PTRITON_DEVICE pD = TR_DEV(hDevice);
     PTRITON_VP p = (PTRITON_VP)hVP.pDrvPrivate;
     PTRITON_VPOV o = (PTRITON_VPOV)hOut.pDrvPrivate;
-    if (!p->pVP || !o || !o->pView || !trVideoEnsure(pD) || StreamCount > 8)
+    if (!pD || !p || !p->pVP || !trVideoEnsure(pD) || StreamCount > 8 || (StreamCount && !pStreams))
         return E_INVALIDARG;
+    HRESULT hr = trRefreshVPOV(pD, o);
+    if (FAILED(hr)) return trVideoViewError(pD, hr);
 
     D3D11_VIDEO_PROCESSOR_STREAM s[8];
     ID3D11VideoProcessorInputView *past[8][4], *future[8][4];
+    ID3D11VideoProcessorInputView *pastRight[8][4], *futureRight[8][4];
     memset(s, 0, sizeof(s));
     for (UINT i = 0; i < StreamCount; i++) {
         const D3D11_1DDI_VIDEO_PROCESSOR_STREAM *in = &pStreams[i];
         s[i].Enable = in->Enable;
+        if (!in->Enable) continue;
+        if (in->PastFrames > 4 || in->FutureFrames > 4 ||
+            (in->PastFrames && !in->pPastSurfaces) ||
+            (in->FutureFrames && !in->pFutureSurfaces))
+            return E_INVALIDARG;
+        BOOL right = in->hInputSurfaceRight.pDrvPrivate != NULL;
+        if ((right && in->PastFrames && !in->pPastSurfacesRight) ||
+            (right && in->FutureFrames && !in->pFutureSurfacesRight))
+            return E_INVALIDARG;
         s[i].OutputIndex = in->OutputIndex;
         s[i].InputFrameOrField = in->InputFrameOrField;
-        s[i].PastFrames = in->PastFrames < 4 ? in->PastFrames : 4;
-        s[i].FutureFrames = in->FutureFrames < 4 ? in->FutureFrames : 4;
-        for (UINT k = 0; k < s[i].PastFrames; k++)
-            past[i][k] = trVPIV(in->pPastSurfaces[k]);
-        for (UINT k = 0; k < s[i].FutureFrames; k++)
-            future[i][k] = trVPIV(in->pFutureSurfaces[k]);
-        s[i].ppPastSurfaces = s[i].PastFrames ? past[i] : NULL;
-        s[i].ppFutureSurfaces = s[i].FutureFrames ? future[i] : NULL;
-        s[i].pInputSurface = trVPIV(in->hInputSurface);
-        s[i].pInputSurfaceRight = NULL;
+        s[i].PastFrames = in->PastFrames;
+        s[i].FutureFrames = in->FutureFrames;
+        hr = trVPIV(pD, in->hInputSurface, &s[i].pInputSurface);
+        if (FAILED(hr)) return trVideoViewError(pD, hr);
+        if (right) {
+            hr = trVPIV(pD, in->hInputSurfaceRight, &s[i].pInputSurfaceRight);
+            if (FAILED(hr)) return trVideoViewError(pD, hr);
+        }
+        for (UINT k = 0; k < in->PastFrames; k++) {
+            hr = trVPIV(pD, in->pPastSurfaces[k], &past[i][k]);
+            if (FAILED(hr)) return trVideoViewError(pD, hr);
+            if (right) {
+                hr = trVPIV(pD, in->pPastSurfacesRight[k], &pastRight[i][k]);
+                if (FAILED(hr)) return trVideoViewError(pD, hr);
+            }
+        }
+        for (UINT k = 0; k < in->FutureFrames; k++) {
+            hr = trVPIV(pD, in->pFutureSurfaces[k], &future[i][k]);
+            if (FAILED(hr)) return trVideoViewError(pD, hr);
+            if (right) {
+                hr = trVPIV(pD, in->pFutureSurfacesRight[k], &futureRight[i][k]);
+                if (FAILED(hr)) return trVideoViewError(pD, hr);
+            }
+        }
+        s[i].ppPastSurfaces = in->PastFrames ? past[i] : NULL;
+        s[i].ppFutureSurfaces = in->FutureFrames ? future[i] : NULL;
+        s[i].ppPastSurfacesRight = right && in->PastFrames ? pastRight[i] : NULL;
+        s[i].ppFutureSurfacesRight = right && in->FutureFrames ? futureRight[i] : NULL;
     }
     return ID3D11VideoContext_VideoProcessorBlt(pD->pVidCtx, p->pVP, o->pView, OutputFrame, StreamCount, s);
 }
@@ -718,9 +883,10 @@ trCreateVPIV(D3D10DDI_HDEVICE hDevice, const D3D11_1DDIARG_CREATEVIDEOPROCESSORI
     (void)hRT;
     PTRITON_DEVICE pD = TR_DEV(hDevice);
     PTRITON_VPIV v = (PTRITON_VPIV)hView.pDrvPrivate;
+    if (!pD || !v || !pArgs) return E_INVALIDARG;
+    memset(v, 0, sizeof(*v));
     PTRITON_RESOURCE r = (PTRITON_RESOURCE)pArgs->hDrvResource.pDrvPrivate;
     PTRITON_VPENUM e = (PTRITON_VPENUM)pArgs->hDrvVideoProcessorEnum.pDrvPrivate;
-    v->pView = NULL;
     if (!r || !r->pResource || !e || !e->pEnum || !trVideoEnsure(pD))
         return E_INVALIDARG;
     D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC desc;
@@ -729,7 +895,17 @@ trCreateVPIV(D3D10DDI_HDEVICE hDevice, const D3D11_1DDIARG_CREATEVIDEOPROCESSORI
     desc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
     desc.Texture2D.MipSlice = pArgs->MipSlice;
     desc.Texture2D.ArraySlice = pArgs->FirstArraySlice;
-    return ID3D11VideoDevice_CreateVideoProcessorInputView(pD->pVidDev, r->pResource, e->pEnum, &desc, &v->pView);
+    v->pResource = r;
+    v->Desc = desc;
+    v->pEnum = e->pEnum;
+    ID3D11VideoProcessorEnumerator_AddRef(v->pEnum);
+    HRESULT hr = trRefreshVPIV(pD, v);
+    if (FAILED(hr)) {
+        ID3D11VideoProcessorEnumerator_Release(v->pEnum);
+        v->pEnum = NULL;
+        v->pResource = NULL;
+    }
+    return hr;
 }
 
 static void APIENTRY
@@ -737,9 +913,11 @@ trDestroyVPIV(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HVIDEOPROCESSORINPUTVIEW hVie
 {
     (void)hDevice;
     PTRITON_VPIV v = (PTRITON_VPIV)hView.pDrvPrivate;
-    if (v->pView)
-        ID3D11VideoProcessorInputView_Release(v->pView);
-    v->pView = NULL;
+    if (!v) return;
+    if (v->pView) ID3D11VideoProcessorInputView_Release(v->pView);
+    if (v->pBacking) ID3D11Resource_Release(v->pBacking);
+    if (v->pEnum) ID3D11VideoProcessorEnumerator_Release(v->pEnum);
+    memset(v, 0, sizeof(*v));
 }
 
 static SIZE_T APIENTRY
@@ -756,9 +934,10 @@ trCreateVPOV(D3D10DDI_HDEVICE hDevice, const D3D11_1DDIARG_CREATEVIDEOPROCESSORO
     (void)hRT;
     PTRITON_DEVICE pD = TR_DEV(hDevice);
     PTRITON_VPOV v = (PTRITON_VPOV)hView.pDrvPrivate;
+    if (!pD || !v || !pArgs) return E_INVALIDARG;
+    memset(v, 0, sizeof(*v));
     PTRITON_RESOURCE r = (PTRITON_RESOURCE)pArgs->hDrvResource.pDrvPrivate;
     PTRITON_VPENUM e = (PTRITON_VPENUM)pArgs->hDrvVideoProcessorEnum.pDrvPrivate;
-    v->pView = NULL;
     if (!r || !r->pResource || !e || !e->pEnum || !trVideoEnsure(pD))
         return E_INVALIDARG;
     D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC desc;
@@ -772,7 +951,17 @@ trCreateVPOV(D3D10DDI_HDEVICE hDevice, const D3D11_1DDIARG_CREATEVIDEOPROCESSORO
         desc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
         desc.Texture2D.MipSlice = pArgs->MipSlice;
     }
-    return ID3D11VideoDevice_CreateVideoProcessorOutputView(pD->pVidDev, r->pResource, e->pEnum, &desc, &v->pView);
+    v->pResource = r;
+    v->Desc = desc;
+    v->pEnum = e->pEnum;
+    ID3D11VideoProcessorEnumerator_AddRef(v->pEnum);
+    HRESULT hr = trRefreshVPOV(pD, v);
+    if (FAILED(hr)) {
+        ID3D11VideoProcessorEnumerator_Release(v->pEnum);
+        v->pEnum = NULL;
+        v->pResource = NULL;
+    }
+    return hr;
 }
 
 static void APIENTRY
@@ -780,9 +969,11 @@ trDestroyVPOV(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HVIDEOPROCESSOROUTPUTVIEW hVi
 {
     (void)hDevice;
     PTRITON_VPOV v = (PTRITON_VPOV)hView.pDrvPrivate;
-    if (v->pView)
-        ID3D11VideoProcessorOutputView_Release(v->pView);
-    v->pView = NULL;
+    if (!v) return;
+    if (v->pView) ID3D11VideoProcessorOutputView_Release(v->pView);
+    if (v->pBacking) ID3D11Resource_Release(v->pBacking);
+    if (v->pEnum) ID3D11VideoProcessorEnumerator_Release(v->pEnum);
+    memset(v, 0, sizeof(*v));
 }
 
 static void APIENTRY
