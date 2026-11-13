@@ -890,6 +890,9 @@ tritonResourceUnmap(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hResource, UINT
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
     ID3D11DeviceContext1_Unmap(pD->pCtx1, r->pResource, Subresource);
+    /* CPU writes to a shared surface (host replays them at Unmap): hand off like any other shared write. */
+    tritonMarkSharedWrite(pD, r);
+    tritonSharedWriteDone(pD, r, "Unmap");
 }
 
 /* No side-effect-free busy query reaches the host: probing with a Map/Unmap
