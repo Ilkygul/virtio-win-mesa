@@ -20,6 +20,38 @@ volatile LONG g_tritonFmtLogCount = 0;
 /* tritonQuery.c; the DDI table in tritonDDI.c carries the same prototype. */
 void APIENTRY tritonCheckFormatSupport(D3D10DDI_HDEVICE, DXGI_FORMAT, UINT *);
 
+
+/* ---------- shared-write tracking + synchronous hand-off (see TRITON_DEVICE.SharedDirty) ---------- */
+struct npt_ring;
+extern struct npt_ring *npt_com_object_ring_seqno(void *self, UINT32 *out_seqno);
+extern UINT32 npt_ring_wait_seqno(struct npt_ring *ring, UINT32 seqno);
+
+void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pRes)
+{
+    const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+    if (pD && r && (r->IsShared || r->IsPresentable || r->pPresentCompanion))
+        InterlockedExchange(&pD->SharedDirty, 1);
+}
+
+void tritonSyncShared(PTRITON_DEVICE pD, const char *why)
+{
+    if (!pD || !pD->pCtx1 || !InterlockedExchange(&pD->SharedDirty, 0))
+        return;
+    if (tritonSwitch("triton-asyncflush"))
+        return;
+    UINT32 seqno = 0;
+    struct npt_ring *ring = npt_com_object_ring_seqno(pD->pCtx1, &seqno);
+    if (!ring)
+        return;
+    const DWORD t0 = GetTickCount();
+    npt_ring_wait_seqno(ring, seqno);
+    static volatile LONG n;
+    LONG k = InterlockedIncrement(&n);
+    if (k <= 60 || (k % 500) == 0)
+        TR_LOG("SYNC shared hand-off #%ld at %s: waited %lu ms for the host to execute up to ring seqno %u",
+               (long)k, why, (unsigned long)(GetTickCount() - t0), (unsigned)seqno);
+}
+
 TR_CALC_PRIVATE_SIZE(tritonCalcPrivateResourceSize, TRITON_RESOURCE,
                      const D3D11DDIARG_CREATERESOURCE *pArgs)
 
@@ -547,6 +579,7 @@ tritonResourceSyncPresentCompanion(PTRITON_DEVICE pD, PTRITON_RESOURCE r)
 {
     if (!r->pPresentCompanion || !r->pResource)
         return;
+    InterlockedExchange(&pD->SharedDirty, 1);
     if (r->SampleDesc.Count > 1)
         ID3D11DeviceContext1_ResolveSubresource(pD->pCtx1, r->pPresentCompanion, 0,
                                                 r->pResource, 0, r->Format);
@@ -845,6 +878,7 @@ tritonResourceUpdateSubresourceUP(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE h
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    tritonMarkSharedWrite(pD, r);
     if (triton_fmt_traced((UINT)r->Format))
         TR_FMT_LOG("UpdateSubresource fmt=%u res=%ux%u sub=%u box=%s(%u,%u,%u,%u) rowPitch=%u depthPitch=%u shared=%d",
                    (UINT)r->Format, (UINT)r->Width, (UINT)r->Height, DstSubresource,
@@ -865,6 +899,7 @@ tritonResourceUpdateSubresourceUP_11_1(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOU
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    tritonMarkSharedWrite(pD, r);
     if (triton_fmt_traced((UINT)r->Format))
         TR_FMT_LOG("UpdateSubresource1 fmt=%u res=%ux%u sub=%u box=%s(%u,%u,%u,%u) rowPitch=%u depthPitch=%u flags=0x%x shared=%d",
                    (UINT)r->Format, (UINT)r->Width, (UINT)r->Height, DstSubresource,
@@ -884,6 +919,7 @@ tritonResourceCopy(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDst.pDrvPrivate);
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
+    tritonMarkSharedWrite(pD, d);
     if (triton_fmt_traced((UINT)d->Format) || triton_fmt_traced((UINT)s->Format))
         TR_FMT_LOG("CopyResource dst fmt=%u %ux%u shared=%d <- src fmt=%u %ux%u shared=%d%s",
                    (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, (int)d->IsShared,
@@ -903,6 +939,7 @@ tritonResourceCopyRegion(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDst.pDrvPrivate);
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
+    tritonMarkSharedWrite(pD, d);
     if (triton_fmt_traced((UINT)d->Format) || triton_fmt_traced((UINT)s->Format))
         TR_FMT_LOG("CopySubresourceRegion dst fmt=%u %ux%u (%u,%u) shared=%d <- src fmt=%u %ux%u box=%s shared=%d%s",
                    (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, DstX, DstY, (int)d->IsShared,
@@ -924,6 +961,7 @@ tritonResourceCopyRegion_11_1(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDst.pDrvPrivate);
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
+    tritonMarkSharedWrite(pD, d);
     if (triton_fmt_traced((UINT)d->Format) || triton_fmt_traced((UINT)s->Format))
         TR_FMT_LOG("CopySubresourceRegion1 dst fmt=%u %ux%u (%u,%u) shared=%d <- src fmt=%u %ux%u box=%s shared=%d%s",
                    (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, DstX, DstY, (int)d->IsShared,
@@ -944,6 +982,7 @@ tritonResourceResolveSubresource(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDst.pDrvPrivate);
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
+    tritonMarkSharedWrite(pD, d);
     ID3D11DeviceContext1_ResolveSubresource(
         pD->pCtx1, d->pResource, DstSubresource, s->pResource, SrcSubresource, Format);
 }

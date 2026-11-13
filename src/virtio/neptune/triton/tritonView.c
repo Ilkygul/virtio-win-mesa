@@ -290,6 +290,7 @@ tritonClearRenderTargetView(D3D10DDI_HDEVICE hDevice,
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RTVIEW v  = (PTRITON_RTVIEW)(hRTV.pDrvPrivate);
     if (!pD || !v || !v->pRTV) return;
+    tritonMarkSharedWrite(pD, v->pResource);
     ID3D11DeviceContext1_ClearRenderTargetView(pD->pCtx1, v->pRTV, color);
 }
 
@@ -311,6 +312,7 @@ tritonFlush(D3D10DDI_HDEVICE hDevice)
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD || !pD->pCtx1) return;
     ID3D11DeviceContext1_Flush(pD->pCtx1);
+    tritonSyncShared(pD, "Flush");
 }
 
 BOOL APIENTRY
@@ -320,6 +322,7 @@ tritonFlush11_1(D3D10DDI_HDEVICE hDevice, UINT FlushFlags)
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD || !pD->pCtx1) return FALSE;
     ID3D11DeviceContext1_Flush(pD->pCtx1);
+    tritonSyncShared(pD, "Flush11_1");
     return TRUE;
 }
 
@@ -357,6 +360,18 @@ tritonSetRenderTargets(D3D10DDI_HDEVICE hDevice,
             ? (PTRITON_RTVIEW)(phRTVs[i].pDrvPrivate)
             : NULL;
         aRTV[i] = v ? v->pRTV : NULL;
+    }
+
+    pD->OmShared = FALSE;
+    for (UINT i = 0; i < NumRTVs; ++i) {
+        PTRITON_RTVIEW v = phRTVs ? (PTRITON_RTVIEW)(phRTVs[i].pDrvPrivate) : NULL;
+        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion))
+            pD->OmShared = TRUE;
+    }
+    for (UINT i = 0; i < NumUAVs; ++i) {
+        PTRITON_UAVIEW v = phUAVs ? (PTRITON_UAVIEW)(phUAVs[i].pDrvPrivate) : NULL;
+        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion))
+            pD->OmShared = TRUE;
     }
 
     PTRITON_DSVIEW dsv = (PTRITON_DSVIEW)(hDSV.pDrvPrivate);
@@ -804,6 +819,7 @@ tritonClearUAVUint(D3D10DDI_HDEVICE hDevice, D3D11DDI_HUNORDEREDACCESSVIEW hUAV,
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_UAVIEW v  = (PTRITON_UAVIEW)(hUAV.pDrvPrivate);
     if (!pD || !v || !v->pUAV) return;
+    tritonMarkSharedWrite(pD, v->pResource);
     ID3D11DeviceContext1_ClearUnorderedAccessViewUint(pD->pCtx1, v->pUAV, Values);
 }
 
@@ -814,6 +830,7 @@ tritonClearUAVFloat(D3D10DDI_HDEVICE hDevice, D3D11DDI_HUNORDEREDACCESSVIEW hUAV
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_UAVIEW v  = (PTRITON_UAVIEW)(hUAV.pDrvPrivate);
     if (!pD || !v || !v->pUAV) return;
+    tritonMarkSharedWrite(pD, v->pResource);
     ID3D11DeviceContext1_ClearUnorderedAccessViewFloat(pD->pCtx1, v->pUAV, Values);
 }
 
@@ -912,6 +929,7 @@ tritonFlush_WDDM2_0(D3D10DDI_HDEVICE hDevice, UINT ContextType, UINT FlushFlags)
     if (!pD) return FALSE;
     if (pD->pCtx3) {
         ID3D11DeviceContext3_Flush1(pD->pCtx3, tritonContextFlagToEnum(ContextType), NULL);
+        tritonSyncShared(pD, "Flush_WDDM2");
         return TRUE;
     }
     return tritonFlush11_1(hDevice, FlushFlags);

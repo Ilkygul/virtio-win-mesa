@@ -215,6 +215,13 @@ typedef struct TRITON_DEVICE {
     ID3D11SamplerState             *pBlitSampler;
     ID3D11Buffer                   *pBlitCB;
     BOOL                            blitInitFailed;
+
+    /* Producer->consumer hand-off (shared textures read by dwm in another process): SharedDirty is set when work that
+     * writes a shared / presentable resource was issued since the last sync point; the next Flush / present then waits
+     * (ring seqno) until the host has executed the Flush, including its GPU wait.  OmShared: a bound RTV/UAV is shared.
+     * File C:\Users\Public\triton-asyncflush disables the wait. */
+    volatile LONG                   SharedDirty;
+    BOOL                            OmShared;
 } TRITON_DEVICE, *PTRITON_DEVICE;
 
 /* Present GPU-done gate timing.  DestroyDevice's drain must outlast the gate's
@@ -514,5 +521,10 @@ void tritonResourceSyncPresentCompanion(PTRITON_DEVICE pD, PTRITON_RESOURCE r);
  *   triton-minprec   opt back IN to min-precision (fp16) shaders; default is none (fp32), fp16 breaks shell text
  * Default (no file) = current behaviour. */
 BOOL tritonSwitch(const char *name);
+
+
+struct _TRITON_RESOURCE_FWD;
+void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE */);
+void tritonSyncShared(PTRITON_DEVICE pD, const char *why);
 
 #endif /* TRITON_H_INCLUDED */

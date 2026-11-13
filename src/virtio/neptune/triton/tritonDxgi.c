@@ -714,6 +714,7 @@ tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
    cb.pDXGIContext   = pArgs->pDXGIContext;
    cb.hContext       = pD->hKMContext;
    HRESULT hr = tritonPresentSubmitCb(pD, &cb);
+   tritonSyncShared(pD, "Present");
    InterlockedDecrement(&pD->presentInFlight);
    return hr;
 }

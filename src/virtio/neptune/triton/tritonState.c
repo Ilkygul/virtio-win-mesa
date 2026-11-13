@@ -599,6 +599,7 @@ tritonDraw(D3D10DDI_HDEVICE hDevice, UINT VertexCount, UINT StartVertexLocation)
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
+    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
     ID3D11DeviceContext1_Draw(pD->pCtx1, VertexCount, StartVertexLocation);
 }
 
@@ -608,6 +609,7 @@ tritonDrawIndexed(D3D10DDI_HDEVICE hDevice, UINT IndexCount,
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
+    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
     ID3D11DeviceContext1_DrawIndexed(pD->pCtx1, IndexCount, StartIndexLocation, BaseVertexLocation);
 }
 
@@ -618,6 +620,7 @@ tritonDrawInstanced(D3D10DDI_HDEVICE hDevice, UINT VertexCountPerInstance,
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
+    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
     ID3D11DeviceContext1_DrawInstanced(pD->pCtx1, VertexCountPerInstance, InstanceCount,
                                        StartVertexLocation, StartInstanceLocation);
 }
@@ -629,6 +632,7 @@ tritonDrawIndexedInstanced(D3D10DDI_HDEVICE hDevice, UINT IndexCountPerInstance,
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
+    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
     ID3D11DeviceContext1_DrawIndexedInstanced(pD->pCtx1, IndexCountPerInstance, InstanceCount,
                                               StartIndexLocation, BaseVertexLocation,
                                               StartInstanceLocation);
