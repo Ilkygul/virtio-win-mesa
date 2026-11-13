@@ -790,6 +790,17 @@ ctx_UpdateSubresource1_override(void *self, ID3D11Resource *pDstResource,
                                 const void *pSrcData, UINT SrcRowPitch,
                                 UINT SrcDepthPitch, UINT CopyFlags)
 {
+   {
+      static volatile LONG n;
+      struct npt_d3d11_buffer *b = npt_d3d11_buffer_cast(pDstResource);
+      D3D11_BUFFER_DESC bd;
+      if (b && npt_d3d11_buffer_fill_desc(b, &bd) && (bd.BindFlags & D3D11_BIND_CONSTANT_BUFFER) &&
+          bd.ByteWidth >= 1024 && InterlockedIncrement(&n) <= 300)
+         npt_log("FMT guest cbuffer UpdateSubresource1 res=0x%llx ByteWidth=%u usage=%u flags=0x%x (CopyFlags are NOT sent to the host) box=%s[%u,%u) %s",
+                 (unsigned long long)((struct npt_com_base *)pDstResource)->base.id, bd.ByteWidth, (unsigned)bd.Usage, CopyFlags,
+                 pDstBox ? "yes" : "no", pDstBox ? pDstBox->left : 0, pDstBox ? pDstBox->right : bd.ByteWidth,
+                 npt_d3d11_context_is_immediate(self) ? "immediate" : "DEFERRED");
+   }
    (void)CopyFlags;
    ctx_UpdateSubresource_override(self, pDstResource, DstSubresource,
                                   pDstBox, pSrcData, SrcRowPitch,
