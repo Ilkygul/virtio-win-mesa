@@ -4,7 +4,7 @@ Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-pr
 
 ## Algemene doelstatus
 
-**Gedeeltelijk gerealiseerd — Windows-interface nog niet correct.** Het algemene doel blijft OPEN. De klassieke titelbalkworkaround geldt uitsluitend voor het eigen demovenster. Taakbeheer toont nog witte navigatieblokken, effen zoekveld-/bedieningsbalken en gekleurde randen; de demo-release is geen algemene driver-/Windows-interfacevrijgave. Nieuwe gerichte ronde vanaf21:16:51UTC, concrete terugkoppeling uiterlijk22:16:51UTC, uitsluitend zelfstandigeC23testVM.
+**Gedeeltelijk gerealiseerd — Taakbeheer hersteld; overige Windows-interface en regressies nog in validatie.** Het algemene doel blijft OPEN. C33 voert minimumprecision-floats op dezelfde GPU met FP32 uit: de echte Taakbeheer-navigatie, zoektekst en knoppen blijven correct tijdens paginawisselen, scrollen, verplaatsen en vergroten. Geen nieuwe softwareterugval. Dit nieuwe driverpaar staat uitsluitend in de zelfstandige C23-test-VM; productie is nog niet bijgewerkt. Explorer/Start moeten nog zonder oude WARP-whitelist als werkelijk hardware-actief worden bevestigd; de korte 3D/video-regressies staan open. De klassieke titelbalkworkaround geldt nog uitsluitend voor het eigen demovenster en is geen algemene Windows-vrijgave. De eerdere eenuursrapportage is geleverd; de actuele C33-winst en beperkingen staan hieronder.
 
 ## Werkafspraak: eerst merkbare gebruikswinst
 
