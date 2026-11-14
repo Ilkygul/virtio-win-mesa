@@ -2,6 +2,10 @@
 
 Bijgewerkt: 14 november 2026. Dit is het centrale beslisregister voor de Fold-proeven op deze voortgangsbranch. De hoofdchat werkt dit na elke betekenisvolle proef bij. Het register begint met de hieronder gecontroleerde resultaten; het is geen volledige reconstructie van alle eerdere kandidaten.
 
+## Algemene doelstatus
+
+**Gedeeltelijk gerealiseerd — Windows-interface nog niet correct.** Het algemene doel blijft OPEN. De klassieke titelbalkworkaround geldt uitsluitend voor het eigen demovenster. Taakbeheer toont nog witte navigatieblokken, effen zoekveld-/bedieningsbalken en gekleurde randen; de demo-release is geen algemene driver-/Windows-interfacevrijgave. Nieuwe gerichte ronde vanaf21:16:51UTC, concrete terugkoppeling uiterlijk22:16:51UTC, uitsluitend zelfstandigeC23testVM.
+
 ## Werkafspraak: eerst merkbare gebruikswinst
 
 De gebruiker heeft op 14 november 2026 gevraagd om sneller en minder perfectionistisch te werken, herhaling te voorkomen en de uitkomsten op GitHub te bewaren.
