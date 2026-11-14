@@ -4,7 +4,7 @@ Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-pr
 
 ## Algemene doelstatus
 
-**Gedeeltelijk gerealiseerd — Taakbeheer hersteld; overige Windows-interface en regressies nog in validatie.** Het algemene doel blijft OPEN. C33 voert minimumprecision-floats op dezelfde GPU met FP32 uit: de echte Taakbeheer-navigatie, zoektekst en knoppen blijven correct tijdens paginawisselen, scrollen, verplaatsen en vergroten. Geen nieuwe softwareterugval. Dit nieuwe driverpaar staat uitsluitend in de zelfstandige C23-test-VM; productie is nog niet bijgewerkt. Explorer/Start moeten nog zonder oude WARP-whitelist als werkelijk hardware-actief worden bevestigd; de korte 3D/video-regressies staan open. De klassieke titelbalkworkaround geldt nog uitsluitend voor het eigen demovenster en is geen algemene Windows-vrijgave. De eerdere eenuursrapportage is geleverd; de actuele C33-winst en beperkingen staan hieronder.
+**Gedeeltelijk gerealiseerd — C33 herstelt Taakbeheer, Verkenner en Start op hardware.** Het algemene doel blijft OPEN voor resterende brede 3D-/video-glitchvrijheid en duurzame uitrol. Minimumprecision-floats lopen op dezelfde GPU met FP32; geen nieuwe softwareterugval. Taakbeheer blijft correct bij navigeren, scrollen, verplaatsen en vergroten; Verkenner/Start zijn werkelijk native bevestigd na uitschakelen van de oude geforceerde WARP-policy. Korte regressies behouden de bestaande privatecopy3D-gain en AV1-hardwaredecode. SearchHost kiest nog zelfstandig WARP en telt niet als GPU-bewijs. De demo-privatecopy/klassiekeNC-route is geen algemene directshared3D-fix; volledige fysiekevideostottervrijheid wordt niet geclaimd. Nieuw paar uitsluitend in C23, productie nog ongewijzigd/UIT. De actuele geteste winsten, bronpatch, cachevoorwaarde en beperkingen staan hieronder.
 
 ## Werkafspraak: eerst merkbare gebruikswinst
 
@@ -164,6 +164,16 @@ De lokale bewijsnamen verwijzen naar bestaande meetbestanden in de gedeelde werk
 - Werkelijk voltooid23:13:12.618–23:13:22.159Z:483succesvollePresents/8.0153s =60.2599 APIpresent/s, geenocclusie/minimalisatie/vroegeexit/foregroundverlies, geen device-removal of fout. QPC-intervallenp95=17.6606ms/max19.8806ms, geeninterval>25ms. Supervisor/child0/natuurlijkafgelopen; per-owned-HWNDpolicy netjeshersteld.
 - Fysieke30s-opname bewaard; Root ziet alle15kubussen herkenbaar in de geselecteerde actieveframe. Geen fysieke60Hz-/volledigeallframes-garantie uit de API-statistiek. Directshared/privatecopy0-route is hier niet opnieuw gevalideerd; oude beperking blijft expliciet.
 - Bewijs evidence/c33-short-regressions-r1/3d/{benchmark.json,supervisor.json,nonclient-result.json,plan.json}, phone-3d.mp4 en3d-frame-7s.png. Beslissing: bestaande3D-gainbehouden; nu alleen korte YouTubehardwaredecode-regressie, geen nieuwe3D-variant.
+
+## C33 korte YouTube-regressie — AV1-hardwaredecode behouden
+
+- **Scenario:** bestaande eigen C23-Edgeprofieltaak/CDP9334, ongewijzigde collector/prep; verse output edge-video-c33-retain-r1,10s warmup en10s observatie. Zelfde C33/native-shellprofiel; geen CPU-harnas of nieuwe decodevariant.
+- **Werkelijke uitkomst:** gemeten23:15:34.272–23:15:45.112Z, videosample-interval9.98s/mediatijd+9.986s,598frames/6drops, circa59.3186 browserpresentedframes/s. Geen collectorerrors, stderrleeg; volledig report metfinishedAt bewaard. Wrapper rapporteert collectorExitCode=null, dus procesexit0 wordt niet geclaimd.
+- **Hardwarebewijs:** D3D11VideoDecoder, kIsPlatformVideoDecoder=true, AV1/Main1920×1080; edge://gpu VideoDecode Hardwareaccelerated. Actuele Android QTI c2.qti.av1.decoder draait innativevideo-worker32537, resource-manager noemt hw-video-codec/swcodecno. Fysieke50s-clip/contactsheet toont daadwerkelijke filmbeelden enleesbareEdgeUI; geen grovebeeldcorruptie in de bekeken samples.
+- **Beperking:** browserpresentaties zijn geen fysieke60Hz-garantie; eerdere bron/compositor-hold-vraag is hiermee niet volledig opgelost. Geen nieuwe CPU- of volledigstottervrijheidsclaim. Directshared3D/privatecopy0 enalgemeneD3D12/HEVCdekking blijven buiten deze gerichtefix/regressie.
+- **Bewijs:** evidence/c33-short-regressions-r1/{video/report.json,video-summary.json,video/collector.stderr,phone-video.mp4,video-contact.png,android-vpu.log,host-video-decode.log}. Beslissing: C33nativeUI-fix enbestaande3D/hardwaredecodewinst behouden inC23; verderwerk uitsluitend vanuitconcreteresterendefouten, geenherhalingC26/C27/C28. Productie ongewijzigd/UIT.
+
+De werkelijkgebouwde bronpatch is nu ook reviewbaar op deze branch: [C33 DXVK minimum-float FP32](patches/c33-dxvk-minimum-float-fp32.patch), commit e0ff97875c11f37fcf15d7ad9f85e30bcc4575ca. Dit is geen algemeneproductierelease; verse/versiegebonden shadercache blijft onderdeel van de testconfig tot een duurzamecachekeywijziging is afgewerkt.
 
 ## Exacte kandidaat-identiteiten
 
