@@ -104,6 +104,9 @@ De lokale bewijsnamen verwijzen naar bestaande meetbestanden in de gedeelde werk
 - **Bewijs:** evidence/c29-taskmgr-a8-draw-r1/{route.json,host-final.log,draw-rows.log,neptune-current.log,phone.mp4,capture-dir-before.txt,capture-dir-after.txt}. Vier nieuwe DWM-PS-programma's 0x897/0x89a/0x89b/0x89d zijn exact uit deze procesepoch veiliggesteld onder programs/ met SHA256-manifest; geen van deze vier kan aan de32 vastgelegde draws worden gekoppeld.
 - **Volgende beslissing:** CPU-disassembly van deze vier bestaande DXBC's; ontbrekende daadwerkelijke atlas→draw-koppeling blijft expliciet open. De al aanwezige DXVK NPT_DUMP_A8-optie is bronmatig beoordeeld: geen procesfilter, brede copy/flush-dumps en echte Map(READ)-GPU-wachten, dus niet als passieve gerichte capture aangezet. Geen herhaling C26/C27/C28 of blinde swizzle/syncpatch. Algemene doelstatus blijft gedeeltelijk gerealiseerd — Windows-interface nog niet correct.
 
+
+- **C29 aanvullende analyse:** expliciete object/blob/resource-ID-koppeling gesloten: TaskMgr ctx163 object0x72→blob114→globalres105→DWMctx7 object0x86e; object0x6b→blob107→globalres104→DWMobject0x86f. Guest-/hostprocesidentiteiten vastgelegd in evidence/c29-taskmgr-guest-identity-audit-r1/analysis.json. Vier DXBC's offline met Windows D3DDisassemble uitgelezen en hashes geverifieerd: coverage-output; integer t0.x-popcount/16×kleur; textureRGB×v1.w met alpha=v1.w; constante uint0xffff. Interpretatie evidence/c29-taskmgr-a8-draw-r1/disassembly/interpretation.json. Nog geen geselecteerde A8-draw, dus geen foutoorzaak uit deze shaderwiskunde afleiden.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
