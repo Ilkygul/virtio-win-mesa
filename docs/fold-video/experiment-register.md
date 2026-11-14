@@ -158,6 +158,13 @@ De lokale bewijsnamen verwijzen naar bestaande meetbestanden in de gedeelde werk
 - **Bewijs:** evidence/c33-native-shell-regression-r1/{phone-native-shell.mp4,start.png,explorer-actual.png,explorer-this-pc.png,native-shell-after.json,host-capture.log,explorer-start-native-maps.txt,native-policy-created.json,result.json}.
 - **Beslissing:** C33-winst behouden met oude softwareweigeringspolicy in de zelfstandige VM uitgeschakeld. Nu alleen korte noodzakelijke privatecopy3D- en YouTube-hardwaredecode-regressies. Productie blijft UIT/onaangeroerd. Geen claim alle Windowsprocessen of alle3D-/video-routes hersteld.
 
+## C33 korte 3D-regressie — bestaande privatecopy-winst behouden
+
+- Zelfde C33/native-shellprofiel, ongewijzigde immutable15kubussen-EXE6BEF en bestaande interactieve supervisorDEFA, verse run regression-c33-privatecopy8-r1. Warmup1s/meting8s, client960×640, privatecopy1; bestaande owned-classic-NC-demoworkaround blijft uitsluitend voor deze demo en is geen algemene drivercaptiontest.
+- Werkelijk voltooid23:13:12.618–23:13:22.159Z:483succesvollePresents/8.0153s =60.2599 APIpresent/s, geenocclusie/minimalisatie/vroegeexit/foregroundverlies, geen device-removal of fout. QPC-intervallenp95=17.6606ms/max19.8806ms, geeninterval>25ms. Supervisor/child0/natuurlijkafgelopen; per-owned-HWNDpolicy netjeshersteld.
+- Fysieke30s-opname bewaard; Root ziet alle15kubussen herkenbaar in de geselecteerde actieveframe. Geen fysieke60Hz-/volledigeallframes-garantie uit de API-statistiek. Directshared/privatecopy0-route is hier niet opnieuw gevalideerd; oude beperking blijft expliciet.
+- Bewijs evidence/c33-short-regressions-r1/3d/{benchmark.json,supervisor.json,nonclient-result.json,plan.json}, phone-3d.mp4 en3d-frame-7s.png. Beslissing: bestaande3D-gainbehouden; nu alleen korte YouTubehardwaredecode-regressie, geen nieuwe3D-variant.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
