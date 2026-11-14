@@ -149,6 +149,15 @@ De lokale bewijsnamen verwijzen naar bestaande meetbestanden in de gedeelde werk
 - **Beperking/volgende beslissing:** dit is een echte nativecompilerverbetering, geen Taakbeheer-softwareterugval. Nog geen brede Windows-,3D- of video-regressieclaim. Oude shellwhitelist14 blijft in deze eerste proef actief, dus Explorer/Start mogen nog niet als hardwarebewijs gelden. Volgende gerichte stap: alleen C23 met bestaand triton-nowarp-optout opnieuw starten (oude whitelist bewaren), vervolgens verse Explorer/Start werkelijk op nieuwehardwaredriver bevestigen en UI+noodzakelijke3D/video kort controleren. Productie blijft UIT en onaangeroerd. C33-winst behouden; algemeen doel blijft OPEN tot resterende controles.
 - **Cachevoorwaarde voor duurzamere uitrol:** de huidige proef gebruikt bewust verse privatecache; oud cachedIR kan deze compilerkeuze overslaan. Als bredere proef slaagt, krijgt de precisiekeuze een cachekey/-generatie-invalidation vóór algemene uitrol, of versiegebonden cachepad bij deployment.
 
+## C33 tweede praktijktest — Verkenner en Start werkelijk op hardware
+
+- **Scenario:** uitsluitend C23 met bestaand extensionless triton-nowarp-optout opnieuw gestart. Dit voorkomt Tritons oude geforceerde adapterweigering vóór whitelist/defaults. Oude14namen-whitelist exact bewaard (SHA6864…01FD2), kopie gemaakt; geen tekstregel gewijzigd. Het markerbestand0bytes is door deze proef gemaakt op23:03:44.4059086Z.
+- **Build/runtime:** ongewijzigd C33 B964/5E6E/privatecache; normale guestshutdown→volledige drain→pooluit/reserve5120→expliciete C23start. Nieuwe Windowsboot23:06:41.643Z, GPUCode0. Explorer4456 / host27038 ctx35 en StartMenuExperienceHost5948 / host27074 ctx47 laden nativeUMD3EEF, geen d3d10warp-module, en de twee nieuwe libraries zijn werkelijk gemapt.
+- **Gebruikerswinst:** Startpictogrammen/labels/zoekveld leesbaar; Verkenner Home en ThisPC tonen correcte toolbar, navigatie, labels en schijfbalken. Geen waargenomen witte glyphblokken in deze korte controle. Fysieke opname en fotos bewaard.
+- **Beperking:** SearchHost5924 kiest zelfstandig d3d10warp.dll; dat proces telt niet als hardwarebewijs. Het markerbestand voorkomt uitsluitend Tritons beleid, niet alle softwarekeuzes van Windows/apps. De eerste opname raakte door een verkeerde taakbalkcoördinaat Search; die is expliciet uitgesloten voor Explorer/Start-acceptatie. De gecorrigeerde opname plus fotos tonen de echte doelen.
+- **Bewijs:** evidence/c33-native-shell-regression-r1/{phone-native-shell.mp4,start.png,explorer-actual.png,explorer-this-pc.png,native-shell-after.json,host-capture.log,explorer-start-native-maps.txt,native-policy-created.json,result.json}.
+- **Beslissing:** C33-winst behouden met oude softwareweigeringspolicy in de zelfstandige VM uitgeschakeld. Nu alleen korte noodzakelijke privatecopy3D- en YouTube-hardwaredecode-regressies. Productie blijft UIT/onaangeroerd. Geen claim alle Windowsprocessen of alle3D-/video-routes hersteld.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
