@@ -1,6 +1,6 @@
 # Proefregister Fold / DroidVM
 
-Bijgewerkt: 14 november 2026. Dit is het centrale beslisregister voor de Fold-proeven op deze voortgangsbranch. De hoofdchat werkt dit na elke betekenisvolle proef bij. Het register begint met de hieronder gecontroleerde resultaten; het is geen volledige reconstructie van alle eerdere kandidaten.
+Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-proeven op deze voortgangsbranch. De hoofdchat werkt dit na elke betekenisvolle proef bij. Het register begint met de hieronder gecontroleerde resultaten; het is geen volledige reconstructie van alle eerdere kandidaten.
 
 ## Algemene doelstatus
 
@@ -139,6 +139,15 @@ De lokale bewijsnamen verwijzen naar bestaande meetbestanden in de gedeelde werk
 - **Identiteit:** C15/F19 bronbestand FF6C1AFC32787FFC953BE3B97BF59E2EF3440819A0DBE4D2BFD46D1C9AE05856 → DE9BAC622C76A832538876C7D57F7E046DBD92802D28B63A3F22FE58FDDE39E2; patchACE25417176B24C0938D1C9A92FE63EAA324FBFC75B99674CC635B540685874E. artifacts/proposals/minprecision-fp32-c33-r1/ met volledige kleine functie/semantiek; Root bronreviewPASS.
 - **Uitvoering:** privébuild van gematcht D3D11/DXGI-paar op de bouw-pc opdracht gegeven. Nog geen nieuwe binary geïnstalleerd, geen resultaatclaim. Originele F19/9F71 en C25-hostpaar beschermd.
 - **Acceptatie/volgende beslissing:** uitsluitend zelfstandige C23, eigen pairpaden; echte ongewijzigde Taakbeheer dezelfde schaal/venster, openen→navigatie terug→scroll→move/resize en korte opname. Hardware-UMD/paar/code0/geen nieuwe WARP aantonen. Bij zichtbare winst korte Verkenner/Start en noodzakelijke3D/video-regressie; anders direct C25 herstellen en deze precisiehypothese opnieuw beoordelen. Productie blijft buiten deze proef. Algemeen doelOPEN.
+
+## C33 eerste praktijktest — Taakbeheer zichtbaar hersteld op hardware, verdere regressie open
+
+- **Werkelijke build:** verse DXVK264/264 build geslaagd; D3D11 B964E83618F109C8E68DD69FF3BC192A3470D34E4B53CEB89308654FA39404DE en DXGI5E6E08A4592A6BAE52B87FCE4442369E11B631D0BBAB5CB7905CADD2E5224740. Exact1268bronbestanden, alleen goedgekeurde compilerwijziging; matched pair/ELFs/oudbestandbescherming gecontroleerd. Bouw-pc opgeruimd, slot vrijgegeven en UIT. Verificatie artifacts/c33-fp32-dxvk-build/session-20261114-fp32-r1/final-local-verification.json.
+- **Werkelijke runtime:** uitsluitend C23-private pairpaden en nieuwe lege private shadercache; geen oude IR-cachefallback. Volledige liveconfig exact, persistenteconfigCAA5DFDA…F9C64B8. Hostmain15636/renderroot15753, DWM1356; boot22:58:48.292Z, TaskMgr6296 geboorte22:59:30.5916236Z; TaskMgrhost17255/ctx61. Beide nieuwe libraries werkelijk in zijn maps; Code0, ongewijzigde Windows-UMD3EEF, geen d3d10warp-module. triton-warp.txt SHA6864…01FD2 ongewijzigd, TaskMgr stond daar niet in; triton-nowarp nog afwezig. Globale oudeF19/9F71 en C25hostpaar blijven ongewijzigd.
+- **Gebruikerswinst:** ongewijzigd Taakbeheer op DPI96,920×690: navigatiepictogrammen herkenbaar; zoektekst/header/knoplabels leesbaar, eerdere witte blokken/effen balken weg. De fysieke32.021s/118frames-opname toont stabiliseren, Performance→Processes, naar beneden/terug scrollen, verplaatsen en vergroten. Tekst/glyphs blijven correct; geen aanhoudende gekleurde TaskMgr-rand in de beoordeelde beelden. Dit is geen118/32-fps-prestatieclaim.
+- **Bewijs:** evidence/c33-taskmanager-minfp32-r1/{phone-actions.mp4,actions.json,before-actions-crop.png,last-actions.png,arrange-result.json,route.json,initial-health.json,taskmgr-native-pair-maps.txt,actual-native-env-disks-maps.txt,first-visual-result.json}; gerichte visuele audit volgt in dezelfde bewijsmap/naastliggendeauditmap.
+- **Beperking/volgende beslissing:** dit is een echte nativecompilerverbetering, geen Taakbeheer-softwareterugval. Nog geen brede Windows-,3D- of video-regressieclaim. Oude shellwhitelist14 blijft in deze eerste proef actief, dus Explorer/Start mogen nog niet als hardwarebewijs gelden. Volgende gerichte stap: alleen C23 met bestaand triton-nowarp-optout opnieuw starten (oude whitelist bewaren), vervolgens verse Explorer/Start werkelijk op nieuwehardwaredriver bevestigen en UI+noodzakelijke3D/video kort controleren. Productie blijft UIT en onaangeroerd. C33-winst behouden; algemeen doel blijft OPEN tot resterende controles.
+- **Cachevoorwaarde voor duurzamere uitrol:** de huidige proef gebruikt bewust verse privatecache; oud cachedIR kan deze compilerkeuze overslaan. Als bredere proef slaagt, krijgt de precisiekeuze een cachekey/-generatie-invalidation vóór algemene uitrol, of versiegebonden cachepad bij deployment.
 
 ## Exacte kandidaat-identiteiten
 
