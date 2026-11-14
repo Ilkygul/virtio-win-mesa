@@ -1,0 +1,70 @@
+{
+  "status": "LIMITED_PRODUCTION_DEMO_VALIDATED",
+  "date": "2026-11-14",
+  "baseline": {
+    "KMD": "1CA24128E436F6A0EEDA4896DE01B3FE3B5EC0BFED51B4CDE3076AB501DE51E4",
+    "nativeUMD": "3EEF8F3E4EC844E05A09E7F5BB5B1B5661AF85E1DCC5CA8D5EE5177FACB31FBD",
+    "nativeAlias": "3EEF8F3E4EC844E05A09E7F5BB5B1B5661AF85E1DCC5CA8D5EE5177FACB31FBD",
+    "ECUMD": "7A4077D3836A0B5931026C19834C16240521AF2278B8E68D7C034F9280229CA6",
+    "driverRewritten": false,
+    "nativeDisplayHz": 60
+  },
+  "demo": {
+    "seconds": 30.0135410417,
+    "apiFps": 60.3061130803,
+    "presents": 1810,
+    "client": [
+      960,
+      640
+    ],
+    "cubes": 15,
+    "drawCallsPerFrame": 15,
+    "privateCopy": 1,
+    "naturalExit": 0,
+    "stderr": "",
+    "gpuCode": 0,
+    "policyEnabledBefore": 1,
+    "policyEnabledAfter": 0,
+    "totalRecordedFrames": 1872,
+    "activeRecordedFramesAll15": 1832,
+    "missing": 0,
+    "blank": 0,
+    "captionMagentaPixelsMax": 0,
+    "startupFrames": 22,
+    "finalDesktopFrames": 18
+  },
+  "video": {
+    "codec": "AV1 1920x1080 60",
+    "decoder": "D3D11VideoDecoder/platformtrue and active QTIAV1",
+    "browserFps": 58.9806068293,
+    "droppedFrames": 30,
+    "totalFrames": 1797,
+    "mediaSecondsAdvanced": 29.966408,
+    "wholeWindowsCpuPercent": 12.2854914197,
+    "edgeCpuPercent": 4.9930572319,
+    "cpuSeconds": 20.0278096875,
+    "edgeProcessSetStable": true,
+    "cpuInsidePlayback": true,
+    "collectorNaturalExit": 0,
+    "physicalCheck": {
+      "recordedFrames": 883,
+      "streamSeconds": 14.981733,
+      "lowChangeIntervals": 8,
+      "maxLowChangeSeconds": 1.198533,
+      "interpretation": "Sourceanimationholdsversusrenderrepeatsunknown;notstallfree"
+    }
+  },
+  "safety": {
+    "coldIndependentBackupVerified": true,
+    "strictMarkersOn": true,
+    "C26C27Excluded": true,
+    "globalThemeChanged": false
+  },
+  "limits": [
+    "OnlybundledWin32demowithprivateframecopy;otherapps/directsharedrendering/WinUIremainunfixed",
+    "Initialdesktopfilledwindowstartupretained",
+    "API-fpsdoesnotprovephysicalrefresh",
+    "Noall-content/pixel/stallfreevideoorfoldstresstestclaim",
+    "Coldstart12sfailedthen30sdeadlinecorrection;firstcookiedialogmeasurementinvalid;allfailuresretained"
+  ]
+}
