@@ -41,11 +41,13 @@ De gebruiker heeft op 14 november 2026 gevraagd om sneller en minder perfectioni
 
 | C23 YouTube baseline r1; ongeldig | Zelfde C23/1CA/3EEF; AV1 1080p60, 10 s warmup en 30 s observatie | Late YouTube-cookiepopup pauzeerde de clip op 3,875 s; nul media-advance en paused=true gedurende hele meting. Hardwaredecoder geselecteerd maar geen geldige playback-CPU-/vloeiendheidsclaim | Alleen opnieuw meten na cookies afwijzen en zichtbaar bewegende clip. Geen driverwijziging; dit is herstel van ongeldige meting | Lokaal: `evidence/c23-youtube-guest-r1/edge-video-r1/report.json`, `evidence/c23-youtube-phone-r1.mp4` |
 
+| C23 YouTube r2; cookiepopup hersteld | Dezelfde baseline als r1; dezelfde eigen clip hervat na cookies afwijzen, 10 s warmup / 30 s meting | AV1 1920×1080 D3D11VideoDecoder/platformtrue; dezelfde PID22068 QTI AV1-decoder en 3191 live Done-logs in begrensde capture. 1778/1800 niet-gedropte frames = 59,267 browserfps, 22 drops, media 30,005 s vooruit in30s, alle samples unpaused. CPU20s geheel binnen meting: Windows9,02%, Edge4,16%, procesgroep stabiel. Fysieke15sopname toont beweging; geen volledige pixelvrijgave | Videowinst bewaren met kleine-glitchbeperking. Eigen browser normaal gesloten, Code0. Volgende concrete proef: dezelfde15Draw-scène privé voltooien en eenmaal naar schermbuffer kopiëren; geen ongewijzigde directpadherhaling | Lokaal: `evidence/c23-youtube-video-decision-r2.json`, `evidence/c23-youtube-guest-r2/edge-video-r2/report.json`, `evidence/c23-youtube-codec-log-r2.txt`, `evidence/c23-youtube-phone-r2.mp4` |
+
 De lokale bewijsnamen verwijzen naar bestaande meetbestanden in de gedeelde werkmap, niet naar op GitHub aanwezige logs. De openbare CPU-samenvatting is direct gelinkt. Voeg bij nieuwe proeven kandidaat/build-identiteit, scenario en compact bewijs toe; publiceer geen wachtwoorden of apparaatidentificatie.
 
 ## Eerstvolgende beslissing
 
-Legacy geeft 58,863 video-browserfps en 60,339 3D-tellerfps, maar de 3D-opname bevat ontbrekende kubussen; daarom geen algemene vrijgave. Native1/runtimeON behoudt de geometrie maar is traag. Herstel die route en meet gericht de extra checkpoint/completionkosten met C22; C21-microbundeling blijft geparkeerd. Constructorcorrectie behouden, titeltekstcorruptie open.
+C23 zelfstandige baseline levert circa59,3 video-browserfps met actieve QTI-VPU en lage CPU, maar het directe 3D-pad mist nog kubussen (3,42% opnametijd). Test één complete private 3D-framekopie met exact dezelfde15Draw-scène en strikte markers. Eerdere copy1-proef op een andere stack gaf volledige geometrie; die bewijst huidige C23 niet. Captioncorruptie blijft open. C21/C22-builds blijven geparkeerd.
 
 ## Exacte kandidaat-identiteiten
 
