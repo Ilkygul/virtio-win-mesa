@@ -1050,6 +1050,15 @@ DXManager: opgeslagen192.168.0.77:38805 geeftNoRoute; Tailscale100.94.244.8:3880
 
 Offline aanvullende binarycontrole reproduceert bekendeC46-CHPE2-positievecontrole en bevestigt C47nativeAA64/ECCHPE2 met ongewijzigdeOpenAdapter10_2/OpenAdapter12-exports. Runtime-template/binderr2 maakt uitsluitend de verseC33-stat een verplichte datatoken; huidige cold-creatematerialisatie is byte-exactgelijk aan de algebonden versie. Head/tail en guard/installer/wrapper blijven gelijk. Geen helper uitgevoerd of fictievebootfeiten ingevuld. Bewijs `local-pe-export-hybrid-proof.json` inC47buildsessie en `r2-cold-bind-equivalence.json` inC47evidence. **Geen claim van prestatieverbetering of opgelost driverdoel; geenproductiemerge/release.**
 
+
+### C47 hervat via werkende wifi — eigen testlaag aangemaakt
+
+Gebruiker meldt dat gewone wifi werkt. Verse ADB-inventaris ziet `192.168.0.77:5555`; toestelidentiteitR3GL60E8R2K en telefoonboot58c1525c…4816b bevestigd. C46 stond nog normaaluit, poolontladen, configuratieAC53/RAM6144 en koude parentstat ongewijzigd. Fold-lock opnieuwgenomen/ververst.
+
+Coldcreate nu werkelijkexit0. Nieuwe C47leaf enprivateVARS bestaan; volledige keten **C47→C46→C35→C33** (alle60GiBvirtual) en qemuchecks0errors bevestigd. C46/C33-stat/head/tail vóór/na exact; VARS-copy gelijk. ColdarchiveSHA `a1b904d9cd90b06dedba03ee27d67b56474389387350731d6fa7f7665c1e445b`; bewijs `evidence/c47-present-single-publication-r1/cold-proof-summary.json`.
+
+Blijvende configuratieénliveRPC zijn nu exactopC47child/privateVARS/RAM6144 gezet; andereveldenblijvengelijk. NieuwefullconfigSHA `8C22BE5077DBE6040B69C615A90900FF893B00C5CAF559CABC460A6BF5CA09F2`. C46blijftfrozenherstelpunt. De6656MiBreservering voor deinstallbootloopt metbestaandeAndroidfloor3072. C47DLLsnogNIETgeïnstalleerd; eerstinstallboot/werkelijke5FDrollen/oudeC46DLLbaseline, dangebonden3DLLtransactieenfreshnewboot. Geenproductiewijziging.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
