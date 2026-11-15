@@ -1018,6 +1018,13 @@ Bronmanifest SHA `2945A6B7FDAB6FF46D1CA20222243CD9F3520CCE180C1AF102F3B80F98ADA7
 
 **Volgende kleine proef:** eerst dezelfde ongewijzigde8s/15-kubus hardwaretaak op huidigeC46/RAM6/DPI200 als verse vergelijkingsbasis. Daarna C47 native+EC bouwen met bestaande privatebouwprocedure, in een omkeerbare zelfstandige testkopie installeren en dezelfde taak vergelijken. Bij winst kort echteTaakbeheer/Start en bestaandehardwarevideo controleren. Niet automatisch alle oude proeven herhalen. Geen productie/mainmerge/release; doel blijft open en C47 is nog niet gebouwd of op het toestel getest.
 
+
+### C46/RAM6 3D-basis: portrait klemt venster, geen geldige960-vergelijking
+
+De bestaande8s-taak liep normaal uit met echte2A-driver, hardwareadapter, nulerrors/deviceRemoved/occlusion/focusverlies;211Presents/8,0236s=26,297API/s. Maar nativeportrait1848×2448 bijDPI200 klemde de gevraagde960-client tot **928×640**. De fysieke opname toont bovendien de rechtervensterrand aan de schermgrens. Dit is geen vergelijkbare volledige960-clientbasis voorC47, en geen reden de demo te wijzigen of delen buitenbeeld te beoordelen.
+
+Bewijs `evidence/c47-present-single-publication-r1/baseline-portrait-analysis.json`, `c46-baseline-guest-run`, `c46-baseline-phone.mp4` en `c46-baseline-frame.png`. **Concrete herstelreden:** één gecorrigeerde basis in native landscape2448×1848 met dezelfdeDPI200/RAM6/EXE/8s/vsync1/defaultcaption/privatecopy0; werkelijke960×640 en gehele venster moeten aantoonbaar passen. Daarna geen verdere identieke basisherhaling. Bronpatch/C47-plan ongewijzigd. Bouw-pc inmiddels wakker, eigenlease genomen; eerste9779Linuxbeschermpaden exact. OudeUSB-netwerkkaart is afwezig, verbindingviaeno1. Windowsbouw-VM start ondereigenlease; geen bestaandeoutput gewijzigd.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
