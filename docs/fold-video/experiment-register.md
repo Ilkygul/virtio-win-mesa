@@ -793,6 +793,16 @@ Actual PS5.1-parse van alle vijf definitieve scripts, alle zeven stagehashes, sc
 
 Normale afsluiting van deze installatieboot09:10:18Z; main weg, verse fullDRAIN na maps-race PASS. Nu poolcyclus en dezelfde C46 opnieuw starten om de nieuwe DLLs werkelijk te laden. Dit is nog geen C46-runtime-, pixel- of snelheidsresultaat. Productie en C45-herstelpunt blijven onaangeroerd.
 
+### C46 nieuwe driver actief — eerste echte 3D-proef met bescheiden winst
+
+Verse Windowsboot09:12:41.6756240Z; DWM1344/birth09:12:47.9784726Z mapte werkelijk native2A7DC660…E744D. EC0D472DA0…BBC32 op disk, Native1/GPUCode0. Actueel hostmain21237/start4104330, C46RW/C35RO/C33RO/privateC46VARSrw, config9FDA. Geen host-/KMDwijziging. PS5.1parse/externe activationhash5812FA48…60939 PASS; bestaande forcepresent-marker09:19:33Z met ACL bewaard verplaatst, dwm/runtime/nowarp blijvenON. Fysiek fullscreen en WMI2448×1848 vóór de proef.
+
+Zelfde immutable6BEF/DEFA-app,15kubussen/defaultDWMcaption/privatecopy0/960×640/warm1/meet8, zonder profiler/C22/WPR. PID6736 mapte werkelijk C46native2A7D tijdens meetfase. **230Presents/8,00499s =28,7321API/s**, versus C4526,9648 (+6,55% in twee korte opeenvolgende metingen, geen geïsoleerde causaliteitsclaim). API-intervalp5034,475/p9546,347/max58,961ms; Presentp5030,766ms. Natuurlijkeexit0, stderrleeg, geen errors/deviceRemoved/foregroundverlies.
+
+Volledige fysieke opname356frames; grensframes visueel geïnspecteerd. Alle **330 geschilderde actieve frames4..333** bevatten alle15kubusposities, nul verdwenen posities/blanke scène. Normale titelbalk in begin/midden/eindcontroles. Interne opnamegapmediaan32,611/p9543,022/max58,500ms, geen>200ms. Desktop/launchvóórpaint en desktopnaexit apart, geen warmupweggelaten. Bestaande onveranderde occupancyvalidator, exact dezelfde ROI19,31/500×333. Dit meet opgenomen compositorbeelden, niet ieder fysiek refresh; slotpresence bewijst geen perfecte kleuren/geometrie.
+
+Bewijs evidence/c46-present-tail-pair-r1/direct8-analysis.json SHAb22737540eeecbb11f72b3e7b6068f0dfd42046e687d44bd6112d1da2455d460. **Beslissing:** C46 als gedeeltelijke driverwinst behouden; nog verre van vloeiend60. Nu korte bestaande nativeTaakbeheer6acties/Start en Edgehardwarevideo-regressie, eventueel één bestaande C22-proef voor pairmechanisme. Geen nieuwe GPUcapture of speculatieve gateverwijdering. Zelfstandige testVM; C45herstelpunt bewaard, bouw-pcuit, productie/mainmerge/releaseuit, algemeen doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
