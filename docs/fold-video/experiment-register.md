@@ -741,6 +741,13 @@ Analyse: evidence/c45-direct-gpu-kernel-analysis-r1/analysis.json SHAE1BBABDA647
 
 **Volgende kleinste proef:** alleen de mislukte hosthelft één keer gericht herstellen, geen GPU-herhaling. Zelfde15s-app met bestaande Present-timings; na verse meetwaarneming binnen dezelfde tooluitvoer de actuele klok en native515D controleren en de bestaande C22-marker2s plaatsen/verwijderen. Doel: vaststellen welke van de huidige prefixgrenzen Draw-, Flush-, Signal- of lifetimewerk bevatten. Geen global Signal/Flush-whitelist, geen extra eventworkers en geen gateverwijdering. Een volgende drivercorrectie moet overbodige indieningen aantonen en echte publicatie, GPU-completion en ownership behouden.
 
+
+### C45 hosthelft r2: tijdformaatcontrole stopte vóór activering
+
+Dezelfde app7164 draaide normaal:15,005s/431Presents, natuurlijk exit0 en geen API-/devicefouten. De uitvoer deed de verse meetwaarneming en native515D-controle correct; V8 zag0,835s ouderdom. Daarna wees een dubbele Python3.9-controle het .NET-ISO-tijdformaat met zeven fractiecijfers af, vóór enige ADB-markeractie. Een latere controle weigerde terecht de inmiddels25s oude fase. De marker is in deze poging niet aangeraakt; er is geen hostmeting.
+
+Na deze tweede gerichte controlestoring is de beslissing expliciet: **nog één poging op nieuw controlebewijs**. De reeds gebruikte V8Date.parse accepteert het echte zeven-cijferformaat; dat is vooraf lokaal bevestigd, evenals afwijzing van ongeldige invoer. De redundante incompatibele Python-parser vervalt. Verse2s-klokgrens, modulehash, VMM-geboorte en eigendom/inodecontroles blijven behouden. Geen tussenliggende modelbeurt tussen verse waarneming en markerplaatsing. Geen GPU-herhaling of driverprestatieclaim. Bewijs evidence/c45-direct-host15-r2/trial-receipt.json SHAD33F4CDF49563FFD9CF566EF1DE824F513275B05EB01AAB37EB6F062DDAA3B7C.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
