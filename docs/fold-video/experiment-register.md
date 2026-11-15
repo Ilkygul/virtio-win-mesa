@@ -593,6 +593,19 @@ De primaire [Microsoft-vlagdefinitie](https://learn.microsoft.com/en-us/windows-
 
 Bewijs evidence/c44-flush-scope-log-r1/trial-and-current-state-receipt.json SHA8FAFE53F043240E67A4A76F8DE1BCB672A6F9BE1A504356B123F5E881719A4B3; raw-flush-scope-after-activation.txt, video-guest/report.json, fysiekePNGs/phone.mp4 enpostvideo-neptune.lognaastdiefile. Dezeuitkomstisvóórvolgendevariantvastgelegd.
 
+
+### C45 — kleinste functionele correctie voor werkelijk gemeten UNLESS_NO_COMMANDS
+
+**Hypothese:** C44toontdat de compositor bij videoALLcontext0/FlushFlags1 gebruikt, met15positieveQschrijfsets/acceptedprefix engeenpending/activewrites. De teenge flags==0voorwaardeblokkeert daar degekwalificeerdeasynchroneFlushroute. Dezelfdepublicatievoorwaarden ookbijgedocumenteerdeUNLESS_NO_COMMANDS1toestaan kan deonnodigeCPUheadwait verminderen, met echteGPUcompletion enresourcegrenzenbehouden. Winstisnogonbewezen.
+
+[Bronpatch](patches/c45-unless-no-commands-flush.patch), commitf1f1c3d21c85c2aaa7a8b3b9234b6f5b3846b77d, SHA1EE970696CFFF1E34363E025E16BE74F7E8F14034E04BC7CF354D8CD748BD9F4. ManifestC50805B0C7EAB978203DE11D8306F5E3D00F80F0650AA4B41D4E1DA7D414E52F. Exact éénbestand/tweepredicaten tegenover werkelijkgecompileerdeC44View708ECF…4D01→B02E3B…806439,442overigebestandenongewijzigd. Beide scoped11_1/WDDM2routesaccepteren expliciet flags0OF D3D11_1DDI_FLUSH_UNLESS_NO_COMMANDS; exactALL/3Dcontextfilterblijft. Geenbredebitmasktoelating.
+
+Mixed/strict/unknownwriteherkomst, trim2/combined3, onbekende/hogevlaggen/context blijvenstrict; publicatiefoutenfailclosed. Checkedserial/tailfrontier, Native1/publisherV1, allQwriteprovenance, backingrotatie/rebind enalleechteGPU-/Present-/Acquire-/Release-/lifetimegates ongewijzigd. Geen softwarefallback/appuitzondering/harnastoegevoegd. Bestaandefixture13153checksPASS/490scopematrix; oorspronkelijkeprovenancebaselineNEG42 enwerkelijkeC44flags1baselineNEG43, rawpatchapply/BOM/CRLFPASS. BronchecksgeenSDK/GPU/performancevrijgave.
+
+**Eerstegebruikstaak:** bestaande beschermdeARM64native+ECbouwroute, verseafzonderlijkeC45sibling/eigenVARSbovenbevrorenC35, huidigeC44bewaardvoorrollback. NieuweDLLmapsforcepresentAANbewijzen, danalleenforcepresentUIT/dwmforceAAN/TTL5s/fullscreen. PositieveQUALIFIED_FLUSH qualified1/accepted1/pending0/active0/flags1bewijzen; dezelfdeopenbareAV1clip10sopwarming/30smeting+20sCPU+fysiekeopname. GepindeCPUsampler viaprocess-onlyExecutionPolicyBypass, geenglobalepolicywijziging. BijpraktischewinstalleennodigenativeUI/directe3Dregressies, geenuitgebreidestressronde. Geenmerkbarewinstbetekentditdeelresultaateerlijkvastleggen enverderbeslissenopnieuwbewijs.
+
+NoggeenC45PC-/Foldactie. Rootheeftdetweepredicatenbeoordeeld; lokaalexactbouwpakketwordtsamengesteld. Productieuit/geenmainmergeofrelease/doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
