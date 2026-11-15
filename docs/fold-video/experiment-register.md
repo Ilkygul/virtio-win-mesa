@@ -4,11 +4,13 @@ Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-pr
 
 ## Algemene doelstatus
 
-**Gedeeltelijk gerealiseerd — de native Windows-interface is hersteld; C37 toont complete directe 3D-beelden, maar 3D en video zijn nog niet vloeiend genoeg. Het algemene doel blijft OPEN.**
+**Gedeeltelijk gerealiseerd — de native Windows-interface is hersteld. C45 toont complete directe 3D en een bescheiden cadansverbetering, maar 3D en video zijn nog niet vloeiend genoeg. Een opstartcrash is nog niet verklaard. Het algemene doel blijft OPEN.**
 
-C33 corrigeert de minimumprecision-shadercompilatie op dezelfde GPU. C36 herstelt een ontbrekend weksignaal; C37 verkort de eerste GPU-hercontroles met begrensde backoff. De actuele C37-test gebruikt F91/C20/runtime en de C33-FP32-backend, zonder nieuwe softwareterugval. Ongewijzigd Taakbeheer blijft correct tijdens alle zes zichtbare acties; ook Start is leesbaar op de native UMD. De directe 15-kubussenproef haalt22.36 API/s en alle271 actieve opgenomen beelden bevatten alle objecten, zonder de kopieer-/titelbalktruc van de eigen demo. Dit bewijst geen algemene 60Hz- of alle-appsacceptatie.
+De huidige testkandidaat is C45: native UMD `515D6B…BC0416`, ARM64EC `F3BF14…81A711`, F91-kerneldriver, Native1/runtime, C37-host en de C33-FP32-shadercorrectie op dezelfde GPU. Er is geen nieuwe softwareterugval of appuitzondering toegevoegd. Ongewijzigd Taakbeheer blijft leesbaar tijdens alle zes opgenomen acties; ook Start gebruikt de nieuwe native driver en blijft correct weergegeven.
 
-AV1-hardwaredecode is actief, maar de nieuwe videoproef bevat nog haperingen tot circa0.8s en tegenstrijdige browsercounters. De oude C33-metingen van ongeveer59 browserframes/s en60 API/s met de demo-kopieertruc gelden voor dat oudere profiel, niet voor C37. C37 is de behouden testkandidaat voor complete directe3D; C33 blijft een bevroren herstelpunt. Alleen de zelfstandige test-VM is gewijzigd. Productie is onaangeroerd en UIT; geen algemene merge/release zolang deze beperkingen bestaan. Bronpatches, metingen en volgende bronstap staan hieronder.
+De directe 15-kubussenproef haalt **26,96 API-fps**. Alle 296 actieve opnamebeelden bevatten alle objecten, zonder private framekopie of aangepaste titelbalk. YouTube gebruikt AV1-hardwaredecode op de QTI-VPU, met **30,98 niet-gedropte browserframes/s** en circa **11,2% CPU voor de hele Windows-VM**. Dit zijn geen fysieke 60-fps-claims. Een vergelijkbaar camerastuk toont kleinere opname-intervallen dan C42, maar langere opnamegaten blijven elders bestaan.
+
+Eén C45-opstart eindigde met MEMORY_MANAGEMENT `0x1A/0x4477`. Na gecontroleerde VM-afsluiting en behoud van de mislukte schijfkopie startte dezelfde kandidaat wel. Er is geen bruikbare kerneldump gevonden; de oorzaak blijft open. C45 is daarom een behouden deelresultaat in de zelfstandige test-VM. Productie staat uit; er is geen main-merge of productie-release. C37/C35 en C33 blijven bevroren herstelbasissen.
 
 ## Werkafspraak: eerst merkbare gebruikswinst
 
@@ -647,6 +649,19 @@ FysiekvergelijkbaarcamerastukC45PTS25–35tegenC42PTS30–40(ongeveeruitgelijnd)
 Recorder0/logcattimeout124/film89605473B. Eigenbrowser9452normaalgesloten07:04:28Z. RuntimeauditF2E33983…29724F, fysiekeaudit29D600C8…0FC5FDB, bronpostmortemDC954181…E1F7C0D. Rootreceipt evidence/c45-unless-no-commands-flush-r1/trial-and-current-state-receipt.json SHA7B56A1273FF2467F026238C7DE7968E42CEB2DEBA94B2F95044946FDFF85070F.
 
 **Beslissing:** echtekleinedrivercorrectie+gedeeltelijkecadanswinstbewarenmetbeperkingen. GeenbewijsdatFlushhoofdoorzaakvanalleresterendevertragingis; geenverderescoperechtruimenofclass0gatesweghalen. Eerstkorte bestaande nativeTaakbeheer/Start-en directe15kubussen8sregressie omdeelresultaatbruikbaartehouden, geenbredecheckronde. Bootbug0x1A4477blijftonopgelost; geenproductie-update/mainmerge/release/algemenedoelvoltooiing.
+
+
+### C45 korte regressies geslaagd — native Windows en complete directe 3D behouden
+
+De bestaande ongewijzigde 15-kubussenapp (`6BEF…`) en DEFA-supervisor zijn hergebruikt: 1 s warmup, 8 s meting, 960×640, vsync1, **private-copy0 en normale DWM-titelbalk**. Natuurlijk einde0, lege stderr, hardwaredriver aangevraagd, WARP-fallback niet toegestaan, deviceRemovedReason0 en errors[]. De app bleef vooraan zonder occlusie of minimalisatie. Resultaat: **216 Presents / 8,01044 s = 26,9648 API-fps**, tegenover C37 circa22,36; geen geïsoleerde patch- of fysieke fps-claim.
+
+De ongewijzigde bezettingsvalidator is na controle van de actuele uitsnede hergebruikt. **296/296 geschilderde actieve opnamebeelden bevatten alle15 kubussen**, met nul ontbrekende of lege beelden. Langste opgenomen actief beeldinterval67,333ms; geen interval>200ms in die korte scène. Titelbalk normaal in de bekeken controlebeelden. Audit: evidence/c45-direct8-visual-audit-r1/analysis.json, SHAF1A3C1A5EA6285F9C8D5EA71A510D933D3467825C0E5471184A9669C152ECCAF.
+
+Ongewijzigd Taakbeheer11236/birth07:15:20.967Z is op dezelfde920×690/DPI96 gezet, met werkelijk foregroundbewijs vóór de opname. Alle zes categorieën zijn zichtbaar bevestigd: Performance, terug naar Processen, beide scrollrichtingen, verplaatsen en vergroten. Glyphs, zoekveld, koptekst en tekst blijven leesbaar; geen vroegere witte blokken of duidelijke gekleurde randvlakken in de bekeken beelden. Native515D is gemapt; runtimecontext279 is positief en de geselecteerde modules bevatten geen d3d10warp. Audit: evidence/c45-taskmgr-visual-coverage-audit-r1/analysis.json, SHAD0F37D569A761B4C0B8377454CEE077659CF90078FD4E771151271BE235C713F. De162 opnamebeelden in32,123s zijn geen GUI-fps-meting.
+
+Ook Start6028 toont leesbare iconen en tekst, met native515D en runtimecontext51. GPUCode0/Native1, forcepresentOFF/dwmforceON, C37-host/C33-FP32 en whitelist6864 blijven behouden. Rootbewijs: evidence/c45-unless-no-commands-flush-r1/short-regression-current-state-receipt.json, SHA20F7579C415B9E1560C6C085F8A07B5057E892E9DFC06AB56B471A8800C87638.
+
+**Beslissing:** C45 als best geteste gecombineerde deelresultaat bewaren; nog geen vloeiende 3D/video of verklaarde opstartcrash, dus geen productie/merge/release. Geen extra blinde Flush-varianten. De actuele directe-app-log bevat grove AcquireResourceToken-wachten, maar de bestaande profiler meet die expliciete wacht en OS-callback niet afzonderlijk. Dat rechtvaardigt géén gateverwijdering of herhaling van de ongeschikte profiler. Eerst een passende bestaande meetmogelijkheid bepalen voor de resterende wachttijd. Bronnotitie: evidence/c45-acquire-profile-source-audit-r1/analysis.json, SHA76074FB1DE942F93BC9A66818571EA15046CD9F1B9FD9B1D1C7AB2F25C14ADA5.
 
 ## Exacte kandidaat-identiteiten
 
