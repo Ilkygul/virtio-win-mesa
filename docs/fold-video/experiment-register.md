@@ -2,6 +2,23 @@
 
 Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-proeven op deze voortgangsbranch. De hoofdchat werkt dit na elke betekenisvolle proef bij. Het register begint met de hieronder gecontroleerde resultaten; het is geen volledige reconstructie van alle eerdere kandidaten.
 
+## Waar staat de werkende code (15 november 2026)
+
+Elke repo heeft nu `main` als standaardbranch met de stand die op de Fold draait; oude feature-branches en tags blijven staan als historie. GitHub Actions staat overal uit.
+
+| Repo | `main` = | Op de Fold |
+|---|---|---|
+| virtio-win-mesa | venus-pvm + Fold-commits + dit register | UMD C46 (Triton/Neptune) |
+| viogpu3d-pvm | F91 + pool-QWORD-fix + F92-bufferfix | KMD F92 |
+| virglrenderer | C37-snapshot | hostrenderer C37 |
+| dxvk | C33-snapshot (FP32 min-precision) | DXVK C33 |
+| crosvm | C15/C12-hostsnapshot | crosvm 6ACBBC + [display-pacing-patch](patches/crosvm-display-pacing.patch) (zit in AOSP `packages/modules/Virtualization`, geen eigen fork) |
+| DroidVM | fold-auto-resize | DroidVM-app |
+| termux-x11 | fold-touch1113 + video-validation | scripts `fold8-desktop/droidvm` |
+| gunyah-guest-drivers-windows | viogpu-pvm + pvpanic-arm64 | pvpanic-driver |
+
+Binaries per onderdeel staan in de releases van deze repo (`fold-*`).
+
 ## Algemene doelstatus
 
 **15 nov 21:50 — productie: F92-KMD, crosvm met frame-pacing, legacy-route, DWM- én Present-sync uit (K1–K4).** Daarvoor, 20:10: productie op legacy-route, bureaubladdoel (punten 1–5) gehaald; 2-uurs stabiliteitsproef loopt.** NativeGpuJobV1=0, marker `triton-runtimestream` uit (`.uit`), `triton-dwmwritesync` uit, `triton-presentwritesync` aan. Meting met [meet/meet.sh](meet/meet.sh) op het Fold-scherm, zie "Bureaubladvloeiendheid" onderaan. Onderstaande tabel beschrijft de Native1-stand van vóór deze overgang.
