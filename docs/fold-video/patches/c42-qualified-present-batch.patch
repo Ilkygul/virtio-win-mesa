@@ -1,0 +1,73 @@
+--- a/triton/triton.h
++++ b/triton/triton.h
+@@ -569,7 +569,7 @@
+  * NPT_SHARED_DRAW_SYNC, until the GPU finished).  File C:\\Users\\Public\\triton-nosharedwritesync disables it. */
+ void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE, NULL = unconditional */, const char *op);
+ void tritonSharedDrawDone(PTRITON_DEVICE pD, const char *op);
+-BOOL tritonCanBatchPresentWrites(const void *pResource);
++BOOL tritonCanBatchPresentWrites(PTRITON_DEVICE pD, const void *pResource);
+ void tritonPresentPublishSharedWrites(PTRITON_DEVICE pD);
+ 
+ #endif /* TRITON_H_INCLUDED */
+--- a/triton/tritonResource.c
++++ b/triton/tritonResource.c
+@@ -96,10 +96,15 @@
+     return s == 2;
+ }
+ 
+-BOOL tritonCanBatchPresentWrites(const void *pRes)
++BOOL tritonCanBatchPresentWrites(PTRITON_DEVICE pD, const void *pRes)
+ {
+     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+-    return r && r->BatchPresentWrites && r->hKMAllocation &&
++    /* Only local displayable writes carried by the real runtime publisher
++     * may coalesce CPU publication. Keep the original shape/bind/misc tag. */
++    return pD && pD->RuntimeStreamActive &&
++           npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
++           r && r->RuntimeWriteClass == 1 && !r->RuntimeOpenedAllocation &&
++           r->BatchPresentWrites && r->hKMAllocation && !r->pPresentCompanion &&
+            !r->hImportAlloc && !r->hImportResKmt &&
+            !tritonSwitch("triton-presentwritesync");
+ }
+@@ -114,15 +119,13 @@
+     InterlockedExchange(&pD->SharedDirty, 1);
+     if (tritonSwitch("triton-nosharedwritesync")) return;
+     if (tritonProcessIsDwm()) {
+-        if (!tritonSwitch("triton-dwmwritesync")) return;
++        if (!pD->RuntimeStreamActive && !tritonSwitch("triton-dwmwritesync")) return;
+         /* C19: retain strict synchronization for shared atlases, imported
+          * surfaces and UAVs. Only the existing eligible present-buffer
+          * contract may batch on the negotiated runtime publisher. Present,
+          * Flush and ReleaseResource still publish and gate the whole frame. */
+-        if (pD->RuntimeStreamActive &&
+-            npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
+-            tritonCanBatchPresentWrites(r)) return;
+-    } else if (tritonCanBatchPresentWrites(r)) {
++        if (tritonCanBatchPresentWrites(pD, r)) return;
++    } else if (tritonCanBatchPresentWrites(pD, r)) {
+         return; /* Caller marked SharedDirty: preserve it through publication. */
+     }
+     tritonWaitHostNow(pD, op, TRUE);
+@@ -136,9 +139,8 @@
+     InterlockedExchange(&pD->SharedDirty, 1);
+     /* OmSharedNeedsWriteSync is true if ANY bound shared RTV is ineligible
+      * or an exported UAV is bound. Do not broaden that resource whitelist. */
+-    if ((!tritonProcessIsDwm() ||
+-         (pD->RuntimeStreamActive &&
+-          npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner))) &&
++    if (pD->RuntimeStreamActive &&
++        npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
+         !pD->OmSharedNeedsWriteSync &&
+         !tritonSwitch("triton-presentwritesync"))
+         return;
+--- a/triton/tritonView.c
++++ b/triton/tritonView.c
+@@ -417,7 +417,7 @@
+         PTRITON_RTVIEW v = phRTVs ? (PTRITON_RTVIEW)(phRTVs[i].pDrvPrivate) : NULL;
+         if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion)) {
+             pD->OmShared = TRUE;
+-            if (!tritonCanBatchPresentWrites(v->pResource))
++            if (!tritonCanBatchPresentWrites(pD, v->pResource))
+                 pD->OmSharedNeedsWriteSync = TRUE;
+         }
+     }
