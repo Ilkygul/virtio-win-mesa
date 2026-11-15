@@ -475,6 +475,17 @@ Bestaande runtime-init vereist expliciet NativeGpuJobV1DWORD1 plus hostpublisher
 
 Root heeft het concrete voorstel beoordeeld. Nu bestaande beschermde Windows-UMDbouwrecept hergebruiken, met volledige actueleC20basis443 en header2536FA…614CA; uitsluitend deze3deltas, C38headernietmeenemen. Nieuwe ARM64native+ARM64ECpair; C37host/C33FP32/F91 blijven. Test pas na echtebuild en verse koude afzonderlijke testchild/eigenVARS. In die proef alleen presentwritesync-forceOFF, dwmwritesyncON en overige ownership-/GPUgates behouden. Begin met één zichtbare videotaak; alleen bij winst de korte benodigde UI/directe3Dregressies. Geen actuele VM-/markerwijziging uitgevoerd; productie uit, geen merge/release en algemeen doel open.
 
+
+### C42 werkelijk gebouwd; klaar voor zelfstandige testkopie
+
+NativeARM64 enARM64EC elk289/289 exit0, volledige443compilerbronnen gecontroleerd: exact3C42deltas/440ongewijzigdC20, header2536FA…614CA en zes bestaande bouwreceptbestanden bytegelijk. Native+alias **5E3DED208360696B5B9CDB11FEDE2FED75BDFFBC41872D1C51F161101762A958**,1360384B; EC **A5AF38E4335612A6941781B04BA3EED5181D02DA904BAD903FB51E13B3B1EBCA**,1267712B. ExportOpenAdapter10_2/version58200 enAA64/8664CHPEv2 gecontroleerd;28bekende waarschuwingen ongewijzigd, geenPDB. Geen nieuwe bronwijziging of compilerretry.
+
+558rawbestanden inclusiefmanifest opgehaald/gecontroleerd. Bouw-VM normaal uit, eigenleasevrij, PCpoweroff0 enSSH255timeout04:14:12.492Z. Linux9779beschermde paden identiek, Windows440bron/978outputhashes/12353footprint behouden. Eindbewijs artifacts/c42-umd-build/session-20261115-qualified-present-r1/final-local-verification.json SHA2C1DB6A5C26E56146201FDB71D1B948C36847DC27BDC04DFA94A325B336EC0BF.
+
+Root hercontroleerde de echte drieDLLhashes. Fold draait nogC37main6970/start1838014, configC6278…B434, eigenC35RW/C33RO/privateVARS, C37server/libmaps; WindowsGPUCode0/2448×1848/C20UMDs enbeideforce-markers0B. Twee read-only procesguards verwierpen eerst onjuiste aannames over argv/comm; actualargv is absoluutcrosvmpad encomm is naarVMnaam hernoemd. Correcte birth+FD-verificatie slaagt; geen herstart of wijziging door die observaties.
+
+Nu normaleC37afsluiting/fullC13drain/pooluit, verse koudeC35parent/C33grandparent/VARSmetadata en NIEUWE C42child+eigenVARS. C38child blijft onbruikbaar. Daarna uitsluitend testchildinstall via bestaande transaction/ACL/backup-recipe. Eerst nieuweC42DLLs op verseboot bewijzen metforcepresentAAN; pas dan alleenforcepresentUIT, dwmforceAAN. Geen batchactivatie op oudeC20 en geen productie. Deze build bewijst nog geen GPU-/pixel-/snelheidswinst; algemeen doel open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
