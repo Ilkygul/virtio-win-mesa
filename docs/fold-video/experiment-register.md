@@ -672,6 +672,15 @@ Ook Start6028 toont leesbare iconen en tekst, met native515D en runtimecontext51
 
 **Volgende beslissing:** met officiële Microsoft TraceEvent3.1.21 één daadwerkelijke switch-out/resume met samengevoegde stack uit de oude ETL bewijzen. Eenmalige kleine bestandsanalyse, geen nieuw algemeen captureharnas. De bestaande guest heeft .NETFrameworkcompiler maar geen WPA/TraceEventreader; een lokale reader wordt voorbereid met vastgelegde pakketidentiteit. Pas bij werkende interpretatie beslissen over een korte gerichte CPU-trace van de ongewijzigde3Dapp. Bewijsvoorbereiding: evidence/c45-c41-cswitch-decoder-readiness-r1/analysis.json SHA3FF8306EDD78CAB084CC83A32CFB638EE09F7EC36880C8D0016824C440B090BA en evidence/c46-acquire-wait-preparation-r1/. Geen nieuwe driver/installatie/boot/productie/merge/release.
 
+
+### C45 oude-traceanalyse geslaagd; nu één gerichte CPU-stackmeting
+
+De officiële TraceEvent3.1.21-reader is daadwerkelijk in Windows uitgevoerd op de ongewijzigde C41-ETL (SHA DCA59DF4C700AB0296055AAC516A3864A19CF14BB17A9897FB00E9013BF86D90). VerseETLX245984089B; readerexit0, inputhashachterafgelijk. 1943766events/127865CSwitch, targetPID3540/TID7308:6086offCPUparen/20afgedrukt, nulgerapporteerdeeventsverloren. Het eerste echte paar58459669521→58459677202 heeft een samengevoegde kernel/userBlockingStack met juiste thread/process en modulebereiken.3ongepaarderesumes/2overschrevenouts/1openoutaanheteindeblijvenvermeld. Dit valideertdeanalyseroute, nietC45vertraging. Eénniet-publiekeQPCFreqpropertyuit readerverwijderd; build0errors/6dependencyversionwarnings, werkelijkeuitvoering0.
+
+Bewijs evidence/c46-acquire-wait-preparation-r1/old-c41-reader-analysis.json enold-c41-reader-output.txt. C45echtebinary/sourceankersapartbevestigd: headwait-callreturnRVA D6578, runtimecallbackD65D8, outerAcquireD40D4; Acquire/ReleasecommonpathnietblinduitéénRVAafgeleid. Sourceaudit20ECE60A…0312B28: ringheeftalhighrestimer/min1mspolling, geenbewezenvaste16mswacht/missinghostwake. GeenblindeSleep-/gatepatch.
+
+**Volgende kleinste proef:** dezelfde ongewijzigde15kubussenapp/defaultDWMcaption/privatecopy0, één diagnostischerun15s in huidigeC45. Alleen bestaande WindowsinboxCPU-profiel8s nadat echte meetfase is waargenomen, eigenWPRsessie in finally stoppen. Geen videoproef/CPUsampler/markerwijziging. CPU-traceoverhead betekent dat ditgeenvergelijkbarefpsproefis. Doel: module+RVA-stacks van alleeigenappthreads latenonderscheiden welkeoffCPUtijd bij headwait, OS-SYNCTOKENcallback ofPresent/pacinghoort; offCPUiszonderReadyThreadjoinnietautomatischGPUwacht. Bijontbrekendestacksgeenbottleneckclaim. C45blijftzelfdehardwarekandidaat, productieuit/doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
