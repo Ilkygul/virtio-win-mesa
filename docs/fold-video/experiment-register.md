@@ -311,6 +311,15 @@ Zelfde collector/prep:10s warmup/10s meten,01:59:30.734–41.830Z. Rapport volto
 
 Huidige driverloadslot2 bevat geen unsupportedpower/invalidreply in gerichte persisteddiagnostiek; dat is geen universeel veiligheidsbewijs. Alleen eigen exact-ID/URL YouTube-targetF6988AB8D7A181736FD8B494241C7F09 gesloten02:00:38Z. Normale gastafsluiting voor volledige C37-terugrol aangevraagd; geen forcekill. C38 wordt niet gepromoveerd op basis van deze uitkomst. Bronfix/native UI/complete directe3D vanC37 behouden, geen appgerichte softwarefallback of productie-uitrol. Bewijs evidence/c38-video-state-batch-r1/{candidate-boot-baseline.json,candidate-actual-fds.txt,loaded-umds.json,video-guest/report.json,video-phone.mp4,video-host.log,after-video-diagnostics.json}. Algemeen doel OPEN.
 
+
+### C38 fysieke uitkomst en volledige C37-terugrol bevestigd
+
+Dezelfde fysieke opname bevat in conservatief filmvensterPTS26–46s vier beeldholds>200ms, maximaal591.622ms;554opname-intervallen, p5032.72ms. Film/browser blijven herkenbaar in de bekeken contact-/boundarybeelden, maar haperingen blijven. C37had798.656ms/11holds in een ander22svenster: alleen beschrijvende vergelijking, geen causale winst. rVFC490callbacks/tellerdelta525over9.9605s=52.708/s blijft strijdig metquality28.388/s; geenfysiekeFPSclaim. Audit evidence/c38-video-runtime-audit-r1/analysis.json SHA4518EBC52BC251A58883F841C93B868E6DF2A6A074E5EC570EC38C5C7C5AC8FB.
+
+LateC22-worker23417/ctx99:128exactgepaardejobs/35video, elkvideoCount1. Geen zes-setter-/Blt-job in dit korte venster. De collector had toen de voorgrond naar edge://gpu verplaatst; daarom geen bewijs dat batching tijdens zichtbare playback wel/niet raakte. Protocolmethodmapping:85/2BeginFrame,85/3EndFrame,85/5DecoderExtension; GetDecoderBufferis85/0. Traceaudit evidence/c38-video-batch-trace-audit-r1/analysis.json SHABDE83C9122CB742CD8E20CABDEBF7AA527A2AE61CBA5EA50528DDB6EDBC667EA. Geen blinde extra trace of gateuitschakeling als gevolg hiervan.
+
+C38 normaal afgesloten02:01:35Z; volledigeVMM/native/maps/disk/VARS-drainPASS, pooluit. Volledige persistC6278C…B434 én liveC37-configexacthersteld/alle4daemonresponsesgeslaagd. Alleen oudeC37/C35-child opnieuwgestart, Windowsboot02:03:48.335Z/main26740/start1531028; echteFDsC35RW/C33RO/eigenC35VARS RW, C37hostmaps. NieuwegastcontrolebevestigtF91signedValid/C20native57899…+EC9CC9…/Native1/runtime0bytes/strictemarkers/whitelistongewijzigd/GPUCode0. NativeWindowszichtbaar. **C38-child is na deze parent-writeboot definitief onbruikbaar en mag nooit opnieuw booten.** Geen data teruggeschreven naar ouders, geen productiegebruik. Volgende bronanalyse richt zich op de exacte decoder-/GPU-completionafhankelijkheden; C38 is geen releasekandidaat. Algemeen doel OPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
