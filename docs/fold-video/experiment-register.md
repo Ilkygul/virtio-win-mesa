@@ -525,6 +525,15 @@ Begrensde QUALIFIED_FLUSH-log buiten de WriteLock reserveert positieve activatie
 
 **Beslissing:** bestaande beschermde nativeARM64+ARM64EC-bouwroute hergebruiken, C37host/C33FP32/F91 behouden. Daarna een NIEUWE sibling-testoverlay boven de nog bevroren C35parent, eigenVARS, echte nieuweDLLmaps eerst met forcepresentAAN bewijzen. Pas daarna forcepresentUIT en dwmforceAAN; éénzelfde zichtbare AV1-videotaak10sopwarming/30smeting plus20sCPU en fysieke opname. Bij winst alleen benodigde korte nativeUI/directe3Dregressies. Bouw en runtime nog niet uitgevoerd; geen productie-update, merge/release of doelvoltooiing.
 
+
+### C43 werkelijk gebouwd; nieuwe testkopie wordt voorbereid
+
+NativeARM64 enARM64EC elk289/289 exit0. Alle443werkelijke compilerbronnen exact geverifieerd:10C43deltas/433ongewijzigdC42, header2536FA…614CA behouden; zes bestaande recepten bytegelijk. Native+alias **2294CFCCB45DD32719424240313AE927341D8C7917B9E8CD72B963FF6650F923**,1365504B; EC **1D89B58BCD6E4E44D31DBAFF609956ED95D0A1D5B284812530D5ADD91B2BB1B8**,1276416B. Werkelijke binaries tonen AA64/8664CHPEv2/OpenAdapter10_2/version58200. Dezelfde28bekende waarschuwingen, geenPDB; geen bron-/receptwijziging of compilerretry.
+
+Alle561rawbestanden inclusiefmanifest opgehaald; Windows440beschermde bron/1426output/12353footprint en Linux9779paden ongewijzigd. Bouw-VM normaal uit, eigenleasevrij, PCpoweroff0 en werkelijkeSSH255timeout05:47:01.264679Z. Eindbewijs artifacts/c43-umd-build/session-20261115-qualified-flush-r1/final-local-verification.json SHADF334F4670A201156215B90694501FDE3E2542AA8B0D05A00310143D273C6AAC. Root heeft de drieDLLhashes afzonderlijk herberekend.
+
+Root heeft de oorspronkelijke C42forcepresent-marker teruggeplaatst05:45:51Z, ACLbehouden/dwmforceAAN, daarna normaleWindowsafsluiting05:46:01Z. Werkelijkeoude main27572/start2425355 verdwenen en volledigeC13drain bevestigd; geheugenpooluit. Een koude read-only scan weigerde eerst een racyprocesmapping; verse scan slaagt. VerseC35/C33stat/head/tail/VARS/fullchainmetadata gelijk aan bevroren uitgangspunt; huidigeconfigA2FAbevestigd. Een nieuweC43sibling bovenC35met eigenVARS wordt nu gemaakt, C42blijft behouden en C38ongebruikt. Dit is bouw-/voorbereidingsbewijs, nog geen werkelijk geladen C43 of gebruikswinst. Productie uit; algemeen doel open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
