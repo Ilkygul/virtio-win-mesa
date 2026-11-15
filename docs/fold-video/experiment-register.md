@@ -891,6 +891,16 @@ Bewijs evidence/c46-gpu-runtime-log-access-r1/actual-token-and-access.json; scop
 
 **Volgende kleinste diagnostiek:** tijdelijk uitsluitendAppendData+Synchronize voorRestrictedCode opditenelogbestand, origineleDACL/ownerbewaard enLowNWalleenvoordiagnose. Hetzelfde read-onlyAccessCheckmoetdaarnaAppendAllowedtruegeven vóórnieuwevideostart. Eigenbrowserdannormaalclose/finalelogbehoud; éénversebestaandeMap-repro met nuverifieerbare runtime-logtoegang, daarnaDACL+Mediumexactherstellen. GeenAppContainerbredegrant/driver-/GPU-/softwarefallbackwijziging engeenalgemeenharnas. AlgemeendoelOPEN, geenproductie/mainmerge/release.
 
+### C46 foutlogtoegang: volledige descriptor nu positief; één Map-repro volgt
+
+De metadataquery is gecorrigeerd: de eerdere AccessCheck kreegalleenowner/group/DACL enliet het werkelijke integriteitslabel weg. Die denials zijn daarom **geen geïsoleerd bewijs dat de afzonderlijkeappend-ACE nietwerkte**. Er is niet op basis van die uitkomst verdervideo getest. Werkelijke normale+restrictedSIDlijsten zijn gelezen; beide bevatten de huidige logonSID S-1-5-5-0-409999.
+
+Tijdelijk staat nu éénAppendData+Synchronize-ACE voor uitsluitenddieaanmeldsessie ophet bestaandePublicneptune.log; de eerdereRC-onlyACE is verwijderd. OorspronkelijkeDACL/owner en labeltoestand zijn bewaard. Sourcequeryr3 laadt owner/group/DACL **énLABEL_SECURITY_INFORMATION** en leestdenialstatus; echte1552/birth-identiteit blijft gelijk. **AccessCheckApiSucceededtrue, AppendAllowedtrue, GrantedAccess4**, daadwerkelijkeLowNWdescriptorvastgelegd. Bewijs evidence/c46-gpu-log-restricted-append-r1/full-descriptor-access-proof.json; sourceSHA6877D6A5…5503C1. Dit blijftmodelbewijs, daadwerkelijkeUMDruntimelogregels vormen devolgendecontrole.
+
+Oude testbrowser1268 is10:14:20Z normaalgesloten/exitbevestigd. De normale helper weigerde een automatischdoorgegaanYouTube-URL; de collector-eigendom van exactdezelfde2targetIDs plus bestaandeabout:blank isgecontroleerd. Een lokaleéénmaligebound-ID/URLhelper heeftalleendie3testsessietabs gesloten; geenonbekendetabofanderebrowser. FinalebrowserlogCF950DBF…7C39D wordtbehouden.
+
+**Volgende eneproef:** dezelfdeverse-startvideo/collector/C46, nu met controleerbarelogtoegang; geen nieuwGPU-/driver-/softwarepad. Bestaande65/110sbeeld en120sNptHwDechostlog/observer binnenbestaandewrapper. Positieve video:CreateVideoDecoder/runtimeregels zijn nodig voordatfaultlogafwezigheidbetekeniskrijgt. Na afloop eigenbrowsernormaaluit, finale bewijsopslag en oorspronkelijkeDACL/MediumNWherstellen met reedsvoorbereidescopedcleanup. Geenproductie/mainmerge/release; doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
