@@ -901,6 +901,14 @@ Oude testbrowser1268 is10:14:20Z normaalgesloten/exitbevestigd. De normale helpe
 
 **Volgende eneproef:** dezelfdeverse-startvideo/collector/C46, nu met controleerbarelogtoegang; geen nieuwGPU-/driver-/softwarepad. Bestaande65/110sbeeld en120sNptHwDechostlog/observer binnenbestaandewrapper. Positieve video:CreateVideoDecoder/runtimeregels zijn nodig voordatfaultlogafwezigheidbetekeniskrijgt. Na afloop eigenbrowsernormaaluit, finale bewijsopslag en oorspronkelijkeDACL/MediumNWherstellen met reedsvoorbereidescopedcleanup. Geenproductie/mainmerge/release; doelOPEN.
 
+### C46 runtime-logproef reproduceert Map opnieuw; oorspronkelijke token nog niet bewezen
+
+Versebrowser5896/birth1794737815178, echteGPU5480/birth1794737815981 tijdens meting. Formeel10:17:20.671–10:17:51.735Z. **10:18:00.695Z MapRemoved, contextlost.697, exit34.899**, MediaDecoderStatus5/PipelineDisconnectedna09Z. Native log bevat nog47startupregels5480 engeenvideo-/Mapruntimebewijs. Geen nieuweframerate- ofstabiliteitswinstclaim.
+
+Belangrijke scopecorrectie: de eerderepositievevolledigeAccessCheck was voor **vervangendeGPU1552**, niet dezeoorspronkelijkeGPU5480. Verschillende initiële/latere sandbox- ofintegriteitsrechten zijn nog niet gemeten; die positievequery bewijst dus niet dat de primaireGPUruntimelogtoegang heeft. Geen verderevideorun onderdieaanname.
+
+Eigenbrowser5896 normaalgesloten10:21:26Z. Bewijs evidence/c46-runtime-map-origin-r1/analysis.json SHAac974fdc3afa148b32bae83b7c906119d227991fd75703f3c3cd3b1ad4abb8dd. **Volgende anderevraag:** één bestaandeversebrowserstart opabout:blank, zonderYouTube/benchmark/opname, en rechtstreekshet oorspronkelijkeGPU-token na initialisatie lezen met hetzelfdegebondenread-onlyscript. Zo oorspronkelijke vsreplacementIL/restrictedsIDs/fileAccessonderscheiden. Tijdelijkelogonappend/Low blijven uitsluitendvoordiemeting; concreteherstelhelper naarorigineleDACL/Mediumligt klaar. C46blijfttestalleen, doelOPEN/geenproductie.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
