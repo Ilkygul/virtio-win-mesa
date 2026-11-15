@@ -551,6 +551,17 @@ Eigenbrowser2032 is06:00:50Z normaal viaBrowser.close gesloten; geenkill. C43bli
 
 **Beslissing:** geen C43snelheidsvrijgave/merge/productierelease; doelopen. Geen ongewijzigde videoretry om counters te verzamelen terwijl positieveFlushactivatie ontbreekt. Volgende kleinste stap: alleen rawcontext+flags aan dezelfde bestaande begrensdeactivatielog meegeven; echteGPUgates en huidigescopepredicaat behouden. Eerst de werkelijke uitsluitingsvoorwaarde kennen, daarna uitsluitend een onderbouwde functionelecorrectie. Deze uitkomst staat vast vóór die volgendevariant.
 
+
+### C44 — minimale raw-scopeobservatie, geen functionele synchronisatiewijziging
+
+**Hypothese/aanleiding:** C43DWM heeft positieve class1-schrijfherkomst en geaccepteerde publicatie, maar allowQualified0. Alleen de werkelijke ContextType/FlushFlags ontbreken om de oorzaak gericht te kennen. Bestaande GPU-taildiagnose zou extraGPUwachten toevoegen en wordt niet ingeschakeld.
+
+[Bronpatch](patches/c44-flush-scope-log.patch), commite3ffcb5ecd227a23fcab40c8701cb72d34ee590d, SHA2715843474AAF50D0F917527B85A4BA7691F562D3F86785CB136416AF7EBC7F5; manifestD9E66F082D3A886F15439C4DC70FA3AB35C071CE73FDDC49DBCEEDE96F39968A. Exactdriebestaandebestanden tegenover werkelijk gecompileerdeC43,440ongewijzigd. Alleen rawargumenten doorgeven aan dezelfde QUALIFIED_FLUSH-regel, ook bij WDDMfallback; geen nieuwe marker, logbudget, GPUcall of scopeverruiming. Flags0+ALL/3Dpredicaat, publicatie-/GPUwacht-/ownershipgedrag enbudget ongewijzigd. Rawpatchapply/BOM/CRLF gecontroleerd; bestaandeactual-functionfixture7789ASan/UBSanchecksPASS, oorspronkelijkebaselinecounterexampleverwachtexit42. Geen nieuwe generieke captureharnas.
+
+**Kleinste proef:** bestaande beschermde native+ECbouwroute; nieuwe aparte C44sibling/eigenVARS boven de nog bevrorenC35, rollbackexacthuidigeC43. Eerst werkelijknieuweDLLmaps met forcepresentAAN bewijzen. Fullscreen en dezelfdehardwareclip openen terwijlforceAAN; pas nadat de clip zichtbaar/unpausedloopt forcepresentUIT. ForceAANverbruiktgeenbudget; na5sTTL horen deeerste16rawargumentregels daardoor bij videoactievecompositie. Eén korte bestaandeclip/collectorobservatie is voldoende, geen30sCPU-/fpsvrijgave nodig voor deze vraag. DwmforceAAN enalleGPUgatesbehouden. Na twee gerichte uitsluitingsproeven zonder nieuwe aanwijzing scopehypothese parkeren/heroverwegen.
+
+Nog niet gebouwd of opFoldgeplaatst. Nu het lokale bouwpakket samenstellen en exactbeoordelen; geen productie-update/merge/release. Algemeendoelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
