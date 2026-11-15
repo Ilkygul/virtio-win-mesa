@@ -873,6 +873,16 @@ De browserstart zelf lukte (eigenPID5376/birth1794736122285), maar de bestaande 
 
 **Noodzakelijke concrete herstelstap:** bestaande wrapper vervangt alleen vaste3s door maximaal45s wachten op echteCDPbereikbaarheid plus exacteownedprofile/listenercontrole. Geen kunstmatige extra browserwarmup na gereedheid. Bestaande collector/prep/CPU/driverinhoud gelijk. Nieuwe outputr2; bestaandeobserver90s en begrensdehost120s/beeld110s passen bij maximaleopstarttijd, zodatpostformelefout niet buitenbeeld valt. Niet als snelheidsvergelijking gebruiken. EerstwerkelijkePS5.1parse/consolepreflight; daarna dezelfde geregistreerde verse-versus-warmeMapvraag. Logbehoud/Mediumherstelnaafloop blijven verplicht; doelOPEN/geenproductie.
 
+### C46 verse-start r2 reproduceert Map-uitval; Low-label alleen geeft geen runtime-logbewijs
+
+De gecorrigeerde wrapper werkte: browser1268 geboren09:52:53.085Z, CDPready09:52:55.937Z; geen extra opwarmvenster. OorspronkelijkeGPU1760/birth1794736373577 positief tijdens meting. Formeel09:53:18.905–09:53:50.153Z, diagnostischecounter32,249/s/CPU12,503% is geen prestatiewinstclaim.
+
+**09:53:58.886Z ANGLE Map faalt0x887A0005, contextlost.889, browserGPUexit34 om59.104 en crashcount1.** Zelfdeplayer meldt09:54:07DecoderStatus5 en09:54:08PIPELINE_ERROR_DISCONNECTED24. Derdeverse-startuitval tegenover éénwarme-nietreproductie; timingverband is nog geenoorzaak.
+
+BestaandeNeptune-log blijft exact47startupregels vanGPU1760, geenorigineleMaphr. Beide werkelijke native/EC-binaries bevatten aantoonbaar het logpad enMap-format; alleenLowNW plusstartupregels bewijst dus geen schrijfrecht ná sandboxactivatie. Geen verdereidentiekevideorun zolang die dekking onbekendblijft.
+
+Bewijs evidence/c46-fresh-map-origin-r2/analysis.json SHA02619a5bcdb937fb4df597971924420f141291928043080a6bc04d7213881971. Eigenbrowser1268/vervangendeGPU1552 is uitsluitend nogevenactief voor één read-onlytoken/DACL-AccessCheck op neptune.log. TijdelijkLowNW is nogactief/DACLgelijk; daarnaeigenBrowser.close/logbehoud/Mediumherstel. Geenalgemeenharnas, driverwijziging, productie/mainmerge/release; doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
