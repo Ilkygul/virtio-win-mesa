@@ -302,6 +302,15 @@ Werkelijke165/165build1m22sgeslaagd, exacte707leden/64rawhashen/ééndelta2855DE
 - Na nieuwe Root-scope/generationbinding en werkelijkePS5.1parser/hashcontrole zijn precies drie UMDs in de child transactioneel vervangen; oudeACLs/backups/preparedfiles/complete receipts gecontroleerd. Kernel/service/mode/INF/CAT/policy niet gewijzigd. Install-intent502FD4398849A18169CF5579D65B5822EAB99AA44308EE16C408A9A1DACAF203, complete-receipt8E59180BFE2F0381FBAEFDEBF5376C3DD1877CBE509AD563097C3C525D11906C, scope99E2145E…041D1. Helper voerde geen VM-actie uit. Normale shutdown01:49:32Z doorRoot aangevraagd.
 - Nog geen videowinst of C38-runtimepass geclaimd. Eerst volledige normale stop/drain/pooluit en verse boot, dan daadwerkelijk geladen UMD-hashes/Code0 en dezelfde korte videoproef. Volledige C37-configterugrol gereed. Productie UIT, algemeen doel OPEN.
 
+
+### C38 eerste hardwarevideoproef — geen overtuigende pacingwinst, herstel C37 aangevraagd
+
+Verse C38-boot 01:57:37.302Z, main21043/start1493903. Werkelijke descriptors: C38-childRW, C37/C35-parentRO, C33-grandparentRO, alleen C38-VARS RW. De drie geïnstalleerde UMD-hashes exact1214854…23812/native+alias en027A04…08C8/EC; DWM1388, Explorer5328 en Edge9320/10332 laden daadwerkelijk de nieuwe nativeUMD. GPUCode0, F91-selectie/signatureValid/Native1/runtime en strikte markers/whitelist ongewijzigd. Een geladen d3d10warp-module in DWM bewijst op zichzelf geen actieve renderroute; geen algemene alle-processen-hardwareclaim of nieuwe softwarefallback.
+
+Zelfde collector/prep:10s warmup/10s meten,01:59:30.734–41.830Z. Rapport voltooid/errors[], wrapperexitNULL blijft geen exit0. AV1 1920×1080 hardwarepad met QTI c2.qti.av1.decoder in actuele hostlog. Qualitysamples9.969s:598totaal/315drops/283doorverschil=28.388/s tegenoverC37=27.614/s; dit is geen overtuigende gebruikswinst of fysieke FPS. Media9.982s vooruit/unpaused/ready4. Opname706frames/59.528s bewaard; fysieke-holdaudit volgt apart. Bestaande C22-marker werd door Root pas01:59:42–46Z gezet, ná de formele meetfase: alleen latere routeobservatie, geen correcte timingcorrelatie met de meetcounters. Geen herhaling om dat te verbergen.
+
+Huidige driverloadslot2 bevat geen unsupportedpower/invalidreply in gerichte persisteddiagnostiek; dat is geen universeel veiligheidsbewijs. Alleen eigen exact-ID/URL YouTube-targetF6988AB8D7A181736FD8B494241C7F09 gesloten02:00:38Z. Normale gastafsluiting voor volledige C37-terugrol aangevraagd; geen forcekill. C38 wordt niet gepromoveerd op basis van deze uitkomst. Bronfix/native UI/complete directe3D vanC37 behouden, geen appgerichte softwarefallback of productie-uitrol. Bewijs evidence/c38-video-state-batch-r1/{candidate-boot-baseline.json,candidate-actual-fds.txt,loaded-umds.json,video-guest/report.json,video-phone.mp4,video-host.log,after-video-diagnostics.json}. Algemeen doel OPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
