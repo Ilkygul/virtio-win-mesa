@@ -1025,6 +1025,13 @@ De bestaande8s-taak liep normaal uit met echte2A-driver, hardwareadapter, nulerr
 
 Bewijs `evidence/c47-present-single-publication-r1/baseline-portrait-analysis.json`, `c46-baseline-guest-run`, `c46-baseline-phone.mp4` en `c46-baseline-frame.png`. **Concrete herstelreden:** één gecorrigeerde basis in native landscape2448×1848 met dezelfdeDPI200/RAM6/EXE/8s/vsync1/defaultcaption/privatecopy0; werkelijke960×640 en gehele venster moeten aantoonbaar passen. Daarna geen verdere identieke basisherhaling. Bronpatch/C47-plan ongewijzigd. Bouw-pc inmiddels wakker, eigenlease genomen; eerste9779Linuxbeschermpaden exact. OudeUSB-netwerkkaart is afwezig, verbindingviaeno1. Windowsbouw-VM start ondereigenlease; geen bestaandeoutput gewijzigd.
 
+
+### C46 geldige liggende basis en C47-build geslaagd
+
+Gecorrigeerde basis: native2448×1848/DPI200/RAM6144, ongewijzigde15-kubus8s-taak, echte2A7D inproces7060, normaleexit0. **215Presents/8,02912s =26,7775API/s**, werkelijke960×640, geenerrors/deviceRemoved/occlusion/focusverlies. Fysiek heelvensterzichtbaar;308opgenomenframes metzichtbaretitelbalk hebbenalle15centraleobjectvlakken, geenblank. Grootsteopgenomenafstand88,811ms; geenclaimdatditvloeiend60Hzis. Bewijs `baseline-landscape-analysis.json` SHA`e5e20db5cbfabf3208e37d92e0f764f96d1a4dde7489af542304d8a90a5eafb0` onder `evidence/c47-present-single-publication-r1`. Dit is de vergelijkingsbasis; de eerdereportraitbasisblijftafgewezen.
+
+C47 privatebouw: eigenPC-lease `codex-c47-present-single-publication-umd-r1`; echtePS5.1parserPASS,40eerderebinariesgeverifieerd; 9779Linuxbeschermpadenvoorafexact. NativeénECbeide289/289/exit0. Finalizerexit0 levert574bestanden/4.483.380B-archive SHA`071CC20E71B92A6E0D493C0C2FF6958E573376300456BB6B046D3054787357A6`. Retrieval/onafhankelijkebron- enbinarycontroleloopt; C47nogNIETopFoldgeïnstalleerd. HuidigeC46blijft6GiB; Fold-lock `codex-c47-driver` genomenvooromkeerbaretestinstallatie. Geenproductie-/mainmerge-/releaseactie.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
