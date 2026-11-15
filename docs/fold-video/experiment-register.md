@@ -699,6 +699,17 @@ WerkelijkeC45rawPE515D/imports/bronankersbevestigen: E91A0=tritonPresentFlushAnd
 
 **Volgendebeslissing:** éénzelfde15sdiagnosezonderWPR, alleen reedsingebouwde NPT_DEBUG=profile,present_timing en NPT_PRESENT_GATE_TRACE=1/NPT_EVENT_WAITER_TRACE=1 in het nieuweeigenkindproces. BestaandeDEFA/exeongewijzigd. Vraag: is degatewachtvoornamelijkechtecompletion, staleevent/valueherarmingofpoolwachttijd? Bestaandetimingsmetensig/arm/wait/callback enqueued_us/wait_us; scheidenhostGPUuitvoeringnietzelfstandigvanWDDMscheduling. RuntimekanDirectOksignalenondersteunen, dus35msworkerwaitisnietautomatischeenextra kritiekehop. Geenalgemeenharnas/driverwijziging/productie/merge/release; doelblijftopen.
 
+
+### C45 bestaande Present-timings — completionwacht bevestigd, pool/staleloop niet dominant
+
+Eénzelfde15sdiagnosezonderWPR, alleenprocesenv NPT_DEBUG=profile,present_timing/NPT_PRESENT_GATE_TRACE=1/NPT_EVENT_WAITER_TRACE=1 vóórnieuwDEFAkind. Pinnedlauncher4103045E…1D2F2F4/PS5.1parse/console/markers/logcapguardPASS; plan-scopetekst vóórstartverduidelijkt, oorspronkelijkbestandbewaard. PID7336/birth07:50:22.3769893Z mapt werkelijknative515D. Fysiekcontrolebeeldtoontalle15kubussen/normaleDWMtitelbalk.15.006736s/428Presents/28.5205API/s, helemetingforeground/errors[]/deviceRemoved0, supervisoruitnatuurlijk0/legestderr. Ditisloggingdiagnose, geenvergelijkbareFPS-winstclaim.
+
+Globallog3514331B(<32MiBcap),2049exactePIDregels.452gelogdeSLOWgates: gemiddeldewait **30.240ms**, p50 **29.277ms**, p95 **43.409ms**, max141.518ms(startupinbegrepen). **Alle452rounds1/obj0=1/timeout0/stale0/deadline0.** Workerqueued_us p5017/p9541/max204µs,depthaltijd0; workercompletionwaitgem30.243mslooptparallel. GateCPU-observefence_done−evt_firedp502µs/p955/max39; ditisgeenechtehostGPUfinishtimestamp. PTn240/n360(ieder120calls) avgwait31.340/31.652ms tegenSignal8µs/arm55–62µs/callback80–84µs. Geenbewijsdatpoolwachtrijofstale-wakeherarminghoofdoorzaakis.
+
+NPT-profilerlaatook7.6sreplytotalsbijCheckFormatSupport/CheckMultisampleQualityLevelszien, **startup-inclusief** enzoalsoudeC18capsdetectie; nietopvoerenalsperframefout. Completebron-/binarycapabilityaudit32D30A8CD7A4AD35ECA4178396094C67EAA9A9380B3125D9D6E6F586E73E9691. Rootanalyse evidence/c45-direct-present-profile-r1/analysis.json SHA91710CCC2585DD8069B051B027D3ED877B5563D020A2B0517EB7946609D408AB; actiefmodulebewijs/volledigePIDlog/natuurlijkeexit/fysiekbeeldnaastdiefile.
+
+**Beslissing:** geenextraeventworker/Acquire-bypass/stalewakepatch. C45gecombineerdedeelresultaatbehouden; resterendelead is GPUcompletionpad. Nu eerstbestaandehost/F91telemetrie enjob-IDkoppelingbepalen omWDDMqueue, echteGPUuitvoering encompletionmeldingtescheiden. Geennieuwevariantofclaimdat30msvolledigGPUtijd is. HuidigeWindowsbootbehouden/Code0, appsproefnatuurlijkuit, WPRgestopt; geenproductie/mainmerge/release/doelvoltooiing.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
