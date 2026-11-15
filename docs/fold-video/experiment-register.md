@@ -859,6 +859,14 @@ Eigenbrowser09:43:47Z normaalgesloten; alle finale logs/opname bewaard. **09:44:
 
 Bewijs evidence/c46-map-origin-r1/analysis.json SHAa715f028f7b15ac1ca487897e6201af902dc511b4b14595805652f810d467273. **Beslissing:** behoud C46gedeeltelijke3D/UIwinst en negatieveversevideoresultaten. Geen volgende prestatiepatch of identiekevideorun; eerstruntime-sandboxlogdekking en verse-versus-warmeGPUqueryvolgorde gericht onderscheiden om innerMaphr te verkrijgen. C45 blijft bestbekende gecombineerdeherstelversie, C46 alleenactievezelfstandigetestkandidaat; geenproductie/mainmerge/release/doelvoltooiing.
 
+### C46 verse Map-oorsprongsproef — warme-startverschil verwijderen
+
+Vorigegoalbeurt=PROGRESS: driverC46 geïnstalleerd/met werkelijk geladen nieuweDLLs, 3D/UIretentie en Map→ContextLost→exit34keten aangetoond; doel blijftOPEN. Verse09:47:17Zcontrole bevestigt dezelfdeWindowsboot09:12:41.6756240Z/DWM1344/native2A7D/EC0D47/Native1/Code0/2448×1848/forcepresentOFF+dwm/runtime/nowarpON. Hostmain21237/start4104330 heeft nog exactC46RW/C35RO/C33RO/privateC46VARSRW; geenherstart/poolwijziging.
+
+**Nieuwe reden:** twee verse browserstarts faalden; de laatste warme browser (115s vóór meting) niet. Eén gerichte verse-startproef met dezelfde bestaande30scollector/prep/20sCPU, eigenloggingtask9334,65sbeeld/90sNptHwDechostlog. BestaandeNeptune-log krijgt tijdelijkLowNW zoalsdeeerderpositieve47startupregels; DACL/owneronveranderd, eerderebrowserlog4FECFF61…E4670 wordt voorafbehouden. Collector startNUzelfdeversebrowser zonderapartopwarmvenster; bestaandeobserver bindt echteGPUtijdensmeting. Geen nieuwe driver/config/performanceclaim.
+
+Vraag: keert Map-fout terug onder verse start, en levert het bestaande Map:sub/type/flags/originelehr-log dan de bronoorzaak? Bij READ is de nonREAD-runtime-sharedguard aantoonbaar nietvan toepassing; format/OOM/reply/pitch/nativeHRESULT blijven afzonderlijke hypotheses. Als fout of runtimefoutlog ontbreekt, niet alsnogeen fixclaim doen ofdezelfdecombinatieblindherhalen. EigenBrowser.close/logbehoud/MediumNWherstelnaafloop; geenproductie/mainmerge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
