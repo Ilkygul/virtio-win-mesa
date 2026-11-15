@@ -9,8 +9,10 @@ public static class W {
   [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr a, int x, int y, int cx, int cy, uint f);
   [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);
   [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+  [DllImport("user32.dll")] public static extern int GetSystemMetrics(int i);
 }
 '@
+$ScrW = [W]::GetSystemMetrics(0); $ScrH = [W]::GetSystemMetrics(1)   # screen size in this process's coordinates
 function Place($h) { [W]::ShowWindow($h, 9) | Out-Null; [W]::SetWindowPos($h, [IntPtr]::Zero, 200, 100, 1400, 850, 0x40) | Out-Null; [W]::SetForegroundWindow($h) | Out-Null }
 function WaitWin($name, $title) {
   for ($i = 0; $i -lt 40; $i++) {
@@ -40,11 +42,11 @@ switch ($mode) {
   'cursor'   { # move the mouse (no buttons; absolute moves also unhide the cursor after touch): 3 s across the screen in 4 ms steps
     Add-Type -Name C -Namespace M -MemberDefinition '[DllImport("user32.dll")] public static extern void mouse_event(uint f, int dx, int dy, uint d, IntPtr e);'
     $sw = [Diagnostics.Stopwatch]::StartNew()
-    while ($sw.ElapsedMilliseconds -lt 3000) { $f = $sw.ElapsedMilliseconds / 3000; [M.C]::mouse_event(0x8001, [int](65535 * (300 + 1800 * $f) / 2448), [int](65535 * (500 + 300 * $f) / 1144), 0, [IntPtr]::Zero); Start-Sleep -Milliseconds 4 }
+    while ($sw.ElapsedMilliseconds -lt 3000) { $f = $sw.ElapsedMilliseconds / 3000; [M.C]::mouse_event(0x8001, [int](65535 * (300 + 1800 * $f) / $ScrW), [int](65535 * (500 + 300 * $f) / $ScrH), 0, [IntPtr]::Zero); Start-Sleep -Milliseconds 4 }
     'ok' }
   'drag'     { # mouse drag of the test window's title bar (empty tab-strip area at 1300,112) to 1800,400 in 2.5 s, then back
     Add-Type -Name C -Namespace M -MemberDefinition '[DllImport("user32.dll")] public static extern void mouse_event(uint f, int dx, int dy, uint d, IntPtr e);'
-    function MuisNaar($x, $y, $f) { [M.C]::mouse_event(0x8001 -bor $f, [int](65535 * $x / 2448), [int](65535 * $y / 1144), 0, [IntPtr]::Zero) }
+    function MuisNaar($x, $y, $f) { [M.C]::mouse_event(0x8001 -bor $f, [int](65535 * $x / $ScrW), [int](65535 * $y / $ScrH), 0, [IntPtr]::Zero) }
     MuisNaar 1300 112 0; Start-Sleep -m 100; MuisNaar 1300 112 2; $sw = [Diagnostics.Stopwatch]::StartNew()
     while ($sw.ElapsedMilliseconds -lt 2500) { $f = $sw.ElapsedMilliseconds / 2500; MuisNaar (1300 + 500 * $f) (112 + 288 * $f) 0; Start-Sleep -m 4 }
     MuisNaar 1800 400 4; Start-Sleep -m 100; MuisNaar 1800 400 2; MuisNaar 1300 112 0; MuisNaar 1300 112 4; 'ok' }
