@@ -849,6 +849,16 @@ Korte browserstartup op about:blank, nog geen nieuwe videorun: eigenbrowser10644
 
 **Beslissing na twee Map-uitvallen:** nu één gerichte derde uitvoering op concrete nieuwe aanwijzing, dezelfde bestaande video/collector en postformaleGPUquery, om exact origineleMaphr/sub/type/flags en eerste driverfout te lezen. Geen nieuwe variant of framerateclaim; de laag gelabelde log verhoogt diagnosewerk. Bestaande oorspronkelijkeGPU1152/birth/CDP-owner vooraf bewijzen; alleen nieuwe outputrol, werkende geïsoleerde browser wordt hergebruikt. Hostfilter90s/NptHwDec en65sfysiekbeeld, geen nieuw WPR/harnas. Daarna eigen browser normaal sluiten, finale logs bewaren, loglabelMedium herstellen. Geen productie/mainmerge/release.
 
+### C46 Map-oorsprongsproef: warme browser reproduceert fout niet; toegang hersteld
+
+Bestaande browser10644/GPU1152 werd hergebruikt na circa115s startup; formeel09:41:39.703–09:42:10.935Z. Dit verschilt van de twee eerdere versebrowserstarts. DezelfdeGPU1152 bleef daarna actief; edge://gpu crashcount0, geenMap-contextlost/exit34-regels in de finale browserlog en geenMedia.playerErrorsRaised. Diagnostischecounter28,096/s wordt niet als prestatievergelijking gebruikt.
+
+Dit is **geen reparatiebewijs**. Neptune bevat nog steeds47GPU1152startupregels, eindigend bij GPUVAcaps, geen mislukteMap. De warmeproef bewijst niet dat de bestaande log ook ná sandboxactivatie alle foutregels kan schrijven. InfoGPU4328 startte nu09:41:44tijdensformeel in plaats van uitsluitend erna; timingverschil is een concrete vervolgaanwijzing, geen bewezenoorzaak. OorspronkelijkeMapHRESULT blijft onbekend.
+
+Eigenbrowser09:43:47Z normaalgesloten; alle finale logs/opname bewaard. **09:44:03Z origineel MandatoryMediumNW hersteld, DACL/eigenaar gelijk**, GPUCode0 en oorspronkelijkeDWM1344 stabiel. Geen blijvendelogrechtenworkaround, driverbytes/config onveranderd.
+
+Bewijs evidence/c46-map-origin-r1/analysis.json SHAa715f028f7b15ac1ca487897e6201af902dc511b4b14595805652f810d467273. **Beslissing:** behoud C46gedeeltelijke3D/UIwinst en negatieveversevideoresultaten. Geen volgende prestatiepatch of identiekevideorun; eerstruntime-sandboxlogdekking en verse-versus-warmeGPUqueryvolgorde gericht onderscheiden om innerMaphr te verkrijgen. C45 blijft bestbekende gecombineerdeherstelversie, C46 alleenactievezelfstandigetestkandidaat; geenproductie/mainmerge/release/doelvoltooiing.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
