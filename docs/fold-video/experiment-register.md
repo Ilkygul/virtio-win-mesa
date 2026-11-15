@@ -1041,6 +1041,15 @@ C46Windows12:28:33Znormaalafgesloten naexactmarker-/ACLherstel; fullDRAINPASS en
 
 Bewijs `artifacts/c47-umd-build/session-20261115-single-publication-r1/umd-success/local-verification.json`, `session-closure.json`; `evidence/c47-present-single-publication-r1/cold-binding-manifest.json` en `c33-cold-check.json`. NuC47leafcoldmaken/volledige4-entrychaincontroleren; dezelfdeRAM6144/DPI200 blijft. Daarna3DLL-transactieininstallboot, normaalafsluiten, pasvolgendenieuweboot38DCgeladenbewijzenenhardwaretaakvergelijken. Geenproductiewijziging/merge/release; C47noggeenprestatiebewijs.
 
+
+### C47 installatie nog niet uitgevoerd — Fold-verbinding weggevallen
+
+De cold-createaanroep bereikte het toestel niet: ADB meldde `device R3GL60E8R2K not found`. Er is daarmee geen C47-leaf of installatiebewijs. Laatst bevestigd: C46 normaaluit/fullDRAIN/pooluit, configuratieAC53 metRAM6144 blijft geselecteerd. C47-binaries en bronpatch zijn gereed; de volledige960-clientbasis is vastgelegd.
+
+DXManager: opgeslagen192.168.0.77:38805 geeftNoRoute; Tailscale100.94.244.8:38805timeout. Ook eerderbekende192.168.0.121:5555NoRoute; mDNS/ADB-deviceinventarisleeg. Verbindingherstellen is aan gebruiker gevraagd; bijterugkomst eerstverseboot/config/noVM/coldpinshercontroleren, geenblindecold-createretry.
+
+Offline aanvullende binarycontrole reproduceert bekendeC46-CHPE2-positievecontrole en bevestigt C47nativeAA64/ECCHPE2 met ongewijzigdeOpenAdapter10_2/OpenAdapter12-exports. Runtime-template/binderr2 maakt uitsluitend de verseC33-stat een verplichte datatoken; huidige cold-creatematerialisatie is byte-exactgelijk aan de algebonden versie. Head/tail en guard/installer/wrapper blijven gelijk. Geen helper uitgevoerd of fictievebootfeiten ingevuld. Bewijs `local-pe-export-hybrid-proof.json` inC47buildsessie en `r2-cold-bind-equivalence.json` inC47evidence. **Geen claim van prestatieverbetering of opgelost driverdoel; geenproductiemerge/release.**
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
