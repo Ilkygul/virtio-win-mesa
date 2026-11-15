@@ -41,8 +41,10 @@ punt2() { # Verkenner en Edge: venster slepen (titelbalk) en scrollen (aanraaksw
     verzamel 6 "gast drag >/dev/null" ; echo "  $app slepen:  $(stats 1600 3700)"; rm -f $T
     sleep 1; verzamel 4 "swipe 900 800 900 300 1500; swipe 900 300 900 800 1500"; echo "  $app scrollen: $(stats 200 2900)"; rm -f $T; done
   gast close >/dev/null; }
-punt3() { # muiscursor: muisbeweging over het bureaublad; zonder hardware-cursor = elk cursorbeeld een DWM-frame
-  verzamel 6 "gast cursor >/dev/null"; echo "  cursor rustig: $(stats 1500 4000)"; rm -f $T
+punt3() { # muiscursor. Met de hardware-cursor (F93) is een beweging alleen een positiewijziging van de
+  # cursorlaag: de DWM-laag hoort dan (bijna) geen frames te krijgen. Zonder (HWCursor=0) ~60 frames/s.
+  verzamel 6 "gast cursor >/dev/null"; n=$(awk -v f=$((T0+1500000000)) -v t=$((T0+4000000000)) '$1>=f&&$1<=t' $T | wc -l | tr -d ' ')
+  echo "  cursor rustig: $n DWM-frames in 2,5 s muisbeweging (hardware-cursor: ~0; software: ~150)"; rm -f $T
   gast explorer >/dev/null; sleep 3
   verzamel 6 "(gast cursor >/dev/null &); sleep 1.5; swipe 900 800 900 300 2500"; echo "  cursor + scrollen: $(stats 1700 3900)"; rm -f $T; gast close >/dev/null; }
 punt4() { # YouTube 1080p60 in Edge (eigen profiel): SF-fps + Chromium dropped frames over 20 s
