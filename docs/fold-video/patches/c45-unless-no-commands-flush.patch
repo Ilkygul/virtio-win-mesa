@@ -1,0 +1,20 @@
+--- a/triton/tritonView.c
++++ b/triton/tritonView.c
+@@ -371,7 +371,7 @@
+     if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
+     ID3D11DeviceContext1_Flush(pD->pCtx1);
+     tritonFlushGpuTailDiagnostic(pD, "Flush11_1", D3DWDDM2_0DDI_CONTEXTTYPE_ALL, FlushFlags);
+-    return tritonSyncSharedFlush(pD, "Flush11_1", graphics && FlushFlags == 0, contextType, FlushFlags);
++    return tritonSyncSharedFlush(pD, "Flush11_1", graphics && (FlushFlags == 0 || FlushFlags == D3D11_1DDI_FLUSH_UNLESS_NO_COMMANDS), contextType, FlushFlags);
+ }
+ 
+ BOOL APIENTRY
+@@ -1026,7 +1026,7 @@
+         tritonFlushGpuTailDiagnostic(pD, "Flush_WDDM2", ContextType, FlushFlags);
+         const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
+             ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
+-        return tritonSyncSharedFlush(pD, "Flush_WDDM2", graphics && FlushFlags == 0, ContextType, FlushFlags);
++        return tritonSyncSharedFlush(pD, "Flush_WDDM2", graphics && (FlushFlags == 0 || FlushFlags == D3D11_1DDI_FLUSH_UNLESS_NO_COMMANDS), ContextType, FlushFlags);
+     }
+     const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
+         ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
