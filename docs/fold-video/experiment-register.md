@@ -1078,6 +1078,17 @@ ZelfdeC47child/Windowsboot13:08:58Z/DPI200/native2448×1848, maaroudeC46DLL2A da
 
 Bewijs `evidence/c47-present-single-publication-r1/c46-ram4-baseline-r2-guest-run`, `c46-ram4-baseline-r2-phone.mp4`, `ram4-baseline-r2-running-modules.json`, `first-install-baseline-after-baseline8.json`. NugebondenC47drieDLLtransactie; pasnaversenormaleWindowsbootnieuwe38DCgeladenbewijzen enexactdezelfde8staak. RAM6basisblijftapart. Geenproductiewijziging/doelopen.
 
+
+### C47 live hardwareproef — geen snelheidswinst, eerdere Present-publicatie gevonden
+
+DrieDLLs werkelijkgeïnstalleerd metgecontroleerdeoudebackups; receiptSHA `EEE5ADE7564A394846F396F191694882C1EA7AE7F140D55392A4BF9DD5950732`. NormaleWindowsafsluiting13:15:14Z/fullDRAIN/pooluit, verse5120MiBpool/Android4988MiB. NieuweWindowsboot13:16:36.6921440Z: DWM1332 énbenchmark3544 laden**38DC**, Code0. WerkelijkehostFDs:alleenC47RW+C46/C35/C33RO+privateC47VARSRW. Geenproductieschijf.
+
+Zelfde4GiB/DPI200/native2448×1848/immutable8s/960×640/vsync1/privatecopy0/defaultcaption: **218/8,027360s=27,1571API/s**, versusC46**27,5761**(-1,52%); natuurlijkeexit0/leegstderr/geenerrors/deviceRemoved/occlusion/focusverlies. C47framep50 35,17ms/p95 53,94/max90,27. Opname/contactblad toontcomplete15kubusscène/leesbarecaption; geenallframepixelcertificering/60Hzclaim. **Geenmerkbarewinst, C47hypotheseinwerkelijkePresentrouteonvoldoende.**
+
+NieuwebronaanwijzinginactualcompiledC47: Presentroeptvoorhetpaar `npt_runtime_owner_maintenance` aan; `npt_device.c796–806` publiceertdeDrawprefixalonvoorwaardelijkvóórEventdrain/COM_RELEASE/MapSlotcleanup. DeC47helpertestbewijstbundelingindienbytesnogpendingzijn, maarhetvolledigePresentpadwerdnietmeegenomen. Ditkandegehooptebundelingvoorkomen; geenbewezen30mscausaliteit. **Nietongewijzigdherhalen.** Onderzoekééngerichteconditioneringvanonderhoudmetbehoudvanallepublicatie-/GPU-/lifetimegrenzen; geenblindeskipofsoftwarefallback. Eerstbronvoorwaarden, danéénconcretecorrectie.
+
+Bewijs `evidence/c47-present-single-publication-r1/matched-ram4-3d-decision.json` SHA `5bf652ca5951eb1529a85cda48ba13c00ef0196e6b9b4038e8fd2c03d7da95d9`, beideguest-runs/phoneclips/contactbladen. GeenC47videowinstofproductiemerge/release; doelopen. C47ligtalleenintestchild, C46frozenherstelpuntblijftbehouden.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
