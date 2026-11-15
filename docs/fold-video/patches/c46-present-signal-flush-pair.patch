@@ -1,0 +1,276 @@
+diff --git a/npt_overrides.h b/npt_overrides.h
+index 119640e..fbe526e 100644
+--- a/npt_overrides.h
++++ b/npt_overrides.h
+@@ -15,6 +15,19 @@
+ 
+ void npt_overrides_d3d11_device_init(void);
+ void npt_overrides_d3d11_context_init(void);
++
++/* Internal Present only. Caller holds its context/fence references and
++ * presentLock. UNSUPPORTED guarantees no pair bytes were submitted; only
++ * that result permits the original Signal + Flush calls. FAILED may follow
++ * publication and MUST stop the Present, without retry or event/flip arm. */
++enum npt_present_pair_result {
++   NPT_PRESENT_PAIR_FAILED = -1,
++   NPT_PRESENT_PAIR_UNSUPPORTED = 0,
++   NPT_PRESENT_PAIR_SUBMITTED = 1,
++};
++enum npt_present_pair_result
++npt_d3d11_present_signal_flush_pair(void *context4, void *context1,
++                                    void *fence, uint64_t value);
+ void npt_overrides_d3d11_buffer_init(void);
+ void npt_overrides_d3d11_texture_init(void);
+ void npt_overrides_d3d11_fence_init(void);
+diff --git a/npt_overrides_d3d11_context.c b/npt_overrides_d3d11_context.c
+index 23ec30b..7450dda 100644
+--- a/npt_overrides_d3d11_context.c
++++ b/npt_overrides_d3d11_context.c
+@@ -65,6 +65,66 @@ npt_d3d11_context_is_immediate(void *context)
+    return aux && !aux->deferred;
+ }
+ 
++/* Keep the ordinary prepublication/maintenance frontier in submit_raw.
++ * Only the two adjacent internal Present commands share the final credit;
++ * preceding draws are NOT merged with this pair. Public Signal is unchanged. */
++enum npt_present_pair_result
++npt_d3d11_present_signal_flush_pair(void *context4, void *context1,
++                                    void *fence, uint64_t value)
++{
++   if (!context4 || !context1 || !fence || !value)
++      return NPT_PRESENT_PAIR_FAILED;
++   struct npt_com_base *c4 = context4, *c1 = context1, *f = fence;
++   struct npt_device *dev = c4->base.device;
++   if (!dev || c1->base.device != dev || f->base.device != dev || !dev->renderer)
++      return NPT_PRESENT_PAIR_FAILED;
++   if (!dev->renderer->publisher_job_v1)
++      return NPT_PRESENT_PAIR_UNSUPPORTED;
++   if (npt_renderer_is_lost(dev->renderer))
++      return NPT_PRESENT_PAIR_FAILED;
++
++   struct npt_com_base *i4 = c4->identity ? c4->identity : c4;
++   struct npt_com_base *i1 = c1->identity ? c1->identity : c1;
++   if (i4 != i1 || !npt_d3d11_context_is_immediate(context4) ||
++       !npt_d3d11_context_is_immediate(context1) ||
++       !c4->base.id || !c1->base.id || !f->base.id ||
++       npt_com_id_is_guest_fab(c4->base.id) ||
++       npt_com_id_is_guest_fab(c1->base.id) ||
++       npt_com_id_is_guest_fab(f->base.id))
++      goto failed;
++
++   struct npt_ring *ring = npt_com_self_ring(context4);
++   if (!ring || ring != npt_com_self_ring(context1) ||
++       ring->device != dev || ring->renderer != dev->renderer ||
++       !ring->publisher_job_v1)
++      goto failed;
++   /* Reject unsupported sizing BEFORE submit_raw can publish anything.
++    * A single direct reservation also excludes an interleaved future Wait. */
++   if (ring->direct_size < 64 || ring->buffer_size < 64 ||
++       npt_sizeof_ID3D11DeviceContext4_Signal(fence, value) != 40 ||
++       npt_sizeof_ID3D11DeviceContext_Flush() != 24)
++      return NPT_PRESENT_PAIR_UNSUPPORTED;
++
++   uint8_t pair[64] = {0};
++   struct npt_cs_encoder enc = { pair, pair + sizeof(pair) };
++   npt_encode_ID3D11DeviceContext4_Signal(&enc, 0, c4->base.id, fence, value);
++   npt_encode_ID3D11DeviceContext_Flush(&enc, 0, c1->base.id);
++   if (enc.cur != enc.end)
++      goto failed;
++   /* submit_raw retains TLS flush, old-prefix credit, locked recheck,
++    * whole-span wrap/space handling and ordered final NotifyV2. Its bool
++    * covers the write; NotifyV2 send failure separately latches lost. */
++   if (!npt_ring_submit_raw(ring, pair, sizeof(pair)) ||
++       npt_renderer_is_lost(dev->renderer))
++      goto failed;
++   return NPT_PRESENT_PAIR_SUBMITTED;
++
++failed:
++   /* May already be committed: never fall back to duplicate legacy calls. */
++   npt_renderer_set_lost(dev->renderer);
++   return NPT_PRESENT_PAIR_FAILED;
++}
++
+ static uint32_t
+ npt_d3d11_map_to_access_flags(D3D11_MAP map_type)
+ {
+diff --git a/triton/tritonDxgi.c b/triton/tritonDxgi.c
+index 7d823ef..805244f 100644
+--- a/triton/tritonDxgi.c
++++ b/triton/tritonDxgi.c
+@@ -17,6 +17,7 @@
+ #include "tritonDxgi.h"
+ #include "tritonPresent.h"
+ #include "npt_env.h"
++#include "npt_overrides.h"
+ #include "tritonPresentTiming.h"
+ #include "npt_shared_texture.h"   /* host format of a primary */
+ 
+@@ -397,9 +398,13 @@ tritonGateProofEnd(PTRITON_DEVICE pD, const TRITON_GATE_PROOF *proof)
+           proof->sites[7], (unsigned long long)proof->samples[7]);
+ }
+ 
+-static void
+-tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
++static HRESULT
++tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait, BOOL pairPresent)
+ {
++   /* Only HRESULT-returning Present DDIs select the new pair. Shared
++    * handoff/Flush callers retain their existing path and completion gates. */
++   if (pairPresent && InterlockedCompareExchange(&pD->RuntimeWriteFailed, 0, 0))
++      return D3DDDIERR_DEVICEREMOVED;
+    TRITON_GATE_PROOF proof = {0};
+    proof.enabled = arm && wait && tritonSwitch("triton-gpugateproof");
+    proof.signalHr = proof.armHr = proof.rearmHr = proof.graceHr = S_FALSE;
+@@ -411,7 +416,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+    }
+    if (!pD->pCtx1) {
+       tritonGateProofEnd(pD, &proof);
+-      return;
++      return S_OK;
+    }
+    if (!pD->presentLockInit) {
+       /* Locks not up (only reachable before a successful CreateDevice):
+@@ -419,7 +424,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+       ID3D11DeviceContext1_Flush(pD->pCtx1);
+       proof.reason = "lock-uninitialized-bare-flush";
+       tritonGateProofEnd(pD, &proof);
+-      return;
++      return S_OK;
+    }
+    if (!arm) {
+       /* Submit only.  presentLock still covers it: the immediate context is
+@@ -428,7 +433,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+       EnterCriticalSection(&pD->presentLock);
+       ID3D11DeviceContext1_Flush(pD->pCtx1);
+       LeaveCriticalSection(&pD->presentLock);
+-      return;
++      return S_OK;
+    }
+ 
+    ID3D11Fence *pFence = NULL;
+@@ -455,8 +460,29 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+       proof.target = v;
+       proof.identity = pD->pPresentFence;
+       proof.signalAttempted = TRUE;
+-      proof.signalHr = ID3D11DeviceContext4_Signal(pD->pCtx4, pD->pPresentFence, v);
+-      ID3D11DeviceContext1_Flush(pD->pCtx1);
++      enum npt_present_pair_result pair = NPT_PRESENT_PAIR_UNSUPPORTED;
++      if (pairPresent)
++         pair = npt_d3d11_present_signal_flush_pair(pD->pCtx4, pD->pCtx1,
++                                                   pD->pPresentFence, v);
++      if (pair == NPT_PRESENT_PAIR_FAILED) {
++         /* No event arm, PresentCb, retry, or success on a selected failure.
++          * Retain pending allocation metadata; future runtime collects fail. */
++         proof.signalHr = D3DDDIERR_DEVICEREMOVED;
++         proof.reason = "signal-flush-pair-failed";
++         InterlockedExchange(&pD->RuntimeWriteFailed, 1);
++         LeaveCriticalSection(&pD->presentLock);
++         tritonSetError(pD, D3DDDIERR_DEVICEREMOVED);
++         tritonGateProofEnd(pD, &proof);
++         return D3DDDIERR_DEVICEREMOVED;
++      }
++      if (pair == NPT_PRESENT_PAIR_UNSUPPORTED) {
++         proof.signalHr = ID3D11DeviceContext4_Signal(pD->pCtx4, pD->pPresentFence, v);
++         ID3D11DeviceContext1_Flush(pD->pCtx1);
++      } else {
++         /* Same assumed S_OK as the existing async Signal thunk. This is
++          * accepted publication, NOT a synchronous native HRESULT/GPU proof. */
++         proof.signalHr = S_OK;
++      }
+       pt_sig = TRITON_PT_NOW();
+       done = tritonGateProofRead(&proof, pD->pPresentFence, 0);
+       proof.reason = done == UINT64_MAX ? "initial-UINT64_MAX" : "initial-already-completed";
+@@ -533,7 +559,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+        * average from being diluted by frames that never waited. */
+       triton_pt_account(pt_sig - pt_t0, pt_arm - pt_sig, 0.0, TRUE);
+       tritonGateProofEnd(pD, &proof);
+-      return;
++      return S_OK;
+    }
+ 
+    if (!wait) {
+@@ -583,7 +609,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+       LeaveCriticalSection(&pD->presentLock);
+       triton_pt_account(pt_sig - pt_t0, pt_arm - pt_sig,
+                         TRITON_PT_NOW() - pt_arm, FALSE);
+-      return;
++      return S_OK;
+    }
+ 
+    /* Block until the GPU retires the marker, so the consumer (DWM) never
+@@ -740,6 +766,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+    triton_pt_account(pt_sig - pt_t0, pt_arm - pt_sig,
+                      TRITON_PT_NOW() - pt_arm, FALSE);
+    tritonGateProofEnd(pD, &proof);
++   return S_OK;
+ }
+ 
+ /* Submit the flip/blit to dxgkrnl under kmCtxLock: DWM's present threads
+@@ -778,7 +805,7 @@ void
+ tritonPresentPublishSharedWrites(PTRITON_DEVICE pD)
+ {
+    if (!pD) return;
+-   tritonPresentFlushAndGate(pD, TRUE /* arm */, TRUE /* GPU complete */);
++   tritonPresentFlushAndGate(pD, TRUE /* arm */, TRUE /* GPU complete */, FALSE /* pair */);
+    tritonSyncShared(pD, "ReleaseResourceGPU");
+ }
+ 
+@@ -827,8 +854,13 @@ tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
+       tritonResourceSyncPresentCompanion(pD, src);
+       tritonPresentUnlock(pD);
+    }
+-   tritonPresentFlushAndGate(pD, TRUE /* arm */,
+-      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */);
++   HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
++      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */,
++      TRUE /* internal Present pair */);
++   if (FAILED(gateHr)) {
++      InterlockedDecrement(&pD->presentInFlight);
++      return gateHr;
++   }
+ 
+    /* DXGIDDICB_PRESENT (MSDN):
+     *   hSrcAllocation  the rendered back buffer to present (a flip-primary
+@@ -1418,7 +1450,7 @@ tritonDxgiBltCommon0(DXGI_DDI_HDEVICE hDevice,
+    trRuntimeWriteEnd(pD);
+       tritonPresentUnlock(pD);
+       if (Flags.Present)
+-         tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */);
++         tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */, FALSE /* pair */);
+       InterlockedDecrement(&pD->presentInFlight);
+       return S_OK;
+    }
+@@ -1455,7 +1487,7 @@ tritonDxgiBltCommon0(DXGI_DDI_HDEVICE hDevice,
+                                             src, SrcSubresource, &box);
+          if (SUCCEEDED(shr)) {
+             if (Flags.Present)
+-               tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */);
++               tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */, FALSE /* pair */);
+             InterlockedDecrement(&pD->presentInFlight);
+             return S_OK;
+          }
+@@ -1491,7 +1523,7 @@ tritonDxgiBltCommon0(DXGI_DDI_HDEVICE hDevice,
+    tritonPresentUnlock(pD);
+    /* A presentation blt is the present: nothing later submits it. */
+    if (Flags.Present)
+-      tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */);
++      tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */, FALSE /* pair */);
+    InterlockedDecrement(&pD->presentInFlight);
+    return S_OK;
+ }
+@@ -1639,8 +1671,13 @@ tritonDxgiPresent1(DXGI_DDI_ARG_PRESENT1 *pArgs)
+       tritonResourceSyncPresentCompanion(pD, src);
+       tritonPresentUnlock(pD);
+    }
+-   tritonPresentFlushAndGate(pD, TRUE /* arm */,
+-      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */);
++   HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
++      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */,
++      TRUE /* internal Present pair */);
++   if (FAILED(gateHr)) {
++      InterlockedDecrement(&pD->presentInFlight);
++      return gateHr;
++   }
+ 
+    DXGIDDICB_PRESENT cb;
+    memset(&cb, 0, sizeof(cb));
