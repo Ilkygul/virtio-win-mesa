@@ -803,6 +803,14 @@ Volledige fysieke opname356frames; grensframes visueel geïnspecteerd. Alle **33
 
 Bewijs evidence/c46-present-tail-pair-r1/direct8-analysis.json SHAb22737540eeecbb11f72b3e7b6068f0dfd42046e687d44bd6112d1da2455d460. **Beslissing:** C46 als gedeeltelijke driverwinst behouden; nog verre van vloeiend60. Nu korte bestaande nativeTaakbeheer6acties/Start en Edgehardwarevideo-regressie, eventueel één bestaande C22-proef voor pairmechanisme. Geen nieuwe GPUcapture of speculatieve gateverwijdering. Zelfstandige testVM; C45herstelpunt bewaard, bouw-pcuit, productie/mainmerge/releaseuit, algemeen doelOPEN.
 
+### C46 korte native Windows-interfacecontrole behouden
+
+Bestaande Taakbeheerlaunch/focushelper274742…81D2A, geen appwijziging. EigenPID5408/birth09:22:12.3543872Z en werkelijkforegroundPID5408; beginvenster920×690/DPI96 op2448×1848. Fysieke voorgrond bevestigd vóór acties. Dezelfde zes acties: Prestaties→Processen, beide scrollrichtingen, verplaatsen, vergroten. Opname30s/exit0 en begin/eind/contactbeelden bewaard.
+
+Pictogrammen, zoekveldtekst en toolbar blijven herkenbaar; geen eerdere witte blokken of gekleurde randvlakken in de geïnspecteerde begin/eind- en12contactbeelden. Startmenu met normale tekst/pictogrammen eveneens fysiek gecontroleerd. Dit behoudt de bestaandeC33FP32winst; geen claim dat C46die oudepixelbugnieuwrepareert. Taakbeheer mapte native **2A7DC660…E744D**, GPUCode0, nowarpON, whitelist6864ongewijzigd; geen per-appsoftwareterugval.
+
+Bewijs evidence/c46-present-tail-pair-r1/native-ui-analysis.json SHAf7ca5ceff41fcca5a44d2e68e3064987b211c3faf862a78b7f49eee981caa119. Korte visuele regressie, geen per-pixelcertificatie van ieder opgenomen frame. **Beslissing:** C46deelwinstbehouden; dezelfde bestaande30sEdgehardwarevideo/20sCPUproef loopt nu. AlgemenevloeiendheidsdoelstellingOPEN, testVMalleen, geenproductie/mainmerge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
