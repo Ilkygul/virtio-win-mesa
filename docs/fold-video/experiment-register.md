@@ -811,6 +811,16 @@ Pictogrammen, zoekveldtekst en toolbar blijven herkenbaar; geen eerdere witte bl
 
 Bewijs evidence/c46-present-tail-pair-r1/native-ui-analysis.json SHAf7ca5ceff41fcca5a44d2e68e3064987b211c3faf862a78b7f49eee981caa119. Korte visuele regressie, geen per-pixelcertificatie van ieder opgenomen frame. **Beslissing:** C46deelwinstbehouden; dezelfde bestaande30sEdgehardwarevideo/20sCPUproef loopt nu. AlgemenevloeiendheidsdoelstellingOPEN, testVMalleen, geenproductie/mainmerge/release.
 
+### C46 videoregressie: hardware actief, maar hapering en latere GPU-disconnect
+
+Dezelfde bestaande collectorD470/prep31A9/CPU4336, clip1080pAV1, nativeconsole2448×1848, 30sformelemeting09:24:40.026–09:25:11.262Z. Edge meldt D3D11VideoDecoder/platformtrue en VideoDecodeHardwareaccelerated; hostworker31770/context229 heeft QTIAV1 RUNNING10:24:27.339local. **926niet-verlorenframes/29,996s=30,8708browsercounter/s**, praktischgelijkC4530,985; geen videowinst. TotaleWindowsCPU11,6055%, Edge4,1641%, proceschurn beperktEdgeattributie.
+
+Fysiekeopname65s/exit0,1507originelePTSframes. In dezelfde bewegendecameraomgevingPTS25..35:321intervallen,p9550,078ms en **max1208,523ms**, daarnaast375,211ms. Grenzen222/223 en243/244 fysiek bekeken: coherente bomen/camera, geenwillekeurigekleurcorruptie. Dit is een echte lange opgenomenbeeldpauze; geen exactUTC-join of bewijs dat uitsluitendGPUuitvoeringdiepauzeveroorzaakte. C45had in zijn vergelijkbarekortevensterp9542,489/max71,500ms. Geen glad60PASS.
+
+Belangrijk: top-level errors[]betreftcollector/CDP, nietalleMediafouten. EénDECODER_UNDERFLOWkwam binnen formelemeting09:25:10.308Z. edge://gpu export09:25:13.532 meldt crashcount0, maar daarna heeft ownedGPU6360/parent7328 geboorte09:25:17.379 en recentcrashcount1. **Dezelfdeplayer meldt09:25:25.398 video decode error, DecoderStatus5;09:25:26.513 PIPELINE_ERROR_DISCONNECTED24.** Collector heeft geenherstart/killopdracht en keepTargetsTRUE; postformaleedge://gpu/screenshot kaninternwerkuitlokken, causaalonbewezen. DWM1344 bleefstaan/GPUCode0, geenWindowsWER1000/1/2 of Crashpaddump gevonden. Hostcapturestopt09:25:22.536 vóórMediafouten, geenexplicietfatal gevonden. Benigne bekendeD3D12cap0x887a0004 nietalscrashoorzaakbestempeld.
+
+Eigen geïsoleerdeEdge7328 op09:29:22Z normaal Browser.close en exitbevestigd; geen anderebrowsergeraakt. Bewijs evidence/c46-present-tail-pair-r1/video-analysis.json SHA2a6cf3723f399a77a4a2cb564a6a8f624d37a45ac7d01e392592e29bc9eb1085. **Beslissing:** C46 behoudt gedeeltelijke3D/UIwinst als diagnosekandidaat, maar geen algemenevervanging. C45 blijft bestbekende gecombineerdeherstelversie; C46-oorzaakisnogonbewezen. EerstdezeGPUexitgerichtlokaliseren metbestaandebrowserlogging enpositieveoudeGPUidentiteit, vóóreenandereprestatiepatch. Geenproductie/mainmerge/release; doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
