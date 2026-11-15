@@ -981,6 +981,30 @@ NieuweFoldboot58c1525c-ed34-4c8e-a4b1-7de4d8c4816b,DXManagerWek&ontgrendelgebrui
 
 **Nieuwe concrete reden/kleinste vervolg:** correct6656reserverenmetgedocumenteerdebestaandedefaultAndroidfloor3072 (script vermeldt freezesrond2,5GB; grensnietlager). Na5728pool+4029available laat6656circa3101MiBAndroidover; actualfloor/PSIwordenbewaakt,enbijteweiniggeenboot. Oude7168pogingnatuurlijkterminalexit1; geenconcurrentreserver. RAM6APIvoorstelalleennamodule/idle/volledigebackingenconfigreadback,exactzelfdeC46disk/VARS. DitisaparteuserRAMproef, geendriverfixclaim.
 
+
+### RAM6 proef afgerond — meer Windows-geheugen, video blijft beperkt
+
+**Kandidaat en scope:** dezelfde zelfstandige C46-test-VM, UUID `c1003be0-3fa5-427c-9aae-1056cc4865d6`, native UMD `2A7DC660…E744D`, F91 KMD, C37/C33 host en beide GPU-pools van 512 MiB. Alleen `memory_mb: 4096 → 6144` is aangepast. Live `vm_modify/vm_get` én blijvende configuratie zijn gecontroleerd: de API alleen bewaart deze wijziging niet. De blijvende configuratie heeft SHA256 `AC53EF160F3155183407BFDB2D2297CA8D2F851228175C7D903AFD1F7E6758EC`; alle andere JSON-waarden en bytes bleven gelijk.
+
+**Werkelijke start:** nieuwe telefoonboot `58c1525c-ed34-4c8e-a4b1-7de4d8c4816b`; main PID11832/start39505 draait werkelijk `--mem 6144`. Open FD's bewijzen dezelfde C46-schijf RW, C35/C33-ouders RO en private C46-VARS RW. Pool6656 MiB was volledig beschikbaar vóór start. Windows boot11:59:46.2894620Z, DWM1440 gebruikt werkelijk2A7D, GPUCode0. Dezelfde gekwalificeerde forcepresentOFF/dwmON-stand is hersteld na de normale boot. DPI200%, gemeten native2448×1848, geenRDP.
+
+**Dezelfde korte YouTube-taak:**
+
+| Meting | 4 GiB, recente baseline | 6 GiB |
+|---|---:|---:|
+| Zichtbaar Windows-RAM | 3,25 GiB | 5,25 GiB |
+| Niet-gedropte browserframes/s | 27,21 | 28,46 |
+| Gedropte/totale frames | 982/1798 | 944/1798 |
+| Totale Windows-CPU | 10,03% | 11,04% |
+
+6GiB formeel12:03:09.905–12:03:40.928Z; tijdens de meting Windows1.043.364KiB vrij, daarna1.255.636KiB terwijl de browser nog open was. Edge meldt hardware video decode, hostAV1-decoderframes zijn actief, originele GPU1692 laadt2A7D. Geen Media-fout of Map/contextlost/GPU-exit in deze korte uitvoering. De fysieke opname toont de echte videotaak; **geen soepel60fps- of driverreparatieclaim**. De circa1,25fps verschil is onvoldoende bewijs van merkbare winst; ook telefoon/Windows zijn tussendoor herstart. De stotterbeperking blijft.
+
+**Android:** 12 begrensde samples, beschikbaar1779,74–2287,05MiB; hoogste fullPSIavg10 slechts0,14%, geen lmkd-kill in de opname en ADB bleef bereikbaar. Na sluiten testbrowser: circa2289MiB beschikbaar/fullPSIavg10=0. De vrije marge is duidelijk kleiner; dit bewijst alleen kort normaal gedrag, geen langdurige stabiliteit.
+
+**Beslissing:** 6GiB voorlopig op deze test-VM behouden voor de aantoonbaar grotere Windows-werkmarge. Geen verhoging naar8/10GiB en geen claim dat extra RAM de driverfout oplost. Bij latere Android-druk staat de exacte4GiB-config klaar voor herstel na normale afsluiting. Productie is niet aangepast. Eigen browser5688 is12:05:50Z normaal gesloten/3eigentabs/exittrue; alle opnames terminal. Oorspronkelijke Android-rotatie3 hersteld, daardoor eindstand1848×2448; DPI200% blijft behouden. DWM1440/GPUCode0 bleven stabiel.
+
+Bewijs: `evidence/c46-ram6-r1/analysis.json`, SHA256 `f5692a7c442c45c65d8b285fecf45ff62802bb5031cd73a6c778c0c3edd4e41d`, plus `actual-start-host-fds.txt`, `guest-run/report.json`, `android-memory-during.txt`, `native-screen.mp4` en `frame50.png`. **Algemeen driverdoel blijft open.** Volgende driverstap richt zich weer op het gedeelde hardwarepad; geen softwareterugval als oplossing.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
