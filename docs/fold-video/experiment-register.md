@@ -375,6 +375,21 @@ De actuele backend bevat al een beperkte diagnose: bestand `/data/adb/fold-vm/np
 
 C39 is normaal afgesloten en volledige C13-drain is bevestigd. De C39-configuratie blijft voor deze diagnose geselecteerd; C37 is **nog niet** teruggezet. Na deze diagnose volledige C37-terugrol tenzij nieuw bewijs een concrete vervolgstap draagt. Geen FIFO-/ownership-/GPU-completioncontrole verwijderen om een getal te verbeteren. Productie blijft uit; het algemene doel blijft open.
 
+
+### C39 bestaande CS-diagnose afgerond; CPU-tailrichting geparkeerd
+
+Dezelfde C39-build/configuratie is normaal opnieuw gestart: Windowsboot 02:43:55.723Z, main26169/start1771708/renderroot26206, dezelfde testschijf/VARS en C39-host; F91/C20/Native1/runtime/strict/nowarp behouden, GPU Code0. Huidig driverlogslot3 bevat in de gerichte controle geen unsupportedpower/invalidreply. Geen bron- of binaire variant.
+
+Formele videofase 02:46:50.245–02:47:01.544Z. Bestaande hwdec-trace aan vanaf51Z, C22 vanaf54Z; beide bestanden verwijderd58Z en opnieuw afwezig bevestigd47:01Z. Werkelijke Edge-worker29178, één decoder. 364 Done-regels van03:46:52.216–58.231 lokale tijd: CS-outputafhandeling mediaan3.839ms, p955.685ms, max7.447ms. Dit is ongeveer60 CS-outputsubmits/s in dit zes-secondenvenster, **geen bewijs van60 voltooide GPU- of schermframes/s**.
+
+Negen EndFrame-jobs in de C22-steekproef hebben mediaan6.114ms totaal/5.606ms poll-lag. Signal/Flush blijven microseconden. End→Done heeft een echte decoder/seq-koppeling; C22 heeft geen codecseq. Unieke voorafgaande End-regels op dezelfde ringthread ondersteunen alleen geordende correlatie: Done-CSmediaan3.573ms en circa1–2ms tussen Done en positieve C22, met1ms-logcatresolutie. Dat laatste bevat GPU, polling en scheduling; geen geïsoleerde GPU-copyduur. Audit: evidence/c39-cs-completion-timing-audit-r1/analysis.json, SHAF8F57A580CB7FAEAFE3B898B1DDF2827A04762615F013CC0E610F5FD4287F264.
+
+De 128 Edge-prefixen omvatten145ms,9EndFrames/5Blts/15Flushes/5Signals. Tussen volledige Blt-intervallen staan1,2,1,2EndFrames; dit bewijst geen vaste halvering of feitelijke Present/displaycadans. `last_method` omvat niet alle commando's. Mapping: evidence/c39-edge-prefix-mapping-r1/analysis.json, SHAF6BA19288801F082236CF4A989D65E9EFC1CBBA5EF29BFDBC9D419699290B04A.
+
+De gastbron corrigeert een mogelijke verkeerde vervolgrichting: de actieve C20-defaults sturen DecoderEndFrame **al asynchroon**, zonder RPC-replywait of expliciete GPU-ticketwait bij return. Een eveneens gegenereerde synchrone call bestaat, maar is hier niet actief. Bronanker: evidence/c39-decoder-endframe-source-audit-r1/analysis.json, SHA1075B8CA446542E3534F649E266395BA895BBBF20C8915B22EAD94EEAB5C45CA. Dus geen ongefundeerde “EndFrame asynchroon maken”-patch. De profileerkwaliteitscounter30.35/s met295/598drops is evenmin een vrijgave of winstclaim.
+
+**Beslissing:** geen extra CPUsetter-/poll-/decoderoptimalisatie op basis van deze meting. Onderzoek eerst met bestaande gegevens waar de doorvoer tussen CS-output en gewone presentatie verloren gaat, inclusief daadwerkelijke Windows-publicatie/callbackduur. Er is nog geen bewijs dat3.8ms-CSduur de circa30browserframes/s veroorzaakt. Alleen eigen YouTube-target5C83A5CACCBCB3E8AD90B2BDE4AD6856 gesloten02:49:01Z. Normale shutdown02:49:02Z, volledigeC13-drainPASS/pooluit; volledigeC37-configterugrol wordt afgerond. Productie uit, bouw-pc uit, algemeen doel open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
