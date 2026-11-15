@@ -780,6 +780,19 @@ Native en alias: **2A7DC660ABF7AC3A6B49991C55FC7B44859F670ADE1D9E8033BE7F62B07E7
 
 Dit is buildbewijs, geen snelheid of runtimevrijgave. Nu de bestaande veilige installatieprocedure: huidige C45 origineel strikte marker teruggeven, normaal afsluiten/fullDRAIN/pooluit, verse C46-sibling boven bevroren C35/C33 en eigenVARS. C45-disk/VARS blijven een onafhankelijk herstelpunt. Eerst nieuwe DLL-maps/Code0 bewijzen, daarna de bestaande korte hardware-3D-proef. Geen productie/mainmerge/release of doelvoltooiing.
 
+
+### C46 zelfstandig geïnstalleerd; nieuwe driverboot wordt gecontroleerd
+
+C45 kreeg zijn oorspronkelijke lege forcepresent-marker met dezelfde ACL terug en sloot normaal af08:47:37Z. De eerste volledige maps-scan weigerde door een procesrace; verse inspectie bevestigde daarna alle VMM/native/maps/FDs opgeruimd. Pool uit. Verse C35/C33-koude metadata, chain/check0 en ongewijzigde parent/VARS zijn bewezen; nieuwe C46-sibling en eigenVARS gemaakt, C45 is geen parent. Coldproofcd82d2708d1b821ce50cb0d14f4c34c91bcf05ecec6fa1d81460ca64d7db43d4; childchain67805be921a18a23bce7f9f27207b69e9f3092986f77437694b9d79cf966212b.
+
+Persistente en live configuratie matchen exact9FDAE537…0EB25; alleen disk/VARS verschillen van C45.5120MiB gereserveerd met Androidfloor4000,5181MiB beschikbaar voor Android. Eerste installatieboot08:58:38.678658Z, main7018/start4020060, echteC46RW/C35RO/C33RO/privateVARSrw. Geërfde C20-DLLs5789/9CC9, F91signedValid/Native1/Code0/2448×1848, vier strikte markers0B en whitelist6864 zijn bevestigd.
+
+De host gebruikt de juiste C37-serverE120 en het C33-FP32-paar/cache. Een aanvankelijke eis dat óók libvirglrenderer.so apart gemapt moest zijn, bleek te streng: de C37-server linkt de renderer/nativejob-code direct; ELF-dependencies, server-specifiek npt_job-object en bouwlog bevestigen dit. Geen backendwijziging nodig. Bewijs9AEFF8514EA66322130681C6041534F658590172C364E1EDF1C32BA84641BA94.
+
+Actual PS5.1-parse van alle vijf definitieve scripts, alle zeven stagehashes, scope en drie nieuwe DLLs PASS. Transactie heeft alle drie bestanden geverifieerd; echte opgehaalde intent **BBF615FFC9E100A21A4106FEF8E6E5AF3B5342B3E011014678F75B88924EE082**, receipt **4D44F65EAF0AE15EC715F7AA5913A83875D2BB4171B36998A42D16DBF4740A5E**, allThreeVerifiedtrue. Geen INF/CAT/KMD/service/policywijziging.
+
+Normale afsluiting van deze installatieboot09:10:18Z; main weg, verse fullDRAIN na maps-race PASS. Nu poolcyclus en dezelfde C46 opnieuw starten om de nieuwe DLLs werkelijk te laden. Dit is nog geen C46-runtime-, pixel- of snelheidsresultaat. Productie en C45-herstelpunt blijven onaangeroerd.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
