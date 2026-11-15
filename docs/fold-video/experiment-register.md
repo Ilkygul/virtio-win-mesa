@@ -615,6 +615,17 @@ NativeARM64 enARM64EC elk289/289 exit0, alle443werkelijkecompilerbronnenexact: �
 
 C44oorspronkelijkeforcepresent-marker06:34:36Zteruggeplaatst/ACLbehouden/dwmforceAAN, normaleWindowsafsluiting06:34:37Z. Oude main13085/start3067672weg/fullC13drainbevestigd/pooluit. VerseC35/C33koudeketen/metadata en huidigeconfig869Egecontroleerd; nieuweC45sibling/eigenVARSwordtgemaakt. GeenC35writableboot/geenoudchildhergebruik; C44/C43/C42bewaarduit. Ditisbuildbewijs, geensnelheidsvrijgave. Nu pingeninstall/restart/werkelijke nieuweDLLmaps en positievequalified1activatie vóórdezichtbarevideoproef; productieuit/doelopen.
 
+
+### C45 geïnstalleerd; herstart onderbroken door kernelbugcheck, veilig herstel
+
+De drieDLLs zijn via bestaande PS5.1/scope/hash/ACL/back-uptransactie geïnstalleerd: intent0DF4AA04…3787396, receiptCE0EA76A…B7BDC07, allThreeVerifiedtrue. Normaleafsluiting06:41:07Z/fullC13drain/pooluit, nieuwebootmain1537/start3204583/render1623/config63D64 metC45RW/C35RO/C33RO/privateVARS. **NieuweUMDmaps enqualified1activatie zijn NIET bewezen; beideforce-markersblevenAAN, geenvideoproefgestart.**
+
+De actuele SBSA-console meldt06:42:51Z MEMORY_MANAGEMENT0x1A, argumenten4477/4FFFB0/1/0. Daarna06:42:55Zrefuseertvirtio_blk1799hosttoegangtotlentGuestMemoryRegionGPA1115d0002. Dit isgeenbewijsdatdeC45Flushwijzigingofeenbepaaldekerneldriverdecrashveroorzaakt; userVAenGPAzijnverschillendeadressen. Geenstackbeschikbaar. Bron-/dumpnotitie evidence/c45-boot-bugcheck-source-audit-r1/analysis.json SHA274AFA88…DFB288D; passendeF91symbolenbestaan.
+
+Bestaandedemonconsolelogsveiliggelezen, geenpipegedraind. ACPIpowerbtnACKzonderafsluiting. VervolgensuitsluitendexacteUUIDdirectvm_control/stop→crosvmExit, zondervm_stopkillfallback.06:50:56Zexitingwithsuccess, mainweg enfullC13proces/maps/FDdrainbevestigd; geenexplicieteflushfoutindestopstaart. Daarna pooluit. KoudeQCOWchecks0zijngeenNTFS-cleanbewijs. VolledigebytekopievanfailedC45child plusVARS bewaardonder /data/adb/fold-vm/codex-c45-after-bugcheck-cold-r1/; bron/kopieSHAc7a8f3dd8a7a613840568011ecd236b8934a64c432cd815a14601638948c7c80 gelijk, kopie0400, oudersongewijzigd. Bewijs evidence/c45-unless-no-commands-flush-r1/after-bugcheck-cold-proof-summary.json.
+
+**Volgendebeslissing:** éénherstelstartvandezelfdeC45 nadatVMM/loanstatevollediggestoptis, metcrashkopiebewaard; geenzinlozeongewijzigdebenchmarkretry. BijbereikbareWindows eerstMinidump/MEMORY.DMP/SystemEvent1001/CrashControlveiligstellen, dannieuweDLLmaps/beideforceAAN. Bijdezelfdebootcrashgeenrebootlus: dump-/herstelrichtingkiezen. C45blijftonbeproefdvoorvideo/3D, productieuit/geenmerge/release/doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
