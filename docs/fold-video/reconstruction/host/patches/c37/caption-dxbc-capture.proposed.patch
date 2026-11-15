@@ -1,0 +1,176 @@
+--- a/src/neptune/npt_resource.c
++++ b/src/neptune/npt_resource.c
+@@ -12,6 +12,10 @@
+ #include "npt_resource.h"
+ 
+ #include <stdio.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <sys/stat.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
+@@ -112,6 +116,101 @@
+                                        __ATOMIC_RELAXED, __ATOMIC_RELAXED)) return old + 1;
+    }
+    return false;
++}
++
++
++/* C25 CPU-only PS bytes: a separate startup opt-in from the late C24 draw
++ * marker. No shader-cache setting or GPU operation is changed. Attempts,
++ * including failed/partial files, consume the one process-wide budget. */
++static unsigned npt_caption_dxbc_attempts;
++
++void npt_caption_capture_pixel_shader(struct npt_dispatch_context *dispatch,
++                                      uint64_t device_id, uint64_t guest_id,
++                                      void *shader, HRESULT result,
++                                      const void *bytecode, size_t bytecode_bytes,
++                                      uint64_t wire_bytes)
++{
++   struct npt_context *ctx = npt_context_from_dispatch(dispatch);
++   if (!ctx || !ctx->debug_name || strcmp(ctx->debug_name, "dwm.exe") ||
++       NPT_FAILED(result) || !shader)
++      return;
++   const char *directory = getenv("NPT_PS_CAPTURE_DIR");
++   if (!directory || directory[0] != '/' ||
++       strnlen(directory, PATH_MAX) == PATH_MAX ||
++       __atomic_load_n(&npt_caption_dxbc_attempts, __ATOMIC_RELAXED) >= 256)
++      return; /* unconfigured: no filesystem operation */
++   char marker[PATH_MAX];
++   int marker_length = snprintf(marker, sizeof(marker), "%s/enable", directory);
++   if (marker_length < 0 || (size_t)marker_length >= sizeof(marker)) return;
++   struct stat marker_stat;
++   if (lstat(marker, &marker_stat) || !S_ISREG(marker_stat.st_mode))
++      return;
++   unsigned sample = npt_caption_take(&npt_caption_dxbc_attempts, 256);
++   if (!sample) return;
++
++   const uint8_t *bytes = bytecode;
++   uint32_t declared = 0, chunks = 0;
++   const char *reason = "invalid-dxbc";
++   int error = 0, dirfd = -1, fd = -1;
++   size_t written = 0;
++   uint64_t canonical = 0;
++   char hash[33] = {0}, filename[160] = {0};
++   /* The decoded allocation is bounded by wire_bytes, not the separate
++    * BytecodeLength field. Header reads happen only after both are checked. */
++   if (!bytes || wire_bytes < 32 || wire_bytes > 65536 ||
++       bytecode_bytes != wire_bytes || memcmp(bytes, "DXBC", 4))
++      goto done;
++   memcpy(&declared, bytes + 24, sizeof(declared));
++   memcpy(&chunks, bytes + 28, sizeof(chunks));
++   if (declared != bytecode_bytes || chunks > (bytecode_bytes - 32) / 4)
++      goto done;
++   for (unsigned i = 0; i < 16; ++i)
++      snprintf(hash + 2 * i, 3, "%02x", bytes[4 + i]);
++   canonical = npt_context_trace_native_id(ctx, shader);
++   if (!canonical) { reason = "unregistered-shader"; goto done; }
++   int length = snprintf(filename, sizeof(filename),
++      "ps-p%lu-c%u-o%016" PRIx64 "-h%s-s%03u.dxbc",
++      (unsigned long)getpid(), ctx->ctx_id, canonical, hash, sample);
++   if (length < 0 || (size_t)length >= sizeof(filename)) {
++      reason = "filename"; goto done;
++   }
++   dirfd = open(directory, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
++   if (dirfd < 0) { reason = "open-directory"; error = errno; goto done; }
++   fd = openat(dirfd, filename,
++               O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC, 0600);
++   if (fd < 0) { reason = "create-new"; error = errno; goto done; }
++   struct stat file_stat;
++   if (fstat(fd, &file_stat)) {
++      reason = "file-type"; error = errno; goto done;
++   }
++   if (!S_ISREG(file_stat.st_mode)) {
++      reason = "file-type"; error = EINVAL; goto done;
++   }
++   /* At most128 writes, including <=8 EINTRs. Positive short writes advance;
++    * zero/error/exhaustion remains UNKNOWN with the partial file preserved. */
++   unsigned calls = 0, interrupts = 0;
++   while (written < bytecode_bytes && calls++ < 128) {
++      ssize_t count = write(fd, bytes + written, bytecode_bytes - written);
++      if (count > 0 && (size_t)count <= bytecode_bytes - written) {
++         written += (size_t)count;
++      } else if (count < 0 && errno == EINTR && ++interrupts <= 8) {
++         continue;
++      } else {
++         reason = "write"; error = count < 0 ? errno : EIO; goto done;
++      }
++   }
++   if (written != bytecode_bytes) { reason = "write-budget"; error = EIO; goto done; }
++   reason = "captured";
++ done:
++   if (fd >= 0 && close(fd)) { reason = "close"; error = errno; }
++   if (dirfd >= 0) close(dirfd);
++   npt_log("CAPTION_DXBC sample=%u cap=256 ctx=%u device=0x%" PRIx64
++           " guest=0x%" PRIx64 " canonical=0x%" PRIx64
++           " hr=0x%x bytes=%zu wire=%" PRIu64 " declared=%u chunks=%u"
++           " dxvkKey=fs.%s file=%s written=%zu errno=%d result=%s reason=%s",
++           sample, ctx->ctx_id, device_id, guest_id, canonical, (unsigned)result,
++           bytecode_bytes, wire_bytes, declared, chunks, hash, filename, written, error,
++           !strcmp(reason, "captured") ? "CAPTURED" : "UNKNOWN", reason);
+ }
+ 
+ unsigned npt_caption_trace_alias_sample(void)
+--- a/src/neptune/npt_resource.h
++++ b/src/neptune/npt_resource.h
+@@ -18,6 +18,7 @@
+ 
+ struct npt_context;
+ struct npt_command_header;
++struct npt_dispatch_context;
+ 
+ /* Opt-in caption diagnostics only. No ownership/grant semantics. */
+ bool npt_caption_trace_enabled(void);
+@@ -29,6 +30,13 @@
+ void npt_caption_trace_draw(struct npt_context *ctx,
+                             const struct npt_command_header *header,
+                             size_t available);
++
++/* C25 bounded CPU shader capture; no pointer is retained after the call. */
++void npt_caption_capture_pixel_shader(struct npt_dispatch_context *dispatch,
++                                      uint64_t device_id, uint64_t guest_id,
++                                      void *shader, HRESULT result,
++                                      const void *bytecode, size_t bytecode_bytes,
++                                      uint64_t wire_bytes);
+ 
+ /* Hard cap on per-call payload byte_size: 2 GB, the guest client's map
+  * slot cap, and bounded so the byte_size+7 alignment math can't wrap to 0
+--- a/src/neptune/neptune-protocol/npt_protocol_host_id3d11device.h
++++ b/src/neptune/neptune-protocol/npt_protocol_host_id3d11device.h
+@@ -12,6 +12,7 @@
+ 
+ #include "npt_protocol_host_structs.h"
+ #include "npt_protocol_host_dispatch_types.h"
++#include "../npt_resource.h"
+ 
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wunused-parameter"
+@@ -1975,6 +1976,7 @@
+      * this field and inserts {_guest_id_ppPixelShader -> *ppPixelShader} in the
+      * context object table. */
+     uint64_t _guest_id_ppPixelShader;
++    uint64_t _caption_wire_bytecode_bytes; /* local decoded allocation bound, not wire ABI */
+     HRESULT ret;
+ };
+ 
+@@ -1985,6 +1987,7 @@
+     /* Decode input parameters from the wire */
+     {
+         const uint64_t _blob_size = npt_decode_array_count_unchecked(dec);
++        args->_caption_wire_bytecode_bytes = _blob_size;
+         if (_blob_size) {
+             args->pShaderBytecode = npt_cs_decoder_alloc_temp(dec, _blob_size);
+             if (!args->pShaderBytecode) return;
+@@ -2106,6 +2109,10 @@
+         npt_cs_handle_register_guest_id(ctx, args._guest_id_ppPixelShader, *args.ppPixelShader, NPT_OBJECT_TYPE_ID3D11PIXELSHADER);
+     else if (args.ppPixelShader)
+         npt_cs_handle_register_failed_guest_id(ctx, args._guest_id_ppPixelShader);
++
++    npt_caption_capture_pixel_shader(ctx, object_id, args._guest_id_ppPixelShader,
++        (NPT_SUCCEEDED(args.ret) && args.ppPixelShader) ? *args.ppPixelShader : NULL, args.ret,
++        args.pShaderBytecode, args.BytecodeLength, args._caption_wire_bytecode_bytes);
+ 
+     if (cmd_flags & NPT_CMD_FLAG_REPLY) {
+         if (!npt_cs_decoder_get_fatal(ctx->decoder)) {

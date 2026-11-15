@@ -1,0 +1,38 @@
+{
+  "status": "BUILD_RETRIEVAL_PROTECTION_CLEANUP_PASS_NOT_RUNTIME",
+  "outputs": [
+    {
+      "name": "libvirglrenderer.so",
+      "bytes": 4691248,
+      "sha256": "b5a31380261a48350795f35f0c017785f0937c0c9b7015676d357960415870c7"
+    },
+    {
+      "name": "virgl_render_server",
+      "bytes": 3002312,
+      "sha256": "e1204fdd39d2b17a5089f2a99eca8bee35c6221ae2752897d34d559890efe604"
+    }
+  ],
+  "rawFilesVerified": 64,
+  "compilerVisibleEntries": 707,
+  "oneDeltaFromActualC36": "src/neptune/npt_job.c",
+  "postSha256": "2855dec3ce0b5ef8b2ba0a0e8307e41852a1529b36bfe6b745558fe3dd55e6d1",
+  "oldSourcesOutputsArtifactsUnchanged": true,
+  "ownContainerMountAndLeaseReleased": true,
+  "poweroffExit": 0,
+  "sshAfterPoweroffExit": 255,
+  "evidence": [
+    {
+      "file": "retrieval-local-verification.json",
+      "sha256": "3db836ec77989ca5575538eca888aa6b044cf118c11ea3ebdbef6c527a021717"
+    },
+    {
+      "file": "local-source-verification.json",
+      "sha256": "92bd51e520193c8be96f9d39d83735d87b321a134b43a640cb9d14c10417f093"
+    },
+    {
+      "file": "session-closure.json",
+      "sha256": "76e1ac150c265747733dcf67a1c613caf281d59f797e7f0e13c619c99cafc496"
+    }
+  ],
+  "noDeviceDeployOrRuntimeActions": true
+}

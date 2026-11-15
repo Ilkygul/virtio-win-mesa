@@ -1,0 +1,13 @@
+--- a/src/dxvk/dxvk_shader_ir.cpp
++++ b/src/dxvk/dxvk_shader_ir.cpp
+@@ -1879,7 +1879,9 @@
+     options.arithmeticOptions.lowerGsVertexCountIn = false;
+     options.arithmeticOptions.hasNvUnsignedItoFBug = m_info.options.flags.test(DxvkShaderCompileFlag::LowerItoF);
+ 
+-    options.min16Options.enableFloat16 = m_info.options.flags.test(DxvkShaderCompileFlag::Supports16BitArithmetic);
++    // Use full precision for D3D minimum-precision floats for UI compatibility.
++    // Explicit native FP16 types and integer lowering remain unchanged.
++    options.min16Options.enableFloat16 = false;
+     options.min16Options.enableInt16 = m_info.options.flags.test(DxvkShaderCompileFlag::Supports16BitArithmetic);
+ 
+     options.resourceOptions.allowSubDwordScratchAndLds = true;

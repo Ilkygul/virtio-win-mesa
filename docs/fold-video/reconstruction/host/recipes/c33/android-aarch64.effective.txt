@@ -1,0 +1,18 @@
+[binaries]
+c = '/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang'
+cpp = '/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang++'
+ar = '/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar'
+strip = '/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip'
+ranlib = '/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib'
+
+[built-in options]
+c_args = ['-fPIC']
+cpp_args = ['-fPIC']
+c_link_args = ['-static-libstdc++']
+cpp_link_args = ['-static-libstdc++']
+
+[host_machine]
+system = 'android'
+cpu_family = 'aarch64'
+cpu = 'aarch64'
+endian = 'little'

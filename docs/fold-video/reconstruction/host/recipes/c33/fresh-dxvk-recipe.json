@@ -1,0 +1,175 @@
+{
+  "schema": "c15-fresh-dxvk-recipe-v1",
+  "status": "SOURCE_ONLY_REVIEW_REQUIRED_NO_EXECUTION_APPROVAL",
+  "basedOn": {
+    "metadataPacketSha256": "6ad56cab8d14bdeb2470bcddcf5093b90b73a397678d11c23de59b29e5f4f158",
+    "metadataManifestSha256": "a42b27223390f20948a985da5cc4a92251278cee0e340bfcf24d04b918d00eb0",
+    "sourcePlanSha256": "315c53de46df7b78b0685e3d8c0dcd7f782f8f78712351f5f117f28f883fd3bb"
+  },
+  "privateSource": "/home/igul/codex-fp32-c33-dxvk-r1/source/dxvk",
+  "freshBuildDirectory": "/home/igul/codex-fp32-c33-dxvk-r1/dxvk-build",
+  "machineFile": {
+    "originalSha256": "ea541a770e41396c694aeb7cb5ad1fccd422ef7c4bb14913a70af36409ef5fe1",
+    "effectiveSha256": "e9c4cd270ea3fde6f579479cb2c43b99b8a5b9fcd835e932ba7c1749e15a7db1",
+    "deltaSha256": "99379d2db581774d684cc75179244a5e64f22a8ceca09c69f63fc6633a7805b5",
+    "reason": "Current file adds two escaped RPATH arguments absent from the active Meson effective configuration. Replace only c_link_args/cpp_link_args with actual intro-buildoptions arrays; retain compiler/NDK/API30, host_machine and PIC exactly.",
+    "stagedPath": "/home/igul/codex-fp32-c33-dxvk-r1/stage-c33-r1/android-aarch64.effective.txt"
+  },
+  "setupArgv": [
+    "meson",
+    "setup",
+    "/home/igul/codex-fp32-c33-dxvk-r1/dxvk-build",
+    "/home/igul/codex-fp32-c33-dxvk-r1/source/dxvk",
+    "--cross-file",
+    "/home/igul/codex-fp32-c33-dxvk-r1/stage-c33-r1/android-aarch64.effective.txt",
+    "-Dbuildtype=release",
+    "-Dnative_headless=true",
+    "-Dnative_sdl2=disabled",
+    "-Dnative_sdl3=disabled",
+    "-Dnative_glfw=disabled",
+    "-Denable_d3d8=false",
+    "-Denable_d3d9=false",
+    "-Denable_d3d10=false",
+    "-Db_ndebug=true",
+    "--wrap-mode=nodownload"
+  ],
+  "buildArgv": [
+    "ninja",
+    "-C",
+    "/home/igul/codex-fp32-c33-dxvk-r1/dxvk-build",
+    "-j8"
+  ],
+  "setupOptionsFromActualCmdLine": {
+    "buildtype": "release",
+    "native_headless": "true",
+    "native_sdl2": "disabled",
+    "native_sdl3": "disabled",
+    "native_glfw": "disabled",
+    "enable_d3d8": "false",
+    "enable_d3d9": "false",
+    "enable_d3d10": "false",
+    "b_ndebug": "true"
+  },
+  "offlinePolicyDelta": "--wrap-mode=nodownload is an explicit new build-safety policy, not an observed old option. Requires Root review; existing source subprojects must be copied and verified, no package/git/subproject fetch. No compiler/render behavior change if identical dependencies are already present.",
+  "expectedEffectiveOptions": {
+    "buildtype": "release",
+    "b_ndebug": "true",
+    "c_args": [
+      "-fPIC"
+    ],
+    "cpp_args": [
+      "-fPIC"
+    ],
+    "c_link_args": [
+      "-static-libstdc++"
+    ],
+    "cpp_link_args": [
+      "-static-libstdc++"
+    ],
+    "cpp_std": "c++17",
+    "enable_dxgi": true,
+    "enable_d3d8": false,
+    "enable_d3d9": false,
+    "enable_d3d10": false,
+    "enable_d3d11": true,
+    "build_id": false,
+    "native_glfw": "disabled",
+    "native_sdl2": "disabled",
+    "native_sdl3": "disabled",
+    "native_headless": true
+  },
+  "expectedSubprojects": [
+    {
+      "name": "libdisplay-info",
+      "version": "0.0.0",
+      "descriptive_name": "libdisplay-info"
+    },
+    {
+      "name": "dxbc-spirv",
+      "version": "0.1.0",
+      "descriptive_name": "dxbc-spirv"
+    },
+    {
+      "name": "directx-native",
+      "version": "1.0.0",
+      "descriptive_name": "directx-native"
+    }
+  ],
+  "postBuildPrivateOnly": [
+    {
+      "input": "/home/igul/codex-fp32-c33-dxvk-r1/dxvk-build/src/d3d11/libdxvk_d3d11.so",
+      "copyUnstrippedTo": "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_d3d11.unstripped.so",
+      "copyPackedTo": "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_d3d11.so",
+      "stripArgv": [
+        "/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip",
+        "--strip-unneeded",
+        "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_d3d11.so"
+      ],
+      "rpathArgv": [
+        "patchelf",
+        "--set-rpath",
+        "$ORIGIN",
+        "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_d3d11.so"
+      ],
+      "inspectArgv": [
+        "/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf",
+        "-h",
+        "-d",
+        "-n",
+        "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_d3d11.so"
+      ]
+    },
+    {
+      "input": "/home/igul/codex-fp32-c33-dxvk-r1/dxvk-build/src/dxgi/libdxvk_dxgi.so",
+      "copyUnstrippedTo": "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_dxgi.unstripped.so",
+      "copyPackedTo": "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_dxgi.so",
+      "stripArgv": [
+        "/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip",
+        "--strip-unneeded",
+        "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_dxgi.so"
+      ],
+      "rpathArgv": [
+        "patchelf",
+        "--set-rpath",
+        "$ORIGIN",
+        "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_dxgi.so"
+      ],
+      "inspectArgv": [
+        "/home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf",
+        "-h",
+        "-d",
+        "-n",
+        "/home/igul/codex-fp32-c33-dxvk-r1/artifact/dxvk/libdxvk_dxgi.so"
+      ]
+    }
+  ],
+  "runtimeSet": [
+    "crosvm",
+    "libvirglrenderer.so",
+    "virgl_render_server",
+    "libdxvk_d3d11.so",
+    "libdxvk_dxgi.so"
+  ],
+  "dxvkAbiPair": "R3 adds an atomic member to DxvkDevice and an internal waitForIdleStatus method. Both DXVK shared libraries must come from this same fresh private source/build/compiler snapshot. Never package new D3D11 with old DXGI, even when old DXGI source was unmodified. Existing D3D11 target links DXGI plus DXVK static archive; original DXGI D347 is protected, not reused as new output.",
+  "originalDxgiProtectedSha256": "d3471089137039aef1d507f8e993061aa6f224bbad74c61f118a9fb387e014d8",
+  "freshSourceAndObjectRequirements": [
+    "CreateNew source/dxvk and dxvk-build; never copy old coredata.dat/build.ninja/objects/archives or old build output.",
+    "Copy the complete current gated source/dependency trees from known repo root only; skip all .git/credential/env/build/output directories. Record all copied file hashes and symlink lstat/readlink/containment; refuse external or unsafe source symlinks rather than retaining an old absolute repo path. Known dependency include roots come from captured target parameters.",
+    "Verify all43 combined source payload postimages in private compiler-visible paths; full originals before/after/source HEAD/status unchanged.",
+    "Before compilation compare new Meson effective options and compiler/NDK/API30 against captured data, allowing only new cross/build/source path and approved nodownload policy. Stop on unexpected old-source/-L/-I library references or dependencies from old build.",
+    "Collect compile_commands.json,ninja command lists, all produced .o/.a hash inventories, source manifest, tool hashes/versions, ELF+dynamic+sourcedependency reports; no borrowed DXVK objects.",
+    "Use exact argv arrays for strip/patchelf; literal $ORIGIN must never be shell-expanded. Preserve both unstripped images.",
+    "Private source lacks original .git by design; Meson vcs_tag may use project fallback2.7.1. Record generated version.h and captured originalHEAD/dirty/patch source hashes explicitly; do not infer source identity from display version."
+  ],
+  "remainingBuildScriptWork": [
+    "Integrate this reviewed recipe with existing2FE host RO/COW workflow and all3hosttargets; freeze new executable buildscript+approval gate before PC compile.",
+    "Actual source/dependency symlink and nested source tree inventories are not collected by phase0; verify bounded known-root source-copy gate during the later approved build session."
+  ],
+  "claims": "No build/runtime/deployment or performance/pixel claim. Five-artifact package coherence is a requirement, not completed evidence.",
+  "toolResolution": {
+    "PATHPrefix": "/home/igul/dxvk-android/venv/bin",
+    "method": "Use same PATH-prefix policy as actual e105 workflow; resolve command names at execution, record absolute resolved tool paths/hashes/version. Do not assume which executable exists under venv/bin.",
+    "expectedMesonVersion": "1.12.1",
+    "expectedNinjaVersion": "1.13.2.git.kitware.jobserver-pipe-1"
+  }
+}

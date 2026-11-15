@@ -1,0 +1,544 @@
+{
+  "schema": "tested-C46-host-source-state-v1",
+  "publication": "PRE_RELEASE_TESTED_SNAPSHOT_NOT_PRODUCTION",
+  "originalRepositories": {
+    "rust": {
+      "head": "8db213546ca924a33ce5c14dfb04efbce9badadb",
+      "branch": "neptune",
+      "upstreamUrls": [
+        "https://github.com/Droid-VM/crosvm"
+      ],
+      "dirtySourceState": " M devices/src/virtio/gpu/mod.rs",
+      "history": "Source repo shallow; selectedHEADnot assumed public. Snapshot source bytes, not reconstructed full original ancestry."
+    },
+    "virgl": {
+      "head": "4d54b39e7ec8733faf9ebe97de0a217fbe7bbb53",
+      "branch": "neptune",
+      "upstreamUrls": [
+        "https://github.com/Droid-VM/virglrenderer"
+      ],
+      "dirtySourceState": "",
+      "history": "Source repo shallow; selectedHEADnot assumed public. Snapshot source bytes, not reconstructed full original ancestry."
+    },
+    "dxvk": {
+      "head": "c8cf25a65f4151634b4e8ab4ad48fc37937d63be",
+      "branch": "master",
+      "upstreamUrls": [
+        "https://github.com/osy/dxvk"
+      ],
+      "dirtySourceState": " M src/d3d11/d3d11_context.cpp\n M src/d3d11/d3d11_device.cpp\n M src/d3d11/d3d11_video_mc.cpp\n M src/d3d11/d3d11_video_mc.h\n M src/dxvk/dxvk_context.cpp",
+      "history": "Source repo shallow; selectedHEADnot assumed public. Snapshot source bytes, not reconstructed full original ancestry."
+    }
+  },
+  "publishedSnapshotCommits": {
+    "virgl": "43753f2ffb42a9a3627a9ea708961efb162c8edc",
+    "dxvk": "b7e4b740e589a83cdae360b7e57978e4c32634e2",
+    "rust": "75203094a00250cecdf5da90f92ba1d7edb00f47"
+  },
+  "publishedSnapshotRepoUrls": {
+    "virgl": "https://github.com/Ilkygul/virglrenderer",
+    "dxvk": "https://github.com/Ilkygul/dxvk",
+    "rust": "https://github.com/Ilkygul/crosvm"
+  },
+  "dependencies": {
+    "minigbm": {
+      "head": "b7c93249f685222a524c51403719493cc114ff5d",
+      "status": ""
+    },
+    "minijail": {
+      "head": "ab6cd0f786481e2deecfe6f8563ae0d2416bd460",
+      "status": ""
+    }
+  },
+  "c15FunctionalBase": {
+    "counts": {
+      "rust": 4,
+      "virgl": 36,
+      "dxvk": 6
+    },
+    "postimages": {
+      "rust": [
+        {
+          "path": "devices/src/virtio/gpu/mod.rs",
+          "liveSha256": "ca06c84637b05f7e694dce448f7f29856bc805887c3162ef89cd722936577fad",
+          "c12CompiledSha256": "341bb6d5306ccc38ae9e46757811191607b005985666a4df9b3f2dfec89280ec",
+          "postSha256": "341bb6d5306ccc38ae9e46757811191607b005985666a4df9b3f2dfec89280ec",
+          "source": "artifacts/c12-host-build/artifact/source/rustFiles/devices/src/virtio/gpu/mod.rs",
+          "origin": "exact C12 built source"
+        },
+        {
+          "path": "devices/src/virtio/gpu/virtio_gpu.rs",
+          "liveSha256": "e3c31e83729ffafdb1ed1e4b08669515afb10401f13c4f08ce273b8811ce1f26",
+          "c12CompiledSha256": "c0b47bc642d2217540906ee8f625695351d88de48cd1187c8aa8f43aa4befe30",
+          "postSha256": "c0b47bc642d2217540906ee8f625695351d88de48cd1187c8aa8f43aa4befe30",
+          "source": "artifacts/c12-host-build/artifact/source/rustFiles/devices/src/virtio/gpu/virtio_gpu.rs",
+          "origin": "exact C12 built source"
+        },
+        {
+          "path": "rutabaga_gfx/src/rutabaga_core.rs",
+          "liveSha256": "e2879594ea10a233e8538f27824caed0f055124120723f93fcb578fd8321a78f",
+          "c12CompiledSha256": "8e334197b4f3c8d807739888e5901bb699dd7ad4e868d78fde40fb3ad79310a9",
+          "postSha256": "8e334197b4f3c8d807739888e5901bb699dd7ad4e868d78fde40fb3ad79310a9",
+          "source": "artifacts/c12-host-build/artifact/source/rustFiles/rutabaga_gfx/src/rutabaga_core.rs",
+          "origin": "exact C12 built source"
+        },
+        {
+          "path": "rutabaga_gfx/src/virgl_renderer.rs",
+          "liveSha256": "6567a1732b8e1bb4032f4f48a4b62953e5aa3bb1143b94b7a4173979220b2cc8",
+          "c12CompiledSha256": "8cda22d0f0620c94956e587a8e0330c373ae7623cb80203da7f97ad9fee1e935",
+          "postSha256": "8cda22d0f0620c94956e587a8e0330c373ae7623cb80203da7f97ad9fee1e935",
+          "source": "artifacts/c12-host-build/artifact/source/rustFiles/rutabaga_gfx/src/virgl_renderer.rs",
+          "origin": "exact C12 built source"
+        }
+      ],
+      "virgl": [
+        {
+          "path": "Android.bp",
+          "liveSha256": "4904d19dcc4b81d1ad0f5f851db7a4aa7c11bb3ffcd3011582dc4b05a283387e",
+          "c12CompiledSha256": "9bc28994d5b9ccdfcc8d644e36f6d431b56a324ea78a242397f828eedf5485cf",
+          "postSha256": "9bc28994d5b9ccdfcc8d644e36f6d431b56a324ea78a242397f828eedf5485cf",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/Android.bp",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/meson.build",
+          "liveSha256": "eb96c2c0bbc09b7bd7d8bb14bc4e49c0af47a88aa59d726bce14f221fee5d1a8",
+          "c12CompiledSha256": "04f2f3f4bfd3ae585b0a55d4c512af1ba9da50bfae559b7ab1fd5b786306360d",
+          "postSha256": "04f2f3f4bfd3ae585b0a55d4c512af1ba9da50bfae559b7ab1fd5b786306360d",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/meson.build",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_context.c",
+          "liveSha256": "5241e7ee6c1b3c1c15558e1112f4b7e1f6388981b00908a634928bd491683386",
+          "c12CompiledSha256": "4499d64a5c1ea11bbd8167ede566b4f59d5b060fee4ecdb9005143d0eb11c146",
+          "postSha256": "7d3fb24b62c027073f2266fb4dc93081deb5fa90cf34e5d3e0e19980f784fcc1",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/neptune/npt_context.c",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "src/neptune/npt_context.h",
+          "liveSha256": "ad347b2683d8ef53acbd06756817395fa889acd26ca56e5161b4c86765c57fcf",
+          "c12CompiledSha256": "0d0f3b64bf4c7b8815703d120923fdf507e3707f7755318035f42091fdce234c",
+          "postSha256": "e23968da04ca2f05beb9c21e1cc3d758ff7a7d062c9d8cb1fbf6bc54584489df",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/neptune/npt_context.h",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "src/neptune/npt_ring.c",
+          "liveSha256": "659d3bd8b933d8be97b8139e369bdadc56b8d8734310918691ef1bfcb2be94c6",
+          "c12CompiledSha256": "da97bd226aa95f8c65088170ad6e7f9feb72e69ce0166d518be70a72d14e50cb",
+          "postSha256": "da97bd226aa95f8c65088170ad6e7f9feb72e69ce0166d518be70a72d14e50cb",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/neptune/npt_ring.c",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_ring.h",
+          "liveSha256": "7489b8d0f501a8ea1c8d76eabc7dbe9017d504af75a54249c6fbb496d6c38ef3",
+          "c12CompiledSha256": "a2bd0c6bf65d86bb958cd8003eeafa836eb65a7dc148dd2b8fb35059c10b26f5",
+          "postSha256": "a2bd0c6bf65d86bb958cd8003eeafa836eb65a7dc148dd2b8fb35059c10b26f5",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/neptune/npt_ring.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_dispatch.c",
+          "liveSha256": "4be5f7afc11aed2fc4ff3f02cacd7c8d5515615b89cdbf4de14a3cc160ed34fc",
+          "c12CompiledSha256": "13acd7e2653edf81543132e5b2656fa20e28292127d3466cdce5791191044fe3",
+          "postSha256": "13acd7e2653edf81543132e5b2656fa20e28292127d3466cdce5791191044fe3",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/neptune/npt_dispatch.c",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_renderer.c",
+          "liveSha256": "d51eceb12b7326981882c88cdf55163844061ac2c25cb5ffcd8ee7e56a13b0ce",
+          "c12CompiledSha256": "64a02d12402999b15a9002eb1f3d2828758b0892508a4899193787b98b1035ee",
+          "postSha256": "880f65ec8f5f90f0309df6379295c37e5e909eb0f8fa09932fa4dba58394a59b",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/neptune/npt_renderer.c",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "src/neptune/npt_renderer.h",
+          "liveSha256": "011e0e0143f8f4f85353795e70cdc3e2a38a31727767463e80fba2614dd84ddd",
+          "c12CompiledSha256": "d5c79a8d1995430cc07c5cfb06b4033150428a2f3df3ed61fd3849d75df2909b",
+          "postSha256": "23024a59d0e441f4b4d0ca81b59f3e85bf4a2d229bd8fd3867667abd44e23177",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/neptune/npt_renderer.h",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "src/neptune/npt_transport_defs.h",
+          "liveSha256": "a37ef3c511a1a3f216d706cc763bca885f9c3f378c1511586a9e20f987af8c44",
+          "c12CompiledSha256": "e9989373db9ff488f813e075cdd27c28607d6d176482679ea8b561dcca8984c4",
+          "postSha256": "e9989373db9ff488f813e075cdd27c28607d6d176482679ea8b561dcca8984c4",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/neptune/npt_transport_defs.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_job.c",
+          "liveSha256": null,
+          "c12CompiledSha256": "7dd87acfb09aa0f0185374bdb4d4fab605229a687b60ef290c932b58372efc3b",
+          "postSha256": "16eb4492a1e289d13ef4e9ba9f90640aeecc68695b9af30005f0678540d4b757",
+          "source": "artifacts/proposals/native-job-video-terminal-r2/proposed/npt_job.c",
+          "origin": "C12 -> guarded native Video terminal R2"
+        },
+        {
+          "path": "src/neptune/npt_job.h",
+          "liveSha256": null,
+          "c12CompiledSha256": "affc42e4d01743940d673af42e0cbcce07a9e241e49d31f45087112c89cc771e",
+          "postSha256": "affc42e4d01743940d673af42e0cbcce07a9e241e49d31f45087112c89cc771e",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/neptune/npt_job.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_job_credit.h",
+          "liveSha256": null,
+          "c12CompiledSha256": "afa321b6acf5d4490474955b138f6aa3445297b94a7de7f33cbcccb523f68bf2",
+          "postSha256": "afa321b6acf5d4490474955b138f6aa3445297b94a7de7f33cbcccb523f68bf2",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/neptune/npt_job_credit.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_overrides_toplevel.c",
+          "liveSha256": "2d4700d0e52c71fcc8e87642c0b36c406e33456626d8032ee2ac304780990247",
+          "c12CompiledSha256": "5f9969483545223182f34b126b161a5c1f03f4bfef7f2b81b0c25781d45d7651",
+          "postSha256": "5f9969483545223182f34b126b161a5c1f03f4bfef7f2b81b0c25781d45d7651",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/neptune/npt_overrides_toplevel.c",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/virglrenderer.c",
+          "liveSha256": "76c4810c7d32f73c39dc89876d894028ce3f0414d67c66fa02c7256192a2783c",
+          "c12CompiledSha256": "5840c8ca56db8a230d9677b6dc282ce036aa904622a6afc7539d3368ac03b689",
+          "postSha256": "5840c8ca56db8a230d9677b6dc282ce036aa904622a6afc7539d3368ac03b689",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/virglrenderer.c",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/virglrenderer.h",
+          "liveSha256": "0fc8a3caceb53ca48e98de62ad620a0e4db9e6feb6ef189ffc74af28812e60c9",
+          "c12CompiledSha256": "1cb30ed3b724a894e4accda9b3d1c5cc1a1e8a2c14c3fbb31deb46a7b1bf9f26",
+          "postSha256": "1cb30ed3b724a894e4accda9b3d1c5cc1a1e8a2c14c3fbb31deb46a7b1bf9f26",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/virglrenderer.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/virgl_context.h",
+          "liveSha256": "c3d115da34bac6896faa52521cc743011acce18fc122bca37abc64d26323bbf1",
+          "c12CompiledSha256": "48bb135161e70ee158f1088d9e665f25439e89d2cd33a9312b44e6d732727d0d",
+          "postSha256": "48bb135161e70ee158f1088d9e665f25439e89d2cd33a9312b44e6d732727d0d",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/virgl_context.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/proxy/proxy_context.c",
+          "liveSha256": "f92eb09b789be405a3b5b6513bd5b156c3f134a895f9752e01a451450a52fa34",
+          "c12CompiledSha256": "ef6f50b7c89296b556a1765a82af84b9c028ca2b9e9c9b49f27d6ffceedf8c79",
+          "postSha256": "019bddfa3bc6c1ff8c97dca0c0e71f5df87e39caf669dad740c02dfd969813ac",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/proxy/proxy_context.c",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "src/proxy/proxy_context.h",
+          "liveSha256": "3064ee99e8068e6fdbb40c47f8608fdaa4ccf41d21b28d5e569a6059f0bbaf1c",
+          "c12CompiledSha256": "8c9fbf45261fc579f4947c4c2e97665ef3e711dfe6bdaac000bd82cd354f0f17",
+          "postSha256": "8c9fbf45261fc579f4947c4c2e97665ef3e711dfe6bdaac000bd82cd354f0f17",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/proxy/proxy_context.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/proxy/proxy_client.c",
+          "liveSha256": "b76e93db2dca9a1161b1f3a5c285425a8f3e5fa185e67c16d3c8cb99946db6f3",
+          "c12CompiledSha256": "82cc529669cee0650b07966a7314d3e8d6c0b9d692a73ab04536ef2573ba06ff",
+          "postSha256": "82cc529669cee0650b07966a7314d3e8d6c0b9d692a73ab04536ef2573ba06ff",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/proxy/proxy_client.c",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/proxy/proxy_client.h",
+          "liveSha256": "f1f0e9239cf918457c9e404a5869d5bd1b657bed39f111f705d90951e5babfe9",
+          "c12CompiledSha256": "fe0001fb9575b050d7272d18cc6d04e2a2ed426c5fbcaac3b783ad21034b3cbe",
+          "postSha256": "fe0001fb9575b050d7272d18cc6d04e2a2ed426c5fbcaac3b783ad21034b3cbe",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/src/proxy/proxy_client.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "server/render_protocol.h",
+          "liveSha256": "91b7b51776000766a5cae9a87ecf76fae88f5b96a54a7a32fc4f7aa714e9f908",
+          "c12CompiledSha256": "1477fa068dd6c581952b86e6622c41f2908df2def68f2beb3e137ea3219414fa",
+          "postSha256": "5f8536557a4e1478d51bf30dbf1a0e28cedec6b8adaa3d7fe19c86daed3b697a",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/server/render_protocol.h",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "server/render_context.c",
+          "liveSha256": "0de05dda11ebc04b7b8edffc4fb88d970b7fb25af229cc623ce4648644e6943f",
+          "c12CompiledSha256": "a0ced9e5176923a909739c577566fc7888f6a6a84a76db9e81532f337ec0616b",
+          "postSha256": "cd57c9f871a0215d7276e7df1ed9c53d10738131faae11d15a848c49fde5432b",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/server/render_context.c",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "server/render_context.h",
+          "liveSha256": "89076a061009feefb872a8b6bd2c3107c73b4dfb8a7b59e6805a7c98c7bc64c1",
+          "c12CompiledSha256": "bba9191021b6b38368edab70f6e8da4c526a02c64e3f791d4aa7d443666b3df0",
+          "postSha256": "bba9191021b6b38368edab70f6e8da4c526a02c64e3f791d4aa7d443666b3df0",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/server/render_context.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "server/render_state.c",
+          "liveSha256": "cfe6bc32c6340e68576dd411b75fef765362bc9cc27dba0d54b672d8e89f0f96",
+          "c12CompiledSha256": "d009d3d904cf18ee6c98d385022aeb2c63d9466c9aa3aacbcd2f1a0ccb4209ac",
+          "postSha256": "ac7d2deeca4b2e085c15d60fce341fc240104d40115d2f3a5347afab7f4f8789",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/server/render_state.c",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "server/render_state.h",
+          "liveSha256": "d5f0a70a889bbcfc3b13182b88a4835621cfe5b113e9c247f0803577d3a8af62",
+          "c12CompiledSha256": "acd0dc0a954c470beb12edf1b934e5b7913e1eed14c2348e3b31405d651aa4d6",
+          "postSha256": "c354ee684c9e5210ac9307a7d9cbbe386b0ab8bf1c473739b8ab13f07faf1172",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/server/render_state.h",
+          "origin": "C12 -> classic layout R2 EGL path"
+        },
+        {
+          "path": "server/render_worker.c",
+          "liveSha256": "630c8c2d0c0f2d701c68bd2862b7b7bcb2cf29e9eaaeb5bee216d7eca28beaa9",
+          "c12CompiledSha256": "b96d45ae7fe7c31a5758160960a4d36ddc91279c76b39564a43d3b9242175a5d",
+          "postSha256": "b96d45ae7fe7c31a5758160960a4d36ddc91279c76b39564a43d3b9242175a5d",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/server/render_worker.c",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "server/render_worker.h",
+          "liveSha256": "8452d9704c83e3b760805712e719ea73c87f769c25f19fa9b055f72bced61b92",
+          "c12CompiledSha256": "3d1470bfde34eea4768f73267835b8e114e2bafb15948dac7f59c0444588f5a8",
+          "postSha256": "3d1470bfde34eea4768f73267835b8e114e2bafb15948dac7f59c0444588f5a8",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/server/render_worker.h",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "server/render_client.c",
+          "liveSha256": "6519029505f9a27e554eb80100b688afab2ccb62de6bbb6d2cd8978e55b6eec8",
+          "c12CompiledSha256": "b84ffc0002945e460300bded6b73250ae18dede4968c0d5023305a71614582ba",
+          "postSha256": "b84ffc0002945e460300bded6b73250ae18dede4968c0d5023305a71614582ba",
+          "source": "artifacts/c12-host-build/artifact/source/virglFiles/server/render_client.c",
+          "origin": "exact C12 compiled source"
+        },
+        {
+          "path": "src/neptune/npt_shared.c",
+          "liveSha256": "6d56b081a215972c36890e2c55817dc348a56cefa13e801ebe8ae19159d9889d",
+          "c12CompiledSha256": "6d56b081a215972c36890e2c55817dc348a56cefa13e801ebe8ae19159d9889d",
+          "postSha256": "2085b92a16100d9679e4c02c87b822b39b4ff727dc108e68a2366382f3009cf1",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/neptune/npt_shared.c",
+          "origin": "clean source matching actual C12 before inventory; actual PC baseline gate mandatory"
+        },
+        {
+          "path": "src/virgl_resource.h",
+          "liveSha256": "b451545d7f0e1374c148ef52da7280aec6e98402e47702e706e30cce9d571d87",
+          "c12CompiledSha256": "b451545d7f0e1374c148ef52da7280aec6e98402e47702e706e30cce9d571d87",
+          "postSha256": "98ae5b83f57646c287ea022c80535c067477a553e29d60193d415ded0e08e9d8",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/virgl_resource.h",
+          "origin": "clean source matching actual C12 before inventory; actual PC baseline gate mandatory"
+        },
+        {
+          "path": "src/virgl_resource_layout.h",
+          "liveSha256": null,
+          "c12CompiledSha256": null,
+          "postSha256": "1db4607b737f096cd846836fe7d8db2c877fce5a3a4b677bb11ed282288e2e33",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/virgl_resource_layout.h",
+          "origin": "classic R2 new header"
+        },
+        {
+          "path": "src/vrend/vrend_renderer.c",
+          "liveSha256": "88ce35ef28db1da8631166dbce4fb45cac2a2cf23f9702f026127f75808369cc",
+          "c12CompiledSha256": "88ce35ef28db1da8631166dbce4fb45cac2a2cf23f9702f026127f75808369cc",
+          "postSha256": "1780010158f4d1e05a3ca8d5b8b0a2688337752487d40d26c53b541ae9bd2f01",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/vrend/vrend_renderer.c",
+          "origin": "clean source matching actual C12 before inventory; actual PC baseline gate mandatory"
+        },
+        {
+          "path": "src/vrend/vrend_winsys_egl.c",
+          "liveSha256": "a9a713bba2558fc031a9a681e75b1f67dc0158ce440dc84d6d31d9f44cbaa2ef",
+          "c12CompiledSha256": "a9a713bba2558fc031a9a681e75b1f67dc0158ce440dc84d6d31d9f44cbaa2ef",
+          "postSha256": "386c394e09448b979536e691f1e6155220b5820a5bff47746a04b8d718efc908",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/vrend/vrend_winsys_egl.c",
+          "origin": "clean source matching actual C12 before inventory; actual PC baseline gate mandatory"
+        },
+        {
+          "path": "src/vrend/vrend_winsys_egl.h",
+          "liveSha256": "da68859812de14ed9fdd9a3297ded8c5a2e15d395bb2e1aa16cc71e0a09c85b6",
+          "c12CompiledSha256": "da68859812de14ed9fdd9a3297ded8c5a2e15d395bb2e1aa16cc71e0a09c85b6",
+          "postSha256": "47ee21f95beb072937af51f64d5f4355e850c62b38e8b285fdea3a7ccd8624ac",
+          "source": "artifacts/proposals/classic-import-layout-r2/proposed/src/vrend/vrend_winsys_egl.h",
+          "origin": "clean source matching actual C12 before inventory; actual PC baseline gate mandatory"
+        },
+        {
+          "path": "src/neptune/d3d11_video_terminal.h",
+          "liveSha256": null,
+          "c12CompiledSha256": null,
+          "postSha256": "4c4b48774f96d4292fd64a2a5d1859c0dc0ae931c279719c90212f498ff31669",
+          "source": "artifacts/proposals/native-job-video-terminal-r2/proposed/d3d11_video_terminal.h",
+          "origin": "new shared header4C4B"
+        }
+      ],
+      "dxvk": [
+        {
+          "path": "src/d3d11/d3d11_device.cpp",
+          "liveSha256": "1034f0adcf6181832a610328af321d814cc64d69019687a9d36fdbb3307f45c7",
+          "postSha256": "e66379f56a051b879885d47a6c2a66de9231baf38a2cf88a9afb21f4662f0a34",
+          "source": "artifacts/proposals/video-terminal-outcome-r4/proposed/src/d3d11/d3d11_device.cpp",
+          "origin": "exact e105/fresh HEAD baseline -> accepted checked-terminal R4"
+        },
+        {
+          "path": "src/d3d11/d3d11_video_mc.cpp",
+          "liveSha256": "be5720e4dabb4375c982a8a931c1896b59169ebc87694bbe5a8f3786578020de",
+          "postSha256": "cd54b9b44379c12eac6a2491afb6c9eb5630fd2c42453f5720e94e1ab4ccc842",
+          "source": "artifacts/proposals/video-terminal-outcome-r4/proposed/src/d3d11/d3d11_video_mc.cpp",
+          "origin": "exact e105/fresh HEAD baseline -> accepted checked-terminal R4"
+        },
+        {
+          "path": "src/d3d11/d3d11_video_mc.h",
+          "liveSha256": "72393341cbe27c94036b9b89166707d1f82413904cf71c5100d62a11008c0374",
+          "postSha256": "597f7fd949380489cf5da05978d3f86008ec69ba8f62254289d4092ba38e601a",
+          "source": "artifacts/proposals/video-terminal-outcome-r4/proposed/src/d3d11/d3d11_video_mc.h",
+          "origin": "exact e105/fresh HEAD baseline -> accepted checked-terminal R4"
+        },
+        {
+          "path": "src/d3d11/d3d11_video_terminal.h",
+          "liveSha256": null,
+          "postSha256": "4c4b48774f96d4292fd64a2a5d1859c0dc0ae931c279719c90212f498ff31669",
+          "source": "artifacts/proposals/video-terminal-outcome-r4/proposed/src/d3d11/d3d11_video_terminal.h",
+          "origin": "exact e105/fresh HEAD baseline -> accepted checked-terminal R4"
+        },
+        {
+          "path": "src/dxvk/dxvk_device.cpp",
+          "liveSha256": "6ea5ed6cf086446e628f949defd89678aeec6d16d40c5074b136555b60db989b",
+          "postSha256": "8f0b74a31170a2606833126c68e34693cfb2c59bff2113943e5b9aab112a826f",
+          "source": "artifacts/proposals/video-terminal-outcome-r4/proposed/src/dxvk/dxvk_device.cpp",
+          "origin": "exact e105/fresh HEAD baseline -> accepted checked-terminal R4"
+        },
+        {
+          "path": "src/dxvk/dxvk_device.h",
+          "liveSha256": "fe4e5f22357f6d2a45d563c1223528f1cc6518d17d24ea0c1a72dc2db850e7a0",
+          "postSha256": "7abdfe73adc928afbaa285466730ca5c903d8fec861606b8bcc6e0f98e1ff689",
+          "source": "artifacts/proposals/video-terminal-outcome-r4/proposed/src/dxvk/dxvk_device.h",
+          "origin": "exact e105/fresh HEAD baseline -> accepted checked-terminal R4"
+        }
+      ]
+    },
+    "chain": [
+      {
+        "scope": "C12 compiled host source+Rust",
+        "planSha256": "ccbb456787acc0221fa3d379879377ecf601e9606aa0a7632532337a954bae22"
+      },
+      {
+        "scope": "classic layout R2 Android EGL export",
+        "manifestSha256": "ade3cddbf05425191e5981c859ad5d0b148ef457088a3998251ea30a5ef42462",
+        "patchSha256": "ff422ae500245559daee7a1b50f25ad35bd0c0cd2dcb3eefe8b501d512ccc08a"
+      },
+      {
+        "scope": "native guarded video",
+        "manifestSha256": "fe3d81a00fd54a7f45d0a7738e70473ce4d7821dd3b113f392122cd2b1ca6a61",
+        "sourceSha256": "16eb4492a1e289d13ef4e9ba9f90640aeecc68695b9af30005f0678540d4b757"
+      },
+      {
+        "scope": "DXVK checked terminal/capability R4",
+        "manifestSha256": "62b0a8e67788b73b2c06ddfbb2fc3ab02da778e6e522002c6e81786d08225159",
+        "patchSha256": "6cfa1e331fcb15e6c22f1a77f5d72c58166282f80da5ac64885bad7e3c0c3eae"
+      }
+    ]
+  },
+  "c37SevenFinalVirglPostimages": [
+    {
+      "path": "src/neptune/npt_context.c",
+      "baselineSha256": "7d3fb24b62c027073f2266fb4dc93081deb5fa90cf34e5d3e0e19980f784fcc1",
+      "postSha256": "fc15b22912c2145e08736460289313d28bba2ed4e4beb4e12b03728097e7fff3",
+      "baselineBytes": 64021,
+      "postBytes": 67004,
+      "currentC19Sha256": "9d295e944f1f0d096e9f6bf3ac25ac6f58c983cec35ebb404d48ce119dce7118"
+    },
+    {
+      "path": "src/neptune/npt_context.h",
+      "baselineSha256": "e23968da04ca2f05beb9c21e1cc3d758ff7a7d062c9d8cb1fbf6bc54584489df",
+      "postSha256": "e6392fd2b9625e4f45cadcdea5796310ae8d0236594cc12a78d3550360decc54",
+      "baselineBytes": 20899,
+      "postBytes": 21666,
+      "currentC19Sha256": "8d5d34a3cf0281c66405ec2e44110b7ce7f53c8b0b97719900db669de45ebb15"
+    },
+    {
+      "path": "src/neptune/npt_resource.c",
+      "baselineSha256": "fd2c55cb8a04b5062747a80cf6c9dde9a2dab33e41a51ea6e44ee932683dc642",
+      "baselineBytes": 38468,
+      "postSha256": "814986fe6133a47cf1c7e03bd75e3bc36a29e303a0f27179e021d2dbd18d1a9d",
+      "postBytes": 63407,
+      "currentC24Sha256": "69677a94b18c4c44fa217f8fe869e6c89a79a28586b62fe5bf64bcf541a29020"
+    },
+    {
+      "path": "src/neptune/npt_resource.h",
+      "baselineSha256": "4e74d1c0e31cfdb1ea19b5b5e393f78dcdb9f07600dd8e3cd93e92c3e06df9d2",
+      "baselineBytes": 2833,
+      "postSha256": "5b04e10df1b3db99a10d45e03cc236f7ba1ae00a9206e208babff83a8621d45b",
+      "postBytes": 3864,
+      "currentC24Sha256": "eb94204184171b6400a9246c226235999b84b1da1b4593f57403250e28baad1c"
+    },
+    {
+      "path": "src/neptune/npt_shared.c",
+      "baselineSha256": "2085b92a16100d9679e4c02c87b822b39b4ff727dc108e68a2366382f3009cf1",
+      "postSha256": "d4d0af4577d09769d4ed1cbc779c7b209ce5ed60c6081710b389820db0864221",
+      "baselineBytes": 23952,
+      "postBytes": 24342,
+      "currentC19Sha256": "d4d0af4577d09769d4ed1cbc779c7b209ce5ed60c6081710b389820db0864221"
+    },
+    {
+      "path": "src/neptune/neptune-protocol/npt_protocol_host_id3d11device.h",
+      "baselineSha256": "ee17e25ae354a0b5c638adb6b7b5a0eb1e87a3151909c183e0e82e94e6fa1508",
+      "baselineBytes": 413462,
+      "postSha256": "35a6fdd8cc4af740a3c5c9ff2677ac6d18d4f147c2730079b8bc5a82ff586adb",
+      "postBytes": 413909,
+      "currentC24Sha256": "ee17e25ae354a0b5c638adb6b7b5a0eb1e87a3151909c183e0e82e94e6fa1508"
+    },
+    {
+      "path": "src/neptune/npt_job.c",
+      "baselineSha256": "16eb4492a1e289d13ef4e9ba9f90640aeecc68695b9af30005f0678540d4b757",
+      "baselineBytes": 33566,
+      "postSha256": "2855dec3ce0b5ef8b2ba0a0e8307e41852a1529b36bfe6b745558fe3dd55e6d1",
+      "postBytes": 41959,
+      "currentC25Sha256": "16eb4492a1e289d13ef4e9ba9f90640aeecc68695b9af30005f0678540d4b757",
+      "currentC35Sha256": "d2faaa16406c7b0fa74d847a25f5a538ab70407445d1fbba11856b691671c83e",
+      "currentC36Sha256": "00e53fbea7de63cf991aacdf8ae6fce653e68b95af73c5fc0d998b76e7c8000a"
+    }
+  ],
+  "c37PatchOrder": [
+    "caption-atlas-trace.proposed.patch",
+    "caption-draw-input.proposed.patch",
+    "caption-dxbc-capture.proposed.patch",
+    "native-checkpoint-telemetry.proposed.patch",
+    "event-ready-wake.proposed.patch",
+    "adaptive-gpu-poll.proposed.patch"
+  ],
+  "c33FP32Source": {
+    "path": "src/dxvk/dxvk_shader_ir.cpp",
+    "baselineSha256": "FF6C1AFC32787FFC953BE3B97BF59E2EF3440819A0DBE4D2BFD46D1C9AE05856",
+    "postSha256": "DE9BAC622C76A832538876C7D57F7E046DBD92802D28B63A3F22FE58FDDE39E2"
+  },
+  "compilerSourceSnapshots": {
+    "C15allComponents": {
+      "sha256": "0728C42E381C76062EE013393FD38ED397B63877FD55E09A15556B47F90C1EA8",
+      "members": 4057
+    },
+    "C37Virgl707": {
+      "sha256": "12C959F22D28AD69FFF1749737BD886ADEFAAAF15AE04E23E527BE0DC2C863D2"
+    },
+    "C33DXVK1268": {
+      "sha256": "639A8824271D4F6E52AB4B6FC106941968791B4DA767B58AED7BCE0989C8243D"
+    }
+  },
+  "C34cacheKey": "PARKED_NOT_INCLUDED",
+  "C47_C48": "PARKED_NOT_INCLUDED",
+  "publishedSnapshotTreeSha1": {
+    "virgl": "94133e5c7c43456f72b9fe1ddab341ae27368fae",
+    "dxvk": "86ea3ef6b13dd376ff5fbf03362c1a89d8c05b6a",
+    "rust": "5c372b634d1d1c46a7cc70a8d6e6c5bedc55cfa4"
+  },
+  "snapshotPublication": "Full exact compiled-source snapshots, verified by Git tree SHA on GitHub. Original shallow ancestry is provenance only; these are new snapshot commits."
+}

@@ -1,0 +1,281 @@
+--- a/src/neptune/npt_context.c
++++ b/src/neptune/npt_context.c
+@@ -629,6 +629,37 @@
+    const bool present = obj && obj->host_ptr;
+    mtx_unlock(&ctx->object_mutex);
+    return present && npt_object_type_is_compatible(actual, want);
++}
++
++void *npt_context_trace_hold_dc(struct npt_context *ctx, uint64_t id)
++{
++   void *dc = NULL;
++   mtx_lock(&ctx->object_mutex);
++   const struct hash_entry *entry = _mesa_hash_table_search(ctx->object_table, &id);
++   const struct npt_object *obj = entry ? entry->data : NULL;
++   if (obj && obj->host_ptr &&
++       (obj->type == NPT_OBJECT_TYPE_ID3D11DEVICECONTEXT ||
++        npt_object_type_has_ancestor(obj->type, NPT_OBJECT_TYPE_ID3D11DEVICECONTEXT))) {
++      dc = obj->host_ptr;
++      npt_com_add_ref(dc);
++   }
++   mtx_unlock(&ctx->object_mutex);
++   return dc;
++}
++
++uint64_t npt_context_trace_native_id(struct npt_context *ctx, void *object)
++{
++   void *unknown = NULL;
++   if (!object || NPT_FAILED(npt_com_query_interface(object, &NPT_IID_IUnknown, &unknown)) || !unknown)
++      return 0;
++   /* COM's actual IUnknown identity, never pointer arithmetic or a new
++    * registration. QI holds it through this existing-table-only lookup. */
++   mtx_lock(&ctx->object_mutex);
++   const struct npt_identity *ident = npt_identity_find_locked(ctx, unknown);
++   const uint64_t id = ident ? ident->primary_id : 0;
++   mtx_unlock(&ctx->object_mutex);
++   npt_com_release(unknown);
++   return id;
+ }
+ 
+ void *npt_context_trace_hold_texture(struct npt_context *ctx, uint64_t id,
+@@ -982,6 +1013,7 @@
+    if (!ctx)
+       return NULL;
+ 
++   atomic_init(&ctx->caption_rect_seen, false);
+    ctx->ctx_id = ctx_id;
+    ctx->retire_fence = retire_fence;
+ 
+@@ -1456,6 +1488,7 @@
+       return false;
+ 
+    npt_caption_trace_copy(ctx, &peek, dec->cur, (size_t)(dec->end - dec->cur));
++   npt_caption_trace_draw(ctx, &peek, (size_t)(dec->end - dec->cur));
+    if (!npt_job_note_dispatch(ctx, dec, &peek)) {
+       npt_cs_decoder_set_fatal(dec); return false;
+    }
+--- a/src/neptune/npt_context.h
++++ b/src/neptune/npt_context.h
+@@ -161,6 +161,8 @@
+     * a host object (its IUnknown) to every id registered for it, so a
+     * canonical getter answers an id the guest already holds.  Both
+     * drained by COM_RELEASE and context_destroy. */
++   /* Diagnostic activation only, never an ownership/completion grant. */
++   _Atomic bool caption_rect_seen;
+    mtx_t object_mutex;
+    struct hash_table *object_table;
+    struct hash_table *identity_table;
+@@ -434,6 +436,11 @@
+ 
+ struct npt_wire_object_ref;
+ 
++/* Diagnostic-only, nonwaiting strong context lookup and readonly COM-identity
++ * association. Native getters/QI run outside object_mutex. Missing means0. */
++void *npt_context_trace_hold_dc(struct npt_context *ctx, uint64_t id);
++uint64_t npt_context_trace_native_id(struct npt_context *ctx, void *object);
++
+ /* Diagnostic scalar snapshot; zero on missing registration. */
+ uint64_t npt_context_trace_primary_id(struct npt_context *ctx, uint64_t id);
+ /* Nonwaiting diagnostic lookup. Caller releases the returned strong ref. */
+--- a/src/neptune/npt_resource.c
++++ b/src/neptune/npt_resource.c
+@@ -187,6 +187,170 @@
+    if (d) npt_com_release(d);
+ }
+ 
++
++/* CPU state only: PS0..7 and RTV0. Other stages/slots/UAVs are not covered. */
++struct caption_view_state {
++   uint64_t view, resource;
++   uint32_t view_format, dimension, texture2d, format, width, height;
++};
++
++static void caption_view_snapshot(struct npt_context *ctx, void *view, bool ps,
++                                  struct caption_view_state *s)
++{
++   memset(s, 0, sizeof(*s));
++   if (!view) return;
++   s->view = npt_context_trace_native_id(ctx, view);
++   if (ps) {
++      D3D11_SHADER_RESOURCE_VIEW_DESC d = {0};
++      PFN_ID3D11ShaderResourceView_GetDesc gd = NPT_COM_VTBL_FUNC(PFN_ID3D11ShaderResourceView_GetDesc,
++         npt_com_vtable(view), NPT_VTBL_ID3D11ShaderResourceView_GetDesc);
++      if (gd) { gd(view, &d); s->view_format = d.Format; s->dimension = d.ViewDimension; }
++   } else {
++      D3D11_RENDER_TARGET_VIEW_DESC d = {0};
++      PFN_ID3D11RenderTargetView_GetDesc gd = NPT_COM_VTBL_FUNC(PFN_ID3D11RenderTargetView_GetDesc,
++         npt_com_vtable(view), NPT_VTBL_ID3D11RenderTargetView_GetDesc);
++      if (gd) { gd(view, &d); s->view_format = d.Format; s->dimension = d.ViewDimension; }
++   }
++   PFN_ID3D11View_GetResource get = NPT_COM_VTBL_FUNC(PFN_ID3D11View_GetResource,
++      npt_com_vtable(view), NPT_VTBL_ID3D11View_GetResource);
++   ID3D11Resource *res = NULL;
++   if (get) get(view, &res);
++   if (!res) return;
++   s->resource = npt_context_trace_native_id(ctx, res);
++   ID3D11Texture2D *tex = NULL;
++   if (!NPT_FAILED(npt_com_query_interface(res, &NPT_IID_ID3D11Texture2D, (void **)&tex)) && tex) {
++      D3D11_TEXTURE2D_DESC d = {0};
++      PFN_ID3D11Texture2D_GetDesc gd = NPT_COM_VTBL_FUNC(PFN_ID3D11Texture2D_GetDesc,
++         npt_com_vtable(tex), NPT_VTBL_ID3D11Texture2D_GetDesc);
++      if (gd) { gd(tex, &d); s->texture2d = 1; s->format = d.Format; s->width = d.Width; s->height = d.Height; }
++      npt_com_release(tex);
++   }
++   npt_com_release(res);
++}
++
++static uint32_t caption_draw_bytes(uint32_t command)
++{
++#define CAPTION_DRAW_CASE(name, bytes) case NPT_CMD_TYPE(255, NPT_IFACE_ID_ID3D11DeviceContext, NPT_METHOD_ID3D11DeviceContext_##name): return bytes
++   switch (command) {
++   CAPTION_DRAW_CASE(Draw, 8);
++   CAPTION_DRAW_CASE(DrawIndexed, 12);
++   CAPTION_DRAW_CASE(DrawInstanced, 16);
++   CAPTION_DRAW_CASE(DrawIndexedInstanced, 20);
++   CAPTION_DRAW_CASE(DrawAuto, 0);
++   CAPTION_DRAW_CASE(DrawIndexedInstancedIndirect, 12);
++   CAPTION_DRAW_CASE(DrawInstancedIndirect, 12);
++   default: return UINT32_MAX;
++   }
++#undef CAPTION_DRAW_CASE
++}
++
++void npt_caption_trace_draw(struct npt_context *ctx,
++                            const struct npt_command_header *h, size_t available)
++{
++   static unsigned draws;
++   const uint32_t args = caption_draw_bytes(h->cmd_type);
++   if (args == UINT32_MAX || h->cmd_size != sizeof(*h) + args || h->cmd_size > available ||
++       __atomic_load_n(&draws, __ATOMIC_RELAXED) >= 32 ||
++       !atomic_load_explicit(&ctx->caption_rect_seen, memory_order_acquire) ||
++       !npt_caption_trace_enabled()) return;
++   void *dc = npt_context_trace_hold_dc(ctx, h->object_id);
++   if (!dc) return;
++   const unsigned sample = npt_caption_take(&draws, 32);
++   if (!sample) { npt_com_release(dc); return; }
++   PFN_ID3D11DeviceContext_PSGetShaderResources psget = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceContext_PSGetShaderResources,
++      npt_com_vtable(dc), NPT_VTBL_ID3D11DeviceContext_PSGetShaderResources);
++   PFN_ID3D11DeviceContext_OMGetRenderTargets omget = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceContext_OMGetRenderTargets,
++      npt_com_vtable(dc), NPT_VTBL_ID3D11DeviceContext_OMGetRenderTargets);
++   PFN_ID3D11DeviceContext_PSGetShader shaderget = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceContext_PSGetShader,
++      npt_com_vtable(dc), NPT_VTBL_ID3D11DeviceContext_PSGetShader);
++   PFN_ID3D11DeviceContext_OMGetBlendState blendget = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceContext_OMGetBlendState,
++      npt_com_vtable(dc), NPT_VTBL_ID3D11DeviceContext_OMGetBlendState);
++   ID3D11ShaderResourceView *ps[8] = {0};
++   ID3D11RenderTargetView *rtv = NULL;
++   ID3D11PixelShader *shader = NULL;
++   ID3D11BlendState *blend = NULL;
++   FLOAT factor[4] = {0}; UINT mask = 0;
++   if (psget) psget(dc, 0, 8, ps);
++   if (omget) omget(dc, 1, &rtv, NULL);
++   if (shaderget) shaderget(dc, &shader, NULL, NULL);
++   if (blendget) blendget(dc, &blend, factor, &mask);
++   const uint64_t shader_id = npt_context_trace_native_id(ctx, shader);
++   const uint64_t blend_id = npt_context_trace_native_id(ctx, blend);
++   D3D11_BLEND_DESC bd = {0}; bool blend_known = false;
++   if (blend) {
++      PFN_ID3D11BlendState_GetDesc gd = NPT_COM_VTBL_FUNC(PFN_ID3D11BlendState_GetDesc,
++         npt_com_vtable(blend), NPT_VTBL_ID3D11BlendState_GetDesc);
++      if (gd) { gd(blend, &bd); blend_known = true; }
++   }
++   struct caption_view_state dst;
++   caption_view_snapshot(ctx, rtv, false, &dst);
++   /* Each entry: slot:viewID/resourceID/viewFmt/viewDim/texture2D/resourceFmt/WxH.
++    * Null PS slots are zero entries; psMask distinguishes unregistered nonnull.
++    * This fixed buffer bounds log output without truncating COM cleanup. */
++   char inputs[1024] = {0}; size_t used = 0; bool clipped = false;
++   unsigned nonnull = 0;
++   for (unsigned i = 0; i < 8; ++i) {
++      struct caption_view_state src;
++      if (ps[i]) nonnull |= 1u << i;
++      caption_view_snapshot(ctx, ps[i], true, &src);
++      if (!clipped) {
++         int n = snprintf(inputs + used, sizeof(inputs) - used,
++            "%s%u:%" PRIx64 "/%" PRIx64 "/%u/%u/%u/%u/%ux%u",
++            i ? "," : "", i, src.view, src.resource, src.view_format, src.dimension,
++            src.texture2d, src.format, src.width, src.height);
++         if (n < 0 || (size_t)n >= sizeof(inputs) - used) clipped = true;
++         else used += (size_t)n;
++      }
++      if (ps[i]) npt_com_release(ps[i]);
++   }
++   npt_log("CAPTION_DRAW sample=%u cap=32 ctx=%u dc=0x%" PRIx64 " cmd=0x%x coverage=PS0..7,RTV0 getters=%u/%u/%u/%u psMask=0x%x"
++           " psShader=0x%" PRIx64 " psPresent=%u dstView=0x%" PRIx64 " dstRes=0x%" PRIx64
++           " dstViewFmt=%u dstDimension=%u dstTexture2D=%u dstFmt=%u dstSize=%ux%u"
++           " blend=0x%" PRIx64 " blendNull=%u blendDescKnown=%u alphaCoverage=%u independentBlend=%u"
++           " rt0Blend=%u,%u,%u,%u,%u,%u,%u,0x%x factor=%g,%g,%g,%g sampleMask=0x%x"
++           " psSlots=%s clipped=%u phase=per-getter-CPU-state-before-draw-not-GPU-completion rowEnd=CAPTION_DRAW_END",
++           sample, ctx->ctx_id, h->object_id, h->cmd_type, psget != NULL, omget != NULL, shaderget != NULL, blendget != NULL, nonnull,
++           shader_id, shader != NULL, dst.view, dst.resource, dst.view_format, dst.dimension, dst.texture2d, dst.format, dst.width, dst.height,
++           blend_id, blend == NULL, blend_known, bd.AlphaToCoverageEnable, bd.IndependentBlendEnable,
++           bd.RenderTarget[0].BlendEnable, bd.RenderTarget[0].SrcBlend, bd.RenderTarget[0].DestBlend, bd.RenderTarget[0].BlendOp,
++           bd.RenderTarget[0].SrcBlendAlpha, bd.RenderTarget[0].DestBlendAlpha, bd.RenderTarget[0].BlendOpAlpha, bd.RenderTarget[0].RenderTargetWriteMask,
++           (double)factor[0], (double)factor[1], (double)factor[2], (double)factor[3], mask, inputs, clipped);
++   if (shader) npt_com_release(shader);
++   if (blend) npt_com_release(blend);
++   if (rtv) npt_com_release(rtv);
++   npt_com_release(dc);
++}
++
++struct caption_colors {
++   uint32_t pixels, alpha0, alpha255, alpha_other, magenta, green, transparent_rgb, rgb_gt_alpha;
++   char first[129];
++};
++
++/* Caller already proved tight rows <=64KiB and the pitched source span valid.
++ * Color counts are observations, not assumptions about premultiplication. */
++static void caption_input_colors(const uint8_t *p, uint32_t pitch, uint32_t width,
++                                  uint32_t height, uint32_t format,
++                                  struct caption_colors *s)
++{
++   memset(s, 0, sizeof(*s));
++   unsigned first = 0;
++   for (uint32_t y = 0; y < height; ++y) {
++      for (uint32_t x = 0; x < width; ++x) {
++         const uint8_t *v = p + (uint64_t)y * pitch + (uint64_t)x * 4;
++         const uint8_t red = v[format == 87 ? 2 : 0], green = v[1];
++         const uint8_t blue = v[format == 87 ? 0 : 2], alpha = v[3];
++         s->pixels++; s->alpha0 += alpha == 0; s->alpha255 += alpha == 255;
++         s->alpha_other += alpha != 0 && alpha != 255;
++         s->magenta += red == 255 && green == 0 && blue == 255;
++         s->green += red == 0 && green == 255 && blue == 0;
++         s->transparent_rgb += alpha == 0 && (red || green || blue);
++         s->rgb_gt_alpha += red > alpha || green > alpha || blue > alpha;
++         for (unsigned b = 0; b < 4 && first < 64; ++b, ++first)
++            snprintf(s->first + first * 2, 3, "%02x", v[b]);
++      }
++   }
++}
++
+ static bool caption_rect_valid(const D3D11_TEXTURE2D_DESC *d, uint32_t sub,
+                                uint32_t pitch, uint32_t bytes,
+                                uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1)
+@@ -226,6 +390,15 @@
+    const uint32_t width = x1 - x0, height = y1 - y0, row = width * 4;
+    uint64_t input_hash, output_hash = 0; uint32_t input_nz, output_nz = 0;
+    caption_rect_hash(payload, pitch, row, height, &input_hash, &input_nz);
++   struct caption_colors colors;
++   caption_input_colors(payload, pitch, width, height, desc->Format, &colors);
++   npt_log("CAPTION_INPUT sample=%u cap=32 ctx=%u object=0x%" PRIx64 " canonical=0x%" PRIx64
++           " fmt=%u image=%ux%u box=%u,%u,%u,%u pixels=%u alpha0=%u alpha255=%u alphaOther=%u"
++           " rgbMagenta=%u rgbGreen=%u transparentRGB=%u rgbGtAlpha=%u firstTightBytes64=%s phase=CPU-payload-not-GPU-pixels",
++           sample, ctx->ctx_id, id, npt_context_trace_primary_id(ctx, id), desc->Format,
++           desc->Width, desc->Height, x0, y0, x1, y1, colors.pixels, colors.alpha0, colors.alpha255,
++           colors.alpha_other, colors.magenta, colors.green, colors.transparent_rgb, colors.rgb_gt_alpha, colors.first);
++   atomic_store_explicit(&ctx->caption_rect_seen, true, memory_order_release);
+    ID3D11Device *dev = NULL; ID3D11Texture2D *st = NULL;
+    HRESULT create_hr = NPT_E_FAIL, map_hr = NPT_E_FAIL;
+    bool copied = false, readback = false;
+--- a/src/neptune/npt_resource.h
++++ b/src/neptune/npt_resource.h
+@@ -25,6 +25,10 @@
+ void npt_caption_trace_copy(struct npt_context *ctx,
+                             const struct npt_command_header *header,
+                             const void *wire, size_t available);
++
++void npt_caption_trace_draw(struct npt_context *ctx,
++                            const struct npt_command_header *header,
++                            size_t available);
+ 
+ /* Hard cap on per-call payload byte_size: 2 GB, the guest client's map
+  * slot cap, and bounded so the byte_size+7 alignment math can't wrap to 0

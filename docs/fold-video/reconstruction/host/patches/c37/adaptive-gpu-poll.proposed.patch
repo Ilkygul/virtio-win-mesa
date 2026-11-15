@@ -1,0 +1,75 @@
+--- a/src/neptune/npt_job.c
++++ b/src/neptune/npt_job.c
+@@ -149,15 +149,16 @@
+ #endif
+ }
+ 
+-/* Caller holds s->mutex. The same 2 ms retry still bounds unknown GPU
+- * completion/deadline checks; CPU checkpoint readiness can now wake it early.
++/* Caller holds s->mutex. At most 2 ms between completion/deadline checks;
++ * CPU checkpoint readiness can still wake the bounded wait early.
+  * Other platforms and clock/wait errors retain the old relative poll. */
+-static void job_wait_ready(struct npt_gpu_jobs *s)
+-{
++static void job_wait_ready(struct npt_gpu_jobs *s, uint64_t wait_ns)
++{
++   (void)wait_ns; /* Non-Linux retains the original relative 2 ms poll. */
+ #if defined(__linux__)
+    struct timespec until;
+    if (!clock_gettime(CLOCK_MONOTONIC, &until)) {
+-      until.tv_nsec += 2000000L;
++      until.tv_nsec += (long)wait_ns;
+       if (until.tv_nsec >= 1000000000L) {
+          ++until.tv_sec;
+          until.tv_nsec -= 1000000000L;
+@@ -337,16 +338,37 @@
+    return !atomic_load_explicit(&s->poison, memory_order_acquire);
+ }
+ 
++/* Called only after the unchanged ready/finite/health checks failed.
++ * CPU-not-ready/poison keeps 2 ms; only an actual GPU-pending head ramps
++ * 250 -> 500 -> 1000 -> 2000 us. No completion is inferred from the delay. */
++static uint64_t job_retry_ns(bool cpu_ready, bool healthy, uint64_t *backoff)
++{
++   if (!cpu_ready || !healthy) {
++      *backoff = 250000ull;
++      return 2000000ull;
++   }
++   const uint64_t delay = *backoff;
++   if (*backoff < 2000000ull) *backoff *= 2;
++   return delay;
++}
++
+ static int job_thread(void *arg)
+ {
+    struct npt_gpu_jobs *s = arg;
++   struct native_job *wait_head = NULL;
++   uint64_t gpu_backoff_ns = 250000ull;
+    mtx_lock(&s->mutex);
+    while (!s->stopping) {
+       if (list_is_empty(&s->jobs) || atomic_load_explicit(&s->poison, memory_order_acquire)) {
+          cnd_wait(&s->cond, &s->mutex); continue;
+       }
+       struct native_job *j = list_first_entry(&s->jobs, struct native_job, head);
++      if (j != wait_head) {
++         wait_head = j;
++         gpu_backoff_ns = 250000ull;
++      }
+       mtx_lock(&j->mutex);
++      const bool cpu_ready = j->assigned && j->submitted && j->pending == 0;
+       bool done = j->assigned && j->submitted && j->pending == 0;
+       if (done && j->trace.sample) {
+          if (!j->trace.first_poll_ns) j->trace.first_poll_ns = npt_profile_now_ns();
+@@ -370,9 +392,11 @@
+       }
+       mtx_unlock(&j->mutex);
+       if (!done || !healthy) {
+-         job_wait_ready(s);
++         job_wait_ready(s, job_retry_ns(cpu_ready, healthy, &gpu_backoff_ns));
+          continue;
+       }
++      wait_head = NULL; /* Clear before retiring/freeing; no pointer-reuse carryover. */
++      gpu_backoff_ns = 250000ull;
+       list_del(&j->head); --s->count;
+       const uint64_t fence = j->fence_id;
+       const unsigned markers = j->marker_count;

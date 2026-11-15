@@ -1,0 +1,352 @@
+{
+  "status": "PUBLICATION_DRAFT_AWAIT_ROOT_ACTUAL_SOURCE_COMMIT_BINDINGS",
+  "scope": "Selected exact recipes, sourcepostimages/patches, source/toolchain/binaryhashes and knownlimits. No binaries, personaltransport, daemonconfig/credentials, privatekeys, VMdisks/VARS or caches.",
+  "files": [
+    {
+      "path": "BUILD.md",
+      "bytes": 9649,
+      "sha256": "867FA911EEE8FAEA2AF3A3BB8006EC6246EAAAF6D99E740231811C22C8FDF3F8"
+    },
+    {
+      "path": "RELEASE-ASSETS.md",
+      "bytes": 1940,
+      "sha256": "DF4FF13E9BBBB5DFB2BFCF0FCA34F55EBEDD8D3C100DBFC007A2E1B023E9923C"
+    },
+    {
+      "path": "SHA256SUMS-tested-host-binaries.txt",
+      "bytes": 410,
+      "sha256": "E899579FB5A0260E79B0F79BEBC673967EEFB3B6F6A01698DB4ED299507C3505"
+    },
+    {
+      "path": "manifests/exact-recipe-copies.json",
+      "bytes": 4589,
+      "sha256": "76108A1311E0F83A39587742D70D6822CBBDE165A01BD15E449E717DFA154E90"
+    },
+    {
+      "path": "manifests/source-pins.json",
+      "bytes": 29518,
+      "sha256": "F20BB2F66CC8D4C7F9DCEDF2CB7088B484EB1D0520998E186575D238CA5C1C2C"
+    },
+    {
+      "path": "manifests/tested-host-binaries.json",
+      "bytes": 887,
+      "sha256": "591144C6273A623466C9BF0668AFA9831F54B06492C0D580B3C66437CA4E09DC"
+    },
+    {
+      "path": "manifests/toolchain-pins.json",
+      "bytes": 3267,
+      "sha256": "46D1D7B95492E2C4F9E04E5D7752136E9380F278F33021093BFFB9D15F89D9D0"
+    },
+    {
+      "path": "patches/c33/minprecision-fp32.patch",
+      "bytes": 771,
+      "sha256": "ACE25417176B24C0938D1C9A92FE63EAA324FBFC75B99674CC635B540685874E"
+    },
+    {
+      "path": "patches/c33/original-working-overlay.patch",
+      "bytes": 18895,
+      "sha256": "251F2F4C442E85AE5E602D453507F8826881CBAD853256A291D6BE6CD101538F"
+    },
+    {
+      "path": "patches/c37/adaptive-gpu-poll.proposed.patch",
+      "bytes": 2882,
+      "sha256": "5B554FE6F27EBDB8492EC00F01E3B252B91E52313C56B9F52FCD7383BA3B0145"
+    },
+    {
+      "path": "patches/c37/caption-atlas-trace.proposed.patch",
+      "bytes": 18006,
+      "sha256": "7BEF0F2E986BB6261639046491ABBD556C7EC60E5C48464685B8BB436AEFBD0E"
+    },
+    {
+      "path": "patches/c37/caption-draw-input.proposed.patch",
+      "bytes": 14107,
+      "sha256": "701D2B357025E32051CB472950D20E815F8257C259D8DE4A69E49B56AF1ABA99"
+    },
+    {
+      "path": "patches/c37/caption-dxbc-capture.proposed.patch",
+      "bytes": 7928,
+      "sha256": "47069AC9B9AAEA094195B7C75A288DD31242636B8F47E7CC6880057A352292F7"
+    },
+    {
+      "path": "patches/c37/event-ready-wake.proposed.patch",
+      "bytes": 3406,
+      "sha256": "A19CFCD5BF2E59D960C22F2E6F596D5BE57143278EFB7B92A29FECFFFC181094"
+    },
+    {
+      "path": "patches/c37/native-checkpoint-telemetry.proposed.patch",
+      "bytes": 11032,
+      "sha256": "B1BF2A036092E1FD7A942A863319542983ADC838478C85BCF14436F848C75EA3"
+    },
+    {
+      "path": "receipts/c33-build-verification.json",
+      "bytes": 1935,
+      "sha256": "D67C2020F706CE41EE7D58867090D2E0A9069839369B22EA3CC49DC39F75197E"
+    },
+    {
+      "path": "receipts/c37-build-verification.json",
+      "bytes": 1229,
+      "sha256": "157D0411E0D0A65783AB5DE31915CE9770BE5FD4C9FB89A7968AC085E6E88D6C"
+    },
+    {
+      "path": "recipes/c15/build-private-c15.py",
+      "bytes": 27739,
+      "sha256": "6052FDC61DAA08C659B001063B1E8ADC677A6AEB7F834FDA3131F7AC9BD49721"
+    },
+    {
+      "path": "recipes/c15/c15_build_common.py",
+      "bytes": 20591,
+      "sha256": "CC2DA4BD680FA273843DB22BB297C5030CDA7782FC77002C72956A338A7547FC"
+    },
+    {
+      "path": "recipes/c15/fresh-dxvk-recipe.json",
+      "bytes": 8387,
+      "sha256": "269D3356094B7A702178167CF63267E3FD6B0A508683ACD51139D27B09D99D2E"
+    },
+    {
+      "path": "recipes/c33/android-aarch64.effective.txt",
+      "bytes": 857,
+      "sha256": "E9C4CD270EA3FDE6F579479CB2C43B99B8A5B9FCD835E932BA7C1749E15A7DB1"
+    },
+    {
+      "path": "recipes/c33/build-dxvk.py",
+      "bytes": 9124,
+      "sha256": "9F507B7892C24C76BA34702450803B62EDE76F017D9C1769E6D7638CB071ED99"
+    },
+    {
+      "path": "recipes/c33/c15_build_common.py",
+      "bytes": 20591,
+      "sha256": "CC2DA4BD680FA273843DB22BB297C5030CDA7782FC77002C72956A338A7547FC"
+    },
+    {
+      "path": "recipes/c33/c15_reference_build.py",
+      "bytes": 27739,
+      "sha256": "6052FDC61DAA08C659B001063B1E8ADC677A6AEB7F834FDA3131F7AC9BD49721"
+    },
+    {
+      "path": "recipes/c33/fresh-dxvk-recipe.json",
+      "bytes": 8482,
+      "sha256": "85D79E343D5440E8E9A19E3BCE0F837F915EFC07951B3BBBD865A481860EF3E6"
+    },
+    {
+      "path": "recipes/c37/build-caption-host.py",
+      "bytes": 16063,
+      "sha256": "7F9A3149ED455622AC6466129AC1405F0E50E1FB997E5B7E633A51230FB6D0CB"
+    },
+    {
+      "path": "recipes/c37/c15_build_common.py",
+      "bytes": 20591,
+      "sha256": "CC2DA4BD680FA273843DB22BB297C5030CDA7782FC77002C72956A338A7547FC"
+    },
+    {
+      "path": "recipes/c37/host-inner.preview.sh",
+      "bytes": 447,
+      "sha256": "B7A411330CE0FEA912BED7D8B6E3E55BCAF21B8E9D8DF829CFD67DA84A9477B6"
+    },
+    {
+      "path": "source-overlays/c15-rust/devices/src/virtio/gpu/mod.rs",
+      "bytes": 124724,
+      "sha256": "341BB6D5306CCC38AE9E46757811191607B005985666A4DF9B3F2DFEC89280EC"
+    },
+    {
+      "path": "source-overlays/c15-rust/devices/src/virtio/gpu/virtio_gpu.rs",
+      "bytes": 125787,
+      "sha256": "C0B47BC642D2217540906EE8F625695351D88DE48CD1187C8AA8F43AA4BEFE30"
+    },
+    {
+      "path": "source-overlays/c15-rust/rutabaga_gfx/src/rutabaga_core.rs",
+      "bytes": 64058,
+      "sha256": "8E334197B4F3C8D807739888E5901BB699DD7AD4E868D78FDE40FB3AD79310A9"
+    },
+    {
+      "path": "source-overlays/c15-rust/rutabaga_gfx/src/virgl_renderer.rs",
+      "bytes": 39761,
+      "sha256": "8CDA22D0F0620C94956E587A8E0330C373AE7623CB80203DA7F97AD9FEE1E935"
+    }
+  ],
+  "exactRecipeSourceCopies": 25,
+  "sourceCommits": "Null publishedsnapshotfields must be filled byRoot with actual commits; no fabricated/upstream-history claim. Rehash this manifest after filling.",
+  "releaseAssets": "Five existingAndroidbinaries + three C46UMDDLLs + F91SYS; seeRELEASE-ASSETS.md. No productionrelease claim.",
+  "publicationStatus": "SOURCE_SNAPSHOTS_PUBLISHED_BUILD_RECIPES_ARCHIVED_NOT_A_NEW_BUILD",
+  "members": [
+    {
+      "path": "BUILD.md",
+      "bytes": 10360,
+      "sha256": "C9EBC2F8402CC9EB9E935A7665BA971A76496830F6FCBCDB311271C2AC5B97A5"
+    },
+    {
+      "path": "RELEASE-ASSETS.md",
+      "bytes": 1940,
+      "sha256": "DF4FF13E9BBBB5DFB2BFCF0FCA34F55EBEDD8D3C100DBFC007A2E1B023E9923C"
+    },
+    {
+      "path": "SHA256SUMS-tested-host-binaries.txt",
+      "bytes": 410,
+      "sha256": "E899579FB5A0260E79B0F79BEBC673967EEFB3B6F6A01698DB4ED299507C3505"
+    },
+    {
+      "path": "manifests/dxvk-snapshot-files.json",
+      "bytes": 370727,
+      "sha256": "EE6DA2E411B0F6357E9C6D64FD067A68E37148FA0A7AC33CBD314EEE69F75338"
+    },
+    {
+      "path": "manifests/exact-recipe-copies.json",
+      "bytes": 4589,
+      "sha256": "76108A1311E0F83A39587742D70D6822CBBDE165A01BD15E449E717DFA154E90"
+    },
+    {
+      "path": "manifests/host-platform-pins.json",
+      "bytes": 1130,
+      "sha256": "AB58DAC3B792890306511CD9AEE5EF21BDC4A2B1277E3B50011B61A3767DA1A2"
+    },
+    {
+      "path": "manifests/rust-snapshot-files.json",
+      "bytes": 529964,
+      "sha256": "3A94E9F175225B1CD5006524E32820C7D01C419188FC20427BD698DD658E1028"
+    },
+    {
+      "path": "manifests/source-pins.json",
+      "bytes": 29998,
+      "sha256": "C467C74A767CAB385429D91E3110C074FC3525DB27EAB00D04AD75D2FDE3AAD5"
+    },
+    {
+      "path": "manifests/tested-host-binaries.json",
+      "bytes": 887,
+      "sha256": "591144C6273A623466C9BF0668AFA9831F54B06492C0D580B3C66437CA4E09DC"
+    },
+    {
+      "path": "manifests/toolchain-pins.json",
+      "bytes": 3267,
+      "sha256": "46D1D7B95492E2C4F9E04E5D7752136E9380F278F33021093BFFB9D15F89D9D0"
+    },
+    {
+      "path": "manifests/virgl-snapshot-files.json",
+      "bytes": 207818,
+      "sha256": "68C4B9F97490F58009FE832238631B9FEE555E0E58C9A9F0E936A7D02BE1CA88"
+    },
+    {
+      "path": "patches/c33/minprecision-fp32.patch",
+      "bytes": 771,
+      "sha256": "ACE25417176B24C0938D1C9A92FE63EAA324FBFC75B99674CC635B540685874E"
+    },
+    {
+      "path": "patches/c33/original-working-overlay.patch",
+      "bytes": 18895,
+      "sha256": "251F2F4C442E85AE5E602D453507F8826881CBAD853256A291D6BE6CD101538F"
+    },
+    {
+      "path": "patches/c37/adaptive-gpu-poll.proposed.patch",
+      "bytes": 2882,
+      "sha256": "5B554FE6F27EBDB8492EC00F01E3B252B91E52313C56B9F52FCD7383BA3B0145"
+    },
+    {
+      "path": "patches/c37/caption-atlas-trace.proposed.patch",
+      "bytes": 18006,
+      "sha256": "7BEF0F2E986BB6261639046491ABBD556C7EC60E5C48464685B8BB436AEFBD0E"
+    },
+    {
+      "path": "patches/c37/caption-draw-input.proposed.patch",
+      "bytes": 14107,
+      "sha256": "701D2B357025E32051CB472950D20E815F8257C259D8DE4A69E49B56AF1ABA99"
+    },
+    {
+      "path": "patches/c37/caption-dxbc-capture.proposed.patch",
+      "bytes": 7928,
+      "sha256": "47069AC9B9AAEA094195B7C75A288DD31242636B8F47E7CC6880057A352292F7"
+    },
+    {
+      "path": "patches/c37/event-ready-wake.proposed.patch",
+      "bytes": 3406,
+      "sha256": "A19CFCD5BF2E59D960C22F2E6F596D5BE57143278EFB7B92A29FECFFFC181094"
+    },
+    {
+      "path": "patches/c37/native-checkpoint-telemetry.proposed.patch",
+      "bytes": 11032,
+      "sha256": "B1BF2A036092E1FD7A942A863319542983ADC838478C85BCF14436F848C75EA3"
+    },
+    {
+      "path": "receipts/c33-build-verification.json",
+      "bytes": 1935,
+      "sha256": "D67C2020F706CE41EE7D58867090D2E0A9069839369B22EA3CC49DC39F75197E"
+    },
+    {
+      "path": "receipts/c37-build-verification.json",
+      "bytes": 1229,
+      "sha256": "157D0411E0D0A65783AB5DE31915CE9770BE5FD4C9FB89A7968AC085E6E88D6C"
+    },
+    {
+      "path": "recipes/c15/build-private-c15.py",
+      "bytes": 27739,
+      "sha256": "6052FDC61DAA08C659B001063B1E8ADC677A6AEB7F834FDA3131F7AC9BD49721"
+    },
+    {
+      "path": "recipes/c15/c15_build_common.py",
+      "bytes": 20591,
+      "sha256": "CC2DA4BD680FA273843DB22BB297C5030CDA7782FC77002C72956A338A7547FC"
+    },
+    {
+      "path": "recipes/c15/fresh-dxvk-recipe.json",
+      "bytes": 8387,
+      "sha256": "269D3356094B7A702178167CF63267E3FD6B0A508683ACD51139D27B09D99D2E"
+    },
+    {
+      "path": "recipes/c33/android-aarch64.effective.txt",
+      "bytes": 857,
+      "sha256": "E9C4CD270EA3FDE6F579479CB2C43B99B8A5B9FCD835E932BA7C1749E15A7DB1"
+    },
+    {
+      "path": "recipes/c33/build-dxvk.py",
+      "bytes": 9124,
+      "sha256": "9F507B7892C24C76BA34702450803B62EDE76F017D9C1769E6D7638CB071ED99"
+    },
+    {
+      "path": "recipes/c33/c15_build_common.py",
+      "bytes": 20591,
+      "sha256": "CC2DA4BD680FA273843DB22BB297C5030CDA7782FC77002C72956A338A7547FC"
+    },
+    {
+      "path": "recipes/c33/c15_reference_build.py",
+      "bytes": 27739,
+      "sha256": "6052FDC61DAA08C659B001063B1E8ADC677A6AEB7F834FDA3131F7AC9BD49721"
+    },
+    {
+      "path": "recipes/c33/fresh-dxvk-recipe.json",
+      "bytes": 8482,
+      "sha256": "85D79E343D5440E8E9A19E3BCE0F837F915EFC07951B3BBBD865A481860EF3E6"
+    },
+    {
+      "path": "recipes/c37/build-caption-host.py",
+      "bytes": 16063,
+      "sha256": "7F9A3149ED455622AC6466129AC1405F0E50E1FB997E5B7E633A51230FB6D0CB"
+    },
+    {
+      "path": "recipes/c37/c15_build_common.py",
+      "bytes": 20591,
+      "sha256": "CC2DA4BD680FA273843DB22BB297C5030CDA7782FC77002C72956A338A7547FC"
+    },
+    {
+      "path": "recipes/c37/host-inner.preview.sh",
+      "bytes": 447,
+      "sha256": "B7A411330CE0FEA912BED7D8B6E3E55BCAF21B8E9D8DF829CFD67DA84A9477B6"
+    },
+    {
+      "path": "source-overlays/c15-rust/devices/src/virtio/gpu/mod.rs",
+      "bytes": 124724,
+      "sha256": "341BB6D5306CCC38AE9E46757811191607B005985666A4DF9B3F2DFEC89280EC"
+    },
+    {
+      "path": "source-overlays/c15-rust/devices/src/virtio/gpu/virtio_gpu.rs",
+      "bytes": 125787,
+      "sha256": "C0B47BC642D2217540906EE8F625695351D88DE48CD1187C8AA8F43AA4BEFE30"
+    },
+    {
+      "path": "source-overlays/c15-rust/rutabaga_gfx/src/rutabaga_core.rs",
+      "bytes": 64058,
+      "sha256": "8E334197B4F3C8D807739888E5901BB699DD7AD4E868D78FDE40FB3AD79310A9"
+    },
+    {
+      "path": "source-overlays/c15-rust/rutabaga_gfx/src/virgl_renderer.rs",
+      "bytes": 39761,
+      "sha256": "8CDA22D0F0620C94956E587A8E0330C373AE7623CB80203DA7F97AD9FEE1E935"
+    }
+  ]
+}

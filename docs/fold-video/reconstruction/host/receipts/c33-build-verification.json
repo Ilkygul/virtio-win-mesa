@@ -1,0 +1,53 @@
+{
+  "status": "FRESH_DXVK_MATCHEDPAIR_BUILD_SOURCE_HASH_ELF_PROTECTION_PC_OFF_PASS_NOT_RUNTIME",
+  "evidence": {
+    "retrieval-local-verification.json": {
+      "sha256": "5dd0e09ca1bc3dd2d47e4254208972e4fbeeb7cca3b2bda41a2149af18a306b7",
+      "bytes": 613
+    },
+    "local-source-elf-verification.json": {
+      "sha256": "bedbcc37085e2ce4bb7b04f0740e019b7e28842f424e26e845a5823a1a0ca4b5",
+      "bytes": 79612
+    },
+    "session-closure.json": {
+      "sha256": "bafb1a8cf0a67dc220b39969c0c5e52fb810d5a286915dd7c4ce48ccc5249099",
+      "bytes": 422
+    }
+  },
+  "outputs": [
+    {
+      "name": "libdxvk_d3d11.so",
+      "bytes": 5906440,
+      "sha256": "b964e83618f109c8e68dd69ff3bc192a3470d34e4b53ceb89308654fa39404de",
+      "unstrippedBytes": 14213112,
+      "unstrippedSha256": "6636fcf71d5816c7ab8c51b445fcfcb796bf769f93083faee5387a0ffbdf11b8",
+      "ELF64LittleEndianAArch64": true
+    },
+    {
+      "name": "libdxvk_dxgi.so",
+      "bytes": 3871041,
+      "sha256": "5e6e08a4592a6bae52b87fce4442369e11b631d0bbab5cb7905cadd2e5224740",
+      "unstrippedBytes": 11099456,
+      "unstrippedSha256": "019663cf7732c4544b502a6874cd3d32416e1fa700b15919580ad254e291e2d7",
+      "ELF64LittleEndianAArch64": true
+    }
+  ],
+  "rawFilesVerified": 63,
+  "compilerVisibleSourceEntries": 1268,
+  "onlySourceDelta": "src/dxvk/dxvk_shader_ir.cpp",
+  "unchangedFromF19": 1267,
+  "matchedFreshPair": true,
+  "compilerWarningsRetained": 287,
+  "newObjectsAndArchives": 237,
+  "ownLeaseReleased": true,
+  "pcUnreachable": true,
+  "noDeploymentOrRuntimeActivation": true,
+  "unchangedRuntime": [
+    "crosvm",
+    "libvirglrenderer.so",
+    "virgl_render_server",
+    "Windows UMDs",
+    "KMD"
+  ],
+  "limits": "Build/integrity proof only; no actual runtimeSPIRV/TaskMgr pixel/caption/performance result. Both DXVK DSOs built from same fresh private source/compiler snapshot; install only as matched pair when separately Rootauthorized."
+}

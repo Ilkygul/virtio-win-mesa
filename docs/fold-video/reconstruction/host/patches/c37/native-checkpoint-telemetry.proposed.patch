@@ -1,0 +1,227 @@
+--- a/src/neptune/npt_job.c
++++ b/src/neptune/npt_job.c
+@@ -12,9 +12,70 @@
+ #include "neptune-protocol/npt_protocol_host_dispatch_types.h"
+ #include <poll.h>
+ #include <unistd.h>
++#include <sys/stat.h>
+ 
+ #define JOB_MAX_NATIVE 32u
+ #define JOB_DEADLINE_NS (30ull * 1000000000ull)
++
++/* C22 diagnostic only: one fresh, empty regular marker activates at most
++ * 128 sampled publisher jobs per PROCESS, two lines per completed checkpoint.
++ * No file access when unset/invalid, or after activation/budget exhaustion.
++ * The marker is metadata-only; removal/replacement never resets the window. */
++#define JOB_TRACE_SAMPLES 128u
++static atomic_bool job_trace_active;
++static atomic_uint job_trace_next;
++struct job_trace_record {
++   unsigned sample, video_calls, native_calls, resource_calls;
++   uint32_t ctx, tail, last_iface, last_method, markers, polls;
++   uint64_t prepared, fence, publisher, generation, serial;
++   uint64_t notify_ns, checkpoint_ns, signal_ns, flush_ns, marker_end_ns;
++   uint64_t first_poll_ns, positive_ns;
++};
++static unsigned job_trace_take(void)
++{
++   if (atomic_load_explicit(&job_trace_next, memory_order_relaxed) >= JOB_TRACE_SAMPLES)
++      return 0;
++   if (!atomic_load_explicit(&job_trace_active, memory_order_acquire)) {
++      const char *path = getenv("NPT_NATIVE_JOB_TRACE_FILE");
++      if (!path || path[0] != '/') return 0;
++      size_t n = 0;
++      while (path[n] && n < 512) {
++         if ((unsigned char)path[n] < 32 || (unsigned char)path[n] > 126) return 0;
++         ++n;
++      }
++      if (!n || n >= 512) return 0;
++      struct stat st;
++      if (lstat(path, &st) || !S_ISREG(st.st_mode) || st.st_size != 0) return 0;
++      atomic_store_explicit(&job_trace_active, true, memory_order_release);
++   }
++   const unsigned sample = atomic_fetch_add_explicit(&job_trace_next, 1, memory_order_relaxed);
++   return sample < JOB_TRACE_SAMPLES ? sample + 1 : 0;
++}
++static uint64_t job_trace_delta(uint64_t end, uint64_t start)
++{
++   return start && end >= start ? end - start : 0;
++}
++static void job_trace_emit(const char *phase, const struct job_trace_record *t)
++{
++   if (!t->sample) return;
++   npt_log("C22 CHECKPOINT_%s pid=%ld sample=%u ctx=%u prepared=%" PRIu64
++      " fence=%" PRIu64 " publisher=%" PRIu64 " generation=%" PRIu64
++      " serial=%" PRIu64 " tail=%u markers=%u video=%u native=%u resource=%u"
++      " last_iface=%u last_method=%u notify_ns=%" PRIu64 " checkpoint_ns=%" PRIu64
++      " marker_end_ns=%" PRIu64 " first_poll_ns=%" PRIu64 " positive_ns=%" PRIu64
++      " decode_ns=%" PRIu64 " signal_cpu_ns=%" PRIu64 " flush_cpu_ns=%" PRIu64
++      " fifo_ns=%" PRIu64 " poll_lag_ns=%" PRIu64 " total_ns=%" PRIu64
++      " polls=%u completion_observed=%u gpu_markers_observed=%u",
++      phase, (long)getpid(), t->sample, t->ctx, t->prepared, t->fence,
++      t->publisher, t->generation, t->serial, t->tail, t->markers,
++      t->video_calls, t->native_calls, t->resource_calls, t->last_iface, t->last_method,
++      t->notify_ns, t->checkpoint_ns, t->marker_end_ns, t->first_poll_ns, t->positive_ns,
++      job_trace_delta(t->checkpoint_ns, t->notify_ns), t->signal_ns, t->flush_ns,
++      job_trace_delta(t->first_poll_ns, t->marker_end_ns),
++      job_trace_delta(t->positive_ns, t->first_poll_ns),
++      job_trace_delta(t->positive_ns, t->notify_ns), t->polls, t->positive_ns != 0,
++      t->positive_ns != 0 && t->markers != 0);
++}
+ 
+ struct job_native {
+    struct list_head head;
+@@ -33,6 +94,7 @@
+    unsigned pending, marker_count;
+    bool submitted, assigned, strict;
+    struct job_marker markers[JOB_MAX_NATIVE];
++   struct job_trace_record trace;
+ };
+ struct job_checkpoint {
+    struct list_head head;
+@@ -46,6 +108,9 @@
+    struct npt_job_credit credit;
+    unsigned touched_count;
+    struct job_native *touched[JOB_MAX_NATIVE];
++   bool trace_collect;
++   unsigned trace_video_calls, trace_native_calls, trace_resource_calls;
++   uint32_t trace_last_iface, trace_last_method;
+ };
+ struct npt_gpu_jobs {
+    struct npt_context *ctx;
+@@ -174,6 +239,14 @@
+                                   struct native_job *j)
+ {
+    mtx_lock(&j->mutex);
++   if (j->trace.sample) {
++      j->trace.checkpoint_ns = npt_profile_now_ns();
++      j->trace.video_calls = r->trace_video_calls;
++      j->trace.native_calls = r->trace_native_calls;
++      j->trace.resource_calls = r->trace_resource_calls;
++      j->trace.last_iface = r->trace_last_iface;
++      j->trace.last_method = r->trace_last_method;
++   }
+    for (unsigned i = 0; i < r->touched_count; ++i) {
+       struct job_native *n = r->touched[i];
+       if (j->marker_count >= JOB_MAX_NATIVE) { job_fail(s, "job marker bound exceeded"); break; }
+@@ -186,15 +259,33 @@
+          PFN_ID3D11DeviceContext4_Signal, npt_com_vtable(n->context4), NPT_VTBL_ID3D11DeviceContext4_Signal);
+       PFN_ID3D11DeviceContext_Flush flush = NPT_COM_VTBL_FUNC(
+          PFN_ID3D11DeviceContext_Flush, npt_com_vtable(n->context4), NPT_VTBL_ID3D11DeviceContext_Flush);
++      const uint64_t trace_begin = j->trace.sample ? npt_profile_now_ns() : 0;
+       const HRESULT hr = signal(n->context4, n->fence, value);
++      const uint64_t trace_signaled = j->trace.sample ? npt_profile_now_ns() : 0;
+       if (hr == 0) flush(n->context4);
++      if (j->trace.sample) {
++         const uint64_t trace_flushed = npt_profile_now_ns();
++         j->trace.signal_ns += job_trace_delta(trace_signaled, trace_begin);
++         j->trace.flush_ns += job_trace_delta(trace_flushed, trace_signaled);
++      }
+       mtx_unlock(&n->mutex);
+       if (hr != 0) { job_fail(s, "actual native Signal failed"); break; }
+       j->markers[j->marker_count++] = (struct job_marker){ .native = n, .value = value };
+    }
+    r->touched_count = 0;
++   r->trace_collect = false;
++   r->trace_video_calls = r->trace_native_calls = r->trace_resource_calls = 0;
++   r->trace_last_iface = r->trace_last_method = 0;
++   if (j->trace.sample) {
++      j->trace.markers = j->marker_count;
++      j->trace.marker_end_ns = npt_profile_now_ns();
++   }
++   /* Copy diagnostic POD before pending drops: the retirement worker may
++    * own/free this job immediately after the existing mutex unlock. */
++   const struct job_trace_record trace = j->trace;
+    assert(j->pending); --j->pending;
+    mtx_unlock(&j->mutex);
++   job_trace_emit("DISPATCHED", &trace);
+    return !atomic_load_explicit(&s->poison, memory_order_acquire);
+ }
+ 
+@@ -209,6 +300,10 @@
+       struct native_job *j = list_first_entry(&s->jobs, struct native_job, head);
+       mtx_lock(&j->mutex);
+       bool done = j->assigned && j->submitted && j->pending == 0;
++      if (done && j->trace.sample) {
++         if (!j->trace.first_poll_ns) j->trace.first_poll_ns = npt_profile_now_ns();
++         ++j->trace.polls;
++      }
+       for (unsigned i = 0; done && i < j->marker_count; ++i) {
+          struct job_marker *m = &j->markers[i];
+          PFN_ID3D11Fence_GetCompletedValue get = NPT_COM_VTBL_FUNC(
+@@ -221,6 +316,10 @@
+       }
+       if (npt_profile_now_ns() >= j->deadline && !done) job_fail(s, "job completion deadline (not success)");
+       const bool healthy = !atomic_load_explicit(&s->poison, memory_order_acquire);
++      if (done && healthy && j->trace.sample) {
++         j->trace.positive_ns = npt_profile_now_ns();
++         j->trace.fence = j->fence_id;
++      }
+       mtx_unlock(&j->mutex);
+       if (!done || !healthy) {
+          mtx_unlock(&s->mutex);
+@@ -236,6 +335,7 @@
+       const uint64_t first_target = markers ? j->markers[0].value : 0;
+       const uint64_t first_actual = markers ? j->markers[0].observed : 0;
+       mtx_unlock(&s->mutex);
++      job_trace_emit("COMPLETE", &j->trace);
+       if (log <= 32 || (log % 512 == 0 && log <= 16384))
+          npt_log("C12 %s pid=%ld ctx=%u ring=0 prepared_seq=%" PRIu64 " seq=%" PRIu64 " markers=%u strict=%u publisher=%" PRIu64 " generation=%" PRIu64 " serial=%" PRIu64 " tail=%u target0=%" PRIu64 " actual0=%" PRIu64 " all_reached=1 finite=1",
+                  markers ? "GPU_JOB_POSITIVE" : "GPU_JOB_EMPTY", (long)getpid(),
+@@ -416,7 +516,12 @@
+    if (atomic_load_explicit(&ring->context->gpu_jobs->poison, memory_order_acquire)) {
+       job_dispatch_ring = NULL; return false;
+    }
+-   mtx_lock(&r->mutex); r->active = true; mtx_unlock(&r->mutex);
++   mtx_lock(&r->mutex);
++   r->active = true;
++   const struct job_checkpoint *trace_p = list_is_empty(&r->checkpoints) ? NULL :
++      list_first_entry(&r->checkpoints, struct job_checkpoint, head);
++   r->trace_collect = trace_p && trace_p->job->trace.sample;
++   mtx_unlock(&r->mutex);
+    return true;
+ }
+ bool npt_job_note_dispatch(struct npt_context *ctx, struct npt_cs_decoder *dec,
+@@ -454,6 +559,12 @@
+           iface == NPT_IFACE_ID_ID3D11Device4 || iface == NPT_IFACE_ID_ID3D11Device5;
+       const bool is_video = iface == NPT_IFACE_ID_ID3D11VideoContext || iface == NPT_IFACE_ID_ID3D11VideoContext1 ||
+           iface == NPT_IFACE_ID_ID3D11VideoContext2 || iface == NPT_IFACE_ID_ID3D11VideoContext3;
++      if (r->trace_collect && (is_context || is_device || is_video)) {
++         ++r->trace_native_calls;
++         if (is_video) ++r->trace_video_calls;
++         r->trace_last_iface = iface;
++         r->trace_last_method = h->cmd_type & 0xffu;
++      }
+       if (is_video && !s->video_retire) {
+          /* Default remains graphics-only. Opt-in requires the paired native
+           * backend's terminal status and CS-ordered output-copy contract. */
+@@ -500,6 +611,7 @@
+       uint64_t context_id = 0;
+       uint64_t resource_id = h->object_id;
+       const uint32_t method = npt_transport_method(h);
++      if (r->trace_collect) ++r->trace_resource_calls;
+       const bool update = method == NPT_TRANSPORT_RESOURCE_UPDATE;
+       const bool map = method == NPT_TRANSPORT_RESOURCE_MAP || method == NPT_TRANSPORT_RESOURCE_UNMAP;
+       if (update) {
+@@ -642,6 +754,8 @@
+    if (!j) { job_fail(s, "NotifyV2 without requested KMD prepare"); return false; }
+    struct job_checkpoint *p = calloc(1, sizeof(*p));
+    if (!p) { job_fail(s, "checkpoint allocation failed"); return false; }
++   /* Marker metadata lookup is outside all existing job/ring mutexes. */
++   const unsigned trace_sample = job_trace_take();
+    mtx_lock(&r->mutex);
+    /* Snapshot publisher first: decoder may advance head while the publisher
+     * refills. An old head paired with a newer tail can falsely exceed size.
+@@ -660,6 +774,12 @@
+    }
+    j->publisher_ring = ring->id; j->publisher_generation = generation;
+    j->publisher_serial = serial; j->publisher_tail = tail; ++j->pending;
++   if (trace_sample) {
++      j->trace = (struct job_trace_record){ .sample = trace_sample,
++         .ctx = ctx->ctx_id, .prepared = j->expected_server_id,
++         .publisher = ring->id, .generation = generation, .serial = serial,
++         .tail = tail, .notify_ns = npt_profile_now_ns() };
++   }
+    mtx_unlock(&j->mutex);
+    list_addtail(&p->head, &r->checkpoints);
+    /* Publish the exact checkpoint BEFORE authorizing any of its bytes. */

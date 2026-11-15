@@ -1,0 +1,378 @@
+--- a/src/neptune/npt_context.c
++++ b/src/neptune/npt_context.c
+@@ -24,6 +24,7 @@
+ #include "npt_overrides.h"
+ #include "npt_profile.h"
+ #include "npt_queue.h"
++#include "npt_resource.h"
+ #include "npt_ring.h"
+ #include "npt_shared.h"
+ #include "neptune-protocol/npt_protocol_host_dispatch.h"
+@@ -267,6 +268,16 @@
+    struct npt_identity *ident =
+       e->identity ? npt_identity_find_locked(ctx, e->identity) : NULL;
+    return ident ? ident->primary_id : e->id;
++}
++
++uint64_t npt_context_trace_primary_id(struct npt_context *ctx, uint64_t id)
++{
++   mtx_lock(&ctx->object_mutex);
++   struct hash_entry *entry = _mesa_hash_table_search(ctx->object_table, &id);
++   const uint64_t result = entry ?
++      npt_identity_primary_locked(ctx, entry->data) : 0;
++   mtx_unlock(&ctx->object_mutex);
++   return result;
+ }
+ 
+ static bool
+@@ -618,6 +629,27 @@
+    const bool present = obj && obj->host_ptr;
+    mtx_unlock(&ctx->object_mutex);
+    return present && npt_object_type_is_compatible(actual, want);
++}
++
++void *npt_context_trace_hold_texture(struct npt_context *ctx, uint64_t id,
++                                     uint64_t *primary)
++{
++   *primary = 0;
++   mtx_lock(&ctx->object_mutex);
++   const struct hash_entry *entry = _mesa_hash_table_search(ctx->object_table, &id);
++   const struct npt_object *obj = entry ? entry->data : NULL;
++   void *texture = NULL;
++   /* Never await an unknown id or downcast a generic IUnknown/Resource.
++    * AddRef is the same native ref operation used by canonical registration;
++    * no descriptor/GPU operation runs under the object-table mutex. */
++   if (obj && obj->host_ptr && (obj->type == NPT_OBJECT_TYPE_ID3D11TEXTURE2D ||
++       npt_object_type_has_ancestor(obj->type, NPT_OBJECT_TYPE_ID3D11TEXTURE2D))) {
++      texture = obj->host_ptr;
++      npt_com_add_ref(texture);
++      *primary = npt_identity_primary_locked(ctx, obj);
++   }
++   mtx_unlock(&ctx->object_mutex);
++   return texture;
+ }
+ 
+ 
+@@ -1423,6 +1455,7 @@
+    if (npt_cs_decoder_get_fatal(dec))
+       return false;
+ 
++   npt_caption_trace_copy(ctx, &peek, dec->cur, (size_t)(dec->end - dec->cur));
+    if (!npt_job_note_dispatch(ctx, dec, &peek)) {
+       npt_cs_decoder_set_fatal(dec); return false;
+    }
+@@ -1729,6 +1762,10 @@
+          .map_info = 0,
+          .export_format = pb->virgl_format,
+       };
++      const unsigned caption_sample = npt_caption_trace_alias_sample();
++      if (caption_sample)
++         npt_log("CAPTION_REGISTER sample=%u cap=128 ctx=%u res=%u blob=%" PRIu64 " bytes=%zu phase=create-blob fd-identity-not-inferred",
++                 caption_sample, ctx->ctx_id, res_id, blob_id, (size_t)pb->size);
+       free(pb);
+ 
+       return true;
+--- a/src/neptune/npt_context.h
++++ b/src/neptune/npt_context.h
+@@ -434,6 +434,12 @@
+ 
+ struct npt_wire_object_ref;
+ 
++/* Diagnostic scalar snapshot; zero on missing registration. */
++uint64_t npt_context_trace_primary_id(struct npt_context *ctx, uint64_t id);
++/* Nonwaiting diagnostic lookup. Caller releases the returned strong ref. */
++void *npt_context_trace_hold_texture(struct npt_context *ctx, uint64_t id,
++                                     uint64_t *primary);
++
+ /* Register the object a canonical method returned (a getter or
+  * QueryInterface whose result may be an object this context already
+  * knows).  When the object is already registered under an id whose type
+--- a/src/neptune/npt_resource.c
++++ b/src/neptune/npt_resource.c
+@@ -22,6 +22,7 @@
+ #include "npt_library.h"
+ #include "npt_transport_defs.h"
+ 
++#include "neptune-protocol/npt_protocol_defs.h"
+ #include "neptune-protocol/npt_protocol_host_dispatch_types.h"
+ #include "neptune-protocol/npt_protocol_host_id3d12resource.h"
+ 
+@@ -82,6 +83,200 @@
+ }
+ 
+ 
++/* C19 diagnostics: identities are registered NPT ids, never fd/inode guesses. */
++static bool npt_caption_trace_configured(void)
++{
++   const char *enabled = getenv("NPT_SHARED_GUARD_TRACE");
++   const char *marker = getenv("NPT_CAPTION_TRACE_FILE");
++   return enabled && !strcmp(enabled, "1") && marker && marker[0];
++}
++
++bool npt_caption_trace_enabled(void)
++{
++   static unsigned activated;
++   if (!npt_caption_trace_configured()) return false; /* no FS check */
++   if (__atomic_load_n(&activated, __ATOMIC_ACQUIRE)) return true;
++   const char *marker = getenv("NPT_CAPTION_TRACE_FILE");
++   if (access(marker, F_OK)) return false;
++   /* One fresh window per process. Removing/replacing the marker never
++    * resets a budget; after activation no operation stats the filesystem. */
++   __atomic_store_n(&activated, 1, __ATOMIC_RELEASE);
++   return true;
++}
++
++static unsigned npt_caption_take(unsigned *counter, unsigned limit)
++{
++   unsigned old = __atomic_load_n(counter, __ATOMIC_RELAXED);
++   while (old < limit) {
++      if (__atomic_compare_exchange_n(counter, &old, old + 1, false,
++                                       __ATOMIC_RELAXED, __ATOMIC_RELAXED)) return old + 1;
++   }
++   return false;
++}
++
++unsigned npt_caption_trace_alias_sample(void)
++{
++   static unsigned aliases;
++   /* Registration metadata must survive until late window activation.
++    * Explicitly configuring the marker opts into these128light rows from
++    * startup; copy/readback budgets stay untouched until file creation. */
++   return npt_caption_trace_configured() ? npt_caption_take(&aliases, 128) : 0;
++}
++
++struct caption_wire { const uint8_t *p; size_t left; };
++static bool caption_read(struct caption_wire *w, void *out, size_t bytes)
++{
++   if (bytes > w->left) return false;
++   memcpy(out, w->p, bytes); w->p += bytes; w->left -= bytes; return true;
++}
++
++/* The generated encoder writes these scalars consecutively (no struct ABI
++ * padding); simple-pointer presence is a uint64 count, not a CPU pointer.
++ * Unknown/truncated/skewed commands are ignored by this diagnostic only. */
++void npt_caption_trace_copy(struct npt_context *ctx,
++                            const struct npt_command_header *h,
++                            const void *wire, size_t available)
++{
++   static unsigned copies;
++   if (__atomic_load_n(&copies, __ATOMIC_RELAXED) >= 128 ||
++       !npt_caption_trace_enabled() || h->cmd_size > available ||
++       h->cmd_size < sizeof(*h)) return;
++   const bool whole = h->cmd_type == NPT_CMD_TYPE(255, NPT_IFACE_ID_ID3D11DeviceContext,
++                                                 NPT_METHOD_ID3D11DeviceContext_CopyResource);
++   const bool region = h->cmd_type == NPT_CMD_TYPE(255, NPT_IFACE_ID_ID3D11DeviceContext,
++                                                  NPT_METHOD_ID3D11DeviceContext_CopySubresourceRegion);
++   const bool region1 = h->cmd_type == NPT_CMD_TYPE(255, NPT_IFACE_ID_ID3D11DeviceContext1,
++                                                   NPT_METHOD_ID3D11DeviceContext1_CopySubresourceRegion1);
++   if (!whole && !region && !region1) return;
++   struct caption_wire w = { (const uint8_t *)wire + sizeof(*h), h->cmd_size - sizeof(*h) };
++   uint64_t dst, src, has_box = 0;
++   uint32_t dst_sub = 0, src_sub = 0, xyz[3] = {0}, box[6] = {0}, flags = 0;
++   if (!caption_read(&w, &dst, sizeof(dst))) return;
++   if (!whole && (!caption_read(&w, &dst_sub, sizeof(dst_sub)) ||
++                  !caption_read(&w, xyz, sizeof(xyz)))) return;
++   if (!caption_read(&w, &src, sizeof(src))) return;
++   if (!whole && (!caption_read(&w, &src_sub, sizeof(src_sub)) ||
++                  !caption_read(&w, &has_box, sizeof(has_box)) || has_box > 1 ||
++                  (has_box && !caption_read(&w, box, sizeof(box))))) return;
++   if (region1 && !caption_read(&w, &flags, sizeof(flags))) return;
++   if (w.left) return;
++   const unsigned sample = npt_caption_take(&copies, 128);
++   if (!sample) return;
++   uint64_t src_primary, dst_primary;
++   void *s = npt_context_trace_hold_texture(ctx, src, &src_primary);
++   void *d = npt_context_trace_hold_texture(ctx, dst, &dst_primary);
++   D3D11_TEXTURE2D_DESC sd = {0}, dd = {0};
++   if (s) {
++      PFN_ID3D11Texture2D_GetDesc gd = NPT_COM_VTBL_FUNC(PFN_ID3D11Texture2D_GetDesc,
++         npt_com_vtable(s), NPT_VTBL_ID3D11Texture2D_GetDesc);
++      gd(s, &sd);
++   }
++   if (d) {
++      PFN_ID3D11Texture2D_GetDesc gd = NPT_COM_VTBL_FUNC(PFN_ID3D11Texture2D_GetDesc,
++         npt_com_vtable(d), NPT_VTBL_ID3D11Texture2D_GetDesc);
++      gd(d, &dd);
++   }
++   npt_log("CAPTION_COPY sample=%u cap=128 ctx=%u dc=0x%" PRIx64 " op=%s src=0x%" PRIx64 " srcCanonical=0x%" PRIx64
++           " dst=0x%" PRIx64 " dstCanonical=0x%" PRIx64 " known=%u/%u fmt=%u/%u size=%ux%u/%ux%u sub=%u/%u"
++           " dstXYZ=%u,%u,%u hasBox=%" PRIu64 " box=%u,%u,%u,%u,%u,%u flags=0x%x phase=before-dispatch-not-GPU-completion",
++           sample, ctx->ctx_id, h->object_id, whole ? "CopyResource" : region1 ? "CopyRegion1" : "CopyRegion",
++           src, src_primary, dst, dst_primary, s != NULL, d != NULL, sd.Format, dd.Format,
++           sd.Width, sd.Height, dd.Width, dd.Height, src_sub, dst_sub, xyz[0], xyz[1], xyz[2],
++           has_box, box[0], box[1], box[2], box[3], box[4], box[5], flags);
++   if (s) npt_com_release(s);
++   if (d) npt_com_release(d);
++}
++
++static bool caption_rect_valid(const D3D11_TEXTURE2D_DESC *d, uint32_t sub,
++                               uint32_t pitch, uint32_t bytes,
++                               uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1)
++{
++   if (sub || (d->Format != 28 && d->Format != 87) || d->SampleDesc.Count != 1 ||
++       !d->MipLevels || !d->ArraySize || d->Width > 4096 || d->Height > 4096 ||
++       d->Height <= 512 || x0 >= x1 || y0 >= y1 || x1 > d->Width || y1 > d->Height) return false;
++   const uint64_t row = (uint64_t)(x1 - x0) * 4;
++   const uint64_t rows = y1 - y0;
++   return pitch >= row && row * rows <= 65536 &&
++      (rows - 1) * pitch + row <= bytes;
++}
++
++static void caption_rect_hash(const uint8_t *p, uint32_t pitch, uint32_t row,
++                               uint32_t rows, uint64_t *hash, uint32_t *nonzero)
++{
++   *hash = 1469598103934665603ull; *nonzero = 0;
++   for (uint32_t y = 0; y < rows; ++y)
++      for (uint32_t x = 0; x < row; ++x) {
++         const uint8_t v = p[(uint64_t)y * pitch + x];
++         *hash ^= v; *hash *= 1099511628211ull; *nonzero += v != 0;
++      }
++}
++
++static void npt_trace_atlas_rect(struct npt_context *ctx, void *dc, void *resource,
++                                 uint64_t id, const D3D11_TEXTURE2D_DESC *desc,
++                                 uint32_t sub, uint32_t pitch, uint32_t bytes,
++                                 uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1,
++                                 const void *payload, bool immediate)
++{
++   static unsigned samples;
++   if (__atomic_load_n(&samples, __ATOMIC_RELAXED) >= 32 ||
++       !npt_caption_trace_enabled() || !immediate || !payload ||
++       !caption_rect_valid(desc, sub, pitch, bytes, x0, y0, x1, y1)) return;
++   const unsigned sample = npt_caption_take(&samples, 32);
++   if (!sample) return;
++   const uint32_t width = x1 - x0, height = y1 - y0, row = width * 4;
++   uint64_t input_hash, output_hash = 0; uint32_t input_nz, output_nz = 0;
++   caption_rect_hash(payload, pitch, row, height, &input_hash, &input_nz);
++   ID3D11Device *dev = NULL; ID3D11Texture2D *st = NULL;
++   HRESULT create_hr = NPT_E_FAIL, map_hr = NPT_E_FAIL;
++   bool copied = false, readback = false;
++   uint32_t mapped_pitch = 0;
++   PFN_ID3D11DeviceChild_GetDevice get_dev = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceChild_GetDevice,
++      npt_com_vtable(resource), NPT_VTBL_ID3D11DeviceChild_GetDevice);
++   get_dev(resource, &dev);
++   if (dev) {
++      D3D11_TEXTURE2D_DESC sd = *desc;
++      sd.Width = width; sd.Height = height; sd.MipLevels = 1; sd.ArraySize = 1;
++      sd.Usage = D3D11_USAGE_STAGING; sd.BindFlags = 0;
++      sd.CPUAccessFlags = D3D11_CPU_ACCESS_READ; sd.MiscFlags = 0;
++      PFN_ID3D11Device_CreateTexture2D create = NPT_COM_VTBL_FUNC(PFN_ID3D11Device_CreateTexture2D,
++         npt_com_vtable(dev), NPT_VTBL_ID3D11Device_CreateTexture2D);
++      create_hr = create(dev, &sd, NULL, &st);
++      if (create_hr == NPT_S_OK && st) {
++         PFN_ID3D11DeviceContext_CopySubresourceRegion copy = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceContext_CopySubresourceRegion,
++            npt_com_vtable(dc), NPT_VTBL_ID3D11DeviceContext_CopySubresourceRegion);
++         PFN_ID3D11DeviceContext_Map map = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceContext_Map,
++            npt_com_vtable(dc), NPT_VTBL_ID3D11DeviceContext_Map);
++         PFN_ID3D11DeviceContext_Unmap unmap = NPT_COM_VTBL_FUNC(PFN_ID3D11DeviceContext_Unmap,
++            npt_com_vtable(dc), NPT_VTBL_ID3D11DeviceContext_Unmap);
++         const D3D11_BOX box = { x0, y0, 0, x1, y1, 1 };
++         copy(dc, (ID3D11Resource *)st, 0, 0, 0, 0, resource, sub, &box);
++         copied = true;
++         D3D11_MAPPED_SUBRESOURCE m = {0};
++         map_hr = map(dc, (ID3D11Resource *)st, 0, D3D11_MAP_READ,
++                      D3D11_MAP_FLAG_DO_NOT_WAIT, &m);
++         if (map_hr == NPT_S_OK) {
++            mapped_pitch = m.RowPitch;
++            if (m.pData && m.RowPitch >= row && (uint64_t)m.RowPitch * height <= 65536) {
++               caption_rect_hash(m.pData, m.RowPitch, row, height, &output_hash, &output_nz);
++               readback = true;
++            }
++            unmap(dc, (ID3D11Resource *)st, 0);
++         }
++      }
++   }
++   npt_log("CAPTION_RECT sample=%u cap=32 ctx=%u object=0x%" PRIx64 " canonical=0x%" PRIx64
++           " fmt=%u image=%ux%u box=%u,%u,%u,%u staging=%ux%u tightBytes=%u pitch=%u payload=%u"
++           " inputFnv=%016" PRIx64 " inputNonzero=%u copied=%u createHr=0x%x mapHr=0x%x mappedPitch=%u"
++           " readback=%u outputFnv=%016" PRIx64 " outputNonzero=%u result=%s no-wait-no-retry",
++           sample, ctx->ctx_id, id, npt_context_trace_primary_id(ctx, id), desc->Format,
++           desc->Width, desc->Height, x0, y0, x1, y1, width, height, row * height,
++           pitch, bytes, input_hash, input_nz, copied, (unsigned)create_hr, (unsigned)map_hr,
++           mapped_pitch, readback, output_hash, output_nz,
++           readback ? (input_hash == output_hash ? "MATCH" : "MISMATCH") : "UNKNOWN");
++   if (st) npt_com_release(st);
++   if (dev) npt_com_release(dev);
++}
++
+ /* ---- texture update trace (initial-data path of small textures, any format): payload tight-row FNV, and after the
+  * update a fresh host staging copy read back and hashed the same way.  Compare with the guest "FMT guest tex-init". */
+ static volatile int npt_fmt_tex_count;
+@@ -103,14 +298,20 @@
+ npt_trace_tex_update(struct npt_context *ctx, void *imm_ctx, void *resource, uint64_t resource_id,
+                      uint32_t subresource, uint32_t row_pitch, uint32_t byte_size, bool has_box,
+                      uint32_t bx0, uint32_t by0, uint32_t bx1, uint32_t by1,
+-                     const void *payload, bool immediate)
+-{
+-   if (npt_fmt_tex_count >= 300) return;
++                     uint32_t bz0, uint32_t bz1, const void *payload, bool immediate)
++{
++   if (npt_fmt_tex_count >= 300 && !npt_caption_trace_enabled()) return;
+    if (!npt_context_object_is(ctx, resource_id, NPT_OBJECT_TYPE_ID3D11TEXTURE2D)) return;
+    PFN_ID3D11Texture2D_GetDesc gd = NPT_COM_VTBL_FUNC(PFN_ID3D11Texture2D_GetDesc, npt_com_vtable(resource), NPT_VTBL_ID3D11Texture2D_GetDesc);
+    if (!gd) return;
+    D3D11_TEXTURE2D_DESC d; gd(resource, &d);
+-   if (d.Width > 4096 || d.Height > 512) return;
++   if (d.Height > 512) {
++      if (!has_box || (bz0 == 0 && bz1 == 1))
++         npt_trace_atlas_rect(ctx, imm_ctx, resource, resource_id, &d, subresource, row_pitch, byte_size,
++            has_box ? bx0 : 0, has_box ? by0 : 0, has_box ? bx1 : d.Width, has_box ? by1 : d.Height, payload, immediate);
++      return;
++   }
++   if (d.Width > 4096 || npt_fmt_tex_count >= 300) return;
+    if (!has_box) { bx0 = 0; by0 = 0; bx1 = d.Width; by1 = d.Height; }
+    if (bx1 <= bx0 || by1 <= by0 || bx1 > d.Width || by1 > d.Height) return;
+    const uint32_t bpp = npt_trace_bpp(d.Format);
+@@ -285,7 +486,7 @@
+    }
+    update(imm_ctx, resource, subresource, box_arg, payload,
+           row_pitch, depth_pitch);
+-   npt_trace_tex_update(ctx, imm_ctx, resource, resource_id, subresource, row_pitch, byte_size, has_box, box_left, box_top, box_right, box_bottom, payload, imm_ctx_owned);
++   npt_trace_tex_update(ctx, imm_ctx, resource, resource_id, subresource, row_pitch, byte_size, has_box, box_left, box_top, box_right, box_bottom, box_front, box_back, payload, imm_ctx_owned);
+ 
+    if (imm_ctx_owned)
+       npt_com_release(imm_ctx);
+--- a/src/neptune/npt_resource.h
++++ b/src/neptune/npt_resource.h
+@@ -11,11 +11,20 @@
+ #define NPT_RESOURCE_H
+ 
+ #include <stdbool.h>
++#include <stddef.h>
+ #include <stdint.h>
+ 
+ #include "npt_com.h"
+ 
+ struct npt_context;
++struct npt_command_header;
++
++/* Opt-in caption diagnostics only. No ownership/grant semantics. */
++bool npt_caption_trace_enabled(void);
++unsigned npt_caption_trace_alias_sample(void);
++void npt_caption_trace_copy(struct npt_context *ctx,
++                            const struct npt_command_header *header,
++                            const void *wire, size_t available);
+ 
+ /* Hard cap on per-call payload byte_size: 2 GB, the guest client's map
+  * slot cap, and bounded so the byte_size+7 alignment math can't wrap to 0
+--- a/src/neptune/npt_shared.c
++++ b/src/neptune/npt_shared.c
+@@ -13,6 +13,7 @@
+  */
+ 
+ #include "npt_shared.h"
++#include "npt_resource.h"
+ 
+ #include <string.h>
+ #include <time.h>
+@@ -350,6 +351,10 @@
+    }
+ 
+    hr = npt_shared_export_handle(ctx, blob_id, data_res_id, data_off, handle);
++   const unsigned caption_sample = hr == NPT_S_OK ? npt_caption_trace_alias_sample() : 0;
++   if (caption_sample)
++      npt_log("CAPTION_ALIAS sample=%u cap=128 ctx=%u object=0x%" PRIx64 " canonical=0x%" PRIx64 " blob=%" PRIu64 " phase=export-success",
++              caption_sample, ctx->ctx_id, texture_id, npt_context_trace_primary_id(ctx, texture_id), blob_id);
+    if (nt_handle)
+       npt_shared_handle_close(handle);
+    return hr;

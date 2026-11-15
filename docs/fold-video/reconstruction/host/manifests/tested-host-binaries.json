@@ -1,0 +1,30 @@
+{
+  "scope": "Exactly testedC46selectedhostset; matchedC33pair mandatory; ELF64AArch64; no new build",
+  "files": [
+    {
+      "name": "crosvm",
+      "bytes": 13081544,
+      "sha256": "6ACBBCAEC64A67501DB335EEA70E4CA5CA4E49C047AA9447E08AA7048DC7ABD7"
+    },
+    {
+      "name": "libvirglrenderer.so",
+      "bytes": 4691248,
+      "sha256": "B5A31380261A48350795F35F0C017785F0937C0C9B7015676D357960415870C7"
+    },
+    {
+      "name": "virgl_render_server",
+      "bytes": 3002312,
+      "sha256": "E1204FDD39D2B17A5089F2A99ECA8BEE35C6221AE2752897D34D559890EFE604"
+    },
+    {
+      "name": "libdxvk_d3d11.so",
+      "bytes": 5906440,
+      "sha256": "B964E83618F109C8E68DD69FF3BC192A3470D34E4B53CEB89308654FA39404DE"
+    },
+    {
+      "name": "libdxvk_dxgi.so",
+      "bytes": 3871041,
+      "sha256": "5E6E08A4592A6BAE52B87FCE4442369E11B631D0BBAB5CB7905CADD2E5224740"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "platform": "Existing rooted Samsung Fold / compatible Gunyah DroidVM environment required. This is not an Android system image or installer.",
+  "droidvmPackage": "cn.classfun.droidvm",
+  "versionName": "0.0.6.r262.gfd985b62",
+  "versionCode": 2920,
+  "apkSha256": "94a41b1736f658f040887fffa19fab3a73ee9be3496e44c087f17811693629f5",
+  "firmwareFingerprint": "samsung/h8qxeea/h8q:17/CP2A.260605.016/F971BXXU3AZI5_OXM3AZI5:user/release-keys",
+  "turnipMainSha256": "49cad8ac6f98fdd48b8142f714cb69e5b474eab00afa5b482ced4d4dbd68b541",
+  "turnipBytes": 13894456,
+  "icdSha256": "244daa24aa0eb8b73e047bc4a25b38c96218d8fa889078c6cec5470fe764d2b0",
+  "icdApiVersion": "1.4.354",
+  "icdLibraryArch": "64",
+  "sourceOrigin": "Pre-existing platform dependency, not rebuilt by C46/C37/C33. Exact original Turnip source revision not established by these receipts; no source revision invented.",
+  "packageCompleteness": "Nine selected rebuilt runtime binaries are packaged. DroidVM APK, Turnip and Android/system/extra platform libraries are external prerequisites, not redistributed. Keep the recorded matching pre-existing platform."
+}

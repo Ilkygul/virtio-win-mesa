@@ -1,0 +1,86 @@
+{
+  "androidNdkVersion": "28.2.13676358",
+  "androidApi": 30,
+  "hostBuildImage": "sha256:c522b381183b9094b0b3596a7c97db160d90cc737998fb9fa17aa3a6fba71f55",
+  "tools": {
+    "meson": {
+      "bytes": 243,
+      "sha256": "c3baf0fe58968c47d852b8794e4e7aef6c935a5e0b6c4fee6b2bf039e653d080"
+    },
+    "ninja": {
+      "bytes": 370448,
+      "sha256": "08639e194fffa7f08b259fc4abfa4803aff66b64de52549cee42ec527d55cea6"
+    },
+    "patchelf": {
+      "bytes": 1394928,
+      "sha256": "bc38d10bf747fb2e14c48e1d28e789035cd5b44f4eb04706b8c2078e54522c6d"
+    },
+    "aarch64-linux-android30-clang": {
+      "bytes": 201,
+      "sha256": "cf2d40be93fb6051d3a66f5d6bdd24ccbe6595913040460f3607a241d562af76"
+    },
+    "aarch64-linux-android30-clang++": {
+      "bytes": 205,
+      "sha256": "662b264a3a4ecaa251c2eee4537000a69b5078211223a9eeb76b0c3a213a1ee4"
+    },
+    "llvm-ar": {
+      "bytes": 15131624,
+      "sha256": "fca4e66c591578b67dbd10e17e1112dc06fc02b202753bf91b4d2460083ab09e"
+    },
+    "llvm-strip": {
+      "bytes": 5902232,
+      "sha256": "1da35c6bcee9649adcaadf8a493132c3b7205901149622836d28e42d7fca7267"
+    },
+    "llvm-ranlib": {
+      "bytes": 15131624,
+      "sha256": "fca4e66c591578b67dbd10e17e1112dc06fc02b202753bf91b4d2460083ab09e"
+    },
+    "llvm-readelf": {
+      "bytes": 7256448,
+      "sha256": "2a28d786027488ebd0e260efe59d15c5dedb939eacbae34a6a9065a3a2f6d054"
+    }
+  },
+  "versions": {
+    "meson": "1.12.1",
+    "ninja": "1.13.2.git.kitware.jobserver-pipe-1",
+    "clang": "Android (13624864, +pgo, +bolt, +lto, +mlgo, based on r530567e) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project 97a699bf4812a18fb657c2779f5296a4ab2694d2)\nTarget: aarch64-unknown-linux-android30\nThread model: posix\nInstalledDir: /home/igul/droidvm-build/android-sdk/ndk/28.2.13676358/toolchains/llvm/prebuilt/linux-x86_64/bin",
+    "patchelf": "patchelf 0.19.3"
+  },
+  "androidCompilerConfigs": {
+    "Android.bp": "9bc28994d5b9ccdfcc8d644e36f6d431b56a324ea78a242397f828eedf5485cf",
+    "prebuilt-intermediates/config.h": "84a18774eb7a60da848eab46c08f4b570f5263c07522f6aa3a9bb536d2940409",
+    "prebuilt-intermediates/config-server.h": "b7af0c0960516113fbd12d8585aa66129d85e3cdebfd41e252f3673a03e6f662"
+  },
+  "nativeDisplayClientRequired": {
+    "sourceSha256": "60eb1870cd0213112400ba3fd821d5878a47ee89bf34071ea43e645840df5cc7",
+    "staticArchiveSha256": "9f7f5801b779af868e1938b4a2de482e77072e85f6401df8ca2fbe659fdbed67"
+  },
+  "dependencies": {
+    "minigbm": {
+      "head": "b7c93249f685222a524c51403719493cc114ff5d",
+      "status": ""
+    },
+    "minijail": {
+      "head": "ab6cd0f786481e2deecfe6f8563ae0d2416bd460",
+      "status": ""
+    }
+  },
+  "dxvkSubprojects": [
+    {
+      "name": "libdisplay-info",
+      "version": "0.0.0",
+      "descriptive_name": "libdisplay-info"
+    },
+    {
+      "name": "dxbc-spirv",
+      "version": "0.1.0",
+      "descriptive_name": "dxbc-spirv"
+    },
+    {
+      "name": "directx-native",
+      "version": "1.0.0",
+      "descriptive_name": "directx-native"
+    }
+  ],
+  "buildLimit": "Historical hostSoongusedprotectedread-onlylowerdependencyobjects. FullAOSPplatformrepo manifest is not captured by these selected recipes; not an independent clean-room/bit-reproducible claim."
+}
