@@ -226,6 +226,14 @@ De werkelijkgebouwde bronpatch is nu ook reviewbaar op deze branch: [C33 DXVK mi
 - **Uitvoering/status:** privébuildtweeSoongtargets opbouw-pcopdrachtgegeven,707bronbestandenwaarvanalleennpt_job.cnieuw. NogGEENnieuwebinarygeladen/geenwinstclaim. C35normalshutdown00:31:57Z, volledigeidle-drainPASS/pooluitAndroid9488MiB. EigenC35child+VARSbehouden,C33parentbevroren;productieUIT.
 - **Acceptatie/volgendebeslissing:** nawerkelijkebuildverificatiealleenprivatehostlib/serverpadvervangen, matchedC33DXVK/F91/C20/runtimegelijk. Eénzelfde8sdirecte3D/defaultcaption/privatecopy0 metvolledigeopnameenlaatbestaandC22venster. WinverwachtinglagerCPUreadywaitzondermissendegeometrie; pasbijfeitelijkewinstkorteWindowsUI/video-regressie. Geengeneralrelease/mergenu; algemeendoelOPEN.
 
+
+### C36 werkelijk gebouwd en geselecteerd — nog geen runtime-uitkomst
+
+- Exact165/165twee-targetbuild geslaagd, daadwerkelijkecompiletijd1m20s. LibD27F7619F50EA1D994BBFA32FC408CBBAAF09E1F08FA09374231B5B1F263FA37/4691176B; serverE89E2BE65D040B124BB3E56FD4D74FC6A3E8B364286C111554CF6632A3F565FB/3002304B. Alle707bronleden/62rawfiles gecontroleerd, alleenbedoeldenpt_job.cnieuw;6131oudepathsbeschermd, eigencontainer/mount/leasevrij, bouw-pcUIT00:40:09Z.
+- Bronchecks285actual-functionCPUchecks+4TUchecksPASS; echteMesa-c11shimselectieenbusy-timeoutzonderextradubbelepollbevestigd. Mockclock/locks, dusgeenfeitelijkeGPU-raceacceptatie. Final artifacts/c36-event-ready-host-build/session-20261115-event-r1/final-local-verification.json SHA5BBAAA63042B80509AED8B68C229F774DB6B839ED593B013527C8BEEB074B810.
+- Rootprivatepairgeïnstalleerd/sha-bound; persist0C311FF25885FA8AE44545124B176B26D7BDD06619B44CB1F1305A1DAF40FA44 énvolledigezelfde liveconfig4successresponsesexact. Alleenserverpad/LDprefixC35→C36; child/VARS/guestdrivers/C33pairbehouden. Poolwerkelijk5120MiB/Android5405; uitsluitendbestaandeC23UUIDstartopdracht. Noggeenruntimewinstclaim.
+- C35volledigeterugrolprivéscriptsgereed; C33parentfrozenstat+origineleVARS8B634C…130A ongewijzigd, productieUIT. Volgende8s-proef meetwaardedirectvergelijkenmetC35R2=9.23548API/s+194/194completeframes; bestaandbenchmarkJSONmeasuringfase bepaaltlateC22activatie.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
