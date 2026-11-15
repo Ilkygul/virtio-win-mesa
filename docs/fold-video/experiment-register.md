@@ -867,6 +867,12 @@ Vorigegoalbeurt=PROGRESS: driverC46 geïnstalleerd/met werkelijk geladen nieuweD
 
 Vraag: keert Map-fout terug onder verse start, en levert het bestaande Map:sub/type/flags/originelehr-log dan de bronoorzaak? Bij READ is de nonREAD-runtime-sharedguard aantoonbaar nietvan toepassing; format/OOM/reply/pitch/nativeHRESULT blijven afzonderlijke hypotheses. Als fout of runtimefoutlog ontbreekt, niet alsnogeen fixclaim doen ofdezelfdecombinatieblindherhalen. EigenBrowser.close/logbehoud/MediumNWherstelnaafloop; geenproductie/mainmerge/release.
 
+### C46 verse-start r1 stopte vóór video; bestaande startwachttijd gecorrigeerd
+
+De browserstart zelf lukte (eigenPID5376/birth1794736122285), maar de bestaande wrapper vroeg9334 na een vaste3s op en kreeg connectionrefused. Dat gebeurde vóór de nieuwe outputdirectory en vóórNode/YouTube. De55sobserver vond terecht geen meting; geen nieuwe Map-/video-uitval of GPU-PIDclaim. Eigenbrowser09:50:52Z normaalgesloten en logbewaard, origineelMediumNW09:50:54Z hersteld/DACLgelijk. Bewijs evidence/c46-fresh-map-origin-r1/startup-failure-analysis.json SHA739af2f8ae9e38ad2720acd72da093966120230c2d48732eb610e5f94e4e11b5.
+
+**Noodzakelijke concrete herstelstap:** bestaande wrapper vervangt alleen vaste3s door maximaal45s wachten op echteCDPbereikbaarheid plus exacteownedprofile/listenercontrole. Geen kunstmatige extra browserwarmup na gereedheid. Bestaande collector/prep/CPU/driverinhoud gelijk. Nieuwe outputr2; bestaandeobserver90s en begrensdehost120s/beeld110s passen bij maximaleopstarttijd, zodatpostformelefout niet buitenbeeld valt. Niet als snelheidsvergelijking gebruiken. EerstwerkelijkePS5.1parse/consolepreflight; daarna dezelfde geregistreerde verse-versus-warmeMapvraag. Logbehoud/Mediumherstelnaafloop blijven verplicht; doelOPEN/geenproductie.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
