@@ -710,6 +710,17 @@ NPT-profilerlaatook7.6sreplytotalsbijCheckFormatSupport/CheckMultisampleQualityL
 
 **Beslissing:** geenextraeventworker/Acquire-bypass/stalewakepatch. C45gecombineerdedeelresultaatbehouden; resterendelead is GPUcompletionpad. Nu eerstbestaandehost/F91telemetrie enjob-IDkoppelingbepalen omWDDMqueue, echteGPUuitvoering encompletionmeldingtescheiden. Geennieuwevariantofclaimdat30msvolledigGPUtijd is. HuidigeWindowsbootbehouden/Code0, appsproefnatuurlijkuit, WPRgestopt; geenproductie/mainmerge/release/doelvoltooiing.
 
+
+### C45 completionpad — één gecombineerde bestaande GPU/C22-diagnose zonder herstart
+
+Vorige goalbeurt=PROGRESS: echteCPU/Presenttimingsveranderdenvolgendebeslissing; geenstatusherhaling. Verse07:55:43controle: dezelfde06:55Windowsboot/GPUCode0/2448×1848/forcepresentOFF+dwmforceON+nowarpON, eigenappweg/WPRnietactief. Zelfdehostmain14210/start3278332/server14282/start3278849. Eenmisdadigdebusyboxpadcontrole127isnietalsafwezigbewijsgebruikt; hersteldegefilterdeproccontrolebevestigt **NPT_NATIVE_JOB_TRACE_FILE=/data/adb/fold-vm/npt/codex-c35-job-trace-r1** inalbeideprocessen, markerABSENT. Bestaande128jobs/process-C22diagnosekan duslaatwordengeactiveerdzonderVMMherstart. Geenfence_traceenvreloadofdriverbuildnodig.
+
+**Nieuwevraag:** in deactueleC45/directe3Dtaak, die werkelijk~30msopPresentcompletionwacht, overheerstWDDMqueuevóórDMA, virtualDMAservice/retirement, ofhostnativecheckpointwerk? C37oudereC20UMDproeftoonde0.608msp50hostjoblatentie; dieandereboot/UMD/dataiseengeenactueleC45kruiskoppeling. Weherhalengeenpollvariant. NieuweaanwijzingisdepositieveC45Present-stack+timinglokalisatie.
+
+**Eénproef:** dezelfdeimmutable15kubussen/defaultcaption/privatecopy0,15sdiagnose; bestaandWPRGPU8s naechteforegroundmeetfase, eigenWPRfinallystop. Alleenbestaandepresent/gate/eventtimingsinverskind, geenvolledigeNPTstartupcapsprofiler. NaWPR-start pasbestaandelegeC22marker2splaatsen, eigenaar/inodebewarenenalleeneigenmarkerweghalen. Markerremovalstoptgelatchtprocesniet; vaste128budgetblijft. Gefilterdebestaandevirgl_render_serverlogcatbegrensd. Geenherstart/nieuwharnas/driverconfigwijziging.
+
+**Beoordeling:** apparaat/procesownershipviadeechteDevice→Contextlifetime; Queue178/179/180enDMA175/177/176metexactcontext/sequence/submission-ID, onbekendepairsongeclaimd. HostC22alleennieuweappctx/PIDenexactehostjobtuples. Klokkenhebbenverschillendeoorsprong; geenrawtimestampaftrekkingof1nativejob=1Presentclaim. SamengevoegdetijdlijnenalleenbijechteF91-fencebrug; andersfasekostenafzonderlijkrapporteren. Bronplannen9C80285B…3774A en5F0E77E4…5EEAAB12. C45bestedeelresultaatblijftbehouden; productieuit/geenrelease/doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
