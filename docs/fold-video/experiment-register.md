@@ -1066,6 +1066,11 @@ Twee gerichte pogingen met doel6656MiB/floor3072: eerste6292MiB/Android3106/exit
 
 Beslissing: alleen de C47-testchild naar4096MiB; liveRPCenpersistedconfig exact gecontroleerd, SHA `732011185A95D7348D06F3A781C8330D1D8546DD2878B7B207D8824C712550DD`. C46frozenherstelconfigAC53 blijft6144. Eerst oudeC46DLLs in dezezelfdechild/RAM4/DPI200/landscape meten; daarna C47 installeren en dezelfdetaak vergelijken. De eerdereRAM6-basis is geen directeRAM4-vergelijking. Geen softwareterugval of productiewijziging. Bewijs `evidence/c47-present-single-publication-r1/install-pool-reserve*.txt`, `short-reserve-pooloff.txt`, `ram4-persist.txt`. Driverdoel blijft open.
 
+
+### C46-in-C47/RAM4 eerste basis ongeldig door native viewport
+
+Windowsboot13:08:58Z/GPUCode0/old2A/F91, werkelijke4GiB en vijf juiste schijf/VARS-FDs bevestigd. Korte8s-app eindigt normaal maar backbuffer **960×553**, niet960×640; Androidopname toont DroidVM-toolbars en nativeverbinding2448×1144. De40,98API/s is daarom **geen geldige vergelijkingsbasis of snelheidswinst**. Originele forcepresentmarker/ACL hersteld. Concrete herstelreden: nativevolledigscherm, stabiele2448×1848, daarna alleen dezelfde8sbasis onder versrunnummer; geen codewijziging. Bewijs `evidence/c47-present-single-publication-r1/c46-ram4-baseline-final`, `c46-ram4-baseline-phone.mp4`, `ram4-after-baseline-gpu.json`. C47nogNIETgeïnstalleerd.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
