@@ -626,6 +626,15 @@ Bestaandedemonconsolelogsveiliggelezen, geenpipegedraind. ACPIpowerbtnACKzondera
 
 **Volgendebeslissing:** éénherstelstartvandezelfdeC45 nadatVMM/loanstatevollediggestoptis, metcrashkopiebewaard; geenzinlozeongewijzigdebenchmarkretry. BijbereikbareWindows eerstMinidump/MEMORY.DMP/SystemEvent1001/CrashControlveiligstellen, dannieuweDLLmaps/beideforceAAN. Bijdezelfdebootcrashgeenrebootlus: dump-/herstelrichtingkiezen. C45blijftonbeproefdvoorvideo/3D, productieuit/geenmerge/release/doelopen.
 
+
+### C45 herstelstart geslaagd; nieuwe driver echt geladen, bootcrashoorzaak blijft open
+
+DezelfdeC45child/config63D64zonderbronwijzigingisnafullstop/nieuwepoolbereikbaar. Werkelijkmain14210/start3278332/render14282, C45RW/C35RO/C33RO/privateVARS; Windows **06:55:01.295545Z**. VerseDWM **1436/birth06:55:07.5844847Z**, Explorer enEdge mappen native **515D6B…BC0416**; EC **F3BF14…81A711**opschijf. F91signedValid/Native1/GPUCode0, runtimepublisherV1/writefeed1positief. Beideforce/runtime/nowarpmarkersnog0BAAN, oorspronkelijkewhitelist6864 enC37host/C33FP32/cachebehouden. FysieknativeWindowsbureaubladweernormaalzichtbaar.
+
+Readonlykernelcrashprobe: CrashDumpEnabled3/AutoReboot1, geenMinidumpofMEMORY.DMP, alleenKernelPower41overdeonzuiveregastafsluiting. Geenstackofveroorzakendedriverbekend; geslaagdeherstelbootbewijstnietdatdebootbugisopgelost. Failedchild/VARS/logsbewaard, productieuit/geenrelease.
+
+Nu uitsluitenddebeperktefunctioneleC45videoproefvoortzetten: gebondenactueleboot/DWM/native515Dactivatie, alleenforcepresentUIT/dwmforceAAN; eerst qualified1/accepted1/pending0/active0/flags1positiefzien. Daarnazelfdeclip10warm/30measure+CPU20metprocess-onlybypass en fysiekeopname. Geenverderebootlusofblindekernelpatch. Bewijs evidence/c45-unless-no-commands-flush-r1/recovery-boot-driver-proof.json, recovery-kernel-crash-evidence.json enrecovery-boot-actual-host-fd-proof.json.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
