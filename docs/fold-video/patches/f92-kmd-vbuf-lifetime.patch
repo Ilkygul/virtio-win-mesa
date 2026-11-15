@@ -1,0 +1,229 @@
+diff -ruN a/viogpu/common/viogpu_queue.cpp b/viogpu/common/viogpu_queue.cpp
+--- a/viogpu/common/viogpu_queue.cpp	2026-11-15 21:14:11
++++ b/viogpu/common/viogpu_queue.cpp	2026-11-15 21:14:11
+@@ -164,6 +164,7 @@
+     ctx->refCount = 1;
+     ctx->vbuf = NULL;
+     ctx->abandoned = 0;
++    ctx->queue = NULL;
+     return ctx;
+ }
+ 
+@@ -187,9 +188,12 @@
+         // released a vbuf that meanwhile belonged to a DIFFERENT
+         // in-flight command -- eating that command's completion (the
+         // commander wedges on its running slot and dxgkrnl TDRs).
+-        if (ctx->abandoned && ctx->vbuf)
++        // F92: the completion paths sample auto_release BEFORE calling us and never touch the
++        // vbuf afterwards, so flipping auto_release here would leak it. The caller is gone and
++        // nobody else owns the vbuf: release it here, exactly once.
++        if (ctx->abandoned && ctx->vbuf && ctx->queue)
+         {
+-            ctx->vbuf->auto_release = true;
++            ctx->queue->ReleaseBuffer(ctx->vbuf);
+         }
+         delete ctx;
+     }
+@@ -408,6 +412,7 @@
+         return FALSE;
+     }
+     waitCtx->vbuf = vbuf;
++    waitCtx->queue = this;
+     InterlockedIncrement(&waitCtx->refCount);
+     vbuf->complete_cb = VioGpuWaitCtxCompleteCB;
+     vbuf->complete_ctx = waitCtx;
+@@ -520,6 +525,7 @@
+         return FALSE;
+     }
+     waitCtx->vbuf = vbuf;
++    waitCtx->queue = this;
+     InterlockedIncrement(&waitCtx->refCount);
+     vbuf->complete_cb = VioGpuWaitCtxCompleteCB;
+     vbuf->complete_ctx = waitCtx;
+@@ -640,6 +646,7 @@
+         return FALSE;
+     }
+     waitCtx->vbuf = vbuf;
++    waitCtx->queue = this;
+     InterlockedIncrement(&waitCtx->refCount);
+     vbuf->complete_cb = VioGpuWaitCtxCompleteCB;
+     vbuf->complete_ctx = waitCtx;
+@@ -714,6 +721,7 @@
+         return FALSE;
+     }
+     waitCtx->vbuf = vbuf;
++    waitCtx->queue = this;
+     InterlockedIncrement(&waitCtx->refCount);
+     vbuf->complete_cb = VioGpuWaitCtxCompleteCB;
+     vbuf->complete_ctx = waitCtx;
+@@ -867,6 +875,7 @@
+         return FALSE;
+     }
+     waitCtx->vbuf = vbuf;
++    waitCtx->queue = this;
+     InterlockedIncrement(&waitCtx->refCount);
+     vbuf->complete_cb = VioGpuWaitCtxCompleteCB;
+     vbuf->complete_ctx = waitCtx;
+@@ -1331,6 +1340,7 @@
+         return FALSE;
+     }
+     waitCtx->vbuf = vbuf;
++    waitCtx->queue = this;
+     InterlockedIncrement(&waitCtx->refCount);
+     vbuf->complete_cb = VioGpuWaitCtxCompleteCB;
+     vbuf->complete_ctx = waitCtx;
+@@ -1468,6 +1478,7 @@
+         return FALSE;
+     }
+     waitCtx->vbuf = vbuf;
++    waitCtx->queue = this;
+     InterlockedIncrement(&waitCtx->refCount);
+     vbuf->complete_cb = VioGpuWaitCtxCompleteCB;
+     vbuf->complete_ctx = waitCtx;
+@@ -1760,11 +1771,13 @@
+         // vbuf (mirroring the AddBuf-failure arm) so the owning command
+         // advances and dxgkrnl sees the fence retire instead of timing the
+         // engine out (VidSchWaitForCompletionEvent TDR).
++        // F92: decide ownership before the callback; it can wake a caller that frees the vbuf.
++        BOOLEAN bufAutoRelease = buf->auto_release;
+         if (buf->complete_cb && InterlockedExchange(&buf->complete_fired, 1) == 0)
+         {
+             buf->complete_cb(buf->complete_ctx, buf->buf, buf->resp_buf);
+         }
+-        if (buf->auto_release)
++        if (bufAutoRelease)
+         {
+             ReleaseBuffer(buf);
+         }
+@@ -1846,12 +1859,14 @@
+                  ("<--> %s AddBuf failed rc=%d; firing complete_cb\n",
+                   __FUNCTION__, rc));
+         UnstageVbuf(buf, FALSE);
++        // F92: decide ownership before the callback; it can wake a caller that frees the vbuf.
++        BOOLEAN bufAutoRelease = buf->auto_release;
+         if (buf->complete_cb &&
+             InterlockedExchange(&buf->complete_fired, 1) == 0)
+         {
+             buf->complete_cb(buf->complete_ctx, buf->buf, buf->resp_buf);
+         }
+-        if (buf->auto_release)
++        if (bufAutoRelease)
+         {
+             ReleaseBuffer(buf);
+         }
+@@ -1881,11 +1896,13 @@
+         {
+             RemoveHeadList(&m_PendingBufs);
+             UnstageVbuf(buf, FALSE);
++            // F92: decide ownership before the callback; it can wake a caller that frees the vbuf.
++            BOOLEAN bufAutoRelease = buf->auto_release;
+             if (buf->complete_cb && InterlockedExchange(&buf->complete_fired, 1) == 0)
+             {
+                 buf->complete_cb(buf->complete_ctx, buf->buf, buf->resp_buf);
+             }
+-            if (buf->auto_release)
++            if (bufAutoRelease)
+             {
+                 ReleaseBuffer(buf);
+             }
+@@ -1957,11 +1974,13 @@
+         PGPU_VBUFFER buf = CONTAINING_RECORD(RemoveHeadList(&parked), GPU_VBUFFER, pending_entry);
+ 
+         UnstageVbuf(buf, FALSE);
++        // F92: decide ownership before the callback; it can wake a caller that frees the vbuf.
++        BOOLEAN bufAutoRelease = buf->auto_release;
+         if (buf->complete_cb && InterlockedExchange(&buf->complete_fired, 1) == 0)
+         {
+             buf->complete_cb(buf->complete_ctx, buf->buf, buf->resp_buf);
+         }
+-        if (buf->auto_release)
++        if (bufAutoRelease)
+         {
+             ReleaseBuffer(buf);
+         }
+diff -ruN a/viogpu/common/viogpu_queue.h b/viogpu/common/viogpu_queue.h
+--- a/viogpu/common/viogpu_queue.h	2026-11-15 21:14:11
++++ b/viogpu/common/viogpu_queue.h	2026-11-15 21:14:11
+@@ -98,6 +98,10 @@
+     // callback's KeSetEvent and its own decrement, and the callback
+     // must then NOT auto-release a vbuf the caller still owns.
+     volatile LONG abandoned;
++    // F92: queue that owns vbuf. On the abandoned path the completion callback releases the
++    // vbuf itself; the DPC no longer reads the vbuf after the callback (it may already be freed
++    // and reused by the woken caller).
++    class VioGpuQueue *queue;
+ } VIOGPU_WAIT_CTX, *PVIOGPU_WAIT_CTX;
+ 
+ class VioGpuQueue;
+diff -ruN a/viogpu/viogpu3d/viogpu_adapter.cpp b/viogpu/viogpu3d/viogpu_adapter.cpp
+--- a/viogpu/viogpu3d/viogpu_adapter.cpp	2026-11-15 21:14:11
++++ b/viogpu/viogpu3d/viogpu_adapter.cpp	2026-11-15 21:14:11
+@@ -2941,12 +2941,14 @@
+                     DbgPrint(TRACE_LEVEL_ERROR,
+                              ("<--> %s pvbuf=%p has no resp_buf for cmd_type=0x%x\n",
+                               __FUNCTION__, pvbuf, pcmd ? pcmd->type : 0));
++                    // F92: decide ownership before the callback; it can wake a caller that frees the vbuf.
++                    BOOLEAN pvbufAutoRelease = pvbuf->auto_release;
+                     if (pvbuf->complete_cb != NULL &&
+                         InterlockedExchange(&pvbuf->complete_fired, 1) == 0)
+                     {
+                         pvbuf->complete_cb(pvbuf->complete_ctx, pvbuf->buf, NULL);
+                     }
+-                    if (pvbuf->auto_release)
++                    if (pvbufAutoRelease)
+                     {
+                         ctrlQueue.ReleaseBuffer(pvbuf);
+                     }
+@@ -3001,12 +3003,14 @@
+                               resp->ctx_id,
+                               pcmd->type));
+                 }
++                // F92: decide ownership before the callback; it can wake a caller that frees the vbuf.
++                BOOLEAN pvbufAutoRelease = pvbuf->auto_release;
+                 if (pvbuf->complete_cb != NULL &&
+                     InterlockedExchange(&pvbuf->complete_fired, 1) == 0)
+                 {
+                     pvbuf->complete_cb(pvbuf->complete_ctx, pvbuf->buf, pvbuf->resp_buf);
+                 }
+-                if (pvbuf->auto_release)
++                if (pvbufAutoRelease)
+                 {
+                     ctrlQueue.ReleaseBuffer(pvbuf);
+                 }
+@@ -4288,17 +4292,32 @@
+ 
+ // ---- Gunyah protected VM pools ---------------------------------------------------------------
+ 
++// RTL_QUERY_REGISTRY_DIRECT cannot be used for a REG_QWORD: for data larger than a ULONG the
++// EntryContext buffer must start with its negative size, so a direct query wrote garbage over the
++// default (every pool size came out as 0xB00000000 = 44 GB while the real pools are 512 MB). Use a
++// query routine instead and only accept a real 8-byte REG_QWORD.
++static NTSTATUS NTAPI ReadQwordRoutine(PWSTR ValueName, ULONG ValueType, PVOID ValueData, ULONG ValueLength,
++                                       PVOID Context, PVOID EntryContext)
++{
++    UNREFERENCED_PARAMETER(ValueName);
++    UNREFERENCED_PARAMETER(Context);
++    if (ValueType == REG_QWORD && ValueLength == sizeof(ULONGLONG) && ValueData != NULL)
++    {
++        RtlCopyMemory(EntryContext, ValueData, sizeof(ULONGLONG));
++    }
++    return STATUS_SUCCESS;
++}
++
+ static ULONGLONG ReadQwordParameter(PCWSTR name, ULONGLONG defaultValue)
+ {
+     ULONGLONG value = defaultValue;
+     RTL_QUERY_REGISTRY_TABLE query[2];
+     RtlZeroMemory(query, sizeof(query));
+-    query[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK;
++    query[0].QueryRoutine = ReadQwordRoutine;
++    query[0].Flags = RTL_QUERY_REGISTRY_NOEXPAND;
+     query[0].Name = (PWSTR)name;
+     query[0].EntryContext = &value;
+-    query[0].DefaultType = (REG_QWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_QWORD;
+-    query[0].DefaultData = &defaultValue;
+-    query[0].DefaultLength = sizeof(defaultValue);
++    query[0].DefaultType = REG_NONE;
+     NTSTATUS status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES, L"VioGpu3D\\Parameters", query, NULL, NULL);
+     if (!NT_SUCCESS(status))
+     {
