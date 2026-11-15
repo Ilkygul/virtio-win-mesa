@@ -234,6 +234,15 @@ De werkelijkgebouwde bronpatch is nu ook reviewbaar op deze branch: [C33 DXVK mi
 - Rootprivatepairgeïnstalleerd/sha-bound; persist0C311FF25885FA8AE44545124B176B26D7BDD06619B44CB1F1305A1DAF40FA44 énvolledigezelfde liveconfig4successresponsesexact. Alleenserverpad/LDprefixC35→C36; child/VARS/guestdrivers/C33pairbehouden. Poolwerkelijk5120MiB/Android5405; uitsluitendbestaandeC23UUIDstartopdracht. Noggeenruntimewinstclaim.
 - C35volledigeterugrolprivéscriptsgereed; C33parentfrozenstat+origineleVARS8B634C…130A ongewijzigd, productieUIT. Volgende8s-proef meetwaardedirectvergelijkenmetC35R2=9.23548API/s+194/194completeframes; bestaandbenchmarkJSONmeasuringfase bepaaltlateC22activatie.
 
+
+## C36 eerste runtimeproef — echte ready-wake gerepareerd, 11.82 API/s; nog zichtbare hapering
+
+- **Werkelijk:** nieuweboot00:42:01.296Z, main21836/start1040301/renderroot21922, eigenC36lib/serverbeidewerkelijkgemapt, childRW/parentRO/VARSclone. NativeDWORD1/runtime0bytes/F91/C20/S33FP32behouden, GPUCode0; huidigedriverloadslot3geenunsupportedpower/invalidreply, geenprobeachtergebleven.
+- **Zelfde directe3D:** onveranderde6BEF-EXE/defaultcaption/privatecopy0/1swarmup8smeten.95Presents/8.03794s=11.81894API/s tegenoverC35R2=9.23548; waargenomen+27.97%, geengeïsoleerdecausaleFPSclaim(bootleeftijd/achtergrondappsverschillen). GeenAPI-/devicefouten/foregroundverlies, nativeexit0/0copies. Intervalp5069.4ms/p95131.3/max562.0ms: nogNIETvloeiend.
+- **Fysiek:** volledige187bronframes/28.063sclip beoordeeld. Paintedactief8–164:157/157alle15centra,0missing/0blank/8.886344sheld. Launch6–7nogongetekendeclient0.220923safzonderlijkgedocumenteerd. Captionfirst/mid/lastnormaal. Frame121houdt0.642267smetalle15zichtbaar: echtehitch, geengeometrieverlies. Audit evidence/c36-direct8-visual-audit-r1/analysis.json SHA6DF30CD48C5ABF240CCDBED2CE6DD747E5E116E7A1D21B54E0DFD667A07E583B.
+- **Gekoppeldedrivermeting:** app26328ctx105(geretrydectx101ongebruikt),128jobsmetexactpublisher/generation/serialjoin;C22naJSONmeasuring16Presents/1.07s geactiveerd00:44:48–52Z. FIFO p501.589→0.0148ms, CPUemptytotal2.020→0.0783ms: ontbrekendereadywakedaadwerkelijkgerepareerd. GPUfirstquerypositive101/107→14/107;90nu2queries,3nu4queries. Vroegequeryonthultvolgende2msGPU-pollquantisatie; Signal/FlushCPUblijvenklein. Timing evidence/c36-event-ready-timing-audit-r1/analysis.json SHAA6874C0F2B3D82BE17EB965B9CEE37EA51BF12E07FD81727393B8BA5177D4757.
+- **Beslissing:** C36-bronfixbehouden alsdeelwinst; geenalgemenefix-/releaseclaim, productieUIT. VolgendenieuweonderbouwdehypotheseC37: uitsluitendbijwerkelijkGPU-pendingheadbegrensdemonotoneCV-backoff250→500→1000→bestaande2000uscap; CPUcheckpointwake/fences/healthy/deadline/FIFOenfailureproofblijven. MeerquerieskanCPUkosten;geenwinstgeclaimdtotwerkelijkgemeten. GeenglobaleTinySyncOFF/appfallback. NoggeenC37buildgeladen. C33LKGfrozenbehouden;algemeendoelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
