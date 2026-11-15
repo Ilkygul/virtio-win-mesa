@@ -606,6 +606,15 @@ Mixed/strict/unknownwriteherkomst, trim2/combined3, onbekende/hogevlaggen/contex
 
 NoggeenC45PC-/Foldactie. Rootheeftdetweepredicatenbeoordeeld; lokaalexactbouwpakketwordtsamengesteld. Productieuit/geenmainmergeofrelease/doelopen.
 
+
+### C45 werkelijk gebouwd; functionele videoproef wordt voorbereid
+
+NativeARM64 enARM64EC elk289/289 exit0, alle443werkelijkecompilerbronnenexact: éénViewdelta/442ongewijzigdC44/header2536FA…614CA; zesreceptenbytegelijk. Native+alias **515D6BA86567BB83A658AA8E8FF641C3A494B776E2904F07EA81A883FBBC0416**,1365504B; EC **F3BF14324F3A0A7471DC656F065C0A399C4EE2356D772CEBC83547805481A711**,1276416B. AA64/8664CHPEv2/OpenAdapter10_2/version58200gecontroleerd; dezelfde28waarschuwingen/geenPDB, geenbronwijzigingofcompilerretry.
+
+567rawinclmanifestopgehaald, Windows440C8bron/2322outputs/12353footprint enLinux9779padenongewijzigd. Bouw-VMnormaaluit/eigenleasevrij/PCpoweroff0/SSH25506:35:38.492649Z. Eindbewijs artifacts/c45-umd-build/session-20261115-unless-no-commands-r1/final-local-verification.json SHAD479DD2E5023D25C2229EDD9D2B1F37EAF51E1F28D8E4AE9D9A6635A0E99601E. Rootde3DLLhashesafzonderlijkherberekend.
+
+C44oorspronkelijkeforcepresent-marker06:34:36Zteruggeplaatst/ACLbehouden/dwmforceAAN, normaleWindowsafsluiting06:34:37Z. Oude main13085/start3067672weg/fullC13drainbevestigd/pooluit. VerseC35/C33koudeketen/metadata en huidigeconfig869Egecontroleerd; nieuweC45sibling/eigenVARSwordtgemaakt. GeenC35writableboot/geenoudchildhergebruik; C44/C43/C42bewaarduit. Ditisbuildbewijs, geensnelheidsvrijgave. Nu pingeninstall/restart/werkelijke nieuweDLLmaps en positievequalified1activatie vóórdezichtbarevideoproef; productieuit/doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
