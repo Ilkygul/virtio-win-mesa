@@ -681,6 +681,13 @@ Bewijs evidence/c46-acquire-wait-preparation-r1/old-c41-reader-analysis.json eno
 
 **Volgende kleinste proef:** dezelfde ongewijzigde15kubussenapp/defaultDWMcaption/privatecopy0, één diagnostischerun15s in huidigeC45. Alleen bestaande WindowsinboxCPU-profiel8s nadat echte meetfase is waargenomen, eigenWPRsessie in finally stoppen. Geen videoproef/CPUsampler/markerwijziging. CPU-traceoverhead betekent dat ditgeenvergelijkbarefpsproefis. Doel: module+RVA-stacks van alleeigenappthreads latenonderscheiden welkeoffCPUtijd bij headwait, OS-SYNCTOKENcallback ofPresent/pacinghoort; offCPUiszonderReadyThreadjoinnietautomatischGPUwacht. Bijontbrekendestacksgeenbottleneckclaim. C45blijftzelfdehardwarekandidaat, productieuit/doelopen.
 
+
+### C45 CPU-proef r1 niet gestart — vensterfocus veilig geweigerd
+
+Ongewijzigdeapp7612 begon07:42:08Z maarweigerde07:42:16Z vóór warmup/tekenen: statusfailed/verify-foreground, foregroundPid6004, attachmentSucceededfalse,0Presents/0meetduur/deviceRemoved0. Bestaandesupervisornatuurlijkeexit1/legestderr. DeobserverstartteWPRniet omdatgeenechtemeetfasekwam; ditisgeenCPU-traceofdriverprestatie-uitkomst. FysiekschermtoontbestaandStartmenuoverbureaublad/Taakbeheer. Rootheefthetmenuviaééntapopvrijbureaubladgesloten, zichtbaarbevestigd. Bewijs evidence/c45-direct-cpu15-r1/guest-run/benchmark.json, supervisor.json, trace-controller.txt en desktop-after-focus.png. Geenmarker-/driverwijziging.
+
+**Beslissing:** éénstartretryr2methersteldevensterfocus; bijdezelfdeweigeringgeenblindelaunchlus maarbestaandefocusbedieninggerichtgebruiken. CPU-vraagblijftonbeantwoord;geenbottleneck-/snelheidsclaim.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
