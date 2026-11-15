@@ -1,0 +1,82 @@
+--- a/src/virtio/neptune/npt_ring.c
++++ b/src/virtio/neptune/npt_ring.c
+@@ -1262,6 +1262,25 @@
+    return npt_ring_submit_raw_seqno(ring, data, size, NULL);
+ }
+ 
++/* Only the generated, no-reply Signal40 + Flush24 internal Present tail.
++ * Pending batchable methods are already globally ordered on this ring; keep
++ * them in the same publication instead of minting an extra prefix credit.
++ * wait_space still publishes that prefix when required for forward progress.
++ * All ordinary raw/control/reply callers retain their existing frontiers. */
++bool
++npt_ring_submit_present_pair(struct npt_ring *ring, const void *pair)
++{
++   if (!ring || !pair || !ring->publisher_job_v1 ||
++       ring->direct_size < 64 || ring->buffer_size < 64)
++      return false;
++
++   npt_ring_stage_flush_self(ring);
++   npt_runtime_ring_lock(ring);
++   const bool ok = npt_ring_submit_locked(ring, pair, 64);
++   npt_ring_unlock_and_notify(ring);
++   return ok;
++}
++
+ /* Direct path twin of npt_ring_submit_locked that takes
+  * [header || payload || padding]. */
+ static bool
+--- a/src/virtio/neptune/npt_ring.h
++++ b/src/virtio/neptune/npt_ring.h
+@@ -362,6 +362,13 @@
+ bool
+ npt_ring_submit_raw(struct npt_ring *ring, const void *data, uint32_t size);
+ 
++/* Fixed generated no-reply Signal40 + Flush24 from the internal Present gate
++ * only. Appends after pending batchable methods and always publishes on exit;
++ * space pressure may first publish a prefix. Never use for arbitrary raw,
++ * Wait, reply, control, resource visibility or lifetime boundaries. */
++bool
++npt_ring_submit_present_pair(struct npt_ring *ring, const void *pair);
++
+ /* `out_seqno` is the value `head` must reach for the bytes to be
+  * fully consumed -- the N-slot rename ring uses it to decide when a
+  * shmem slot is safe to reuse. */
+--- a/src/virtio/neptune/npt_overrides_d3d11_context.c
++++ b/src/virtio/neptune/npt_overrides_d3d11_context.c
+@@ -65,9 +65,8 @@
+    return aux && !aux->deferred;
+ }
+ 
+-/* Keep the ordinary prepublication/maintenance frontier in submit_raw.
+- * Only the two adjacent internal Present commands share the final credit;
+- * preceding draws are NOT merged with this pair. Public Signal is unchanged. */
++/* Only the adjacent internal Present Signal/Flush tail can share a final
++ * publication with pending batchable methods. Public Signal is unchanged. */
+ enum npt_present_pair_result
+ npt_d3d11_present_signal_flush_pair(void *context4, void *context1,
+                                     void *fence, uint64_t value)
+@@ -98,7 +97,7 @@
+        ring->device != dev || ring->renderer != dev->renderer ||
+        !ring->publisher_job_v1)
+       goto failed;
+-   /* Reject unsupported sizing BEFORE submit_raw can publish anything.
++   /* Reject unsupported sizing BEFORE the tail helper can publish anything.
+     * A single direct reservation also excludes an interleaved future Wait. */
+    if (ring->direct_size < 64 || ring->buffer_size < 64 ||
+        npt_sizeof_ID3D11DeviceContext4_Signal(fence, value) != 40 ||
+@@ -111,10 +110,10 @@
+    npt_encode_ID3D11DeviceContext_Flush(&enc, 0, c1->base.id);
+    if (enc.cur != enc.end)
+       goto failed;
+-   /* submit_raw retains TLS flush, old-prefix credit, locked recheck,
+-    * whole-span wrap/space handling and ordered final NotifyV2. Its bool
+-    * covers the write; NotifyV2 send failure separately latches lost. */
+-   if (!npt_ring_submit_raw(ring, pair, sizeof(pair)) ||
++   /* Append the whole pair under the existing recorder/ring locks, then
++    * publish once with preceding batchable methods. Space pressure retains
++    * its necessary prefix publication. NotifyV2 failure still latches lost. */
++   if (!npt_ring_submit_present_pair(ring, pair) ||
+        npt_renderer_is_lost(dev->renderer))
+       goto failed;
+    return NPT_PRESENT_PAIR_SUBMITTED;
