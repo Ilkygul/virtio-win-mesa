@@ -972,6 +972,15 @@ C46Windowsnormaaluit11:46:14Z, origineelforcepresentmarkerACLhersteldvoorvolgend
 
 TijdensvoorbereidingkwamdezelfdeC46testVMonverwachtterugmet4GiB(main413,later6851);startoorzaaknogonbekend. Deidle/pooluitguardshebbenactieveVMMcorrectgeweigerd; geenlivepoolontladen/configwijziging. TweedebootviaSSHnormaalafsluitverzoekgeslaagd, daarnafrissefullDRAINnodig. RAMconfigblijft4GiB; bronvoorstel6144nogNIETuitgevoerd. Eerstveiligdrain/appstop/pooluit, danééngecontroleerdeFoldreboottegenfragmentatie enverse7168reservering, wekkenviabestaandeDXManagerknop. GeenlagereAndroidgrensblindowegschrijven; bijonvoldoendeveilige6GiBreservering4GiBherstellenenbeperkingeerlijkrapporteren. Bewijs evidence/c46-ram6-r1/reserve7168.txt,unexpected-vmm.txt,normal-shutdown.json,unexpected-boot2-shutdown.json. Driverongewijzigd/doelOPEN.
 
+
+### RAM6 broncorrectie: backing6656MiB, geen7168; verse reservering stopt netjes bijfloor
+
+NieuweFoldboot58c1525c-ed34-4c8e-a4b1-7de4d8c4816b,DXManagerWek&ontgrendelgebruikt. VooraffullDRAINtweemaal/pooluitPASS, daarnaadbherstart. Verse7168/floor4000reserveringbereikt5850MiB,geeftbij3910MiBAndroidterugnaar5728MiB/Android4029,exit1. GeenVMstart/configwijziging. Ditisnuveiligheidsfloor, geenblindherhalenmigrationhypothese.
+
+**Correctie eigen eerdere rekensom:** werkelijke6ACcrosvmaarch64/lib.rs715–765:gpu_guest512isadditief,venus512consume_system_mem=true enbinnen--mem. Voor6144is mainRAM5376+swiotlb256+gpu_guest512+venus512 = **6656MiB /3328foliovan2MiB**. Allegröttesaligned;actualC46geensimplefb/extra firmware/gap/testpool. Bron798–847/997–1055enGunyah628–649bevestigengeenextrakopie.7168teldevideopool512dubbel; eerderebronkeuzetekst/derivedguarddaardooronjuist, nietgebruiken.
+
+**Nieuwe concrete reden/kleinste vervolg:** correct6656reserverenmetgedocumenteerdebestaandedefaultAndroidfloor3072 (script vermeldt freezesrond2,5GB; grensnietlager). Na5728pool+4029available laat6656circa3101MiBAndroidover; actualfloor/PSIwordenbewaakt,enbijteweiniggeenboot. Oude7168pogingnatuurlijkterminalexit1; geenconcurrentreserver. RAM6APIvoorstelalleennamodule/idle/volledigebackingenconfigreadback,exactzelfdeC46disk/VARS. DitisaparteuserRAMproef, geendriverfixclaim.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
