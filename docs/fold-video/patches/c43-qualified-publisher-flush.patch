@@ -1,0 +1,555 @@
+--- a/npt_device.c
++++ b/npt_device.c
+@@ -762,6 +762,26 @@
+    struct npt_device *owner=opaque;
+    if(owner) npt_ring_publish_pending(owner->ring);
+ }
++int npt_runtime_owner_publish_checked(void *opaque)
++{
++   struct npt_device *owner=opaque;
++   if (!owner || !owner->renderer || !owner->renderer->publisher_job_v1) return 0;
++   struct npt_ring *ring=owner->ring;
++   if (!ring || !ring->publisher_job_v1) return 0;
++   npt_ring_publish_pending(ring);
++   /* Writer ordering is record -> ring -> publish. last_tail is minted
++    * before send, so require the completed send frontier as well. */
++   npt_ring_lock_acquire(&ring->lock);
++   mtx_lock(&ring->publish_mutex);
++   const bool accepted = !(atomic_load_explicit(ring->status,memory_order_acquire) & NPT_RING_STATUS_FATAL_BIT) &&
++      ring->publish_generation && !ring->notify_pending && !ring->publish_failed &&
++      ring->publish_last_tail == ring->cur && ring->publish_serial != UINT64_MAX &&
++      ring->publish_next_send == ring->publish_serial + 1 &&
++      ring->publish_finished == ring->publish_serial;
++   mtx_unlock(&ring->publish_mutex);
++   npt_ring_lock_release(&ring->lock);
++   return accepted && !npt_renderer_is_lost(owner->renderer);
++}
+ unsigned npt_runtime_owner_context_id(void *opaque)
+ {
+    struct npt_device *owner=opaque;
+--- a/npt_device.h
++++ b/npt_device.h
+@@ -145,6 +145,7 @@
+ void npt_device_owner_unref(struct npt_device *dev);
+ void npt_runtime_owner_join_release(void *owner);
+ void npt_runtime_owner_publish(void *owner);
++int npt_runtime_owner_publish_checked(void *owner);
+ void npt_runtime_owner_maintenance(void *owner);
+ unsigned npt_runtime_owner_context_id(void *owner);
+ int npt_runtime_owner_publisher_v1(void *owner);
+--- a/npt_runtime_stream.h
++++ b/npt_runtime_stream.h
+@@ -28,6 +28,7 @@
+ };
+ void npt_runtime_owner_join_release(void *owner);
+ void npt_runtime_owner_publish(void *owner);
++int npt_runtime_owner_publish_checked(void *owner);
+ void npt_runtime_owner_maintenance(void *owner);
+ unsigned npt_runtime_owner_context_id(void *owner);
+ int npt_runtime_owner_publisher_v1(void *owner);
+--- a/triton/triton.h
++++ b/triton/triton.h
+@@ -66,6 +66,7 @@
+ typedef struct TRITON_RUNTIME_WRITE_REF {
+     D3DKMT_HANDLE allocation;
+     UINT classification; /* 0=not displayable, 1=displayable, 2=unknown import */
++    LONG sharedDirty; /* backing snapshot; not a wire field */
+ } TRITON_RUNTIME_WRITE_REF;
+ 
+ typedef struct TRITON_DEVICE {
+@@ -211,6 +212,7 @@
+     BOOL                            RuntimeStreamActive;
+     void                           *RuntimeTransportOwner;
+     CRITICAL_SECTION                RuntimeWriteLock;
++    volatile LONG                   RuntimeSharedChanging; /* qualification only; no wire state */
+     TRITON_RUNTIME_WRITE_REF         RuntimeRtv[8], RuntimeDsv;
+     TRITON_RUNTIME_WRITE_REF         RuntimeOmUav[64], RuntimeCsUav[64];
+     D3DKMT_HANDLE                    RuntimeActiveWrites[D3DDDI_MAX_WRITTEN_PRIMARIES];
+@@ -243,6 +245,9 @@
+      * writes a shared / presentable resource was issued since the last sync point; the next Flush / present then waits
+      * (ring seqno) until the host has executed the Flush, including its GPU wait.  OmShared: a bound RTV/UAV is shared.
+      * File C:\Users\Public\triton-asyncflush disables the wait. */
++    /* OR-only provenance until a locked publication boundary consumes it. */
++#define TRITON_SHARED_QUALIFIED 1L
++#define TRITON_SHARED_STRICT    2L
+     volatile LONG                   SharedDirty;
+     BOOL                            OmShared;
+     BOOL                            OmSharedNeedsWriteSync; /* any strict shared RTV or exported UAV */
+@@ -563,6 +568,9 @@
+ struct _TRITON_RESOURCE_FWD;
+ void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE */);
+ void tritonSyncShared(PTRITON_DEVICE pD, const char *why);
++BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified);
++void tritonMarkSharedDrawWrite(PTRITON_DEVICE pD);
++BOOL tritonLocalPresentBacking(const void *pResource);
+ 
+ 
+ /* Per-write hand-off: right after a shared write, wait (ring seqno) until the host has executed it (and, with the host's
+--- a/triton/tritonDxgi.c
++++ b/triton/tritonDxgi.c
+@@ -969,6 +969,7 @@
+    if(runtimeRotationTrace>0 && runtimeRotationTrace<=16)
+       tritonTraceRuntimeRotation(pD,pArgs,runtimeRotationTrace,"before");
+    trRuntimePublishBeforeReuse(pD);
++   trRuntimeSharedBackingBegin(pD);
+    /* Mixed/unknown rotation provenance must never inherit relaxed publication. */
+    {
+       BOOL allBatch = TRUE;
+@@ -1028,11 +1029,17 @@
+       }
+    }
+ 
++   trRuntimeSharedBackingTupleDone(pD);
++
+    /* Host views wrapping these resources still target the pre-rotation
+     * textures; rebuild them in place. */
+    for (i = 0; i < n; ++i)
+       tritonResourceRecreateViews(pD,
+          (PTRITON_RESOURCE)(uintptr_t)pArgs->pResources[i]);
++
++   /* Missing replay leaves cached qualification strict. Successful replay
++    * below reconstructs it from the new backing after mutation is complete. */
++   trRuntimeSharedBackingEnd(pD);
+ 
+    /* Have the runtime replay current bindings through the DDI so the
+     * host context picks up the recreated views ("the driver might be
+--- a/triton/tritonResource.c
++++ b/triton/tritonResource.c
+@@ -33,19 +33,21 @@
+ {
+     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+     if (pD && r && (r->IsShared || r->IsPresentable || r->pPresentCompanion))
+-        InterlockedExchange(&pD->SharedDirty, 1);
+-}
+-
+-void tritonSyncShared(PTRITON_DEVICE pD, const char *why)
+-{
+-    if (!pD || !pD->pCtx1 || !InterlockedExchange(&pD->SharedDirty, 0))
+-        return;
+-    if (tritonSwitch("triton-asyncflush"))
+-        return;
+-    UINT32 seqno = 0;
+-    struct npt_ring *ring = npt_com_object_ring_seqno(pD->pCtx1, &seqno);
+-    if (!ring)
+-        return;
++        InterlockedOr(&pD->SharedDirty, tritonCanBatchPresentWrites(pD,r) ?
++            TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
++}
++
++void tritonMarkSharedDrawWrite(PTRITON_DEVICE pD)
++{
++    if (pD && pD->OmShared)
++        InterlockedOr(&pD->SharedDirty,
++            pD->RuntimeStreamActive && !pD->RuntimeSharedChanging && npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
++            !pD->OmSharedNeedsWriteSync && !tritonSwitch("triton-presentwritesync") ?
++            TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
++}
++
++static void tritonWaitSharedSeqno(struct npt_ring *ring, UINT32 seqno, const char *why)
++{
+     const DWORD t0 = GetTickCount();
+     npt_ring_wait_seqno(ring, seqno);
+     static volatile LONG n;
+@@ -55,6 +57,88 @@
+                (long)k, why, (unsigned long)(GetTickCount() - t0), (unsigned)seqno);
+ }
+ 
++void tritonSyncShared(PTRITON_DEVICE pD, const char *why)
++{
++    if (!pD || !pD->pCtx1) return;
++    const BOOL runtime = pD->RuntimeStreamActive;
++    if (runtime) EnterCriticalSection(&pD->RuntimeWriteLock);
++    const LONG dirty = InterlockedExchange(&pD->SharedDirty, 0);
++    UINT32 seqno = 0;
++    struct npt_ring *ring = dirty ? npt_com_object_ring_seqno(pD->pCtx1, &seqno) : NULL;
++    if (runtime && dirty && (!ring ||
++        InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0) ||
++        !npt_runtime_owner_publish_checked(pD->RuntimeTransportOwner) ||
++        InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0) ||
++        pD->RuntimePendingWriteCount || pD->RuntimeActiveWriteCount)) {
++        InterlockedOr(&pD->SharedDirty,dirty | TRITON_SHARED_STRICT);
++        InterlockedExchange(&pD->RuntimeWriteFailed,1);
++        LeaveCriticalSection(&pD->RuntimeWriteLock);
++        TR_LOG("RUNTIME_WRITE strict publication unavailable; retaining dirty provenance");
++        tritonSetError(pD,D3DDDIERR_DEVICEREMOVED);
++        return;
++    }
++    if (runtime) LeaveCriticalSection(&pD->RuntimeWriteLock);
++    if (!dirty || !ring || tritonSwitch("triton-asyncflush")) return;
++    /* Never hold the write/record lock while waiting for host progress. */
++    tritonWaitSharedSeqno(ring,seqno,why);
++}
++
++/* One saturating process budget: at most32 records; keep the final16
++ * available for a positive qualified branch instead of startup strict noise. */
++static void tritonTraceQualifiedFlush(PTRITON_DEVICE pD, const char *why, LONG dirty,
++    BOOL allowQualified, BOOL qualified, UINT pending, UINT active)
++{
++    if (!dirty || tritonSwitch("triton-presentwritesync")) return;
++    static volatile LONG count;
++    LONG old=InterlockedCompareExchange(&count,0,0);
++    for (;;) {
++        if (old >= 32 || (!qualified && old >= 16)) return;
++        LONG seen=InterlockedCompareExchange(&count,old+1,old);
++        if (seen==old) break;
++        old=seen;
++    }
++    TR_LOG("QUALIFIED_FLUSH #%ld why=%s dev=%p thread=%lu dirtyMask=0x%lx "
++           "allowQualified=%d qualified=%d strictCpuWait=%d accepted=1 pending=%u active=%u",
++           (long)(old+1),why,(void*)pD,(unsigned long)GetCurrentThreadId(),
++           (unsigned long)dirty,allowQualified,qualified,!qualified,pending,active);
++}
++
++BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified)
++{
++    if (!pD || !pD->pCtx1) return FALSE;
++    if (!pD->RuntimeStreamActive) { tritonSyncShared(pD,why); return TRUE; }
++    EnterCriticalSection(&pD->RuntimeWriteLock);
++    const LONG dirty = InterlockedExchange(&pD->SharedDirty,0);
++    UINT32 seqno=0;
++    struct npt_ring *ring=npt_com_object_ring_seqno(pD->pCtx1,&seqno);
++    /* Flush was already encoded. This locked cut may include later work,
++     * but every encoded write has asserted its provenance under this lock. */
++    const BOOL accepted = ring && !InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0) &&
++        npt_runtime_owner_publish_checked(pD->RuntimeTransportOwner) &&
++        !pD->RuntimePendingWriteCount && !pD->RuntimeActiveWriteCount &&
++        !InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0);
++    if (!accepted) {
++        InterlockedOr(&pD->SharedDirty,dirty | TRITON_SHARED_STRICT);
++        InterlockedExchange(&pD->RuntimeWriteFailed,1);
++        LeaveCriticalSection(&pD->RuntimeWriteLock);
++        TR_LOG("RUNTIME_WRITE Flush publication unavailable; retaining dirty provenance");
++        tritonSetError(pD,D3DDDIERR_DEVICEREMOVED);
++        return FALSE;
++    }
++    const BOOL qualified = allowQualified && dirty == TRITON_SHARED_QUALIFIED &&
++        !pD->RuntimeSharedChanging &&
++        !(InterlockedCompareExchange(&pD->SharedDirty,0,0) & ~TRITON_SHARED_QUALIFIED) &&
++        npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
++        !tritonSwitch("triton-presentwritesync");
++    const UINT pending=pD->RuntimePendingWriteCount;
++    const UINT active=pD->RuntimeActiveWriteCount;
++    LeaveCriticalSection(&pD->RuntimeWriteLock);
++    tritonTraceQualifiedFlush(pD,why,dirty,allowQualified,qualified,pending,active);
++    /* Unknown bits, mixed/strict writes and unsupported Flush scope keep the
++     * old CPU-head wait. This is not a GPU completion or global async switch. */
++    if (dirty && !qualified) tritonWaitSharedSeqno(ring,seqno,why);
++    return TRUE;
++}
+ 
+ static void tritonWaitHostNow(PTRITON_DEVICE pD, const char *op, BOOL perWrite)
+ {
+@@ -96,17 +180,19 @@
+     return s == 2;
+ }
+ 
++BOOL tritonLocalPresentBacking(const void *pRes)
++{
++    const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
++    return r && r->RuntimeWriteClass == 1 && !r->RuntimeOpenedAllocation &&
++           r->BatchPresentWrites && r->hKMAllocation && !r->pPresentCompanion &&
++           !r->hImportAlloc && !r->hImportResKmt;
++}
++
+ BOOL tritonCanBatchPresentWrites(PTRITON_DEVICE pD, const void *pRes)
+ {
+-    const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+-    /* Only local displayable writes carried by the real runtime publisher
+-     * may coalesce CPU publication. Keep the original shape/bind/misc tag. */
+-    return pD && pD->RuntimeStreamActive &&
++    return pD && pD->RuntimeStreamActive && !pD->RuntimeSharedChanging &&
+            npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
+-           r && r->RuntimeWriteClass == 1 && !r->RuntimeOpenedAllocation &&
+-           r->BatchPresentWrites && r->hKMAllocation && !r->pPresentCompanion &&
+-           !r->hImportAlloc && !r->hImportResKmt &&
+-           !tritonSwitch("triton-presentwritesync");
++           tritonLocalPresentBacking(pRes) && !tritonSwitch("triton-presentwritesync");
+ }
+ 
+ void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pRes, const char *op)
+@@ -116,7 +202,8 @@
+     if (pRes && !(r->IsShared || r->IsPresentable || r->pPresentCompanion)) return;
+     /* Also covers legacy callsites such as GenerateMips/DxgiBlt that did not
+      * call tritonMarkSharedWrite before this post-operation helper. */
+-    InterlockedExchange(&pD->SharedDirty, 1);
++    InterlockedOr(&pD->SharedDirty, r && tritonCanBatchPresentWrites(pD,r) ?
++        TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
+     if (tritonSwitch("triton-nosharedwritesync")) return;
+     if (tritonProcessIsDwm()) {
+         if (!pD->RuntimeStreamActive && !tritonSwitch("triton-dwmwritesync")) return;
+@@ -136,7 +223,7 @@
+ void tritonSharedDrawDone(PTRITON_DEVICE pD, const char *op)
+ {
+     if (!pD || !pD->OmShared) return;
+-    InterlockedExchange(&pD->SharedDirty, 1);
++    tritonMarkSharedDrawWrite(pD);
+     /* OmSharedNeedsWriteSync is true if ANY bound shared RTV is ineligible
+      * or an exported UAV is bound. Do not broaden that resource whitelist. */
+     if (pD->RuntimeStreamActive &&
+@@ -738,7 +825,7 @@
+ {
+     if (!r->pPresentCompanion || !r->pResource)
+         return;
+-    InterlockedExchange(&pD->SharedDirty, 1);
++    InterlockedOr(&pD->SharedDirty, TRITON_SHARED_STRICT);
+     if (!trRuntimeWriteResourceBegin(pD,r)) return;
+     if (r->SampleDesc.Count > 1)
+         ID3D11DeviceContext1_ResolveSubresource(pD->pCtx1, r->pPresentCompanion, 0,
+@@ -758,7 +845,7 @@
+     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+     if (pD) trRuntimePublishBeforeReuse(pD);
+     if(pD && pD->RuntimeStreamActive) {
+-        TRITON_RUNTIME_WRITE_REF old=trRuntimeWriteRef(r);
++        TRITON_RUNTIME_WRITE_REF old=trRuntimeWriteRef(pD,r);
+         EnterCriticalSection(&pD->RuntimeWriteLock);
+         if(old.allocation) {
+         for(UINT i=0;i<8;++i) if(pD->RuntimeRtv[i].allocation==old.allocation) memset(&pD->RuntimeRtv[i],0,sizeof(old));
+@@ -1076,9 +1163,12 @@
+     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
+     if (!pD || !r || !r->pResource) return;
++    if (pD->RuntimeStreamActive) EnterCriticalSection(&pD->RuntimeWriteLock);
+     TRITON_RUNTIME_WRITE_REF mapref={0};
+-    if(r->RuntimeMapWrites) mapref=trRuntimeWriteRef(r);
+-    if (!trRuntimeWriteBegin(pD,&mapref,1)) return;
++    if(r->RuntimeMapWrites) mapref=trRuntimeWriteRef(pD,r);
++    BOOL mapWriteOk=trRuntimeWriteBegin(pD,&mapref,1);
++    if (pD->RuntimeStreamActive) LeaveCriticalSection(&pD->RuntimeWriteLock);
++    if (!mapWriteOk) return;
+     ID3D11DeviceContext1_Unmap(pD->pCtx1, r->pResource, Subresource);
+     trRuntimeWriteEnd(pD);
+     /* CPU writes to a shared surface (host replays them at Unmap): hand off like any other shared write. */
+--- a/triton/tritonRuntimeWrites.h
++++ b/triton/tritonRuntimeWrites.h
+@@ -5,14 +5,50 @@
+ #include "npt_runtime_stream.h"
+ #define TRITON_RUNTIME_RESOURCE_DISPLAYABLE 0x4454504eu /* NPTD */
+ #define TRITON_RUNTIME_RESOURCE_ORDINARY    0x4e54504eu /* NPTN */
+-static inline TRITON_RUNTIME_WRITE_REF trRuntimeWriteRef(PTRITON_RESOURCE r)
++/* Only tuple metadata is locked across mutation. No host call/wait is
++ * made until TupleDone releases it; view replay then restores fresh refs. */
++static inline void trRuntimeSharedBackingBegin(PTRITON_DEVICE p)
++{
++    if (!p->RuntimeStreamActive) return;
++    EnterCriticalSection(&p->RuntimeWriteLock);
++    if (InterlockedExchange(&p->RuntimeSharedChanging,1)) {
++        InterlockedExchange(&p->RuntimeWriteFailed,1);
++        InterlockedOr(&p->SharedDirty,TRITON_SHARED_STRICT);
++    }
++    for (UINT i=0;i<8;++i)
++        if (p->RuntimeRtv[i].sharedDirty) p->RuntimeRtv[i].sharedDirty |= TRITON_SHARED_STRICT;
++    if (p->RuntimeDsv.sharedDirty) p->RuntimeDsv.sharedDirty |= TRITON_SHARED_STRICT;
++    for (UINT i=0;i<64;++i) {
++        if (p->RuntimeOmUav[i].sharedDirty) p->RuntimeOmUav[i].sharedDirty |= TRITON_SHARED_STRICT;
++        if (p->RuntimeCsUav[i].sharedDirty) p->RuntimeCsUav[i].sharedDirty |= TRITON_SHARED_STRICT;
++    }
++    p->OmSharedNeedsWriteSync=TRUE;
++}
++static inline void trRuntimeSharedBackingTupleDone(PTRITON_DEVICE p)
++{
++    if (p->RuntimeStreamActive) LeaveCriticalSection(&p->RuntimeWriteLock);
++}
++static inline void trRuntimeSharedBackingEnd(PTRITON_DEVICE p)
++{
++    if (!p->RuntimeStreamActive) return;
++    EnterCriticalSection(&p->RuntimeWriteLock);
++    InterlockedExchange(&p->RuntimeSharedChanging,0);
++    LeaveCriticalSection(&p->RuntimeWriteLock);
++}
++static inline TRITON_RUNTIME_WRITE_REF trRuntimeWriteRef(PTRITON_DEVICE p, PTRITON_RESOURCE r)
+ {
+     TRITON_RUNTIME_WRITE_REF v = {0};
++    if (p->RuntimeStreamActive) EnterCriticalSection(&p->RuntimeWriteLock);
+     if (r) {
+         v.classification = r->RuntimeWriteClass;
++        if (r->IsShared || r->IsPresentable || r->pPresentCompanion)
++            v.sharedDirty = tritonLocalPresentBacking(r) ?
++                TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT;
+         v.allocation = r->RuntimeOpenedAllocation ? r->RuntimeOpenedAllocation : r->hKMAllocation;
+         if (v.classification == 1 && !v.allocation) v.classification = 2;
+     }
++    if (v.sharedDirty && p->RuntimeSharedChanging) v.sharedDirty |= TRITON_SHARED_STRICT;
++    if (p->RuntimeStreamActive) LeaveCriticalSection(&p->RuntimeWriteLock);
+     return v;
+ }
+ static inline BOOL trRuntimeUniqueAdd(D3DKMT_HANDLE *a, UINT *n, D3DKMT_HANDLE h)
+@@ -30,14 +66,24 @@
+     if (InterlockedCompareExchange(&p->RuntimeWriteFailed,0,0) || p->RuntimeActiveWriteCount) goto unsupported;
+     D3DKMT_HANDLE combined[D3DDDI_MAX_WRITTEN_PRIMARIES];
+     UINT n = p->RuntimePendingWriteCount;
++    LONG dirty = 0;
+     memcpy(combined, p->RuntimePendingWrites, n*sizeof(*combined));
+     for (UINT i=0; i<count; ++i) {
+         if (refs[i].classification == 2) goto unsupported;
++        dirty |= refs[i].sharedDirty;
+         if (refs[i].classification == 1) {
+             if (!refs[i].allocation || !trRuntimeUniqueAdd(combined,&n,refs[i].allocation) ||
+                 !trRuntimeUniqueAdd(p->RuntimeActiveWrites,&p->RuntimeActiveWriteCount,refs[i].allocation))
+                 goto unsupported;
+         }
++    }
++    if (dirty) {
++        if (dirty != TRITON_SHARED_QUALIFIED || p->RuntimeSharedChanging ||
++            !npt_runtime_owner_publisher_v1(p->RuntimeTransportOwner) ||
++            tritonSwitch("triton-presentwritesync")) dirty |= TRITON_SHARED_STRICT;
++        /* Reassert under the operation lock BEFORE encoding. A premark may
++         * have been consumed by an earlier boundary before this write began. */
++        InterlockedOr(&p->SharedDirty,dirty);
+     }
+     return TRUE;
+ unsupported:
+@@ -92,8 +138,11 @@
+ }
+ static inline BOOL trRuntimeWriteResourceBegin(PTRITON_DEVICE p,PTRITON_RESOURCE r)
+ {
+-    TRITON_RUNTIME_WRITE_REF ref=trRuntimeWriteRef(r);
+-    return trRuntimeWriteBegin(p,&ref,1);
++    if (p->RuntimeStreamActive) EnterCriticalSection(&p->RuntimeWriteLock);
++    TRITON_RUNTIME_WRITE_REF ref=trRuntimeWriteRef(p,r);
++    BOOL ok=trRuntimeWriteBegin(p,&ref,1);
++    if (p->RuntimeStreamActive) LeaveCriticalSection(&p->RuntimeWriteLock);
++    return ok;
+ }
+ static inline BOOL trRuntimeDrawWriteBegin(PTRITON_DEVICE p,BOOL compute)
+ {
+@@ -105,6 +154,13 @@
+         for(UINT i=0;i<8;++i) refs[n++]=p->RuntimeRtv[i];
+         refs[n++]=p->RuntimeDsv;
+         for(UINT i=0;i<64;++i) refs[n++]=p->RuntimeOmUav[i];
++    }
++    /* A shared OM with no positive cached shared-write snapshot is unknown,
++     * never a positive qualification inferred from current OM flags alone. */
++    if (!compute && p->OmShared) {
++        BOOL known=FALSE;
++        for (UINT i=0;i<n;++i) if (refs[i].sharedDirty) known=TRUE;
++        if (!known) InterlockedOr(&p->SharedDirty,TRITON_SHARED_STRICT);
+     }
+     BOOL ok=trRuntimeWriteBegin(p,refs,n);
+     LeaveCriticalSection(&p->RuntimeWriteLock);
+--- a/triton/tritonState.c
++++ b/triton/tritonState.c
+@@ -601,7 +601,7 @@
+ {
+     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+     if (!pD) return;
+-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
++    tritonMarkSharedDrawWrite(pD);
+     if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
+     ID3D11DeviceContext1_Draw(pD->pCtx1, VertexCount, StartVertexLocation);
+     trRuntimeWriteEnd(pD);
+@@ -614,7 +614,7 @@
+ {
+     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+     if (!pD) return;
+-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
++    tritonMarkSharedDrawWrite(pD);
+     if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
+     ID3D11DeviceContext1_DrawIndexed(pD->pCtx1, IndexCount, StartIndexLocation, BaseVertexLocation);
+     trRuntimeWriteEnd(pD);
+@@ -628,7 +628,7 @@
+ {
+     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+     if (!pD) return;
+-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
++    tritonMarkSharedDrawWrite(pD);
+     if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
+     ID3D11DeviceContext1_DrawInstanced(pD->pCtx1, VertexCountPerInstance, InstanceCount,
+                                        StartVertexLocation, StartInstanceLocation);
+@@ -643,7 +643,7 @@
+ {
+     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+     if (!pD) return;
+-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
++    tritonMarkSharedDrawWrite(pD);
+     if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
+     ID3D11DeviceContext1_DrawIndexedInstanced(pD->pCtx1, IndexCountPerInstance, InstanceCount,
+                                               StartIndexLocation, BaseVertexLocation,
+--- a/triton/tritonVideo.c
++++ b/triton/tritonVideo.c
+@@ -365,7 +365,7 @@
+     PTRITON_VDOV v = (PTRITON_VDOV)pArgs->hOutputView.pDrvPrivate;
+     HRESULT hr = trRefreshVDOV(pD, v);
+     if (FAILED(hr)) return trVideoViewError(pD, hr);
+-    if(pD->RuntimeStreamActive && trRuntimeWriteRef(v->pResource).classification != 0) {
++    if(pD->RuntimeStreamActive && trRuntimeWriteRef(pD,v->pResource).classification != 0) {
+         InterlockedExchange(&pD->RuntimeWriteFailed,1);
+         TR_LOG("RUNTIME_WRITE decoder displayable/unknown output rejected before BeginFrame");
+         tritonSetError(pD,D3DDDIERR_DEVICEREMOVED);
+--- a/triton/tritonView.c
++++ b/triton/tritonView.c
+@@ -359,11 +359,11 @@
+     if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
+     ID3D11DeviceContext1_Flush(pD->pCtx1);
+     tritonFlushGpuTailDiagnostic(pD, "Flush", D3DWDDM2_0DDI_CONTEXTTYPE_ALL, 0);
+-    tritonSyncShared(pD, "Flush");
+-}
+-
+-BOOL APIENTRY
+-tritonFlush11_1(D3D10DDI_HDEVICE hDevice, UINT FlushFlags)
++    (void)tritonSyncSharedFlush(pD, "Flush", TRUE);
++}
++
++static BOOL
++tritonFlush11_1Scoped(D3D10DDI_HDEVICE hDevice, UINT FlushFlags, BOOL graphics)
+ {
+     (void)FlushFlags;
+     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+@@ -371,8 +371,13 @@
+     if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
+     ID3D11DeviceContext1_Flush(pD->pCtx1);
+     tritonFlushGpuTailDiagnostic(pD, "Flush11_1", D3DWDDM2_0DDI_CONTEXTTYPE_ALL, FlushFlags);
+-    tritonSyncShared(pD, "Flush11_1");
+-    return TRUE;
++    return tritonSyncSharedFlush(pD, "Flush11_1", graphics && FlushFlags == 0);
++}
++
++BOOL APIENTRY
++tritonFlush11_1(D3D10DDI_HDEVICE hDevice, UINT FlushFlags)
++{
++    return tritonFlush11_1Scoped(hDevice,FlushFlags,TRUE);
+ }
+ 
+ void APIENTRY
+@@ -456,12 +461,12 @@
+         memset(pD->RuntimeOmUav,0,sizeof(pD->RuntimeOmUav));
+         for(UINT i=0;i<NumRTVs;++i) {
+             PTRITON_RTVIEW v=phRTVs ? phRTVs[i].pDrvPrivate : NULL;
+-            pD->RuntimeRtv[i]=trRuntimeWriteRef(v ? v->pResource : NULL);
+-        }
+-        pD->RuntimeDsv=trRuntimeWriteRef(dsv ? dsv->pResource : NULL);
++            pD->RuntimeRtv[i]=trRuntimeWriteRef(pD,v ? v->pResource : NULL);
++        }
++        pD->RuntimeDsv=trRuntimeWriteRef(pD,dsv ? dsv->pResource : NULL);
+         for(UINT i=0;i<NumUAVs;++i) {
+             PTRITON_UAVIEW v=phUAVs ? phUAVs[i].pDrvPrivate : NULL;
+-            pD->RuntimeOmUav[UAVStartSlot+i]=trRuntimeWriteRef(v ? v->pResource : NULL);
++            pD->RuntimeOmUav[UAVStartSlot+i]=trRuntimeWriteRef(pD,v ? v->pResource : NULL);
+         }
+     }
+     ID3D11DeviceContext1_OMSetRenderTargetsAndUnorderedAccessViews(
+@@ -974,7 +979,7 @@
+         EnterCriticalSection(&pD->RuntimeWriteLock);
+         for(UINT i=0;i<N;++i) {
+             PTRITON_UAVIEW v=ph ? ph[i].pDrvPrivate : NULL;
+-            pD->RuntimeCsUav[Start+i]=trRuntimeWriteRef(v ? v->pResource : NULL);
++            pD->RuntimeCsUav[Start+i]=trRuntimeWriteRef(pD,v ? v->pResource : NULL);
+         }
+     }
+     ID3D11DeviceContext1_CSSetUnorderedAccessViews(pD->pCtx1, Start, N, a, pInitial);
+@@ -1019,8 +1024,11 @@
+     if (pD->pCtx3) {
+         ID3D11DeviceContext3_Flush1(pD->pCtx3, tritonContextFlagToEnum(ContextType), NULL);
+         tritonFlushGpuTailDiagnostic(pD, "Flush_WDDM2", ContextType, FlushFlags);
+-        tritonSyncShared(pD, "Flush_WDDM2");
+-        return TRUE;
+-    }
+-    return tritonFlush11_1(hDevice, FlushFlags);
+-}
++        const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
++            ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
++        return tritonSyncSharedFlush(pD, "Flush_WDDM2", graphics && FlushFlags == 0);
++    }
++    const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
++        ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
++    return tritonFlush11_1Scoped(hDevice, FlushFlags, graphics);
++}
