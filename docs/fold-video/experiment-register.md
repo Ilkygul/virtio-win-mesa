@@ -251,6 +251,15 @@ De werkelijkgebouwde bronpatch is nu ook reviewbaar op deze branch: [C33 DXVK mi
 - **Identiteit:** baseline00E53FBEA7DE63CF991AACDF8AE6FCE653E68B95AF73C5FC0D998B76E7C8000A →2855DEC3CE0B5EF8B2BA0A0E8307E41852A1529B36BFE6B745558FE3DD55E6D1; patch5B554FE6F27EBDB8492EC00F01E3B252B91E52313C56B9F52FCD7383BA3B0145. [Bronpatch](patches/c37-native-job-adaptive-poll.patch) commitbe6ba170e6f8144f094c73a4164e353719548674.329gerichteCPUchecks/4actual-headerTUchecksPASS (mocksgeenechteGPUraceacceptatie); manifest0C361F3566E93AAB56B6CD10013C2C436814B9747CE5D45FA66683CFAD504F1A.
 - **Status/acceptatie:** werkelijkebouw-pccompilerop2targetsloopt,707bronbestanden/1delta; C36/6899oudepathsbehouden. Nognietgeïnstalleerdofalswinstgeclaimd. RootcontroleertintussenbehoudenC36nativeTaskMgrweergave. Na exactebuildverificatieéénzelfde8sdirect3D/defaultcaption/privatecopy0, volledigeactieveopname+laatbestaandC22fasevenster;GPUqueryaantallen/zichtbarehitch/pacingexpliciet. Geensoftwarefallback, geenproductiewijziging, algemeendoelOPEN.
 
+
+### C36 gewone Windows-UI: positieve nativefoto, zesactie-opname ongeldig
+
+TaakMgr2284/geboorte00:49:31.0923397Z,920×690/DPI96 laadtC20native57899…/geend3d10warp. De echtevooraanstaande taskmgr-taskbar-click.png toontleesbarenav/search/header/knoppen, zonderdewitteglyphblokken. De daaropvolgendegeplandezesactie-opname toont echterFirefox/bureaublad:0actiesalsgeslaagdgeteld, geengeldigeUI-redrawregressieclaim. TaskMgrblijftnaafloophetzelfdeproces/geen1000-/1001-crashgevonden. BestaandeArrange hadforegroundRequested=false; volgendeUIcontrolemoetrestore/actualforegroundPIDénfreshphysicalfrontbeeldbevestigen, geenapp-/renderwijziging. Bewijs evidence/c36-taskmgr-ui-coverage-audit-r1/analysis.json SHABE7214D3BBFBAFE86ADA17CB08237919DAF6E622E876CDFCD0946E01760CC4AE. C36normaalafgesloten00:55:28Z, volledigenativedrainPASS/pooluit.
+
+### C37 actualbuild-/stagebewijs — runtimeproef nog open
+
+Werkelijke165/165build1m22sgeslaagd, exacte707leden/64rawhashen/ééndelta2855DEC3…/706gelijkC36,6899oudepathsbeschermd. PrivatelibB5A31380261A48350795F35F0C017785F0937C0C9B7015676D357960415870C7/4691248B; serverE1204FDD39D2B17A5089F2A99ECA8BEE35C6221AE2752897D34D559890EFE604/3002312B. Final artifacts/c37-gpu-poll-host-build/session-20261115-poll-r1/final-local-verification.json SHA157D0411E0D0A65783AB5DE31915CE9770BE5FD4C9FB89A7968AC085E6E88D6C. Eigencontainer/mount/leaseweg,bouw-pcUIT/SSH25500:55:39Z. Rootprivatepairgestaged/hashgebonden; verseC36volledigeconfig0C311FFenoriginele+cloneVARS8B634C…130Abevestigd. AlleenC37privateserver/LDprefixselectie, volledigeC36terugrolgereed. Geenruntime-/FPSwinstclaimtotdegeplande8sproef;productieblijftUIT.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
