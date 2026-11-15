@@ -71,6 +71,9 @@ struct npt_cmd_set_reply_stream {
 #define NPT_TRANSPORT_RING_SUBMIT_VQ_SEQNO 5u
 #define NPT_TRANSPORT_RING_WAIT_VQ_SEQNO   6u
 #define NPT_TRANSPORT_RING_WAIT_PEER       7u
+#define NPT_TRANSPORT_RING_CREATE_V2       8u
+#define NPT_TRANSPORT_RING_NOTIFY_V2       9u
+#define NPT_PUBLISHER_JOB_V1_MAGIC         0x4e4a5031u
 
 /* Virtio timelines (ring_idx values) every Neptune context is created
  * with.  0 is the CPU timeline; Win32 event fences use the upper half,
@@ -119,6 +122,25 @@ struct npt_cmd_create_ring {
     * defined per side against the same wire values: npt_library.h on the host,
     * npt_workaround.h on the guest. */
    uint32_t workaround_offset;
+};
+
+/* Opt-in only: host validates empty head/tail and installs credit0 BEFORE
+ * starting its consumer. Prefix is identical to the legacy create layout. */
+struct npt_cmd_create_ring_v2 {
+   struct npt_cmd_create_ring base;
+   uint64_t generation;
+   uint32_t magic;
+   uint32_t reserved;
+};
+
+/* A publisher snapshot, never a host-tail sample. Exactly56bytes. */
+struct npt_cmd_notify_ring_v2 {
+   struct npt_command_header header;
+   uint64_t ring_id;
+   uint64_t generation;
+   uint64_t publish_serial;
+   uint32_t end_tail;
+   uint32_t reserved;
 };
 
 struct npt_cmd_destroy_ring {

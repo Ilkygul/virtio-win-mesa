@@ -160,6 +160,8 @@ struct npt_capset {
  * buffer (RESOURCE_BIND_D3D11_BUFFER_SHMEM): a Map of such a buffer
  * writes the bytes the GPU reads, with no host copy. */
 #define NPT_CAPSET_CAP_D3D11_EXTERNAL_BUFFERS    (1u << 7)
+/* Exact publisher boundary / host pre-decode credit protocol v1. */
+#define NPT_CAPSET_CAP_PUBLISHER_JOB_V1         (1u << 8)
 
 #ifdef __WINE__
 void npt_log_impl(const char *fmt, ...);

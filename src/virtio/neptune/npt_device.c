@@ -298,19 +298,56 @@ npt_host_workaround_flags(void)
 
 static void npt_device_destroy(struct npt_device *dev);
 
+struct npt_device *npt_device_create(void)
+{
+   return npt_device_create_with_renderer(NULL);
+}
+
+void npt_device_owner_ref(struct npt_device *dev)
+{
+   if (dev->runtime_owned)
+      atomic_fetch_add_explicit(&dev->runtime_refs, 1, memory_order_relaxed);
+   else
+      npt_device_acquire();
+}
+
+void npt_device_owner_unref(struct npt_device *dev)
+{
+   if (!dev) return;
+   if (dev->runtime_owned) {
+      if (atomic_fetch_sub_explicit(&dev->runtime_refs, 1, memory_order_acq_rel) == 1)
+         npt_device_destroy(dev);
+   } else {
+      npt_device_release();
+   }
+}
+
+
 struct npt_device *
-npt_device_create(void)
+npt_device_create_with_renderer(struct npt_renderer *renderer)
 {
    struct npt_device *dev = npt_alloc(sizeof(*dev));
-   if (!dev)
+   if (!dev) {
+      if (renderer) npt_renderer_destroy(renderer);
       return NULL;
+   }
+   dev->runtime_owned = renderer != NULL;
+   atomic_init(&dev->runtime_refs, 1);
+   dev->renderer = renderer;
 
    /* virtgpu inside a VM, vtest otherwise.  NPT_DEBUG=force_vtest skips
     * the virtgpu probe so the guest can be tested over a local
     * virgl_test_server (Neptune capset) Unix socket even when a
     * /dev/dri/renderDxxx is present. */
-   if (!NPT_DEBUG(FORCE_VTEST))
+   if (!dev->runtime_owned && !NPT_DEBUG(FORCE_VTEST))
       dev->renderer = npt_renderer_create_virtgpu();
+#if defined(_WIN32) && !defined(__WINE__) && defined(NPT_TRITON_D3D11_UMD)
+   if (!dev->renderer && npt_renderer_publisher_job_requested()) {
+      npt_log("publisher job v1 requested: refusing fallback to a legacy transport");
+      free(dev);
+      return NULL;
+   }
+#endif
    if (!dev->renderer)
       dev->renderer = npt_renderer_create_vtest();
    if (!dev->renderer) {
@@ -333,7 +370,11 @@ npt_device_create(void)
    atomic_store_explicit(&dev->dc_sc_ring_refs, 0, memory_order_relaxed);
 
    /* Cached so per-call sites can branch without re-reading the env. */
-   dev->multi_ring_enabled = NPT_PERF(MULTI_RING);
+   /* Exact publisher jobs need one ordering lane for every operation that
+    * may resolve this device's immediate DC (Device/Video/RESOURCE too).
+    * Other npt_device objects retain their own independent rings. */
+   dev->multi_ring_enabled = NPT_PERF(MULTI_RING) &&
+                             !dev->renderer->publisher_job_v1;
 
    struct npt_ring_layout layout;
    const uint32_t primary_size = dev->multi_ring_enabled
@@ -354,7 +395,7 @@ npt_device_create(void)
    }
    /* One ring for the device: recording threads stage into it
     * (npt_ring.h, "Per-thread staging"). */
-   dev->ring->staging = !dev->multi_ring_enabled;
+   dev->ring->staging = !dev->multi_ring_enabled && !dev->ring->publisher_job_v1;
 
    npt_shmem_pool_init(&dev->data_pool, NPT_DATA_SHMEM_MIN_ALLOC);
    npt_shmem_pool_init(&dev->map_pool,  NPT_MAP_POOL_INITIAL_SIZE);
@@ -423,6 +464,7 @@ npt_device_destroy(struct npt_device *dev)
       return;
 
    atomic_store_explicit(&dev->shutting_down, true, memory_order_release);
+   npt_ring_publish_pending(dev->ring);
 
    /* Order: drain leaked wrappers (needs a live ring for COM_RELEASE)
     * -> stop event waiter -> data pool -> ring -> cache -> renderer. */
@@ -571,6 +613,7 @@ npt_device_release(void)
 struct npt_renderer_shmem *
 npt_device_alloc_data(struct npt_device *dev, size_t size, size_t *out_offset)
 {
+   npt_ring_publish_pending(dev->ring);
    return npt_shmem_pool_alloc(dev->renderer, &dev->data_pool,
                                size, out_offset);
 }
@@ -587,6 +630,7 @@ npt_device_free_feedback_slot(struct npt_device *dev,
 {
    if (!dev || !shmem)
       return;
+   npt_ring_publish_pending(dev->ring);
    slot_size = (slot_size + NPT_FEEDBACK_SLOT_ALIGN - 1u) &
                ~(NPT_FEEDBACK_SLOT_ALIGN - 1u);
    struct npt_feedback_free_slot *f = NULL;
@@ -643,6 +687,7 @@ npt_device_alloc_feedback_slot(struct npt_device *dev,
 {
    if (!slot_size)
       return NULL;
+   npt_ring_publish_pending(dev->ring);
    slot_size = (slot_size + NPT_FEEDBACK_SLOT_ALIGN - 1u) &
                ~(NPT_FEEDBACK_SLOT_ALIGN - 1u);
 
@@ -696,4 +741,67 @@ npt_device_method_ring(struct npt_device *dev)
    struct npt_ring *r =
       atomic_load_explicit(&dev->dc_sc_ring, memory_order_acquire);
    return r ? r : dev->ring;
+}
+
+/* These SDK-safe bridge entry points never expose generated COM/types to
+ * Triton. Owner is the exact private device created by its factory. */
+void npt_runtime_owner_join_release(void *opaque)
+{
+   struct npt_device *owner=opaque;
+   if(!owner) return;
+   npt_runtime_owner_maintenance(owner);
+   while(atomic_load_explicit(&owner->runtime_refs,memory_order_acquire)!=1) {
+      npt_runtime_owner_maintenance(owner);
+      struct timespec pause={0,1000000};
+      thrd_sleep(&pause,NULL);
+   }
+   npt_device_owner_unref(owner); /* synchronous ring/event/reaper/renderer teardown */
+}
+void npt_runtime_owner_publish(void *opaque)
+{
+   struct npt_device *owner=opaque;
+   if(owner) npt_ring_publish_pending(owner->ring);
+}
+int npt_runtime_owner_publish_checked(void *opaque)
+{
+   struct npt_device *owner=opaque;
+   if (!owner || !owner->renderer || !owner->renderer->publisher_job_v1) return 0;
+   struct npt_ring *ring=owner->ring;
+   if (!ring || !ring->publisher_job_v1) return 0;
+   npt_ring_publish_pending(ring);
+   /* Writer ordering is record -> ring -> publish. last_tail is minted
+    * before send, so require the completed send frontier as well. */
+   npt_ring_lock_acquire(&ring->lock);
+   mtx_lock(&ring->publish_mutex);
+   const bool accepted = !(atomic_load_explicit(ring->status,memory_order_acquire) & NPT_RING_STATUS_FATAL_BIT) &&
+      ring->publish_generation && !ring->notify_pending && !ring->publish_failed &&
+      ring->publish_last_tail == ring->cur && ring->publish_serial != UINT64_MAX &&
+      ring->publish_next_send == ring->publish_serial + 1 &&
+      ring->publish_finished == ring->publish_serial;
+   mtx_unlock(&ring->publish_mutex);
+   npt_ring_lock_release(&ring->lock);
+   return accepted && !npt_renderer_is_lost(owner->renderer);
+}
+unsigned npt_runtime_owner_context_id(void *opaque)
+{
+   struct npt_device *owner=opaque;
+   return owner ? owner->renderer->info.virtio_ctx_id : 0;
+}
+int npt_runtime_owner_publisher_v1(void *opaque)
+{
+   struct npt_device *owner=opaque;
+   return owner && owner->renderer->publisher_job_v1;
+}
+
+void npt_runtime_owner_maintenance(void *opaque)
+{
+   struct npt_device *owner=opaque;
+   if(!owner || !owner->runtime_owned) return;
+   /* A queued COM_RELEASE/MapSlot replacement may still have ring bytes.
+    * Publish before deallocating any associated shmem; no new GPU command. */
+   npt_ring_publish_pending(owner->ring);
+   npt_event_drain_completed(owner);
+   npt_ring_publish_pending(owner->ring);
+   if(owner->renderer->ops.drain_deferred_cleanup)
+      owner->renderer->ops.drain_deferred_cleanup(owner->renderer);
 }

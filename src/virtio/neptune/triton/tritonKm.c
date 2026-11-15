@@ -241,3 +241,54 @@ tritonKmFillSharedExchange(VIOGPU_CREATE_ALLOCATION_EXCHANGE *ax,
       ax->Size = ((d->Width * d->Height * 4) + 4095) & ~4095ull;
    return TRUE;
 }
+
+/* Runtime stream mode: make the surface resident and enqueue an asynchronous
+ * paging-fence wait before its first writing prefix on the actual context. */
+HRESULT tritonKmRequestResidencyOnContext(TRITON_KM *km,HANDLE context,D3DKMT_HANDLE allocation)
+{
+   if(!km || !km->pLock || !context || !allocation || !km->pCallbacks ||
+      !km->pCallbacks->pfnCreatePagingQueueCb || !km->pCallbacks->pfnDestroyPagingQueueCb || !km->pCallbacks->pfnMakeResidentCb ||
+      !km->pCallbacks->pfnWaitForSynchronizationObjectFromGpuCb)
+      return E_NOTIMPL;
+   EnterCriticalSection(km->pLock);
+   HRESULT hr=S_OK;
+   if(!km->hPagingQueue) {
+      D3DDDICB_CREATEPAGINGQUEUE pq={0};
+      hr=km->pCallbacks->pfnCreatePagingQueueCb(km->hRTDevice,&pq);
+      if(hr!=S_OK) goto done;
+      /* Remember successful partial outputs for checked abort cleanup. */
+      km->hPagingQueue=pq.hPagingQueue;
+      km->PagingSyncObject=pq.hSyncObject;
+      if(!pq.hPagingQueue || !pq.hSyncObject) { hr=E_FAIL; goto done; }
+      km->PagingQueueTried=TRUE;
+      km->PagingFenceVa=pq.FenceValueCPUVirtualAddress;
+   }
+   if(!km->PagingSyncObject) { hr=E_FAIL; goto done; }
+   D3DDDI_MAKERESIDENT mr={0};
+   mr.hPagingQueue=km->hPagingQueue;
+   mr.NumAllocations=1; mr.AllocationList=&allocation;
+   hr=km->pCallbacks->pfnMakeResidentCb(km->hRTDevice,&mr);
+   if(hr==E_PENDING) {
+      D3DDDICB_WAITFORSYNCHRONIZATIONOBJECTFROMGPU wait={0};
+      wait.hContext=context; wait.ObjectCount=1;
+      wait.ObjectHandleArray=&km->PagingSyncObject;
+      wait.MonitoredFenceValueArray=&mr.PagingFenceValue;
+      hr=km->pCallbacks->pfnWaitForSynchronizationObjectFromGpuCb(km->hRTDevice,&wait);
+   }
+   if(SUCCEEDED(hr) && hr!=S_OK) hr=E_FAIL;
+done:
+   LeaveCriticalSection(km->pLock);
+   return hr;
+}
+
+HRESULT tritonKmDestroyChecked(TRITON_KM *km)
+{
+   if(km->hPagingQueue) {
+      if(!km->pCallbacks || !km->pCallbacks->pfnDestroyPagingQueueCb) return E_NOTIMPL;
+      D3DDDI_DESTROYPAGINGQUEUE q={0}; q.hPagingQueue=km->hPagingQueue;
+      HRESULT hr=km->pCallbacks->pfnDestroyPagingQueueCb(km->hRTDevice,&q);
+      if(hr!=S_OK) return FAILED(hr) ? hr : E_FAIL;
+   }
+   km->hPagingQueue=0; km->PagingSyncObject=0; km->PagingFenceVa=NULL; km->pLock=NULL;
+   return S_OK;
+}

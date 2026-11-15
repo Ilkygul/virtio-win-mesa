@@ -528,9 +528,24 @@ dev3_CreateDeferredContext3_override(void *self, UINT ContextFlags,
       (void **)ppDeferredContext);
 }
 
+static HRESULT NPT_STDMETHODCALLTYPE
+dev_GetDeviceRemovedReason_reply_error(void *self)
+{
+   struct npt_device *dev=npt_com_self_device(self);
+   if (dev && dev->runtime_owned && dev->renderer &&
+       npt_renderer_is_lost(dev->renderer)) {
+      /* Public DXGI_ERROR_DEVICE_REMOVED, not a fabricated S_OK reply. */
+      npt_renderer_report_reply_error(dev->renderer);
+      return (HRESULT)0x887a0005u;
+   }
+   return npt_id3d11device_default_GetDeviceRemovedReason(self);
+}
+
 void
 npt_overrides_d3d11_device_init(void)
 {
+   NPT_REGISTER_OVERRIDE(id3d11device, GetDeviceRemovedReason,
+                                       dev_GetDeviceRemovedReason_reply_error);
    NPT_REGISTER_OVERRIDE(id3d11device, CreateDeferredContext,
                                        dev_CreateDeferredContext_override);
    NPT_REGISTER_OVERRIDE(id3d11device1, CreateDeferredContext1,

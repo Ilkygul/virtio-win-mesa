@@ -357,9 +357,10 @@ npt_com_destroy(struct npt_com_base *com)
                              memory_order_relaxed);
    const uint32_t device_refs =
       atomic_load_explicit(&com->base.device_ref_holds, memory_order_relaxed);
+   struct npt_device *owner = com->base.device;
    free(com);
    for (uint32_t i = 0; i < device_refs; i++)
-      npt_device_release();
+      npt_device_owner_unref(owner);
 }
 
 /* Drop one wrapper-lifetime hold on `held` and propagate final
@@ -785,7 +786,7 @@ npt_com_wrap_canonical(struct npt_device *dev,
       }
       /* A wrapper minted from a reply has no parent to ride on: it
        * holds the device the way an entry point's wrapper does. */
-      npt_device_acquire();
+      npt_device_owner_ref(dev);
       atomic_fetch_add_explicit(&com->base.device_ref_holds, 1,
                                 memory_order_relaxed);
       return com;

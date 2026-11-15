@@ -35,6 +35,7 @@ struct npt_device;
 
 void npt_event_init(struct npt_device *dev);
 void npt_event_fini(struct npt_device *dev);
+void npt_event_drain_completed(struct npt_device *dev);
 
 /* Call BEFORE the generated thunk so the host's _replace sees the
  * proxy eventfd.  Internally refcounted: the matching RELEASE is

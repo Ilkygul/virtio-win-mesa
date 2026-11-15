@@ -43,6 +43,7 @@ typedef struct TRITON_KM {
      * polled when MakeResident answers E_PENDING. */
     BOOL                           PagingQueueTried;
     D3DKMT_HANDLE                  hPagingQueue;
+    D3DKMT_HANDLE                  PagingSyncObject;
     volatile const UINT64         *PagingFenceVa;
 } TRITON_KM;
 
@@ -54,6 +55,8 @@ void    tritonKmDestroy(TRITON_KM *km);
 HRESULT tritonKmEscape(const TRITON_KM *km, VIOGPU_ESCAPE *esc);
 void    tritonKmEnsureRuntimeCtx(TRITON_KM *km);
 void    tritonKmRequestResidency(TRITON_KM *km, D3DKMT_HANDLE hAllocation);
+HRESULT tritonKmRequestResidencyOnContext(TRITON_KM *km,HANDLE context,D3DKMT_HANDLE allocation);
+HRESULT tritonKmDestroyChecked(TRITON_KM *km);
 
 /* The D3D11 description of a texture being exported as a shared blob. */
 typedef struct TRITON_KM_SHARED_DESC {

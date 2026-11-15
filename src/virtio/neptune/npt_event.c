@@ -60,6 +60,10 @@ event_now_us(void)
 #define NPT_EVENT_WAIT_SLICE_MS 2000
 
 struct npt_event_state {
+   /* Completed tokens keep their unique identity until a DDI caller sends
+    * ReleaseRing. Worker thread only appends CPU metadata. */
+   struct event_pending *completed_head,*completed_tail;
+   struct event_pending *unknown_head,*unknown_tail;
    /* Half-open [base, end) carving the upper portion of the host's
     * sync_queues table; sized from the renderer's
     * max_timeline_count so we don't collide with Present rings.
@@ -263,6 +267,21 @@ npt_event_block_until_value(struct npt_device *dev,
 }
 #endif
 
+static bool event_defer_runtime_wait_error(struct npt_device *dev,struct npt_event_state *st,
+                                           struct event_pending *p)
+{
+   if(!dev->renderer->ddi_callbacks_only) return false;
+   npt_renderer_set_lost(dev->renderer); /* atomic latch only; never CoreLayer callback here */
+   p->next=NULL;
+   mtx_lock(&st->pending_mutex);
+   if(st->unknown_tail) st->unknown_tail->next=p;
+   else st->unknown_head=p;
+   st->unknown_tail=p;
+   mtx_unlock(&st->pending_mutex);
+   npt_log("runtime event wait failed; retaining unknown fd/token/arm, no completion signaled");
+   return true;
+}
+
 #if defined(_WIN32)
 static DWORD WINAPI event_waiter_thread(LPVOID arg)
 #else
@@ -339,6 +358,7 @@ static void *event_waiter_thread(void *arg)
           * that never happened. */
          npt_log("event: dropping arm for handle %p at shutdown", p->handle);
       } else {
+         if(event_defer_runtime_wait_error(dev,st,p)) continue;
          /* The wait itself failed, so this arm can never complete.  A
           * lost SetEvent parks the app on its event forever, which is
           * worse than an early one; signal and log loudly. */
@@ -359,11 +379,21 @@ static void *event_waiter_thread(void *arg)
                     p->pop_depth, p->handle);
       }
       close_fd(p->sync_fd);
-      atomic_fetch_sub(&st->app_arms[p->ring_idx - st->ring_base], 1);
+      if(!dev->renderer->ddi_callbacks_only)
+         atomic_fetch_sub(&st->app_arms[p->ring_idx - st->ring_base],1);
       /* Single-use proxy: release after completion (the host firing
        * necessarily preceded the KMD signal we just consumed). */
-      npt_dispatch_event_release_ring(npt_device_method_ring(dev), p->token);
-      free(p);
+      if(dev->renderer->ddi_callbacks_only) {
+         p->next=NULL;
+         mtx_lock(&st->pending_mutex);
+         if(st->completed_tail) st->completed_tail->next=p;
+         else st->completed_head=p;
+         st->completed_tail=p;
+         mtx_unlock(&st->pending_mutex);
+      } else {
+         npt_dispatch_event_release_ring(npt_device_method_ring(dev),p->token);
+         free(p);
+      }
    }
 #if defined(_WIN32)
    return 0;
@@ -419,6 +449,22 @@ npt_event_init(struct npt_device *dev)
    event_waiter_spawn(dev, st);
 }
 
+void npt_event_drain_completed(struct npt_device *dev)
+{
+   struct npt_event_state *st=dev->event;
+   if(!st || !dev->renderer->ddi_callbacks_only) return;
+   mtx_lock(&st->pending_mutex);
+   struct event_pending *head=st->completed_head;
+   st->completed_head=st->completed_tail=NULL;
+   mtx_unlock(&st->pending_mutex);
+   while(head) {
+      struct event_pending *next=head->next;
+      npt_dispatch_event_release_ring(npt_device_method_ring(dev),head->token);
+      atomic_fetch_sub(&st->app_arms[head->ring_idx-st->ring_base],1);
+      free(head); head=next;
+   }
+}
+
 void
 npt_event_fini(struct npt_device *dev)
 {
@@ -443,6 +489,14 @@ npt_event_fini(struct npt_device *dev)
 #endif
    }
 
+   /* All waiters have joined. Unknown failed waits are not completions and
+    * cannot be released/reused while their native registration is unproven. */
+   if(st->unknown_head) {
+      npt_log("runtime event teardown has unknown ownership; retaining device/event state");
+      for(;;) { const struct timespec pause={1,0}; thrd_sleep(&pause,NULL); }
+   }
+   /* The DDI thread owns every known completed token. */
+   npt_event_drain_completed(dev);
    while (st->pending_head) {
       struct event_pending *p = st->pending_head;
       st->pending_head = p->next;
@@ -483,6 +537,11 @@ npt_event_arm(struct npt_device *dev, void *hEvent)
       return 0;
 
    struct npt_event_state *st = dev->event;
+
+   if(dev->renderer->ddi_callbacks_only) {
+      npt_event_drain_completed(dev); /* DDI caller, before arm_mutex/free-ring search */
+      if(npt_renderer_is_lost(dev->renderer)) return 0;
+   }
 
    /* SINGLE-USE token, minted per arm.  Keying the host proxy by the
     * raw HANDLE value reused one proxy pipe across every wait on the
@@ -575,6 +634,11 @@ npt_event_arm_token_fd(struct npt_device *dev, uint64_t token)
    if (!st || !token)
       return -1;
 
+   if(dev->renderer->ddi_callbacks_only) {
+      npt_event_drain_completed(dev); /* DDI caller, before arm_mutex/free-ring search */
+      if(npt_renderer_is_lost(dev->renderer)) return -1;
+   }
+
    npt_dispatch_event_register_ring(npt_device_method_ring(dev), token);
 
    const uint32_t ring_idx = event_pick_ring(st);
@@ -644,6 +708,11 @@ npt_event_gate_arm(struct npt_device *dev, uint64_t fence_obj_id,
    if (!dev || !dev->event)
       return 0;
    struct npt_event_state *st = dev->event;
+
+   if(dev->renderer->ddi_callbacks_only) {
+      npt_event_drain_completed(dev); /* DDI caller, before arm_mutex/free-ring search */
+      if(npt_renderer_is_lost(dev->renderer)) return 0;
+   }
 
    const uint32_t ring_idx = event_pick_ring(st);
 

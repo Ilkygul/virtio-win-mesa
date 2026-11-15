@@ -4,10 +4,32 @@
  */
 
 #include "npt_ring.h"
+#include "npt_publisher_batch.h"
 #include "npt_workaround.h"
 #include "npt_device.h"
 #include "npt_profile.h"
 #include "npt_tls.h"
+
+static void npt_runtime_record_enter(struct npt_ring *ring)
+{
+   struct npt_renderer *r=ring->device->renderer;
+   if(r->ops.record_enter) r->ops.record_enter(r);
+}
+static void npt_runtime_record_leave(struct npt_ring *ring)
+{
+   struct npt_renderer *r=ring->device->renderer;
+   if(r->ops.record_leave) r->ops.record_leave(r);
+}
+static void npt_runtime_ring_lock(struct npt_ring *ring)
+{
+   npt_runtime_record_enter(ring);
+   npt_ring_lock_acquire(&ring->lock);
+}
+static void npt_runtime_ring_unlock(struct npt_ring *ring)
+{
+   npt_ring_lock_release(&ring->lock);
+   npt_runtime_record_leave(ring);
+}
 
 #include "util/os_misc.h"
 #ifndef _WIN32
@@ -20,7 +42,9 @@ static_assert(ATOMIC_INT_LOCK_FREE >= 1 && sizeof(atomic_uint) == 4,
               "npt_ring requires lock-free 32-bit atomic_uint");
 
 static void
-npt_ring_notify(struct npt_ring *ring);
+npt_ring_notify(struct npt_ring *ring, uint32_t end_tail, uint64_t publish_serial);
+
+static _Atomic uint64_t npt_publish_generation_next;
 
 #define NPT_RING_IDLE_TIMEOUT_NS (1000000) /* 1ms */
 /* TLS rings park 10x longer than the primary ring's 1ms idle so
@@ -262,6 +286,10 @@ npt_ring_request_notify_locked(struct npt_ring *ring);
 static inline void
 npt_ring_doorbell_locked(struct npt_ring *ring)
 {
+   if (ring->publisher_job_v1) {
+      npt_ring_request_notify_locked(ring); /* every positive commit, not idle-only */
+      return;
+   }
    const uint64_t now = npt_ring_ticks();
    if (now - ring->doorbell_last_submit >= ring->doorbell_idle_ticks)
       npt_ring_request_notify_locked(ring);
@@ -291,7 +319,12 @@ npt_ring_flush_notify_locked(struct npt_ring *ring)
 {
    if (ring->notify_pending) {
       ring->notify_pending = false;
-      npt_ring_notify(ring);
+      const uint32_t tail = ring->cur;
+      if (!ring->publisher_job_v1 || tail != ring->publish_last_tail) {
+         const uint64_t serial = ring->publisher_job_v1 ? ++ring->publish_serial : 0;
+         ring->publish_last_tail = tail;
+         npt_ring_notify(ring, tail, serial);
+      }
    }
 }
 
@@ -299,14 +332,39 @@ npt_ring_flush_notify_locked(struct npt_ring *ring)
  * is safe: the host re-reads the tail before it parks and takes
  * ring->mutex to do so, so a doorbell that lands after its decision
  * still finds it in the wait. */
+/* Public callers hold no ring lock. Credit is minted only here/normal
+ * notify boundaries; async methods already wrote globally ordered ring bytes. */
+void
+npt_ring_publish_pending(struct npt_ring *ring)
+{
+   if (!ring || !ring->publisher_job_v1) return;
+   npt_runtime_ring_lock(ring);
+   npt_ring_flush_notify_locked(ring);
+   npt_runtime_ring_unlock(ring);
+}
+
 static void
 npt_ring_unlock_and_notify(struct npt_ring *ring)
 {
-   const bool notify = ring->notify_pending;
+   bool notify = ring->notify_pending;
+   const uint32_t tail = ring->cur;
+   uint64_t serial = 0;
    ring->notify_pending = false;
-   npt_ring_lock_release(&ring->lock);
+   if (notify && ring->publisher_job_v1) {
+      if (tail == ring->publish_last_tail)
+         notify = false; /* no zero-write serial hole */
+      else {
+         serial = ++ring->publish_serial;
+         ring->publish_last_tail = tail;
+      }
+   }
+   /* Keep record ordering after dropping the ring lock, through NotifyV2's
+    * publish serial send. Otherwise a later recorder can invert the mutexes. */
+   npt_runtime_record_enter(ring);
+   npt_runtime_ring_unlock(ring);
    if (notify)
-      npt_ring_notify(ring);
+      npt_ring_notify(ring, tail, serial);
+   npt_runtime_record_leave(ring);
 }
 
 /* ---------- per-thread staging (npt_ring.h, "Per-thread staging") ---------- */
@@ -453,7 +511,7 @@ npt_ring_stage_flush_locked(struct npt_ring_stage *stage)
       return;
    struct npt_ring *ring = stage->ring;
    if (ring) {
-      npt_ring_lock_acquire(&ring->lock);
+      npt_runtime_ring_lock(ring);
       npt_ring_submit_locked(ring, stage->buf, used);
       npt_profile_record_stage_flush(&ring->profile, used);
       npt_ring_unlock_and_notify(ring);
@@ -836,6 +894,7 @@ npt_ring_order_after_locked(struct npt_ring *ring, uint64_t target_id,
    if (target_id == ring->id || npt_ring_edge_covered(ring, target_id, seqno))
       return;
 
+   if (ring->publisher_job_v1) npt_ring_flush_notify_locked(ring);
    struct npt_cmd_wait_peer_ring cmd;
    memset(&cmd, 0, sizeof(cmd));
    cmd.header.cmd_type =
@@ -855,7 +914,7 @@ npt_ring_order_after(struct npt_ring *ring, uint64_t target_id,
    if (!ring || target_id == ring->id ||
        npt_ring_edge_covered(ring, target_id, target_seqno))
       return;
-   npt_ring_lock_acquire(&ring->lock);
+   npt_runtime_ring_lock(ring);
    npt_ring_order_after_locked(ring, target_id, target_seqno);
    npt_ring_unlock_and_notify(ring);
 }
@@ -881,7 +940,7 @@ npt_ring_order_after_edges(struct npt_ring *ring,
    }
    if (!any)
       return;
-   npt_ring_lock_acquire(&ring->lock);
+   npt_runtime_ring_lock(ring);
    for (uint32_t i = 0; i < count; i++)
       npt_ring_order_after_locked(ring, edges[i].ring_id, edges[i].seqno);
    npt_ring_unlock_and_notify(ring);
@@ -914,8 +973,37 @@ npt_ring_order_after_all(struct npt_ring *ring)
 }
 
 static void
-npt_ring_notify(struct npt_ring *ring)
+npt_ring_notify(struct npt_ring *ring, uint32_t end_tail, uint64_t publish_serial)
 {
+   if (ring->publisher_job_v1) {
+      struct npt_cmd_notify_ring_v2 cmd;
+      memset(&cmd, 0, sizeof(cmd));
+      cmd.header.cmd_type = NPT_TRANSPORT_CMD_TYPE(NPT_TRANSPORT_SUBGROUP_RING,
+                                                  NPT_TRANSPORT_RING_NOTIFY_V2);
+      cmd.header.cmd_size = sizeof(cmd);
+      cmd.ring_id = ring->id;
+      cmd.generation = ring->publish_generation;
+      cmd.publish_serial = publish_serial;
+      cmd.end_tail = end_tail;
+      /* No renderer submission CS is held while waiting for this ticket.
+       * Immutable snapshots mean the earlier sender never needs ring->lock. */
+      mtx_lock(&ring->publish_mutex);
+      while (!ring->publish_failed && publish_serial != ring->publish_next_send)
+         cnd_wait(&ring->publish_cond, &ring->publish_mutex);
+      if (!ring->publish_failed) {
+         if (!publish_serial || npt_renderer_is_lost(ring->renderer) ||
+             !npt_renderer_submit_cmd(ring->renderer, &cmd, sizeof(cmd))) {
+            ring->publish_failed = true;
+            npt_renderer_set_lost(ring->renderer);
+         } else {
+            ring->publish_next_send++;
+         }
+      }
+      ring->publish_finished++; /* includes failed sends: teardown joins all tickets */
+      cnd_broadcast(&ring->publish_cond);
+      mtx_unlock(&ring->publish_mutex);
+      return;
+   }
    struct npt_cmd_notify_ring cmd;
    memset(&cmd, 0, sizeof(cmd));
    cmd.header.cmd_type = NPT_TRANSPORT_CMD_TYPE(NPT_TRANSPORT_SUBGROUP_RING,
@@ -950,8 +1038,8 @@ npt_ring_seqno_passed(const struct npt_ring *ring, uint32_t seqno)
    return npt_ring_seqno_status(ring, seqno);
 }
 
-uint32_t
-npt_ring_wait_seqno(struct npt_ring *ring, uint32_t seqno)
+static uint32_t
+npt_ring_wait_seqno_impl(struct npt_ring *ring, uint32_t seqno)
 {
    /* Each yield is a kernel scheduler slice for virtio-gpu page
     * bookkeeping that reconciles the guest VMA with the host memfd
@@ -978,13 +1066,22 @@ npt_ring_wait_seqno(struct npt_ring *ring, uint32_t seqno)
    return iter;
 }
 
+uint32_t
+npt_ring_wait_seqno(struct npt_ring *ring, uint32_t seqno)
+{
+   /* Reply, shadow-slot reuse and Triton shared handoff/flush callers are
+    * outside ring->lock. No CPU read/reuse may wait on unpublished bytes. */
+   npt_ring_publish_pending(ring);
+   return npt_ring_wait_seqno_impl(ring, seqno);
+}
+
 /* Wait for the host to consume past the last EXECUTE on this ring
  * (i.e. done reading upload_shmem).  Caller holds ring->lock. */
 static void
 npt_ring_wait_upload_drained_locked(struct npt_ring *ring)
 {
    npt_ring_flush_notify_locked(ring);
-   npt_ring_wait_seqno(ring, ring->upload_horizon_seqno);
+   npt_ring_wait_seqno_impl(ring, ring->upload_horizon_seqno);
 }
 
 /* Caller holds ring->lock.  *out_fresh = a new upload_shmem was
@@ -994,6 +1091,7 @@ static bool
 npt_ring_upload_reserve_locked(struct npt_ring *ring, uint32_t size,
                                uint32_t *out_offset, bool *out_fresh)
 {
+   if (ring->publisher_job_v1) npt_ring_flush_notify_locked(ring);
    const uint32_t aligned = (size + 7u) & ~7u;
    *out_fresh = false;
 
@@ -1044,8 +1142,12 @@ npt_ring_upload_reserve_locked(struct npt_ring *ring, uint32_t size,
  * instead (shmem_create_host_visible).
  */
 static uint64_t
-npt_ring_roundtrip_submit(struct npt_ring *ring)
+npt_ring_roundtrip_submit(struct npt_ring *ring, bool caller_locked)
 {
+   if (ring->publisher_job_v1) {
+      if (caller_locked) npt_ring_flush_notify_locked(ring);
+      else npt_ring_publish_pending(ring);
+   }
    /* acq_rel: a thread minting a later seqno is thereby ordered after
     * this thread's create submission, which the out-of-order wait
     * argument in npt_ring_ensure_shmem_visible relies on. */
@@ -1076,6 +1178,7 @@ npt_ring_roundtrip_wait_locked(struct npt_ring *ring, uint64_t seqno)
 {
    npt_profile_record_roundtrip(&ring->profile);
 
+   if (ring->publisher_job_v1) npt_ring_flush_notify_locked(ring);
    struct npt_cmd_wait_virtqueue_seqno wait_cmd;
    memset(&wait_cmd, 0, sizeof(wait_cmd));
    wait_cmd.header.cmd_type =
@@ -1101,7 +1204,7 @@ npt_ring_roundtrip_locked(struct npt_ring *ring)
 {
    if (!npt_ring_needs_create_roundtrip(ring))
       return;
-   npt_ring_roundtrip_wait_locked(ring, npt_ring_roundtrip_submit(ring));
+   npt_ring_roundtrip_wait_locked(ring, npt_ring_roundtrip_submit(ring, true));
 }
 
 /*
@@ -1174,6 +1277,17 @@ npt_ring_submit_locked_split(struct npt_ring *ring,
    npt_ring_write_buffer_at(ring, cur,               header,  header_size);
    if (payload_size)
       npt_ring_write_buffer_at(ring, cur + header_size, payload, payload_size);
+   /* Initialize a short trailing gap before tail publication. The batch policy
+    * permits only full-copy updates, so its gap is alignment padding; clipped
+    * legacy updates remain immediate and never require reading beyond data. */
+   if (ring->publisher_job_v1 &&
+       npt_publisher_batch_update(header, header_size, payload_size,
+                                   payload_padded_size, ring->direct_size) &&
+       payload_padded_size > payload_size && payload_padded_size - payload_size < 8) {
+      const uint8_t zero[8] = {0};
+      npt_ring_write_buffer_at(ring, cur + header_size + payload_size,
+                                zero, payload_padded_size - payload_size);
+   }
    ring->cur = cur + total;
    npt_ring_store_tail(ring);
 
@@ -1244,8 +1358,13 @@ npt_ring_submit_raw_with_payload(struct npt_ring *ring,
       return false;
 
    const uint32_t total = header_size + payload_padded_size;
+   const bool batch = ring->publisher_job_v1 &&
+      npt_publisher_batch_update(header, header_size, payload_size,
+                                  payload_padded_size, ring->direct_size);
    npt_ring_stage_flush_self(ring);
-   npt_ring_lock_acquire(&ring->lock);
+   if (!batch) npt_ring_publish_pending(ring);
+   npt_runtime_ring_lock(ring);
+   if (!batch && ring->publisher_job_v1) npt_ring_flush_notify_locked(ring);
    bool ok;
    if (total > ring->direct_size) {
       ok = npt_ring_submit_indirect_locked_split(ring, header, header_size,
@@ -1256,7 +1375,8 @@ npt_ring_submit_raw_with_payload(struct npt_ring *ring,
                                         payload, payload_size,
                                         payload_padded_size);
    }
-   npt_ring_unlock_and_notify(ring);
+   if (batch && ok) npt_runtime_ring_unlock(ring);
+   else npt_ring_unlock_and_notify(ring);
    return ok;
 }
 
@@ -1275,8 +1395,8 @@ npt_ring_ensure_shmem_visible(struct npt_ring *ring,
     * queued on the FIFO control queue, so the host observing ANY seqno
     * >= mine proves my create reached the resource table. */
    npt_ring_stage_flush_self(ring);
-   const uint64_t seqno = npt_ring_roundtrip_submit(ring);
-   npt_ring_lock_acquire(&ring->lock);
+   const uint64_t seqno = npt_ring_roundtrip_submit(ring, false);
+   npt_runtime_ring_lock(ring);
    npt_ring_roundtrip_wait_locked(ring, seqno);
    /* Under the lock, after the WAIT: a thread that sees this id takes
     * the lock later and so lands behind the WAIT. */
@@ -1292,7 +1412,9 @@ npt_ring_submit_raw_seqno(struct npt_ring *ring, const void *data,
       return false;
 
    npt_ring_stage_flush_self(ring);
-   npt_ring_lock_acquire(&ring->lock);
+   npt_ring_publish_pending(ring);
+   npt_runtime_ring_lock(ring);
+   if (ring->publisher_job_v1) npt_ring_flush_notify_locked(ring);
    const bool ok = npt_ring_submit_dispatch_locked(ring, data, size);
    if (out_seqno)
       *out_seqno = ring->cur;
@@ -1333,15 +1455,19 @@ npt_ring_submit_command(struct npt_ring *ring,
    struct npt_profile_submit_state prof;
    npt_profile_submit_begin(submit, ring->direct_size, &prof);
 
-   if (submit->staged && !submit->reply_size && ring->staging &&
+   if (!ring->publisher_job_v1 && submit->staged && !submit->reply_size && ring->staging &&
        npt_ring_stage_append(ring, submit->cmd_data,
                              (uint32_t)submit->cmd_size)) {
       npt_profile_submit_finalize(&ring->profile, &prof);
       return;
    }
 
-   /* Immediate: behind everything this thread has staged. */
+   const bool batch = ring->publisher_job_v1 &&
+      npt_publisher_batch_method(submit->cmd_data, submit->cmd_size,
+                                  submit->reply_size, ring->direct_size);
+   /* Keep program/global-ring order; no per-thread D3D11 stages. */
    npt_ring_stage_flush_self(ring);
+   if (!batch) npt_ring_publish_pending(ring);
 
    /* Reply window must be carved BEFORE ring->lock: the pool's growth
     * path takes its own lock and may call shmem_create. */
@@ -1360,7 +1486,10 @@ npt_ring_submit_command(struct npt_ring *ring,
       npt_ring_ensure_shmem_visible(ring, submit->reply_shmem);
    }
 
-   npt_ring_lock_acquire(&ring->lock);
+   npt_runtime_ring_lock(ring);
+   /* Another thread could append between the unlocked flush and this lock.
+    * Publish that prefix BEFORE any Wait/Flush/reply/unknown method bytes. */
+   if (!batch && ring->publisher_job_v1) npt_ring_flush_notify_locked(ring);
 
    if (submit->reply_size) {
       struct npt_cmd_set_reply_stream set_cmd;
@@ -1390,9 +1519,28 @@ npt_ring_submit_command(struct npt_ring *ring,
 
    submit->seqno = ring->cur;
 
-   npt_ring_unlock_and_notify(ring);
+   if (batch) npt_runtime_ring_unlock(ring);
+   else npt_ring_unlock_and_notify(ring);
 
    npt_profile_submit_finalize(&ring->profile, &prof);
+}
+
+/* Leaf-only raw RingLock read: no runtime record/write lock, flush,
+ * notify, callback or progress wait is allowed while held. This is an
+ * explicit read-only exception to recorder lock order: it never acquires
+ * WriteLock after RingLock. Release before error publication or decoding.
+ * Only locally issued submit->seqno values may use the old-slot shortcut. */
+static bool
+npt_ring_reply_consumed(struct npt_ring *ring, uint32_t seqno)
+{
+   npt_ring_lock_acquire(&ring->lock);
+   const uint32_t head=npt_ring_load_head(ring);
+   const uint32_t cur=ring->cur; /* protected by the actual writer lock */
+   const bool window_valid=(uint32_t)(cur-head)<=ring->buffer_size;
+   const bool reached=window_valid &&
+      ((int32_t)(head-seqno)>=0 || (uint32_t)(cur-seqno)>=ring->buffer_size);
+   npt_ring_lock_release(&ring->lock);
+   return reached;
 }
 
 struct npt_cs_decoder *
@@ -1402,8 +1550,12 @@ npt_ring_get_command_reply(struct npt_ring *ring,
    if (!submit->reply_size)
       return NULL;
 
-   if (!submit->reply_shmem)
+   if (!submit->reply_shmem ||
+       (npt_ring_load_status(ring) & NPT_RING_STATUS_FATAL_BIT) ||
+       npt_renderer_is_lost(ring->renderer)) {
+      npt_renderer_report_reply_error(ring->renderer);
       return NULL;
+   }
 
    const bool prof_enabled = npt_profile_enabled();
    const uint64_t prof_t0 = prof_enabled ? npt_profile_now_ns() : 0;
@@ -1420,8 +1572,11 @@ npt_ring_get_command_reply(struct npt_ring *ring,
       npt_profile_record_reply_ns(submit->prof_cmd_type, prof_wait_ns);
       npt_profile_record_thread_reply_ns(prof_wait_ns);
    }
-   if (npt_ring_load_status(ring) & NPT_RING_STATUS_FATAL_BIT) {
-      npt_log("ring fatal while waiting for reply");
+   if (!npt_ring_reply_consumed(ring, submit->seqno) ||
+       (npt_ring_load_status(ring) & NPT_RING_STATUS_FATAL_BIT) ||
+       npt_renderer_is_lost(ring->renderer)) {
+      npt_log("reply unavailable or transport lost; no reply decoded");
+      npt_renderer_report_reply_error(ring->renderer);
       return NULL;
    }
 
@@ -1441,6 +1596,7 @@ npt_ring_free_command_reply(struct npt_ring *ring,
    submit->dec.end = NULL;
 
    if (submit->reply_shmem) {
+      npt_ring_publish_pending(ring);
       npt_renderer_shmem_unref(ring->renderer, submit->reply_shmem);
       submit->reply_shmem = NULL;
    }
@@ -1461,10 +1617,32 @@ npt_ring_create(struct npt_device *device,
    ring->renderer = renderer;
    ring->device = device;
    ring->is_tls_ring = is_tls_ring;
+   ring->publisher_job_v1 = renderer->publisher_job_v1;
+   if (ring->publisher_job_v1) {
+      if (mtx_init(&ring->publish_mutex, mtx_plain) != thrd_success) {
+         free(ring);
+         return NULL;
+      }
+      if (cnd_init(&ring->publish_cond) != thrd_success) {
+         mtx_destroy(&ring->publish_mutex);
+         free(ring);
+         return NULL;
+      }
+      ring->publish_generation = atomic_fetch_add_explicit(
+         &npt_publish_generation_next, 1, memory_order_relaxed) + 1;
+      if (!ring->publish_generation)
+         ring->publish_generation = atomic_fetch_add_explicit(
+            &npt_publish_generation_next, 1, memory_order_relaxed) + 1;
+      ring->publish_next_send = 1;
+   }
    list_inithead(&ring->instance_head);
 
    ring->shmem = npt_renderer_shmem_create(renderer, layout->shmem_size);
    if (!ring->shmem) {
+      if (ring->publisher_job_v1) {
+         cnd_destroy(&ring->publish_cond);
+         mtx_destroy(&ring->publish_mutex);
+      }
       free(ring);
       return NULL;
    }
@@ -1543,7 +1721,20 @@ npt_ring_create(struct npt_device *device,
    /* TLS rings use SYNC so the ring thread is polling before the
     * caller can submit; primary stays async (device init masks the
     * latency). */
-   if (is_tls_ring)
+   if (ring->publisher_job_v1) {
+      struct npt_cmd_create_ring_v2 cmd = { .base = create_cmd };
+      cmd.base.header.cmd_type = NPT_TRANSPORT_CMD_TYPE(NPT_TRANSPORT_SUBGROUP_RING,
+                                                        NPT_TRANSPORT_RING_CREATE_V2);
+      cmd.base.header.cmd_size = sizeof(cmd);
+      cmd.generation = ring->publish_generation;
+      cmd.magic = NPT_PUBLISHER_JOB_V1_MAGIC;
+      /* ALL V2 rings: gated host credit0 must exist before first publication. */
+      if (!npt_renderer_submit_cmd_sync(renderer, &cmd, sizeof(cmd))) {
+         npt_renderer_set_lost(renderer);
+         npt_ring_destroy(ring);
+         return NULL;
+      }
+   } else if (is_tls_ring)
       npt_renderer_submit_cmd_sync(renderer, &create_cmd, sizeof(create_cmd));
    else
       npt_renderer_submit_cmd(renderer, &create_cmd, sizeof(create_cmd));
@@ -1563,6 +1754,18 @@ npt_ring_destroy(struct npt_ring *ring)
     * sync ensures the host has stopped reading the shmem before we
     * unref it.
     */
+   if (ring->publisher_job_v1) {
+      /* Existing caller lifetime prohibits new writers during destruction.
+       * Join issued sends before destroying their mutex/condition storage. */
+      npt_runtime_ring_lock(ring);
+      npt_ring_flush_notify_locked(ring);
+      const uint64_t issued = ring->publish_serial;
+      npt_runtime_ring_unlock(ring);
+      mtx_lock(&ring->publish_mutex);
+      while (ring->publish_finished < issued)
+         cnd_wait(&ring->publish_cond, &ring->publish_mutex);
+      mtx_unlock(&ring->publish_mutex);
+   }
    if (ring->shmem) {
       struct npt_cmd_destroy_ring cmd;
       memset(&cmd, 0, sizeof(cmd));
@@ -1570,7 +1773,16 @@ npt_ring_destroy(struct npt_ring *ring)
                                                    NPT_TRANSPORT_RING_DESTROY);
       cmd.header.cmd_size = sizeof(cmd);
       cmd.ring_id = ring->id;
-      npt_renderer_submit_cmd_sync(ring->renderer, &cmd, sizeof(cmd));
+      const bool stopped = npt_renderer_submit_cmd_sync(ring->renderer, &cmd, sizeof(cmd));
+      if (!stopped && ring->publisher_job_v1) {
+         /* Unknown teardown is not permission to release ring/backing or
+          * return to device destruction. Preserve the owning stack; root
+          * must not force-stop/reclaim pools on this failure path. */
+         npt_renderer_set_lost(ring->renderer);
+         npt_log("publisher ring destroy unproven; retaining ring and backing");
+         const struct timespec retry = { .tv_sec = 1 };
+         for (;;) thrd_sleep(&retry, NULL);
+      }
 
       npt_renderer_shmem_unref(ring->renderer, ring->shmem);
    }
@@ -1579,5 +1791,9 @@ npt_ring_destroy(struct npt_ring *ring)
    npt_shmem_pool_fini(ring->renderer, &ring->reply_pool);
    npt_profile_unregister_ring(ring);
    npt_ring_stages_destroy(ring);
+   if (ring->publisher_job_v1) {
+      cnd_destroy(&ring->publish_cond);
+      mtx_destroy(&ring->publish_mutex);
+   }
    free(ring);
 }

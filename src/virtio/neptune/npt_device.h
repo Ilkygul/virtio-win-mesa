@@ -36,6 +36,8 @@ struct npt_wrapper_cache {
 };
 
 struct npt_device {
+   bool runtime_owned;
+   atomic_uint runtime_refs;
    struct npt_renderer *renderer;
    /* Primary ring; fallback when TLS rings are disabled. */
    struct npt_ring *ring;
@@ -138,6 +140,16 @@ struct npt_device {
 
 struct npt_device *
 npt_device_create(void);
+struct npt_device *npt_device_create_with_renderer(struct npt_renderer *renderer);
+void npt_device_owner_ref(struct npt_device *dev);
+void npt_device_owner_unref(struct npt_device *dev);
+void npt_runtime_owner_join_release(void *owner);
+void npt_runtime_owner_publish(void *owner);
+int npt_runtime_owner_publish_checked(void *owner);
+void npt_runtime_owner_maintenance(void *owner);
+unsigned npt_runtime_owner_context_id(void *owner);
+int npt_runtime_owner_publisher_v1(void *owner);
+
 
 struct npt_renderer_shmem *
 npt_device_alloc_data(struct npt_device *dev, size_t size, size_t *out_offset);

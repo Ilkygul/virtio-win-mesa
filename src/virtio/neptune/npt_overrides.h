@@ -15,6 +15,19 @@
 
 void npt_overrides_d3d11_device_init(void);
 void npt_overrides_d3d11_context_init(void);
+
+/* Internal Present only. Caller holds its context/fence references and
+ * presentLock. UNSUPPORTED guarantees no pair bytes were submitted; only
+ * that result permits the original Signal + Flush calls. FAILED may follow
+ * publication and MUST stop the Present, without retry or event/flip arm. */
+enum npt_present_pair_result {
+   NPT_PRESENT_PAIR_FAILED = -1,
+   NPT_PRESENT_PAIR_UNSUPPORTED = 0,
+   NPT_PRESENT_PAIR_SUBMITTED = 1,
+};
+enum npt_present_pair_result
+npt_d3d11_present_signal_flush_pair(void *context4, void *context1,
+                                    void *fence, uint64_t value);
 void npt_overrides_d3d11_buffer_init(void);
 void npt_overrides_d3d11_texture_init(void);
 void npt_overrides_d3d11_fence_init(void);

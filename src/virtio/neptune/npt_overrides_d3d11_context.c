@@ -65,6 +65,66 @@ npt_d3d11_context_is_immediate(void *context)
    return aux && !aux->deferred;
 }
 
+/* Keep the ordinary prepublication/maintenance frontier in submit_raw.
+ * Only the two adjacent internal Present commands share the final credit;
+ * preceding draws are NOT merged with this pair. Public Signal is unchanged. */
+enum npt_present_pair_result
+npt_d3d11_present_signal_flush_pair(void *context4, void *context1,
+                                    void *fence, uint64_t value)
+{
+   if (!context4 || !context1 || !fence || !value)
+      return NPT_PRESENT_PAIR_FAILED;
+   struct npt_com_base *c4 = context4, *c1 = context1, *f = fence;
+   struct npt_device *dev = c4->base.device;
+   if (!dev || c1->base.device != dev || f->base.device != dev || !dev->renderer)
+      return NPT_PRESENT_PAIR_FAILED;
+   if (!dev->renderer->publisher_job_v1)
+      return NPT_PRESENT_PAIR_UNSUPPORTED;
+   if (npt_renderer_is_lost(dev->renderer))
+      return NPT_PRESENT_PAIR_FAILED;
+
+   struct npt_com_base *i4 = c4->identity ? c4->identity : c4;
+   struct npt_com_base *i1 = c1->identity ? c1->identity : c1;
+   if (i4 != i1 || !npt_d3d11_context_is_immediate(context4) ||
+       !npt_d3d11_context_is_immediate(context1) ||
+       !c4->base.id || !c1->base.id || !f->base.id ||
+       npt_com_id_is_guest_fab(c4->base.id) ||
+       npt_com_id_is_guest_fab(c1->base.id) ||
+       npt_com_id_is_guest_fab(f->base.id))
+      goto failed;
+
+   struct npt_ring *ring = npt_com_self_ring(context4);
+   if (!ring || ring != npt_com_self_ring(context1) ||
+       ring->device != dev || ring->renderer != dev->renderer ||
+       !ring->publisher_job_v1)
+      goto failed;
+   /* Reject unsupported sizing BEFORE submit_raw can publish anything.
+    * A single direct reservation also excludes an interleaved future Wait. */
+   if (ring->direct_size < 64 || ring->buffer_size < 64 ||
+       npt_sizeof_ID3D11DeviceContext4_Signal(fence, value) != 40 ||
+       npt_sizeof_ID3D11DeviceContext_Flush() != 24)
+      return NPT_PRESENT_PAIR_UNSUPPORTED;
+
+   uint8_t pair[64] = {0};
+   struct npt_cs_encoder enc = { pair, pair + sizeof(pair) };
+   npt_encode_ID3D11DeviceContext4_Signal(&enc, 0, c4->base.id, fence, value);
+   npt_encode_ID3D11DeviceContext_Flush(&enc, 0, c1->base.id);
+   if (enc.cur != enc.end)
+      goto failed;
+   /* submit_raw retains TLS flush, old-prefix credit, locked recheck,
+    * whole-span wrap/space handling and ordered final NotifyV2. Its bool
+    * covers the write; NotifyV2 send failure separately latches lost. */
+   if (!npt_ring_submit_raw(ring, pair, sizeof(pair)) ||
+       npt_renderer_is_lost(dev->renderer))
+      goto failed;
+   return NPT_PRESENT_PAIR_SUBMITTED;
+
+failed:
+   /* May already be committed: never fall back to duplicate legacy calls. */
+   npt_renderer_set_lost(dev->renderer);
+   return NPT_PRESENT_PAIR_FAILED;
+}
+
 static uint32_t
 npt_d3d11_map_to_access_flags(D3D11_MAP map_type)
 {

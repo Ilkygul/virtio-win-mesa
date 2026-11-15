@@ -15,6 +15,8 @@
 
 #include "triton.h"
 #include "triton_log.h"
+#include "tritonRuntimeWrites.h"
+#include "triton_log.h"
 
 /* ---------- per-resource view list + rotation support ---------- */
 
@@ -291,7 +293,9 @@ tritonClearRenderTargetView(D3D10DDI_HDEVICE hDevice,
     PTRITON_RTVIEW v  = (PTRITON_RTVIEW)(hRTV.pDrvPrivate);
     if (!pD || !v || !v->pRTV) return;
     tritonMarkSharedWrite(pD, v->pResource);
+    if (!trRuntimeWriteResourceBegin(pD,v->pResource)) return;
     ID3D11DeviceContext1_ClearRenderTargetView(pD->pCtx1, v->pRTV, color);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, v->pResource, "ClearRenderTargetView");
 }
 
@@ -304,7 +308,47 @@ tritonClearDepthStencilView(D3D10DDI_HDEVICE hDevice,
     PTRITON_DSVIEW v  = (PTRITON_DSVIEW)(hDSV.pDrvPrivate);
     if (!pD || !v || !v->pDSV) return;
     /* DDI uses identical bit layout to D3D11_CLEAR_DEPTH/_STENCIL. */
+    if (!trRuntimeWriteResourceBegin(pD,v->pResource)) return;
     ID3D11DeviceContext1_ClearDepthStencilView(pD->pCtx1, v->pDSV, Flags, Depth, Stencil);
+    trRuntimeWriteEnd(pD);
+}
+
+/* Diagnostic only: a graphics Flush may submit shared-source reads into a
+ * private render target without making SharedDirty true. The existing write
+ * guard cannot prove that GPU reads are complete at this boundary. This
+ * opt-in waits the existing whole-context GPU tail, independent of dirty
+ * writes. It is not an unconditional ownership guarantee: the existing gate
+ * has logged fail-open paths, and Flush itself is not a token-release DDI. */
+static void
+tritonFlushGpuTailDiagnostic(PTRITON_DEVICE pD, const char *why,
+                              UINT contextType, UINT flushFlags)
+{
+    if (!pD || !tritonSwitch("triton-flushgputail"))
+        return;
+    static volatile LONG count;
+    const LONG serial = InterlockedIncrement(&count);
+    const BOOL log = serial <= 128 || (serial % 500) == 0;
+    const BOOL graphics = contextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
+        (contextType & D3DWDDM2_0DDI_CONTEXTTYPE_3D) != 0;
+    const LONG dirty = InterlockedCompareExchange(&pD->SharedDirty, 0, 0);
+    const ULONGLONG started = GetTickCount64();
+    if (log)
+        TR_LOG("FLUSH-GPU-TAIL begin #%ld process=%lu thread=%lu dev=%p "
+               "why=%s contextType=0x%x flags=0x%x dirty=%ld graphics=%d",
+               (long)serial, GetCurrentProcessId(), GetCurrentThreadId(),
+               (void *)pD, why, contextType, flushFlags, (long)dirty, graphics);
+    if (graphics) {
+        /* This helper acquires/releases presentLock internally and performs
+         * its GPU wait unlocked. No caller Triton lock is held here. */
+        tritonPresentPublishSharedWrites(pD);
+    }
+    if (log)
+        TR_LOG("FLUSH-GPU-TAIL end #%ld process=%lu thread=%lu dev=%p "
+               "why=%s helperCalled=%d helperReturned=%d totalMs=%llu "
+               "(return is NOT a verified GPU-completion result)",
+               (long)serial, GetCurrentProcessId(), GetCurrentThreadId(),
+               (void *)pD, why, graphics, graphics,
+               (unsigned long long)(GetTickCount64() - started));
 }
 
 void APIENTRY
@@ -312,19 +356,28 @@ tritonFlush(D3D10DDI_HDEVICE hDevice)
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD || !pD->pCtx1) return;
+    if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
     ID3D11DeviceContext1_Flush(pD->pCtx1);
-    tritonSyncShared(pD, "Flush");
+    tritonFlushGpuTailDiagnostic(pD, "Flush", D3DWDDM2_0DDI_CONTEXTTYPE_ALL, 0);
+    (void)tritonSyncSharedFlush(pD, "Flush", TRUE, D3DWDDM2_0DDI_CONTEXTTYPE_ALL, 0);
+}
+
+static BOOL
+tritonFlush11_1Scoped(D3D10DDI_HDEVICE hDevice, UINT FlushFlags, BOOL graphics, UINT contextType)
+{
+    (void)FlushFlags;
+    PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+    if (!pD || !pD->pCtx1) return FALSE;
+    if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
+    ID3D11DeviceContext1_Flush(pD->pCtx1);
+    tritonFlushGpuTailDiagnostic(pD, "Flush11_1", D3DWDDM2_0DDI_CONTEXTTYPE_ALL, FlushFlags);
+    return tritonSyncSharedFlush(pD, "Flush11_1", graphics && (FlushFlags == 0 || FlushFlags == D3D11_1DDI_FLUSH_UNLESS_NO_COMMANDS), contextType, FlushFlags);
 }
 
 BOOL APIENTRY
 tritonFlush11_1(D3D10DDI_HDEVICE hDevice, UINT FlushFlags)
 {
-    (void)FlushFlags;
-    PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
-    if (!pD || !pD->pCtx1) return FALSE;
-    ID3D11DeviceContext1_Flush(pD->pCtx1);
-    tritonSyncShared(pD, "Flush11_1");
-    return TRUE;
+    return tritonFlush11_1Scoped(hDevice,FlushFlags,TRUE,D3DWDDM2_0DDI_CONTEXTTYPE_ALL);
 }
 
 void APIENTRY
@@ -364,15 +417,21 @@ tritonSetRenderTargets(D3D10DDI_HDEVICE hDevice,
     }
 
     pD->OmShared = FALSE;
+    pD->OmSharedNeedsWriteSync = FALSE;
     for (UINT i = 0; i < NumRTVs; ++i) {
         PTRITON_RTVIEW v = phRTVs ? (PTRITON_RTVIEW)(phRTVs[i].pDrvPrivate) : NULL;
-        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion))
+        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion)) {
             pD->OmShared = TRUE;
+            if (!tritonCanBatchPresentWrites(pD, v->pResource))
+                pD->OmSharedNeedsWriteSync = TRUE;
+        }
     }
     for (UINT i = 0; i < NumUAVs; ++i) {
         PTRITON_UAVIEW v = phUAVs ? (PTRITON_UAVIEW)(phUAVs[i].pDrvPrivate) : NULL;
-        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion))
+        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion)) {
             pD->OmShared = TRUE;
+            pD->OmSharedNeedsWriteSync = TRUE; /* UAV batching is outside scope. */
+        }
     }
 
     PTRITON_DSVIEW dsv = (PTRITON_DSVIEW)(hDSV.pDrvPrivate);
@@ -396,9 +455,24 @@ tritonSetRenderTargets(D3D10DDI_HDEVICE hDevice,
             : NULL;
         aUAV[i] = u ? u->pUAV : NULL;
     }
+    if (pD->RuntimeStreamActive) {
+        EnterCriticalSection(&pD->RuntimeWriteLock);
+        memset(pD->RuntimeRtv,0,sizeof(pD->RuntimeRtv));
+        memset(pD->RuntimeOmUav,0,sizeof(pD->RuntimeOmUav));
+        for(UINT i=0;i<NumRTVs;++i) {
+            PTRITON_RTVIEW v=phRTVs ? phRTVs[i].pDrvPrivate : NULL;
+            pD->RuntimeRtv[i]=trRuntimeWriteRef(pD,v ? v->pResource : NULL);
+        }
+        pD->RuntimeDsv=trRuntimeWriteRef(pD,dsv ? dsv->pResource : NULL);
+        for(UINT i=0;i<NumUAVs;++i) {
+            PTRITON_UAVIEW v=phUAVs ? phUAVs[i].pDrvPrivate : NULL;
+            pD->RuntimeOmUav[UAVStartSlot+i]=trRuntimeWriteRef(pD,v ? v->pResource : NULL);
+        }
+    }
     ID3D11DeviceContext1_OMSetRenderTargetsAndUnorderedAccessViews(
         pD->pCtx1, NumRTVs, aRTV, pDSV,
         UAVStartSlot, NumUAVs, aUAV, NumUAVs ? pUAVInitialCounts : NULL);
+    if(pD->RuntimeStreamActive) LeaveCriticalSection(&pD->RuntimeWriteLock);
 
     BOOL hasTargets = pDSV != NULL;
     for (UINT i = 0; i < NumRTVs && !hasTargets; ++i)
@@ -821,7 +895,9 @@ tritonClearUAVUint(D3D10DDI_HDEVICE hDevice, D3D11DDI_HUNORDEREDACCESSVIEW hUAV,
     PTRITON_UAVIEW v  = (PTRITON_UAVIEW)(hUAV.pDrvPrivate);
     if (!pD || !v || !v->pUAV) return;
     tritonMarkSharedWrite(pD, v->pResource);
+    if (!trRuntimeWriteResourceBegin(pD,v->pResource)) return;
     ID3D11DeviceContext1_ClearUnorderedAccessViewUint(pD->pCtx1, v->pUAV, Values);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, v->pResource, "ClearUAVUint");
 }
 
@@ -833,7 +909,9 @@ tritonClearUAVFloat(D3D10DDI_HDEVICE hDevice, D3D11DDI_HUNORDEREDACCESSVIEW hUAV
     PTRITON_UAVIEW v  = (PTRITON_UAVIEW)(hUAV.pDrvPrivate);
     if (!pD || !v || !v->pUAV) return;
     tritonMarkSharedWrite(pD, v->pResource);
+    if (!trRuntimeWriteResourceBegin(pD,v->pResource)) return;
     ID3D11DeviceContext1_ClearUnorderedAccessViewFloat(pD->pCtx1, v->pUAV, Values);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, v->pResource, "ClearUAVFloat");
 }
 
@@ -845,8 +923,10 @@ tritonCopyStructureCount(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hDstBuffer
     PTRITON_RESOURCE d  = (PTRITON_RESOURCE)(hDstBuffer.pDrvPrivate);
     PTRITON_UAVIEW   v  = (PTRITON_UAVIEW)(hSrcUAV.pDrvPrivate);
     if (!pD || !d || !v || !d->pResource || !v->pUAV) return;
+    if (!trRuntimeWriteResourceBegin(pD,d)) return;
     ID3D11DeviceContext1_CopyStructureCount(
         pD->pCtx1, (ID3D11Buffer *)d->pResource, DstAlignedByteOffset, v->pUAV);
+    trRuntimeWriteEnd(pD);
 }
 
 /* ---------- Per-stage SRV bind ---------- */
@@ -895,7 +975,15 @@ tritonCsSetUAVs(D3D10DDI_HDEVICE hDevice, UINT Start, UINT N,
             : NULL;
         a[i] = v ? v->pUAV : NULL;
     }
+    if(pD->RuntimeStreamActive) {
+        EnterCriticalSection(&pD->RuntimeWriteLock);
+        for(UINT i=0;i<N;++i) {
+            PTRITON_UAVIEW v=ph ? ph[i].pDrvPrivate : NULL;
+            pD->RuntimeCsUav[Start+i]=trRuntimeWriteRef(pD,v ? v->pResource : NULL);
+        }
+    }
     ID3D11DeviceContext1_CSSetUnorderedAccessViews(pD->pCtx1, Start, N, a, pInitial);
+    if(pD->RuntimeStreamActive) LeaveCriticalSection(&pD->RuntimeWriteLock);
 }
 
 void APIENTRY
@@ -904,7 +992,9 @@ tritonGenerateMips(D3D10DDI_HDEVICE hDevice, D3D10DDI_HSHADERRESOURCEVIEW hSRV)
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_SRVIEW v  = (PTRITON_SRVIEW)(hSRV.pDrvPrivate);
     if (!pD || !v || !v->pSRV) return;
+    if (!trRuntimeWriteResourceBegin(pD,v->pResource)) return;
     ID3D11DeviceContext1_GenerateMips(pD->pCtx1, v->pSRV);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, v->pResource, "GenerateMips");
 }
 
@@ -933,8 +1023,12 @@ tritonFlush_WDDM2_0(D3D10DDI_HDEVICE hDevice, UINT ContextType, UINT FlushFlags)
     if (!pD) return FALSE;
     if (pD->pCtx3) {
         ID3D11DeviceContext3_Flush1(pD->pCtx3, tritonContextFlagToEnum(ContextType), NULL);
-        tritonSyncShared(pD, "Flush_WDDM2");
-        return TRUE;
+        tritonFlushGpuTailDiagnostic(pD, "Flush_WDDM2", ContextType, FlushFlags);
+        const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
+            ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
+        return tritonSyncSharedFlush(pD, "Flush_WDDM2", graphics && (FlushFlags == 0 || FlushFlags == D3D11_1DDI_FLUSH_UNLESS_NO_COMMANDS), ContextType, FlushFlags);
     }
-    return tritonFlush11_1(hDevice, FlushFlags);
+    const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
+        ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
+    return tritonFlush11_1Scoped(hDevice, FlushFlags, graphics, ContextType);
 }

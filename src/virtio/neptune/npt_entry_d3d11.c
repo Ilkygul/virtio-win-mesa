@@ -13,6 +13,10 @@
 #include "neptune-protocol/npt_protocol_guest_toplevel.h"
 #include "neptune-protocol/npt_protocol_defs.h"
 
+HRESULT npt_d3d11_create_device_with_renderer(struct npt_renderer *,
+                  const D3D_FEATURE_LEVEL *,UINT,ID3D11Device **,
+                  D3D_FEATURE_LEVEL *,ID3D11DeviceContext **,void **);
+
 /* Cross-TU entry helpers: Triton's tritonDDI.c declares matching
  * externs, and the D3D11* exports below wrap them. */
 HRESULT
@@ -51,8 +55,8 @@ npt_d3d11_create_device_and_swap_chain_internal(IDXGIAdapter *pAdapter,
                               D3D_FEATURE_LEVEL *pFeatureLevel,
                               ID3D11DeviceContext **ppImmediateContext);
 
-HRESULT
-npt_d3d11_create_device_internal(IDXGIAdapter *pAdapter,
+static HRESULT
+npt_d3d11_create_on_owner(struct npt_device *dev, IDXGIAdapter *pAdapter,
                   D3D_DRIVER_TYPE DriverType,
                   HMODULE Software,
                   UINT Flags,
@@ -70,7 +74,6 @@ npt_d3d11_create_device_internal(IDXGIAdapter *pAdapter,
 
    npt_com_init();
    /* Top-level: device_ref_holds carries the acquire onto the wrapper. */
-   struct npt_device *dev = npt_device_acquire();
    if (!dev) return NPT_E_FAIL;
 
    ID3D11Device *raw_device = NULL;
@@ -97,7 +100,7 @@ npt_d3d11_create_device_internal(IDXGIAdapter *pAdapter,
          npt_com_send_release(dev, (uint64_t)(uintptr_t)raw_device);
       if (raw_context)
          npt_com_send_release(dev, (uint64_t)(uintptr_t)raw_context);
-      npt_device_release();
+      npt_device_owner_unref(dev);
       return NPT_FAILED(hr) ? hr : NPT_E_FAIL;
    }
 
@@ -107,7 +110,7 @@ npt_d3d11_create_device_internal(IDXGIAdapter *pAdapter,
    if (!device_wrapper) {
       if (raw_context)
          npt_com_send_release(dev, (uint64_t)(uintptr_t)raw_context);
-      npt_device_release();
+      npt_device_owner_unref(dev);
       return NPT_E_OUTOFMEMORY;
    }
    /* Counter so multiple entry-point calls collapsing onto one
@@ -140,6 +143,40 @@ npt_d3d11_create_device_internal(IDXGIAdapter *pAdapter,
 
    if (pFeatureLevel) *pFeatureLevel = fl;
    return hr;
+}
+
+HRESULT
+npt_d3d11_create_device_with_renderer(struct npt_renderer *renderer,
+                  const D3D_FEATURE_LEVEL *levels, UINT count,
+                  ID3D11Device **device, D3D_FEATURE_LEVEL *level,
+                  ID3D11DeviceContext **context, void **owner)
+{
+   if (!owner) { npt_renderer_destroy(renderer); return NPT_E_INVALIDARG; }
+   *owner = NULL;
+   npt_com_init(); /* Global profiler/COM state must precede owner ring creation. */
+   struct npt_device *dev = npt_device_create_with_renderer(renderer);
+   if (!dev) return NPT_E_FAIL;
+   npt_device_owner_ref(dev);
+   HRESULT hr = npt_d3d11_create_on_owner(dev, NULL, D3D_DRIVER_TYPE_HARDWARE,
+      NULL, 0, levels, count, D3D11_SDK_VERSION, device, level, context);
+   *owner = dev; /* also on failure: caller must join before runtime storage dies */
+   return hr;
+}
+
+HRESULT
+npt_d3d11_create_device_internal(IDXGIAdapter *pAdapter,
+                  D3D_DRIVER_TYPE DriverType, HMODULE Software, UINT Flags,
+                  const D3D_FEATURE_LEVEL *pFeatureLevels, UINT FeatureLevels,
+                  UINT SDKVersion, ID3D11Device **ppDevice,
+                  D3D_FEATURE_LEVEL *pFeatureLevel,
+                  ID3D11DeviceContext **ppImmediateContext)
+{
+   if (pAdapter && (DriverType != D3D_DRIVER_TYPE_UNKNOWN || Software))
+      return NPT_E_INVALIDARG;
+   npt_com_init(); /* Acquire may create a ring and register its profiler state. */
+   return npt_d3d11_create_on_owner(npt_device_acquire(), pAdapter,
+      DriverType, Software, Flags, pFeatureLevels, FeatureLevels, SDKVersion,
+      ppDevice, pFeatureLevel, ppImmediateContext);
 }
 
 HRESULT

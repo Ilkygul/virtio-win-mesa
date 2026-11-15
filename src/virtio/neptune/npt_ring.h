@@ -268,6 +268,19 @@ struct npt_ring {
     * first or a parked host never wakes to make that progress. */
    bool notify_pending;
 
+   /* Captured under ring->lock, sent in this exact order outside it.
+    * The earlier notifier never needs ring->lock again, including when a
+    * later lock-held space-pressure flush waits for its send ticket. */
+   bool publisher_job_v1;
+   uint64_t publish_generation;
+   uint64_t publish_serial;
+   uint32_t publish_last_tail;
+   mtx_t publish_mutex;
+   cnd_t publish_cond;
+   uint64_t publish_next_send;
+   uint64_t publish_finished;
+   bool publish_failed;
+
    /* Bump allocator for per-call reply windows.  Each sync submission
     * carves a region and SET_REPLY_STREAMs it just before the command,
     * so concurrent sync calls don't fight over a fixed slot. */
@@ -388,6 +401,10 @@ npt_ring_ensure_shmem_visible(struct npt_ring *ring,
 /* Yield-heavy poll until head is past seqno.  Returns the relax-
  * iteration count (sync-reply path feeds it to the profiler).
  * Callers may ignore the return value. */
+/* Unlocked publisher barrier; callers already holding ring->lock use the
+ * internal locked flush. No-op for legacy contexts. */
+void npt_ring_publish_pending(struct npt_ring *ring);
+
 uint32_t
 npt_ring_wait_seqno(struct npt_ring *ring, uint32_t seqno);
 

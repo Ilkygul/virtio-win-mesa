@@ -132,6 +132,12 @@ shmem_reaper_unref(struct npt_renderer *renderer,
    if (!shmem || !npt_refcount_dec(&shmem->refcount))
       return;
 
+   if(renderer->ops.defer_shmem_destroy) {
+      /* Metadata-only ownership transfer. No callback and no OOM fallback
+       * on a worker thread; final ref is the intrusive queue's ownership. */
+      renderer->ops.defer_shmem_destroy(renderer,shmem);
+      return;
+   }
    shmem_reaper_lazy_init();
 
    struct shmem_reap_entry *e = malloc(sizeof(*e));
@@ -208,6 +214,8 @@ alloc_slot_locked(struct npt_d3d_map_ring *r, uint32_t idx)
 
    struct npt_device *dev = r->com->base.device;
    struct npt_renderer *rndr = dev->renderer;
+   /* Map-ring lock only: publish before a pool grow/create can drain. */
+   npt_ring_publish_pending(dev->ring);
    /* Sub-allocate from the per-device map pool.  npt_shmem_pool_alloc
     * grows the pool's shmem when there isn't room; old shmem stays
     * alive via prior slot refs. */
@@ -292,6 +300,7 @@ npt_d3d_map_ring_fini(struct npt_d3d_map_ring *r)
       return;
    }
    struct npt_renderer *rndr = r->com->base.device->renderer;
+   npt_ring_publish_pending(r->com->base.device->ring);
 
    /* No pending_seqno wait: a Map's slot choice is the only consumer and
     * the ring is going away.  Host-side ordering is covered by COM_RELEASE
@@ -518,6 +527,7 @@ static void
 npt_d3d11_buffer_aux_destroy(void *aux_raw)
 {
    struct npt_d3d11_buffer_aux *aux = aux_raw;
+   npt_ring_publish_pending(aux->com->base.device->ring);
    /* The host holds its own reference to each shmem's memory, so the
     * blobs need not outlive the COM_RELEASE queued before this. */
    for (uint32_t i = 0; i < NPT_D3D11_EXTERNAL_SLOT_MAX; i++) {
@@ -690,6 +700,7 @@ npt_d3d11_buffer_add_external_slot(struct npt_d3d11_buffer *b,
     * whole number of its pages: 16 KiB on Apple silicon. */
    const size_t size = ((size_t)aux->byte_width + 16383u) & ~(size_t)16383u;
    struct npt_renderer *rndr = aux->com->base.device->renderer;
+   npt_ring_publish_pending(ring);
    struct npt_renderer_shmem *shmem = rndr->shmem_ops.create(rndr, size);
    if (!shmem) {
       /* With no shmem the host has nothing to rename onto. */
@@ -710,6 +721,7 @@ npt_d3d11_buffer_add_external_slot(struct npt_d3d11_buffer *b,
                  (unsigned long long)aux->com->base.id, cookie,
                  (unsigned)hr);
       aux->external_slots[cookie] = NULL;
+      npt_ring_publish_pending(ring);
       npt_renderer_shmem_unref_async(rndr, shmem);
       if (cookie == 0)
          npt_d3d11_buffer_drop_external(b);

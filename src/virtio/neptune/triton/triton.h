@@ -47,6 +47,7 @@ struct triton_host_caps11;
 
 typedef struct TRITON_ADAPTER {
     D3D10DDI_HRTADAPTER          hRTAdapter;
+    D3DDDI_ADAPTERCALLBACKS      RuntimeAdapterCallbacks;
     /* Host feature snapshot (tritonHostCaps.h), taken on the first
      * GetCaps; every host-backed cap answer translates out of it. */
     INIT_ONCE                    HostCapsOnce;
@@ -61,6 +62,12 @@ typedef struct TRITON_ADAPTER {
 
 struct TRITON_SHADER;
 struct TRITON_ELEMENTLAYOUT;
+
+typedef struct TRITON_RUNTIME_WRITE_REF {
+    D3DKMT_HANDLE allocation;
+    UINT classification; /* 0=not displayable, 1=displayable, 2=unknown import */
+    LONG sharedDirty; /* backing snapshot; not a wire field */
+} TRITON_RUNTIME_WRITE_REF;
 
 typedef struct TRITON_DEVICE {
     D3D10DDI_HRTDEVICE              hRTDevice;
@@ -202,12 +209,25 @@ typedef struct TRITON_DEVICE {
     CRITICAL_SECTION                kmCtxLock;
     /* TRUE once both critical sections above are initialised. */
     BOOL                            presentLockInit;
+    BOOL                            RuntimeStreamActive;
+    void                           *RuntimeTransportOwner;
+    CRITICAL_SECTION                RuntimeWriteLock;
+    volatile LONG                   RuntimeSharedChanging; /* qualification only; no wire state */
+    TRITON_RUNTIME_WRITE_REF         RuntimeRtv[8], RuntimeDsv;
+    TRITON_RUNTIME_WRITE_REF         RuntimeOmUav[64], RuntimeCsUav[64];
+    D3DKMT_HANDLE                    RuntimeActiveWrites[D3DDDI_MAX_WRITTEN_PRIMARIES];
+    D3DKMT_HANDLE                    RuntimePendingWrites[D3DDDI_MAX_WRITTEN_PRIMARIES];
+    UINT                            RuntimeActiveWriteCount, RuntimePendingWriteCount;
+    volatile LONG                   RuntimeWriteFailed;
     /* DXGI DDI calls currently driving the present path (pfnPresent,
      * pfnPresent1, pfnBlt, pfnBlt1).  Such a call drops presentLock for the
      * GPU wait and then re-takes it, and drives pfnPresentCb under kmCtxLock,
      * so DestroyDevice must wait for this to reach zero before touching
      * anything it uses. */
     volatile LONG                   presentInFlight;
+    /* Process-private, zeroed by CreateDevice. An opt-in CPU bridge failure
+     * is terminal for this device even if its experiment marker is removed. */
+    volatile LONG                   handoffCpuBridgeFailed;
 
     /* Stretch/convert blit rig for the DXGI Blt DDI (tritonDxgiBltStretch):
      * a plain CopySubresourceRegion cannot stretch and the host silently
@@ -225,8 +245,12 @@ typedef struct TRITON_DEVICE {
      * writes a shared / presentable resource was issued since the last sync point; the next Flush / present then waits
      * (ring seqno) until the host has executed the Flush, including its GPU wait.  OmShared: a bound RTV/UAV is shared.
      * File C:\Users\Public\triton-asyncflush disables the wait. */
+    /* OR-only provenance until a locked publication boundary consumes it. */
+#define TRITON_SHARED_QUALIFIED 1L
+#define TRITON_SHARED_STRICT    2L
     volatile LONG                   SharedDirty;
     BOOL                            OmShared;
+    BOOL                            OmSharedNeedsWriteSync; /* any strict shared RTV or exported UAV */
 } TRITON_DEVICE, *PTRITON_DEVICE;
 
 /* Present GPU-done gate timing.  DestroyDevice's drain must outlast the gate's
@@ -338,10 +362,17 @@ typedef struct TRITON_RESOURCE {
      * via SET_SCANOUT_BLOB. */
     BOOL                   IsPresentable;
 
+    /* Process-private creation provenance; not serialized in a shared/KM descriptor.
+     * OpenResource zero-initializes this; identity rotation moves it with backing. */
+    BOOL                   BatchPresentWrites;
+
     /* KM allocation backing this resource's virtio-gpu blob (shared
      * textures and primaries; 0 otherwise).  Owned by the creator;
      * consumers leave it 0 (the runtime owns their opened allocation). */
     D3DKMT_HANDLE          hKMAllocation;
+    D3DKMT_HANDLE          RuntimeOpenedAllocation; /* runtime OpenResource handle, never renderer alias */
+    UINT                   RuntimeWriteClass; /* travels with backing tuple */
+    BOOL                   RuntimeMapWrites;
 
     /* TRUE when the resource is shared (creator) or opened (consumer). */
     BOOL                   IsShared;
@@ -537,11 +568,16 @@ BOOL tritonSwitch(const char *name);
 struct _TRITON_RESOURCE_FWD;
 void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE */);
 void tritonSyncShared(PTRITON_DEVICE pD, const char *why);
+BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified, UINT contextType, UINT flushFlags);
+void tritonMarkSharedDrawWrite(PTRITON_DEVICE pD);
+BOOL tritonLocalPresentBacking(const void *pResource);
 
 
 /* Per-write hand-off: right after a shared write, wait (ring seqno) until the host has executed it (and, with the host's
  * NPT_SHARED_DRAW_SYNC, until the GPU finished).  File C:\\Users\\Public\\triton-nosharedwritesync disables it. */
 void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE, NULL = unconditional */, const char *op);
 void tritonSharedDrawDone(PTRITON_DEVICE pD, const char *op);
+BOOL tritonCanBatchPresentWrites(PTRITON_DEVICE pD, const void *pResource);
+void tritonPresentPublishSharedWrites(PTRITON_DEVICE pD);
 
 #endif /* TRITON_H_INCLUDED */

@@ -12,6 +12,8 @@
  */
 
 #include "triton.h"
+#include "triton_log.h"
+#include "tritonRuntimeWrites.h"
 #include <stdio.h>
 #include <string.h>
 #include "triton_log.h"
@@ -23,6 +25,49 @@
 #include "tritonPresent.h"
 #include "tritonSharedBridge.h"
 #include "tritonHostCaps.h"
+#include "npt_runtime_stream.h"
+extern HRESULT npt_d3d11_create_device_with_renderer(struct npt_renderer *,
+    const D3D_FEATURE_LEVEL *, UINT, ID3D11Device **, D3D_FEATURE_LEVEL *,
+    ID3D11DeviceContext **, void **);
+
+static void tritonRuntimeReplyError(void *owner)
+{
+    PTRITON_DEVICE p=owner;
+    if (!p || !p->RuntimeStreamActive) return;
+    /* Existing latch also prevents every later write/submit. Actual runtime
+     * core-layer error publication occurs on this synchronous DDI caller. */
+    if (!InterlockedExchange(&p->RuntimeWriteFailed,1))
+        tritonSetError(p,D3DDDIERR_DEVICEREMOVED);
+}
+
+static void tritonRuntimeCreateAbort(PTRITON_DEVICE p)
+{
+    if (!p->RuntimeStreamActive) return;
+    if (p->RuntimeTransportOwner) {
+        npt_runtime_owner_join_release(p->RuntimeTransportOwner);
+        p->RuntimeTransportOwner = NULL;
+    }
+    if (p->hKMContext) {
+        D3DDDICB_DESTROYCONTEXT cb = {0}; cb.hContext = p->hKMContext;
+        HRESULT contextHr=p->KTCallbacks.pfnDestroyContextCb(p->hRTDevice.handle,&cb);
+        if(contextHr!=S_OK) {
+            TR_LOG("runtime CreateAbort context destroy unknown; retaining owner");
+            for(;;) Sleep(1000);
+        }
+        p->hKMContext = NULL;
+    }
+    if(tritonKmDestroyChecked(&p->Km)!=S_OK) {
+        TR_LOG("runtime CreateAbort paging teardown unknown; retaining callback owner");
+        for(;;) Sleep(1000);
+    }
+    if (p->presentLockInit) {
+        DeleteCriticalSection(&p->presentLock);
+        DeleteCriticalSection(&p->kmCtxLock);
+        DeleteCriticalSection(&p->RuntimeWriteLock);
+        p->presentLockInit = FALSE;
+    }
+}
+
 
 /* Statically linked from src/virtio/neptune/npt_entry_d3d11.c.  The
  * function pulls in the protocol-generated COM machinery internally;
@@ -674,6 +719,10 @@ static void APIENTRY tritonDestroyDevice(D3D10DDI_HDEVICE hDevice)
             Sleep(1);
         }
         if (!drained) {
+            if(p->RuntimeStreamActive) {
+                npt_log("runtime DestroyDevice present ownership unknown; retaining callback owner/locks");
+                for(;;) Sleep(1000); /* never return/free pD while borrowed callbacks are live */
+            }
             npt_log("triton: DestroyDevice: presentInFlight still %ld after "
                     "%u ms -- skipping teardown. A present is genuinely stuck, "
                     "or the counter is unbalanced; the runtime frees this "
@@ -691,13 +740,18 @@ static void APIENTRY tritonDestroyDevice(D3D10DDI_HDEVICE hDevice)
     /* Tear down the present kernel context before the device goes away, under
      * the HCONTEXT-domain lock (see kmCtxLock in triton.h) so it cannot run
      * against a pfnPresentCb on the same handle. */
+    if (!p->RuntimeStreamActive) {
     if (p->hKMContext && p->KTCallbacks.pfnDestroyContextCb) {
         D3DDDICB_DESTROYCONTEXT dc;
         memset(&dc, 0, sizeof(dc));
         dc.hContext = p->hKMContext;
         if (p->presentLockInit)
             EnterCriticalSection(&p->kmCtxLock);
-        p->KTCallbacks.pfnDestroyContextCb(p->hRTDevice.handle, &dc);
+        HRESULT contextHr=p->KTCallbacks.pfnDestroyContextCb(p->hRTDevice.handle,&dc);
+        if(p->RuntimeStreamActive && contextHr!=S_OK) {
+            TR_LOG("runtime DestroyDevice context destroy unknown; retaining owner");
+            for(;;) Sleep(1000);
+        }
         p->hKMContext = NULL;
         if (p->presentLockInit)
             LeaveCriticalSection(&p->kmCtxLock);
@@ -706,6 +760,8 @@ static void APIENTRY tritonDestroyDevice(D3D10DDI_HDEVICE hDevice)
     /* The residency requests the paging queue granted die with this
      * device's allocations. */
     tritonKmDestroy(&p->Km);
+
+    }
 
     /* Release the lazily-created present-fence objects under presentLock,
      * marking the fence not-ready+disabled first so a present still inside
@@ -729,14 +785,50 @@ static void APIENTRY tritonDestroyDevice(D3D10DDI_HDEVICE hDevice)
                 TR_LOG("DestroyDevice: %u present events left open (registration outstanding)", leaked);
         }
         LeaveCriticalSection(&p->presentLock);
-        DeleteCriticalSection(&p->presentLock);
-        DeleteCriticalSection(&p->kmCtxLock);
-        p->presentLockInit = FALSE;
+        if (!p->RuntimeStreamActive) {
+            DeleteCriticalSection(&p->presentLock);
+            DeleteCriticalSection(&p->kmCtxLock);
+            p->presentLockInit = FALSE;
+        }
     }
     if (p->pCtx3) { ID3D11DeviceContext3_Release(p->pCtx3); p->pCtx3 = NULL; }
     if (p->pCtx1) { ID3D11DeviceContext1_Release(p->pCtx1); p->pCtx1 = NULL; }
     if (p->pDev3) { ID3D11Device3_Release(p->pDev3);        p->pDev3 = NULL; }
     if (p->pDev1) { ID3D11Device1_Release(p->pDev1);        p->pDev1 = NULL; }
+    if (p->RuntimeStreamActive) {
+        npt_runtime_owner_join_release(p->RuntimeTransportOwner);
+        p->RuntimeTransportOwner = NULL;
+    if (p->hKMContext && p->KTCallbacks.pfnDestroyContextCb) {
+        D3DDDICB_DESTROYCONTEXT dc;
+        memset(&dc, 0, sizeof(dc));
+        dc.hContext = p->hKMContext;
+        if (p->presentLockInit)
+            EnterCriticalSection(&p->kmCtxLock);
+        HRESULT contextHr=p->KTCallbacks.pfnDestroyContextCb(p->hRTDevice.handle,&dc);
+        if(p->RuntimeStreamActive && contextHr!=S_OK) {
+            TR_LOG("runtime DestroyDevice context destroy unknown; retaining owner");
+            for(;;) Sleep(1000);
+        }
+        p->hKMContext = NULL;
+        if (p->presentLockInit)
+            LeaveCriticalSection(&p->kmCtxLock);
+    }
+
+    /* The residency requests the paging queue granted die with this
+     * device's allocations. */
+    if(tritonKmDestroyChecked(&p->Km)!=S_OK) {
+        TR_LOG("runtime DestroyDevice paging teardown unknown; retaining callback owner");
+        for(;;) Sleep(1000);
+    }
+
+        if (p->presentLockInit) {
+            DeleteCriticalSection(&p->presentLock);
+            DeleteCriticalSection(&p->kmCtxLock);
+            DeleteCriticalSection(&p->RuntimeWriteLock);
+            p->presentLockInit = FALSE;
+        }
+    }
+
     /* The runtime owns the TRITON_DEVICE memory (allocated via
      * pfnCalcPrivateDeviceSize); just clear the back-pointer. */
     p->pAdapter = NULL;
@@ -836,6 +928,26 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
         return E_FAIL;
     }
 
+    p->RuntimeStreamActive = tritonSwitch("triton-runtimestream");
+    if (p->RuntimeStreamActive) {
+        if (tritonSwitch("triton-acquirecpuwait")) return E_INVALIDARG;
+        if (!p->KTCallbacks.pfnCreateContextVirtualCb ||
+            !p->KTCallbacks.pfnDestroyContextCb) return E_NOTIMPL;
+        InitializeCriticalSection(&p->presentLock);
+        InitializeCriticalSection(&p->kmCtxLock);
+        InitializeCriticalSection(&p->RuntimeWriteLock);
+        p->presentLockInit = TRUE; p->Km.pLock = &p->kmCtxLock;
+        D3DDDICB_CREATECONTEXTVIRTUAL runtimeContext={0};
+        EnterCriticalSection(&p->kmCtxLock);
+        HRESULT contextHr=p->KTCallbacks.pfnCreateContextVirtualCb(p->hRTDevice.handle,&runtimeContext);
+        if(contextHr==S_OK) p->hKMContext=runtimeContext.hContext;
+        LeaveCriticalSection(&p->kmCtxLock);
+        if(contextHr!=S_OK || !p->hKMContext) {
+            TR_LOG("runtime transport virtual context create failed hr=0x%08lx",(unsigned long)contextHr);
+            tritonRuntimeCreateAbort(p); return FAILED(contextHr) ? contextHr : E_FAIL;
+        }
+    }
+
     /* Statically-linked internal factory.  Returns the base
      * ID3D11Device + ID3D11DeviceContext; QI down to the Tier 1 forms
      * Triton works with. */
@@ -847,7 +959,7 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
      * host's highest level; adopt it when it covers the requested level
      * rather than create a second host device.  A later CreateDevice on
      * the same adapter creates its own. */
-    if (pAdapter->pCapsDev && requested <= pAdapter->CapsFeatureLevel) {
+    if (!p->RuntimeStreamActive && pAdapter->pCapsDev && requested <= pAdapter->CapsFeatureLevel) {
         raw_dev = (ID3D11Device *)InterlockedExchangePointer(
             (PVOID volatile *)&pAdapter->pCapsDev, NULL);
         if (raw_dev) {
@@ -858,15 +970,35 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
                    (void *)raw_dev, (unsigned)pAdapter->CapsFeatureLevel);
         }
     }
-    if (!raw_dev)
+    if (!raw_dev && !p->RuntimeStreamActive)
         hr = npt_d3d11_create_device_internal(
             NULL /* pAdapter */, D3D_DRIVER_TYPE_HARDWARE, NULL,
             0 /* Flags */, &requested, 1, D3D11_SDK_VERSION,
             &raw_dev, &hostLevel, &raw_ctx);
+    if (p->RuntimeStreamActive) {
+        struct npt_runtime_stream stream = {0};
+        stream.adapter = p->Km.hRTAdapter;
+        stream.device = p->hRTDevice.handle;
+        stream.context = p->hKMContext;
+        stream.context_lock = &p->kmCtxLock;
+        stream.write_lock=&p->RuntimeWriteLock;
+        stream.write_owner=p;
+        stream.collect_writes=trRuntimeCollectWrites;
+        stream.submitted_writes=trRuntimeSubmittedWrites;
+        stream.report_reply_error=tritonRuntimeReplyError;
+        stream.callbacks = p->KTCallbacks;
+        stream.query_adapter_info = pAdapter->RuntimeAdapterCallbacks.pfnQueryAdapterInfoCb;
+        struct npt_renderer *renderer = npt_renderer_create_runtime_stream(&stream);
+        hr = renderer ? npt_d3d11_create_device_with_renderer(renderer,
+            &requested, 1, &raw_dev, &hostLevel, &raw_ctx,
+            &p->RuntimeTransportOwner) : E_FAIL;
+        if (SUCCEEDED(hr)) p->Km.RuntimeCtxInited = TRUE;
+    }
     if (FAILED(hr) || !raw_dev || !raw_ctx) {
         TR_LOG("CreateDevice: npt_d3d11_create_device_internal failed 0x%08lx", hr);
         if (raw_dev) ID3D11Device_Release(raw_dev);
         if (raw_ctx) ID3D11DeviceContext_Release(raw_ctx);
+        tritonRuntimeCreateAbort(p);
         return FAILED(hr) ? hr : E_FAIL;
     }
     hr = ID3D11Device_QueryInterface(raw_dev, &IID_ID3D11Device1,
@@ -875,6 +1007,7 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
     if (FAILED(hr) || !p->pDev1) {
         TR_LOG("CreateDevice: QI ID3D11Device1 failed 0x%08lx", hr);
         ID3D11DeviceContext_Release(raw_ctx);
+        tritonRuntimeCreateAbort(p);
         return FAILED(hr) ? hr : E_NOINTERFACE;
     }
     hr = ID3D11DeviceContext_QueryInterface(raw_ctx, &IID_ID3D11DeviceContext1,
@@ -883,6 +1016,7 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
     if (FAILED(hr) || !p->pCtx1) {
         TR_LOG("CreateDevice: QI ID3D11DeviceContext1 failed 0x%08lx", hr);
         ID3D11Device1_Release(p->pDev1); p->pDev1 = NULL;
+        tritonRuntimeCreateAbort(p);
         return FAILED(hr) ? hr : E_NOINTERFACE;
     }
     TR_LOG("CreateDevice: got Neptune device, requested level 0x%x, host level 0x%x",
@@ -907,10 +1041,12 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
      * kmCtxLock in triton.h.  Created only on the success path: a failed
      * CreateDevice gets no matching DestroyDevice, so anything initialised
      * before this point would never be deleted. */
-    InitializeCriticalSection(&p->presentLock);
-    InitializeCriticalSection(&p->kmCtxLock);
-    p->presentLockInit = TRUE;
-    p->Km.pLock = &p->kmCtxLock;
+    if (!p->presentLockInit) {
+        InitializeCriticalSection(&p->presentLock);
+        InitializeCriticalSection(&p->kmCtxLock);
+        p->presentLockInit = TRUE;
+        p->Km.pLock = &p->kmCtxLock;
+    }
 
     /* The kernel context must exist before the runtime's first
      * dxgkrnl-side operation on it, and those are not all DDI-visible:
@@ -923,6 +1059,16 @@ static HRESULT APIENTRY tritonCreateDevice(D3D10DDI_HADAPTER hAdapter,
      * lazy creation on the first present. */
     if (p->KTCallbacks.pfnCreateContextVirtualCb)
         tritonPresentEnsureKernelContext(p);
+    if(p->RuntimeStreamActive && p->RuntimeTransportOwner) {
+        static volatile LONG boundCount;
+        LONG sample=InterlockedIncrement(&boundCount);
+        if(sample<=16) {
+            void *owner=p->RuntimeTransportOwner;
+            TR_LOG("RUNTIME_STREAM_BOUND #%ld rtDevice=%p runtimeContext=%p owner=%p virtioCtx=%u publisherV1=%d writefeed=1",
+                   (long)sample,p->hRTDevice.handle,p->hKMContext,(void *)owner,
+                   npt_runtime_owner_context_id(owner),npt_runtime_owner_publisher_v1(owner));
+        }
+    }
     return S_OK;
 }
 
@@ -1349,6 +1495,8 @@ HRESULT APIENTRY OpenAdapter10_2(D3D10DDIARG_OPENADAPTER *pOpenData)
     if (!pAdapter) return E_OUTOFMEMORY;
 
     pAdapter->hRTAdapter  = pOpenData->hRTAdapter;
+    if (pOpenData->pAdapterCallbacks)
+        pAdapter->RuntimeAdapterCallbacks = *pOpenData->pAdapterCallbacks;
 
     pOpenData->hAdapter.pDrvPrivate = pAdapter;
 

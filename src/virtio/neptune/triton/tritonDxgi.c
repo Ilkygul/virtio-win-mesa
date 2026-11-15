@@ -12,9 +12,12 @@
 
 #include "triton.h"
 #include "triton_log.h"
+#include "tritonRuntimeWrites.h"
+#include "triton_log.h"
 #include "tritonDxgi.h"
 #include "tritonPresent.h"
 #include "npt_env.h"
+#include "npt_overrides.h"
 #include "tritonPresentTiming.h"
 #include "npt_shared_texture.h"   /* host format of a primary */
 
@@ -310,16 +313,118 @@ tritonGateTraceMs(void)
    return (int)npt_env.present_gate_trace_ms;
 }
 
-static void
-tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
+/* Opt-in observation only. Each wrapped completed-value read executes exactly
+ * one original API call at the original expression site. No extra fence query,
+ * GPU command, event registration or wait is introduced. Values are snapshots,
+ * not a new checked ownership protocol; UINT64_MAX is never completion proof. */
+typedef struct triton_gate_proof {
+   BOOL enabled, signalAttempted, armAttempted, sentinel, deadline;
+   LONG serial;
+   UINT64 target, first, last, loopFirst, loopLast, samples[8];
+   unsigned queries, loopQueries, sites[8], sampleCount;
+   ID3D11Fence *identity;
+   HRESULT signalHr, armHr, rearmHr, graceHr;
+   DWORD waitResult;
+   const char *reason;
+} TRITON_GATE_PROOF;
+
+/* sites: 0 initial, 1 pace-loop, 2 full-loop, 3 rearm, 4 trace-wake,
+ * 5 deadline, 6 grace, 7 trace-tail. First eight raw reads plus final/loop
+ * endpoints are retained; queries/sampleCount explicitly expose omissions. */
+static inline UINT64
+tritonGateProofRead(TRITON_GATE_PROOF *proof, ID3D11Fence *fence, unsigned site)
 {
-   if (!pD->pCtx1)
-      return;
+   const UINT64 value = ID3D11Fence_GetCompletedValue(fence);
+   if (proof->enabled) {
+      if (!proof->queries) proof->first = value;
+      proof->last = value;
+      proof->queries++;
+      if (site == 2) {
+         if (!proof->loopQueries) proof->loopFirst = value;
+         proof->loopLast = value;
+         proof->loopQueries++;
+      }
+      if (value == UINT64_MAX) proof->sentinel = TRUE;
+      if (proof->sampleCount < 8) {
+         proof->samples[proof->sampleCount] = value;
+         proof->sites[proof->sampleCount++] = site;
+      }
+   }
+   return value;
+}
+
+static void
+tritonGateProofEnd(PTRITON_DEVICE pD, const TRITON_GATE_PROOF *proof)
+{
+   if (!proof->enabled) return;
+   const BOOL rawReached = proof->queries && proof->last != UINT64_MAX &&
+      proof->target && proof->last >= proof->target;
+   const BOOL observed = proof->signalAttempted && SUCCEEDED(proof->signalHr) &&
+      !proof->sentinel && rawReached;
+   const BOOL failure = !observed || proof->deadline ||
+      (proof->armAttempted && FAILED(proof->armHr)) ||
+      FAILED(proof->rearmHr) || FAILED(proof->graceHr);
+   static volatile LONG failures;
+   if (proof->serial > 64 &&
+       (!failure || InterlockedIncrement(&failures) > 32)) return;
+   TR_LOG("GPU-GATE-PROOF #%ld pid=%lu tid=%lu dev=%p fence=%p target=%llu "
+          "reason=%s signalCalled=%d signalHr=0x%08lx armCalled=%d "
+          "armHr=0x%08lx rearmHr=0x%08lx graceHr=0x%08lx",
+          (long)proof->serial, GetCurrentProcessId(), GetCurrentThreadId(),
+          (void *)pD, (void *)proof->identity, (unsigned long long)proof->target,
+          proof->reason, proof->signalAttempted, (unsigned long)proof->signalHr,
+          proof->armAttempted, (unsigned long)proof->armHr,
+          (unsigned long)proof->rearmHr, (unsigned long)proof->graceHr);
+   TR_LOG("GPU-GATE-PROOF #%ld values queries=%u first=%llu last=%llu "
+          "loopQueries=%u loopFirst=%llu loopLast=%llu sentinel=%d "
+          "deadline=%d waitResult=0x%08lx rawReached=%d observed=%d "
+          "(snapshot only; legacy return unchanged)",
+          (long)proof->serial, proof->queries,
+          (unsigned long long)proof->first, (unsigned long long)proof->last,
+          proof->loopQueries, (unsigned long long)proof->loopFirst,
+          (unsigned long long)proof->loopLast, proof->sentinel, proof->deadline,
+          (unsigned long)proof->waitResult, rawReached, observed);
+   TR_LOG("GPU-GATE-PROOF #%ld samples count=%u omitted=%u "
+          "raw=%u:%llu,%u:%llu,%u:%llu,%u:%llu,%u:%llu,%u:%llu,%u:%llu,%u:%llu",
+          (long)proof->serial, proof->sampleCount,
+          proof->queries - proof->sampleCount,
+          proof->sites[0], (unsigned long long)proof->samples[0],
+          proof->sites[1], (unsigned long long)proof->samples[1],
+          proof->sites[2], (unsigned long long)proof->samples[2],
+          proof->sites[3], (unsigned long long)proof->samples[3],
+          proof->sites[4], (unsigned long long)proof->samples[4],
+          proof->sites[5], (unsigned long long)proof->samples[5],
+          proof->sites[6], (unsigned long long)proof->samples[6],
+          proof->sites[7], (unsigned long long)proof->samples[7]);
+}
+
+static HRESULT
+tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait, BOOL pairPresent)
+{
+   /* Only HRESULT-returning Present DDIs select the new pair. Shared
+    * handoff/Flush callers retain their existing path and completion gates. */
+   if (pairPresent && InterlockedCompareExchange(&pD->RuntimeWriteFailed, 0, 0))
+      return D3DDDIERR_DEVICEREMOVED;
+   TRITON_GATE_PROOF proof = {0};
+   proof.enabled = arm && wait && tritonSwitch("triton-gpugateproof");
+   proof.signalHr = proof.armHr = proof.rearmHr = proof.graceHr = S_FALSE;
+   proof.waitResult = 0xffffffff;
+   proof.reason = "no-context";
+   if (proof.enabled) {
+      static volatile LONG count;
+      proof.serial = InterlockedIncrement(&count);
+   }
+   if (!pD->pCtx1) {
+      tritonGateProofEnd(pD, &proof);
+      return S_OK;
+   }
    if (!pD->presentLockInit) {
       /* Locks not up (only reachable before a successful CreateDevice):
        * bare flush rather than race the fence protocol. */
       ID3D11DeviceContext1_Flush(pD->pCtx1);
-      return;
+      proof.reason = "lock-uninitialized-bare-flush";
+      tritonGateProofEnd(pD, &proof);
+      return S_OK;
    }
    if (!arm) {
       /* Submit only.  presentLock still covers it: the immediate context is
@@ -328,7 +433,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
       EnterCriticalSection(&pD->presentLock);
       ID3D11DeviceContext1_Flush(pD->pCtx1);
       LeaveCriticalSection(&pD->presentLock);
-      return;
+      return S_OK;
    }
 
    ID3D11Fence *pFence = NULL;
@@ -352,11 +457,37 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
        * completion, and the KMD signals the event from its completion DPC
        * -- so the present thread SLEEPS (no spin). */
       v = ++pD->presentFenceValue;
-      ID3D11DeviceContext4_Signal(pD->pCtx4, pD->pPresentFence, v);
-      ID3D11DeviceContext1_Flush(pD->pCtx1);
+      proof.target = v;
+      proof.identity = pD->pPresentFence;
+      proof.signalAttempted = TRUE;
+      enum npt_present_pair_result pair = NPT_PRESENT_PAIR_UNSUPPORTED;
+      if (pairPresent)
+         pair = npt_d3d11_present_signal_flush_pair(pD->pCtx4, pD->pCtx1,
+                                                   pD->pPresentFence, v);
+      if (pair == NPT_PRESENT_PAIR_FAILED) {
+         /* No event arm, PresentCb, retry, or success on a selected failure.
+          * Retain pending allocation metadata; future runtime collects fail. */
+         proof.signalHr = D3DDDIERR_DEVICEREMOVED;
+         proof.reason = "signal-flush-pair-failed";
+         InterlockedExchange(&pD->RuntimeWriteFailed, 1);
+         LeaveCriticalSection(&pD->presentLock);
+         tritonSetError(pD, D3DDDIERR_DEVICEREMOVED);
+         tritonGateProofEnd(pD, &proof);
+         return D3DDDIERR_DEVICEREMOVED;
+      }
+      if (pair == NPT_PRESENT_PAIR_UNSUPPORTED) {
+         proof.signalHr = ID3D11DeviceContext4_Signal(pD->pCtx4, pD->pPresentFence, v);
+         ID3D11DeviceContext1_Flush(pD->pCtx1);
+      } else {
+         /* Same assumed S_OK as the existing async Signal thunk. This is
+          * accepted publication, NOT a synchronous native HRESULT/GPU proof. */
+         proof.signalHr = S_OK;
+      }
       pt_sig = TRITON_PT_NOW();
-      done = ID3D11Fence_GetCompletedValue(pD->pPresentFence);
+      done = tritonGateProofRead(&proof, pD->pPresentFence, 0);
+      proof.reason = done == UINT64_MAX ? "initial-UINT64_MAX" : "initial-already-completed";
       if (done < v) {
+         proof.reason = "event-unavailable";
          hEvt = tritonPresentPopEvent(pD);
          tritonPresentDrainEvent(hEvt);
          /* Bounded run-ahead (KMD-gated presents only): nothing else paces
@@ -390,14 +521,17 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
             if (v > maxAhead && done < v - maxAhead)
                paceTarget = v - maxAhead;
          }
-         if (hEvt && SUCCEEDED(ID3D11Fence_SetEventOnCompletion(pD->pPresentFence, v,
+         proof.armAttempted = hEvt != NULL;
+         if (hEvt && SUCCEEDED(proof.armHr = ID3D11Fence_SetEventOnCompletion(pD->pPresentFence, v,
                                                                 hEvt))) {
             /* Keep the fence alive across the unlocked wait: teardown
              * releases the device's reference under presentLock, but this
              * waiter holds its own. */
             pFence = pD->pPresentFence;
             ID3D11Fence_AddRef(pFence);
+            proof.reason = "full-loop-ended";
          } else {
+            proof.reason = hEvt ? "initial-arm-failed" : "event-unavailable";
             if (hEvt) {
                /* Armed even though the call failed: the transport arms
                 * npt_event before issuing the remoted SetEventOnCompletion,
@@ -412,6 +546,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
          }
       }
    } else {
+      proof.reason = "fence-unavailable-bare-flush";
       ID3D11DeviceContext1_Flush(pD->pCtx1);
    }
    LeaveCriticalSection(&pD->presentLock);
@@ -423,7 +558,8 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
        * present paid no GPU wait; counting them separately keeps the wait
        * average from being diluted by frames that never waited. */
       triton_pt_account(pt_sig - pt_t0, pt_arm - pt_sig, 0.0, TRUE);
-      return;
+      tritonGateProofEnd(pD, &proof);
+      return S_OK;
    }
 
    if (!wait) {
@@ -446,7 +582,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
          HANDLE hTimer = CreateWaitableTimerExW(NULL, NULL,
                                                 CREATE_WAITABLE_TIMER_HIGH_RESOLUTION,
                                                 TIMER_ALL_ACCESS);
-         while (ID3D11Fence_GetCompletedValue(pFence) < paceTarget) {
+         while (tritonGateProofRead(&proof, pFence, 1) < paceTarget) {
             if (GetTickCount64() >= deadline) {
                static LONG paN;
                LONG n = InterlockedIncrement(&paN);
@@ -473,7 +609,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
       LeaveCriticalSection(&pD->presentLock);
       triton_pt_account(pt_sig - pt_t0, pt_arm - pt_sig,
                         TRITON_PT_NOW() - pt_arm, FALSE);
-      return;
+      return S_OK;
    }
 
    /* Block until the GPU retires the marker, so the consumer (DWM) never
@@ -491,7 +627,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
    /* Whether a SetEventOnCompletion registration is still outstanding on
     * hEvt.  Only a wait that actually consumed the signal clears it. */
    BOOL regOutstanding = TRUE;
-   while (ID3D11Fence_GetCompletedValue(pFence) < v) {
+   while (tritonGateProofRead(&proof, pFence, 2) < v) {
       const ULONGLONG now = GetTickCount64();
       if (now >= deadline) {
          /* Extend while the device still reports healthy (see the deadline
@@ -509,6 +645,8 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
          static LONG toN;
          LONG n = InterlockedIncrement(&toN);
          hitDeadline = TRUE;
+         proof.deadline = TRUE;
+         proof.reason = "deadline-exhausted";
          if (n == 1 || (n & 255) == 0)
             TR_LOG("present-fence: GPU wait timed out #%ld (presenting anyway)", n);
          break;
@@ -526,23 +664,26 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
          EnterCriticalSection(&pD->presentLock);
          tritonPresentDrainEvent(hEvt);
          HRESULT rehr = ID3D11Fence_SetEventOnCompletion(pFence, v, hEvt);
+         proof.rearmHr = rehr;
          LeaveCriticalSection(&pD->presentLock);
          if (SUCCEEDED(rehr))
             regOutstanding = TRUE;
          if (FAILED(rehr)) {
+            proof.reason = "rearm-failed";
             static LONG raN;
             LONG n = InterlockedIncrement(&raN);
             if (n == 1 || (n & 255) == 0)
                TR_LOG("present-fence: re-arm failed 0x%08lx #%ld", (unsigned long)rehr, n);
             break;   /* GetCompletedValue remains the source of truth */
          }
-         if (ID3D11Fence_GetCompletedValue(pFence) >= v)
+         if (tritonGateProofRead(&proof, pFence, 3) >= v)
             break;
       }
       /* Wait the full remaining deadline rather than polling, so a dropped
        * completion surfaces as the deadline instead of being hidden behind
        * repeated short polls. */
       DWORD r = WaitForSingleObject(hEvt, (DWORD)(deadline - now));
+      proof.waitResult = r;
       if (gate_ms) {
          /* obj0 vs timeout is the discriminator: "event never came" vs
           * "event came, value was stale".  The stale count is the health
@@ -552,7 +693,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
             tr_obj0++;
             if (tr_evt_fired < 0.0)
                tr_evt_fired = triton_pt_qpc_us() - tr_arm;
-            if (ID3D11Fence_GetCompletedValue(pFence) < v) {
+            if (tritonGateProofRead(&proof, pFence, 4) < v) {
                tr_stale++;
                static LONG stN;
                LONG sn = InterlockedIncrement(&stN);
@@ -567,6 +708,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
       if (r == WAIT_OBJECT_0)
          regOutstanding = FALSE;   /* fired; this wait consumed the signal */
       if (r != WAIT_OBJECT_0 && r != WAIT_TIMEOUT) {
+         proof.reason = "wait-failed";
          static LONG weN;
          LONG n = InterlockedIncrement(&weN);
          if (n == 1 || (n & 255) == 0)
@@ -580,17 +722,19 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
     * registration a bounded grace period first.  This is the only recourse
     * when a single full-deadline wait consumed every round, since the re-arm
     * above runs only from the second round on. */
-   if (hitDeadline && ID3D11Fence_GetCompletedValue(pFence) < v) {
+   if (hitDeadline && tritonGateProofRead(&proof, pFence, 5) < v) {
       EnterCriticalSection(&pD->presentLock);
       tritonPresentDrainEvent(hEvt);
       HRESULT ghr = ID3D11Fence_SetEventOnCompletion(pFence, v, hEvt);
+      proof.graceHr = ghr;
       LeaveCriticalSection(&pD->presentLock);
       if (SUCCEEDED(ghr)) {
          regOutstanding = TRUE;
          if (WaitForSingleObject(hEvt, TRITON_PRESENT_GRACE_MS) == WAIT_OBJECT_0)
             regOutstanding = FALSE;
       }
-      if (ID3D11Fence_GetCompletedValue(pFence) < v) {
+      if (tritonGateProofRead(&proof, pFence, 6) < v) {
+         proof.reason = "still-short-after-grace";
          static LONG ugN;
          LONG n = InterlockedIncrement(&ugN);
          if (n == 1 || (n & 255) == 0)
@@ -600,7 +744,7 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
 
    if (gate_ms) {
       const double tr_end = triton_pt_qpc_us();
-      if (ID3D11Fence_GetCompletedValue(pFence) >= v)
+      if (tritonGateProofRead(&proof, pFence, 7) >= v)
          tr_fence_done = tr_end - tr_arm;
       const long long total_us = (long long)(tr_end - tr_t0);
       if (hitDeadline || total_us >= (long long)gate_ms * 1000)
@@ -621,6 +765,8 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait)
 
    triton_pt_account(pt_sig - pt_t0, pt_arm - pt_sig,
                      TRITON_PT_NOW() - pt_arm, FALSE);
+   tritonGateProofEnd(pD, &proof);
+   return S_OK;
 }
 
 /* Submit the flip/blit to dxgkrnl under kmCtxLock: DWM's present threads
@@ -655,6 +801,14 @@ tritonPresentAmortize(PTRITON_DEVICE pD)
       pD->pUMCallbacks->pfnPerformAmortizedProcessingCb(pD->hRTCoreLayer);
 }
 
+void
+tritonPresentPublishSharedWrites(PTRITON_DEVICE pD)
+{
+   if (!pD) return;
+   tritonPresentFlushAndGate(pD, TRUE /* arm */, TRUE /* GPU complete */, FALSE /* pair */);
+   tritonSyncShared(pD, "ReleaseResourceGPU");
+}
+
 static HRESULT APIENTRY
 tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
 {
@@ -669,6 +823,7 @@ tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
    if (!pD || !src) return E_INVALIDARG;
    /* Pin the device for the whole present (see presentInFlight in triton.h). */
    InterlockedIncrement(&pD->presentInFlight);
+   if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
    /* Windowed flip-model devices never created a primary, so the kernel
     * context may not exist yet; create it here or the present is lost. */
    if (!pD->hKMContext)
@@ -699,7 +854,13 @@ tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
       tritonResourceSyncPresentCompanion(pD, src);
       tritonPresentUnlock(pD);
    }
-   tritonPresentFlushAndGate(pD, TRUE /* arm */, !src->IsPresentable /* wait */);
+   HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
+      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */,
+      TRUE /* internal Present pair */);
+   if (FAILED(gateHr)) {
+      InterlockedDecrement(&pD->presentInFlight);
+      return gateHr;
+   }
 
    /* DXGIDDICB_PRESENT (MSDN):
     *   hSrcAllocation  the rendered back buffer to present (a flip-primary
@@ -775,6 +936,30 @@ tritonDxgiQueryResourceResidency(DXGI_DDI_ARG_QUERYRESOURCERESIDENCY *pArgs)
    return S_OK;
 }
 
+/* Bounded metadata-only correlation for stale cached write-ref diagnosis.
+ * No callback/GPU operation runs under the short snapshot lock. */
+static void
+tritonTraceRuntimeRotation(PTRITON_DEVICE pD, const DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES *args,
+                           LONG sample, const char *phase)
+{
+   TRITON_RUNTIME_WRITE_REF cached[9];
+   EnterCriticalSection(&pD->RuntimeWriteLock);
+   memcpy(cached,pD->RuntimeRtv,sizeof(pD->RuntimeRtv));
+   cached[8]=pD->RuntimeDsv;
+   UINT pending=pD->RuntimePendingWriteCount,active=pD->RuntimeActiveWriteCount;
+   LeaveCriticalSection(&pD->RuntimeWriteLock);
+   TR_LOG("RUNTIME_ROTATE phase=%s sample=%ld tid=%lu device=%p count=%u pending=%u active=%u tupleCap=8",
+          phase,sample,(unsigned long)GetCurrentThreadId(),pD,args->Resources,pending,active);
+   for(UINT i=0;i<args->Resources && i<8;++i) {
+      PTRITON_RESOURCE r=(PTRITON_RESOURCE)(uintptr_t)args->pResources[i];
+      TR_LOG("RUNTIME_ROTATE_TUPLE phase=%s sample=%ld index=%u resource=%p backing=%p km=0x%x opened=0x%x class=%u",
+             phase,sample,i,r,r->pResource,r->hKMAllocation,r->RuntimeOpenedAllocation,r->RuntimeWriteClass);
+   }
+   for(UINT i=0;i<9;++i)
+      TR_LOG("RUNTIME_ROTATE_CACHE phase=%s sample=%ld slot=%u allocation=0x%x class=%u",
+             phase,sample,i,cached[i].allocation,cached[i].classification);
+}
+
 static HRESULT APIENTRY
 tritonDxgiRotateResourceIdentities(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES *pArgs)
 {
@@ -811,6 +996,25 @@ tritonDxgiRotateResourceIdentities(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES *pArg
       }
    }
 
+   static LONG runtimeRotationTraceCount;
+   const LONG runtimeRotationTrace = pD->RuntimeStreamActive ? InterlockedIncrement(&runtimeRotationTraceCount) : 0;
+   if(runtimeRotationTrace>0 && runtimeRotationTrace<=16)
+      tritonTraceRuntimeRotation(pD,pArgs,runtimeRotationTrace,"before");
+   trRuntimePublishBeforeReuse(pD);
+   trRuntimeSharedBackingBegin(pD);
+   /* Mixed/unknown rotation provenance must never inherit relaxed publication. */
+   {
+      BOOL allBatch = TRUE;
+      for (i = 0; i < n; ++i)
+         if (!((PTRITON_RESOURCE)(uintptr_t)pArgs->pResources[i])->BatchPresentWrites)
+            allBatch = FALSE;
+      if (!allBatch) {
+         for (i = 0; i < n; ++i)
+            ((PTRITON_RESOURCE)(uintptr_t)pArgs->pResources[i])->BatchPresentWrites = FALSE;
+         pD->OmSharedNeedsWriteSync = TRUE;
+      }
+   }
+
    /* Flip-model back buffers (windowed shared textures AND scanout
     * primaries) are DISTINCT host textures, each with its own blob-
     * backed KM allocation that consumers have imported.  Left-rotate
@@ -823,7 +1027,10 @@ tritonDxgiRotateResourceIdentities(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES *pArg
       ID3D11Resource *tmpRes    = r0->pResource;
       ID3D11Resource *tmpComp   = r0->pPresentCompanion;
       D3DKMT_HANDLE   tmpAlloc  = r0->hKMAllocation;
+      D3DKMT_HANDLE tmpRuntimeAlloc = r0->RuntimeOpenedAllocation;
+      UINT tmpWriteClass = r0->RuntimeWriteClass;
       BOOL            tmpShared = r0->IsShared;
+      BOOL            tmpBatch = r0->BatchPresentWrites;
       D3DKMT_HANDLE   tmpImpA   = r0->hImportAlloc;
       D3DKMT_HANDLE   tmpImpR   = r0->hImportResKmt;
       for (i = 0; i + 1 < n; ++i) {
@@ -832,7 +1039,10 @@ tritonDxgiRotateResourceIdentities(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES *pArg
          a->pResource     = b->pResource;
          a->pPresentCompanion = b->pPresentCompanion;
          a->hKMAllocation = b->hKMAllocation;
+         a->RuntimeOpenedAllocation = b->RuntimeOpenedAllocation;
+         a->RuntimeWriteClass = b->RuntimeWriteClass;
          a->IsShared      = b->IsShared;
+         a->BatchPresentWrites = b->BatchPresentWrites;
          a->hImportAlloc  = b->hImportAlloc;
          a->hImportResKmt = b->hImportResKmt;
       }
@@ -842,17 +1052,26 @@ tritonDxgiRotateResourceIdentities(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES *pArg
          last->pResource     = tmpRes;
          last->pPresentCompanion = tmpComp;
          last->hKMAllocation = tmpAlloc;
+         last->RuntimeOpenedAllocation = tmpRuntimeAlloc;
+         last->RuntimeWriteClass = tmpWriteClass;
          last->IsShared      = tmpShared;
+         last->BatchPresentWrites = tmpBatch;
          last->hImportAlloc  = tmpImpA;
          last->hImportResKmt = tmpImpR;
       }
    }
+
+   trRuntimeSharedBackingTupleDone(pD);
 
    /* Host views wrapping these resources still target the pre-rotation
     * textures; rebuild them in place. */
    for (i = 0; i < n; ++i)
       tritonResourceRecreateViews(pD,
          (PTRITON_RESOURCE)(uintptr_t)pArgs->pResources[i]);
+
+   /* Missing replay leaves cached qualification strict. Successful replay
+    * below reconstructs it from the new backing after mutation is complete. */
+   trRuntimeSharedBackingEnd(pD);
 
    /* Have the runtime replay current bindings through the DDI so the
     * host context picks up the recreated views ("the driver might be
@@ -887,6 +1106,8 @@ tritonDxgiRotateResourceIdentities(DXGI_DDI_ARG_ROTATE_RESOURCE_IDENTITIES *pArg
             cb->pfnStateOmRenderTargetsCb(pD->hRTCoreLayer);
       }
    }
+   if(runtimeRotationTrace>0 && runtimeRotationTrace<=16)
+      tritonTraceRuntimeRotation(pD,pArgs,runtimeRotationTrace,"after-rebind");
    return S_OK;
 }
 
@@ -1132,7 +1353,14 @@ tritonDxgiBltStretch(PTRITON_DEVICE pD,
    ID3D11DeviceContext1_PSSetShaderResources(c, 0, 1, &srv);
    ID3D11DeviceContext1_PSSetSamplers(c, 0, 1, &pD->pBlitSampler);
    ID3D11DeviceContext1_PSSetConstantBuffers(c, 0, 1, &pD->pBlitCB);
+   if (!trRuntimeWriteResourceBegin(pD,dst)) {
+      tritonPresentUnlock(pD);
+      ID3D11ShaderResourceView_Release(srv);
+      ID3D11RenderTargetView_Release(rtv);
+      return D3DDDIERR_DEVICEREMOVED;
+   }
    ID3D11DeviceContext1_Draw(c, 3, 0);
+   trRuntimeWriteEnd(pD);
    {
       /* Unbind our views before the runtime replays app state, so the
        * primary is never simultaneously bound as PS resource and render
@@ -1210,13 +1438,19 @@ tritonDxgiBltCommon0(DXGI_DDI_HDEVICE hDevice,
    /* MSAA resolve blt. */
    if (Flags.Resolve) {
       tritonPresentLock(pD);
+   if (!trRuntimeWriteResourceBegin(pD,dst)) {
+      tritonPresentUnlock(pD);
+      InterlockedDecrement(&pD->presentInFlight);
+      return D3DDDIERR_DEVICEREMOVED;
+   }
       ID3D11DeviceContext1_ResolveSubresource(pD->pCtx1,
                                               dst->pResource, DstSubresource,
                                               src->pResource, SrcSubresource,
                                               (DXGI_FORMAT)dst->Format);
+   trRuntimeWriteEnd(pD);
       tritonPresentUnlock(pD);
       if (Flags.Present)
-         tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */);
+         tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */, FALSE /* pair */);
       InterlockedDecrement(&pD->presentInFlight);
       return S_OK;
    }
@@ -1253,7 +1487,7 @@ tritonDxgiBltCommon0(DXGI_DDI_HDEVICE hDevice,
                                             src, SrcSubresource, &box);
          if (SUCCEEDED(shr)) {
             if (Flags.Present)
-               tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */);
+               tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */, FALSE /* pair */);
             InterlockedDecrement(&pD->presentInFlight);
             return S_OK;
          }
@@ -1275,15 +1509,21 @@ tritonDxgiBltCommon0(DXGI_DDI_HDEVICE hDevice,
    }
 
    tritonPresentLock(pD);
+   if (!trRuntimeWriteResourceBegin(pD,dst)) {
+      tritonPresentUnlock(pD);
+      InterlockedDecrement(&pD->presentInFlight);
+      return D3DDDIERR_DEVICEREMOVED;
+   }
    ID3D11DeviceContext1_CopySubresourceRegion(pD->pCtx1,
                                               dst->pResource, DstSubresource,
                                               DstLeft, DstTop, 0,
                                               src->pResource, SrcSubresource,
                                               &box);
+   trRuntimeWriteEnd(pD);
    tritonPresentUnlock(pD);
    /* A presentation blt is the present: nothing later submits it. */
    if (Flags.Present)
-      tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */);
+      tritonPresentFlushAndGate(pD, FALSE /* arm */, FALSE /* wait */, FALSE /* pair */);
    InterlockedDecrement(&pD->presentInFlight);
    return S_OK;
 }
@@ -1410,6 +1650,7 @@ tritonDxgiPresent1(DXGI_DDI_ARG_PRESENT1 *pArgs)
    PTRITON_RESOURCE dst = (PTRITON_RESOURCE)(uintptr_t)pArgs->hDstResource;
    if (!src) return E_INVALIDARG;
    InterlockedIncrement(&pD->presentInFlight);   /* see tritonDxgiPresent */
+   if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
    if (!pD->hKMContext)
       tritonPresentEnsureKernelContext(pD);
    if (!pD->hKMContext || !pD->pfnPresentCb || !src->hKMAllocation) {
@@ -1430,7 +1671,13 @@ tritonDxgiPresent1(DXGI_DDI_ARG_PRESENT1 *pArgs)
       tritonResourceSyncPresentCompanion(pD, src);
       tritonPresentUnlock(pD);
    }
-   tritonPresentFlushAndGate(pD, TRUE /* arm */, !src->IsPresentable /* wait */);
+   HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
+      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */,
+      TRUE /* internal Present pair */);
+   if (FAILED(gateHr)) {
+      InterlockedDecrement(&pD->presentInFlight);
+      return gateHr;
+   }
 
    DXGIDDICB_PRESENT cb;
    memset(&cb, 0, sizeof(cb));

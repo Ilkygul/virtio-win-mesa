@@ -49,7 +49,7 @@ libneptune_umd = shared_library(
          '../npt_entry_d3d12.c')],
   include_directories : triton_incs,
   dependencies : npt_deps,
-  c_args : npt_c_args,
+  c_args : npt_c_args + ['-DNPT_TRITON_D3D11_UMD=1'],
   # d3d10umddi.h redeclares many D3D10_* numeric constants as file-scope
   # `const UINT` variables on top of the #define forms in d3d10.h.  In C
   # those have external linkage, so every TU that includes the umddi
@@ -72,7 +72,7 @@ if with_tests
       'triton_dxbc_test',
       files('tests/tritonDxbcTest.c'),
       include_directories : triton_incs,
-      c_args : npt_c_args,
+      c_args : npt_c_args + ['-DNPT_TRITON_D3D11_UMD=1'],
     ),
     suite : ['neptune'],
   )
@@ -85,7 +85,7 @@ if with_tests
       'triton_dxil_test',
       files('tests/tritonDxilTest.cpp', 'tritonDxil.c', 'tritonDxbc.c'),
       include_directories : triton_incs,
-      c_args : npt_c_args,
+      c_args : npt_c_args + ['-DNPT_TRITON_D3D11_UMD=1'],
       link_args : ['ole32.lib'],
     ),
     suite : ['neptune'],

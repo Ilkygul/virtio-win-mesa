@@ -18,6 +18,8 @@
 
 #include "triton.h"
 #include "triton_log.h"
+#include "tritonRuntimeWrites.h"
+#include "triton_log.h"
 #include "tritonVideo.h"
 
 #define TRITON_NPT_DXVA_SUBMIT  0x4e505644u /* 'NPVD' */
@@ -363,6 +365,12 @@ trVideoDecoderBeginFrame(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HDECODE hDecode,
     PTRITON_VDOV v = (PTRITON_VDOV)pArgs->hOutputView.pDrvPrivate;
     HRESULT hr = trRefreshVDOV(pD, v);
     if (FAILED(hr)) return trVideoViewError(pD, hr);
+    if(pD->RuntimeStreamActive && trRuntimeWriteRef(pD,v->pResource).classification != 0) {
+        InterlockedExchange(&pD->RuntimeWriteFailed,1);
+        TR_LOG("RUNTIME_WRITE decoder displayable/unknown output rejected before BeginFrame");
+        tritonSetError(pD,D3DDDIERR_DEVICEREMOVED);
+        return D3DDDIERR_DEVICEREMOVED;
+    }
     return ID3D11VideoContext_DecoderBeginFrame(pD->pVidCtx, d->pDecoder, v->pView, 0, NULL);
 }
 
@@ -866,7 +874,10 @@ trVideoProcessorBlt(D3D10DDI_HDEVICE hDevice, D3D11_1DDI_HVIDEOPROCESSOR hVP, D3
         s[i].ppPastSurfacesRight = right && in->PastFrames ? pastRight[i] : NULL;
         s[i].ppFutureSurfacesRight = right && in->FutureFrames ? futureRight[i] : NULL;
     }
-    return ID3D11VideoContext_VideoProcessorBlt(pD->pVidCtx, p->pVP, o->pView, OutputFrame, StreamCount, s);
+    if(!trRuntimeWriteResourceBegin(pD,o->pResource)) return D3DDDIERR_DEVICEREMOVED;
+    HRESULT bltHr=ID3D11VideoContext_VideoProcessorBlt(pD->pVidCtx,p->pVP,o->pView,OutputFrame,StreamCount,s);
+    trRuntimeWriteEnd(pD);
+    return bltHr;
 }
 
 static SIZE_T APIENTRY

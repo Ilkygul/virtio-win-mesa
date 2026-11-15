@@ -14,6 +14,8 @@
 
 #include "triton.h"
 #include "triton_log.h"
+#include "tritonRuntimeWrites.h"
+#include "triton_log.h"
 
 /* D3D10/11_1 DDI enums share the underlying integer values with their
  * D3D11 counterparts where d3d10umddi.h says "HW consumes values
@@ -599,8 +601,10 @@ tritonDraw(D3D10DDI_HDEVICE hDevice, UINT VertexCount, UINT StartVertexLocation)
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
+    tritonMarkSharedDrawWrite(pD);
+    if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
     ID3D11DeviceContext1_Draw(pD->pCtx1, VertexCount, StartVertexLocation);
+    trRuntimeWriteEnd(pD);
     tritonSharedDrawDone(pD, "Draw");
 }
 
@@ -610,8 +614,10 @@ tritonDrawIndexed(D3D10DDI_HDEVICE hDevice, UINT IndexCount,
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
+    tritonMarkSharedDrawWrite(pD);
+    if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
     ID3D11DeviceContext1_DrawIndexed(pD->pCtx1, IndexCount, StartIndexLocation, BaseVertexLocation);
+    trRuntimeWriteEnd(pD);
     tritonSharedDrawDone(pD, "DrawIndexed");
 }
 
@@ -622,9 +628,11 @@ tritonDrawInstanced(D3D10DDI_HDEVICE hDevice, UINT VertexCountPerInstance,
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
+    tritonMarkSharedDrawWrite(pD);
+    if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
     ID3D11DeviceContext1_DrawInstanced(pD->pCtx1, VertexCountPerInstance, InstanceCount,
                                        StartVertexLocation, StartInstanceLocation);
+    trRuntimeWriteEnd(pD);
     tritonSharedDrawDone(pD, "DrawInstanced");
 }
 
@@ -635,10 +643,12 @@ tritonDrawIndexedInstanced(D3D10DDI_HDEVICE hDevice, UINT IndexCountPerInstance,
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
-    if (pD->OmShared) InterlockedExchange(&pD->SharedDirty, 1);
+    tritonMarkSharedDrawWrite(pD);
+    if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
     ID3D11DeviceContext1_DrawIndexedInstanced(pD->pCtx1, IndexCountPerInstance, InstanceCount,
                                               StartIndexLocation, BaseVertexLocation,
                                               StartInstanceLocation);
+    trRuntimeWriteEnd(pD);
     tritonSharedDrawDone(pD, "DrawIndexedInstanced");
 }
 
@@ -647,7 +657,9 @@ tritonDrawAuto(D3D10DDI_HDEVICE hDevice)
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
+    if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
     ID3D11DeviceContext1_DrawAuto(pD->pCtx1);
+    trRuntimeWriteEnd(pD);
     tritonSharedDrawDone(pD, "DrawAuto");
 }
 
@@ -658,8 +670,10 @@ tritonDrawInstancedIndirect(D3D10DDI_HDEVICE hDevice,
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hBuf.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
     ID3D11DeviceContext1_DrawInstancedIndirect(
         pD->pCtx1, (ID3D11Buffer *)r->pResource, Offset);
+    trRuntimeWriteEnd(pD);
 }
 
 void APIENTRY
@@ -669,8 +683,10 @@ tritonDrawIndexedInstancedIndirect(D3D10DDI_HDEVICE hDevice,
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hBuf.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    if (!trRuntimeDrawWriteBegin(pD,FALSE)) return;
     ID3D11DeviceContext1_DrawIndexedInstancedIndirect(
         pD->pCtx1, (ID3D11Buffer *)r->pResource, Offset);
+    trRuntimeWriteEnd(pD);
 }
 
 void APIENTRY
@@ -678,7 +694,9 @@ tritonDispatch(D3D10DDI_HDEVICE hDevice, UINT X, UINT Y, UINT Z)
 {
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD) return;
+    if (!trRuntimeDrawWriteBegin(pD,TRUE)) return;
     ID3D11DeviceContext1_Dispatch(pD->pCtx1, X, Y, Z);
+    trRuntimeWriteEnd(pD);
 }
 
 void APIENTRY
@@ -688,8 +706,10 @@ tritonDispatchIndirect(D3D10DDI_HDEVICE hDevice,
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hBuf.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    if (!trRuntimeDrawWriteBegin(pD,TRUE)) return;
     ID3D11DeviceContext1_DispatchIndirect(
         pD->pCtx1, (ID3D11Buffer *)r->pResource, Offset);
+    trRuntimeWriteEnd(pD);
 }
 
 /* ---------- Stream output ---------- */

@@ -1,0 +1,2678 @@
+{
+  "schema": "fold-retained-c46-neptune-sources-v1",
+  "status": "ACTUALLY_BUILT_AND_TESTED_PARTIAL_RESULT",
+  "scope": "Exact compiler-visible Neptune source subtree of retained C46. C47/C48 excluded. Full Mesa base/toolchain provenance is documented separately.",
+  "sourcePrefix": "src/virtio/neptune/",
+  "files": [
+    {
+      "path": "d3d11.def",
+      "bytes": 108,
+      "gitSha": "9a132e1c814b7e4201ec43d55d560342b67581ea",
+      "sha256": "290e311245cfbd4778ccaa10d0f92ff23b819ccee4bcff1ccf04654504b06ffd"
+    },
+    {
+      "path": "d3d12.def",
+      "bytes": 454,
+      "gitSha": "ad72fd6aeadd598d9bf4b260f1d2bbce3051e38e",
+      "sha256": "bfe37c24bf9a638dc89daa02e09198bd550a1302de388dd6cbfcb3d1dd51615a"
+    },
+    {
+      "path": "dxgi.def",
+      "bytes": 93,
+      "gitSha": "ca39df80b9e1698d6d3fb651597d3d0a278127da",
+      "sha256": "f4c2f6d3e59a2870a2c27110c0d9732f43d84161129b371db6fa4c4a041bf2df"
+    },
+    {
+      "path": "meson.build",
+      "bytes": 4750,
+      "gitSha": "8502e805af927a950c4855f0e6ba9f94892df4a1",
+      "sha256": "42a64c3e0e6ebeed2438760aa26f7c6776860051c8da003c7427d41112595457"
+    },
+    {
+      "path": "neptune-protocol/.gitattributes",
+      "bytes": 331,
+      "gitSha": "f3a57d08c72e5e631e9cad0998b2ef42a6741d5c",
+      "sha256": "924d2d4c1dbb0d8b8e628434ec727a5d14cf7a4d52fd2b0a26fcb45afa058b3c"
+    },
+    {
+      "path": "neptune-protocol/npt_client_families.txt",
+      "bytes": 1985,
+      "gitSha": "3445d29aa07d633bee1065c386303fcb8004069a",
+      "sha256": "295e7747ec05dc93da653f30751b4b722a4f05eab86db9533e36b3560e6bbae0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d10blob.c",
+      "bytes": 4082,
+      "gitSha": "6fff09d6acb99b8d419d250e5e9af7b8063c51db",
+      "sha256": "c4da03cde3bf3aab01248c3987c27da3e3dc4b04ee713bac3ad52c0b8705423a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d10blob.h",
+      "bytes": 4512,
+      "gitSha": "87646bcfc321996c8829dbca47038f066828a22e",
+      "sha256": "8ec9994883ec17b3abbb5723ccb80e03c7d4f0335c6fd2884410b20da3ee2011"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11asynchronous.c",
+      "bytes": 4241,
+      "gitSha": "05b98eecf71c7517a87c686fa865336b8ada1d8f",
+      "sha256": "ee67a294b55b5902d12f7e16fac8d61a65b0790f0373a7d28c5498a2344e9430"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11asynchronous.h",
+      "bytes": 5182,
+      "gitSha": "326916977adc67e2b855ad7842f061d2c1a58083",
+      "sha256": "e2b9c394ba1387500d95d29449f092d5b970e4cdb69cf5455b9ec084d0ede1e3"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11authenticatedchannel.c",
+      "bytes": 5332,
+      "gitSha": "f9c55319c922db44c41a2e596da0fc0a79ed6612",
+      "sha256": "6b02a002302a97f153859a4ccaad282bc6510dad541d5c2d42fcfe2b0ff9a4f7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11authenticatedchannel.h",
+      "bytes": 6039,
+      "gitSha": "e09e0dd9d6e3f3dd31202794b988a1c3c44aaa6b",
+      "sha256": "677339c025ac727ee14062b937904040365dd8f3603e037a825c55fe1fff8848"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11blendstate.c",
+      "bytes": 5110,
+      "gitSha": "22e1e4726e966361810cd8c4af72cee8957fe772",
+      "sha256": "f5df1a4b517a5dac63d4c2e88a2feb31cd8aaebd3c76471d2dcc102ff63666d9"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11blendstate.h",
+      "bytes": 8158,
+      "gitSha": "3090c3a4eafb81d6b14a82c283c39a22a4d52ec2",
+      "sha256": "c2a3d2b3f6b06842b855a235d0fbced28b5e8bb4dd679995b2025b3f952ec792"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11buffer.c",
+      "bytes": 4249,
+      "gitSha": "e1515d0598c08cb8412ad88a91983e133506f4f6",
+      "sha256": "268115c321041c5c810b681b43c469a60f0195aabcee62430a312b3e58949528"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11buffer.h",
+      "bytes": 5493,
+      "gitSha": "2b8433095d6e9c6f5e8c69ae5516ed69ce5288c7",
+      "sha256": "db14c54d880adfe33dd75b73ac50ca24462589d57b71016be75b51b8cdd586a0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11classinstance.c",
+      "bytes": 6781,
+      "gitSha": "fb0d94a1ac748dd282c414880f37869dfca76564",
+      "sha256": "e8d5cf788b32d92409c1a6ee0e7f6d4742f1bbdc6e981cab41866758732c535a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11classinstance.h",
+      "bytes": 6133,
+      "gitSha": "f6e71333c3eb269d24b7a46cea768fe2a4b1e2c9",
+      "sha256": "91bf829ffc61e0425eee5f860a6edeb300f244b813cdecf747f2da6f53551947"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11classlinkage.c",
+      "bytes": 7316,
+      "gitSha": "406a202859d4f1ef379b6cebdac04e6561502015",
+      "sha256": "3a59e6bafdd792c59d719b5164bf0520a3d8662fe6068aec80c2fa006a476b78"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11classlinkage.h",
+      "bytes": 5924,
+      "gitSha": "94e0a91cef6fa7596df51c87864472b7b69dd69a",
+      "sha256": "2d0f211999bace07bbcb62fceedd17629e0603c0951e5b6ad06d3759ba6e703f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11commandlist.c",
+      "bytes": 4220,
+      "gitSha": "4b03b7f8a30723e627294e5d608019e85683a1f7",
+      "sha256": "9f1aaf83a2c9bdebc13b55cd222e3f7e180c6af7163d92d65629d84b3f5b9a96"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11commandlist.h",
+      "bytes": 5171,
+      "gitSha": "c8822985bdfc5887115623b2518e9a3ea58a2742",
+      "sha256": "ec24a1131dcfca661f4b6ec7bf031dbdcc878b755764235222eac6bd3af3ed46"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11computeshader.c",
+      "bytes": 4000,
+      "gitSha": "403f954eedc95960773cf7bf9ee97fe30f9321e4",
+      "sha256": "902c4a8ecdf9e0ff31b53f3ae0c508044d654f7fec76355e07e882183bbd74ef"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11computeshader.h",
+      "bytes": 5004,
+      "gitSha": "86e1825bd8856639b5f40c5869a37ea75e7414ec",
+      "sha256": "485438965d6ac7e26aa4667c605963110042ac3eb80d824ba71d7f597e46e88e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11counter.c",
+      "bytes": 4145,
+      "gitSha": "243586d8269361f5600e4d47a68bae03985a1e8e",
+      "sha256": "d59da0d732d8d71f9859291becd6ec2354a73fa85b25dd3dc5ba69aff8d6e4a7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11counter.h",
+      "bytes": 5221,
+      "gitSha": "9003372aa40bdfef5f535d708e12f636bedcca2a",
+      "sha256": "12805456908b61db290bdfbbbe1037d666fe6f84e23c5681890026ace93dcd83"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11cryptosession.c",
+      "bytes": 5669,
+      "gitSha": "85a966a5e72ae564dcc98d820d2fbf042a664cfd",
+      "sha256": "2b5c2e814550a4dcfd93c0d27afd8ffb7dd95756b672bddc39ee8b7e3eb2037d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11cryptosession.h",
+      "bytes": 6396,
+      "gitSha": "2e3f42bfecef4a821fc11b03398f02adeb6a0db4",
+      "sha256": "a3d7c696b2d7ab8205436d04cd6f0812ed0e80aedb8ed60870e82142f7be6c83"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11depthstencilstate.c",
+      "bytes": 4421,
+      "gitSha": "8c2529a9f532ea3395468dd851b414339623562b",
+      "sha256": "fd666ce4caa95b86914bdb37f428266ea51be1c387e8e4b918801e74ebae4305"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11depthstencilstate.h",
+      "bytes": 5353,
+      "gitSha": "5f36446aea175e5158c0d3367561af5c28835fcc",
+      "sha256": "f3b91d6b4a7b23c0f33b37c007369e5d2bc37e7f18c3720f03951adfb0e13faf"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11depthstencilview.c",
+      "bytes": 4473,
+      "gitSha": "15f131a86e472197e49b3fa61cc3560e8d557122",
+      "sha256": "c54dea8017ed0761ad418f654084700a318378b5eff3956b0d7050c8ba069f1f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11depthstencilview.h",
+      "bytes": 5464,
+      "gitSha": "1e404601965dfe8601d97a27fa8e671105da11a0",
+      "sha256": "66d7a3bb04d4a788e645942f4a6c817386e432644d3f2291a6628c7ce6b492d9"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11device.c",
+      "bytes": 92743,
+      "gitSha": "3610d84acf243daa463e46aa2792d4b625a42b84",
+      "sha256": "f72d386d3361ecc7d134cb15be2130a7e284b14778e5876ed0873cb55e54c6fc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11device.h",
+      "bytes": 95941,
+      "gitSha": "8c89b6c2501aa73f48ceba7d99a4e1d534f5371b",
+      "sha256": "3103190b12ad804e052106b77e79519b49df9a4cc4fcfc2cc6507d0f8169657e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11devicechild.c",
+      "bytes": 6952,
+      "gitSha": "b3e0d02b074ec9c0cd699046b55e2e73ccf10995",
+      "sha256": "7e3eb4dfc170b027b68b12b1eb637cc3136f6bcf4518cf1556002275a8a1f794"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11devicechild.h",
+      "bytes": 5466,
+      "gitSha": "2809fc53983048c3d3e19424ea54628aea9e4d89",
+      "sha256": "22b916f6f69fca1c2af51d45b09fa76d6c847c6436c23620cd60888c3277cc03"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11devicecontext.c",
+      "bytes": 126147,
+      "gitSha": "840fc50bee8d0e965886cf5fc6e2e2999a18f669",
+      "sha256": "3be1f53cafa4700dc4525dce30a38323ff69e7438eb4e2e30a0a584c09f361bc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11devicecontext.h",
+      "bytes": 173065,
+      "gitSha": "60788c4c7958d138ef277b35a14aa3817d5e0c5e",
+      "sha256": "3cae65d64abe66718aff0ab6ddee28dc78c1cd7c8d84c1bf2385027b19f3d3b7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11domainshader.c",
+      "bytes": 3966,
+      "gitSha": "5429d43b420dd201eb0fab9912754034af29a1cd",
+      "sha256": "dcf38fca7ff5f6f07748a6e21280b112b54d87c04c4fba77b2ea40630a2afbea"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11domainshader.h",
+      "bytes": 4983,
+      "gitSha": "4f754be72846ac96da0da3b173463f4a3c444f97",
+      "sha256": "ae843821eeddd8896ab3d1ad94ad957d1d767d063fc998853c024b1b63dff449"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11fence.c",
+      "bytes": 4984,
+      "gitSha": "7add0260e1a64d34d815cf6d72eb92c64d554adf",
+      "sha256": "d59a210deb54833315ee2b2955af87ad61b46759b3f70c9d4a41d172fe018f8e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11fence.h",
+      "bytes": 5725,
+      "gitSha": "f0d86b48bbda8d55023a9a52322ec28677d6cbaa",
+      "sha256": "91ab7ec7ccbfffe126224a6bf39c914ff673c6e4c5e4ff9f9de40887320e23cc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11geometryshader.c",
+      "bytes": 4034,
+      "gitSha": "59918e4ecfa902f66f220dda682e83de8b58befd",
+      "sha256": "e936dc5458dc6202aad973f38b1f4026e864f5fcc8539c470ceb9b9d54253684"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11geometryshader.h",
+      "bytes": 5025,
+      "gitSha": "09be1f5ba457d9016dc3e874f28da579be97994e",
+      "sha256": "260f3d21ad8a9845260427aaaacd4df187e57989aea79cf11b17769a940883dc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11hullshader.c",
+      "bytes": 3898,
+      "gitSha": "200dca160a2df056ef4e6141a1d0de7fc092a982",
+      "sha256": "fa215ecd1f7c8a9547b22e9c028ab158792970eabcd2b3b901fb6c9874368aa0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11hullshader.h",
+      "bytes": 4941,
+      "gitSha": "b84e5624ae32999ca575441311e8d54bd87d9fc2",
+      "sha256": "ead855553df220772ab3abe31d03b566e6c07ebd6d832c16adbace03052c33c9"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11inputlayout.c",
+      "bytes": 3932,
+      "gitSha": "d8e6174bb245ac21e361b55ef3386f72a0c40776",
+      "sha256": "8ef651038cf7be432be47c81fbd4ad4a7c7d6a4d4cdb005faa82b34ff46a70bf"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11inputlayout.h",
+      "bytes": 4962,
+      "gitSha": "362d684a2c54339d02c29986caf732196600d901",
+      "sha256": "338d6084c27164fd5f3e30864dce07c1bbb638db9112f50768dbf2c31a12d35d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11multithread.c",
+      "bytes": 4712,
+      "gitSha": "2699528e5bad864d78731ee482164f94ac6ff7f8",
+      "sha256": "213e14b07e09718aeb2d066399ece61a3016f0f4dfd1840aa148d9128d637790"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11multithread.h",
+      "bytes": 5122,
+      "gitSha": "51466e08790710b5715b3fa74e49302bf1590e5c",
+      "sha256": "14e5da08d6cae77f44e27fd6772ad86cf5def8755e3b5d671d25d76ba7461cf8"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11on12device.c",
+      "bytes": 11395,
+      "gitSha": "00aa345cf68b136fbf64a9430348d0915bf88911",
+      "sha256": "8a40bb45ccd229d7f1719a631b4761a66b694a7be369361ba173dcf767c2ae23"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11on12device.h",
+      "bytes": 12039,
+      "gitSha": "2a069411417ea9ec54a2715f42b19a3f6ca7c41f",
+      "sha256": "8946609438992096520a7193e3677538b600e22b64b810a7bd6e33ab13392c7d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11pixelshader.c",
+      "bytes": 3932,
+      "gitSha": "a7092a0af53fc1d6f1a82f7dc85369fdb5cede2c",
+      "sha256": "b29b45e5eb5fb9534c17cb7c54df63368c24675d6ed1c679082a5031e1b46b7a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11pixelshader.h",
+      "bytes": 4962,
+      "gitSha": "9548b6ea521e26276a2bca221c5a3c4d37be375b",
+      "sha256": "9b9a61a65d905400818d6b7ba8486157e7bb2fcc9ae8b0256b84f1f72348095a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11predicate.c",
+      "bytes": 4042,
+      "gitSha": "85add1c3dcd55bcc4a82619e6675e12aaf19b6e4",
+      "sha256": "7301985db8b1c9ab4a42008b7e6dfe588af73a40bb27105f5a6bd0f244931cab"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11predicate.h",
+      "bytes": 5143,
+      "gitSha": "dd4081c0df8d659aa558f210da4a217ccc429888",
+      "sha256": "c9383c35357fce7077ce0b306d692501ce13530a2fbe7da2b7abb79d50448549"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11query.c",
+      "bytes": 4982,
+      "gitSha": "04ed793eda09e8cb56a2535ef81335b24a686bb8",
+      "sha256": "3cc2175368510dc5556f08be326ea8280dc636c30fe381dda0585aa473f6da84"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11query.h",
+      "bytes": 8179,
+      "gitSha": "3a5c1ffe6955765aff8c6da57305a17c4b133fa7",
+      "sha256": "e9c35b1c014a038446eb4a84cc0efe6df2cbf158334f9774e2f64a0d4857eb46"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11rasterizerstate.c",
+      "bytes": 6345,
+      "gitSha": "f1159e33620268a5c4796feb5f8222ae972c281f",
+      "sha256": "e9d8c4f445984c2de88d18ae64af27c34383644e53370db1d6fd4e93a8c52e6f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11rasterizerstate.h",
+      "bytes": 11599,
+      "gitSha": "455afcde9355a1ac9eaf0b60a9593a5d9d205080",
+      "sha256": "6368bc92b4a564d070f827d5ea29cba1ff7e2cbbd996ae76c787066172e1b94c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11rendertargetview.c",
+      "bytes": 5498,
+      "gitSha": "783408cfc96ab0c4563a99762348c0908601be32",
+      "sha256": "fb8edba86d8a144a38330ef328473358607e9b46b37f7095084e845e641e411b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11rendertargetview.h",
+      "bytes": 8720,
+      "gitSha": "743e14786151f3254e6c13c04001376e8ab12428",
+      "sha256": "5ef7a8860987ab60082e12574298ad82e851661e8d72833589f7c58b4327dea7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11resource.c",
+      "bytes": 4716,
+      "gitSha": "b20c7422cd39f7cbf8eabd8c2fd746f428451a41",
+      "sha256": "3867aa5c00d0ec54ee51abb5c5dc7f67bb8f2ea69c3eb3c7de3edc6370a9f8f4"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11resource.h",
+      "bytes": 5648,
+      "gitSha": "20ba528c00c1535d4ea7c79a8e1f09ee7d771402",
+      "sha256": "aae8a4bd97a573c55dadee704412fa2b94cfe2390870c7e203cc2048650ad971"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11samplerstate.c",
+      "bytes": 4230,
+      "gitSha": "ec6a23deb3fe31a145464d4810277c3904d3ae4d",
+      "sha256": "ca236832ee45456491dadaed14bc669cb78f844e6ec41af503bfcd5d44d4b814"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11samplerstate.h",
+      "bytes": 5226,
+      "gitSha": "88ad698051f90dab8d5b92c649855be6c03bc71a",
+      "sha256": "6b6c6bf818676c6a35ad3e42acec61de26567cf8072bbc6ae23a843c54ec9e25"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11shaderresourceview.c",
+      "bytes": 5594,
+      "gitSha": "ae00ee1e25f09bf6fdfdc755e269dce519e3eeef",
+      "sha256": "99b7f54afbfa4117fd6f6ad70af74dcd8563daf75a44670533c23ec376965b9d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11shaderresourceview.h",
+      "bytes": 8810,
+      "gitSha": "73adb4b5028bec3554459b10b4df0ef09b68a29b",
+      "sha256": "c7e4280ea0057cc72afcf0a42522fc052f9a4fa73e49c0c19c43b8a18bae6984"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11texture1d.c",
+      "bytes": 4363,
+      "gitSha": "8d647398a641e062fb3f53d585bb82f0352c7ccd",
+      "sha256": "399b0bba81d3630c144fcaaf97bb02b9425e2c727f51617215ab965d5932adbe"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11texture1d.h",
+      "bytes": 5568,
+      "gitSha": "fab21a4ae95798c6c186052c832f18d5fdddc6cb",
+      "sha256": "c502e36b2d586aa74cf25bd45715706df63881a05b665bf49e694c597945e340"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11texture2d.c",
+      "bytes": 5314,
+      "gitSha": "5a694eb1e0843ce9003bc4552bd0ea287abf49cb",
+      "sha256": "9f80641d91af151abd2a905c19916909f87479f4095ba9fefdda0470316cf2a7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11texture2d.h",
+      "bytes": 8956,
+      "gitSha": "349a2290d38843d5eea3753b00d8566882baa45c",
+      "sha256": "c098a24fd5d5ac792af76638ead727c0aab735c553f063f6544c0b514ddc9218"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11texture3d.c",
+      "bytes": 5314,
+      "gitSha": "ed80ba11e1e6d110b1e044c65ba175335c329dc7",
+      "sha256": "16c72433a16df2a0786f7f5bb3b56205cde719811ec112385e9012741e51ed54"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11texture3d.h",
+      "bytes": 8956,
+      "gitSha": "4c5ba33ebae22fd94cc2a3e8f86645c80f0868a3",
+      "sha256": "9cf9b5a5b1164d7765fb81232fa02fcd33b77755e14b57a76d73f4890d9c2cbb"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11unorderedaccessview.c",
+      "bytes": 5642,
+      "gitSha": "11363c773fac9ae3c5670af6b00934527f49c6fe",
+      "sha256": "859a6769f72e122949e62359b70fed8b0b7d42ce54a6b3d72f1028ad68ebf804"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11unorderedaccessview.h",
+      "bytes": 8855,
+      "gitSha": "39ef0a4d86563eb8c02e1ed24a0b4371dcb6e4db",
+      "sha256": "59d7fe44b6810225ba29ec3b15a863a9596e9f9b9245aaa77ff845b9c5f373b7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11vertexshader.c",
+      "bytes": 3966,
+      "gitSha": "ae642b83c5074c1452797dbb60bcc0f470692207",
+      "sha256": "a1347867be3d0b9ebdc445e4475264c94c0c947a6986c75007b98b9159db9819"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11vertexshader.h",
+      "bytes": 4983,
+      "gitSha": "ce88ef12c985e96b4afb80a24aa89d8759bb2ebf",
+      "sha256": "3482a616d51c8a3619c35e58d6a87dc7eef9709f641141db49fa22dcd2c4e73f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videocontext.c",
+      "bytes": 46655,
+      "gitSha": "9b29f12ebe33f4a57f835998fddd4b015c27fe0b",
+      "sha256": "26c8fe9925b51c021cd87e23441645eeff06ec10e98edba7135b688cd59002f5"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videocontext.h",
+      "bytes": 101839,
+      "gitSha": "507ac47758e90646ecf1cfe7200d630f3536bd77",
+      "sha256": "f3ecbdc9ff0890c411bdd244d4c8b13ed4ef59d067ee13586a5bec89fc90aa09"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videodecoder.c",
+      "bytes": 4718,
+      "gitSha": "64a1021e0bd13c8c5af22e2e2d131dc688538ba1",
+      "sha256": "3a4544f3b22d3ffb1525a96c499e786342d8cf1787597083d6c7a58957698770"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videodecoder.h",
+      "bytes": 5637,
+      "gitSha": "06ad927255ba740d7127ec821feb3891584dcdc9",
+      "sha256": "0448d2ce6c8bc91c0dbf4293f87eb90a3551564925470f89e30c5d1cd415c25c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videodecoderoutputview.c",
+      "bytes": 4702,
+      "gitSha": "4abd8455890ee0650615f9447461f98cd6258de6",
+      "sha256": "e180baa8358f0499c18c1f3b7473ef890ca4054889a953cc764c559f9bc489f4"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videodecoderoutputview.h",
+      "bytes": 5616,
+      "gitSha": "c217c616a757e84329a2777486e8a529bbaaf9a0",
+      "sha256": "f401e1df3b11c3159280fdb66625420d348bfc3510bded2f4e9326993529a34c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videodevice.c",
+      "bytes": 27095,
+      "gitSha": "42d8b44fff2df4de1f74ba160d68a36a5beeff89",
+      "sha256": "96ad57978380fedd9809622f3066290dfb3165f2c418ebab44a4a87de30fca6a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videodevice.h",
+      "bytes": 28035,
+      "gitSha": "517274a7531ef0092f3813226f553b78104b1a52",
+      "sha256": "211351734f513308969b3d7e4329ffe6a964def87cfe0489d1ac48e5656c0e4e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessor.c",
+      "bytes": 4698,
+      "gitSha": "cb5f6652f37757966cf15bfb842c7e05e1f3fedd",
+      "sha256": "a29d746ef74c078f656872d58599f8bd0b36580160fd5650a50237830a168db8"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessor.h",
+      "bytes": 5662,
+      "gitSha": "0203c465ef7fb08b4a24dede4cee0c082507b211",
+      "sha256": "208bc81ff8a57fa844beeed2bfa6b8a524140caa5f418453c390be00448f42ac"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessorenumerator.c",
+      "bytes": 8526,
+      "gitSha": "7b7ab83349613da52cf799278b6278013a140e74",
+      "sha256": "43eacbc881af3cf94c2f37539cda0369284fff282ca6a5f0a826ceac43a32f76"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessorenumerator.h",
+      "bytes": 12321,
+      "gitSha": "09bc42c23d4d1b69fac3bc381cfe50f793627d8c",
+      "sha256": "246c36ade98db9bc8c75fd741119570171e0147d7f0bdc35391cea3881ab45f3"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessorinputview.c",
+      "bytes": 4740,
+      "gitSha": "5d23e8bda5506453d0371e977ef294c645847e53",
+      "sha256": "a996315fbb7392dfdd3ac38d884362bd26411a67542a34e9ddbfd787d4607b6a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessorinputview.h",
+      "bytes": 5641,
+      "gitSha": "acbfbdd2f2531227c1d6ed1a918f0da3c63cee44",
+      "sha256": "bc72d3ab4f97ef8ebfaf8f0c2095b98a97ca415f9859aa22e0f8d03b0007cdb3"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessoroutputview.c",
+      "bytes": 4778,
+      "gitSha": "7e5263d198586b7db694ab0a656c44582c1576c0",
+      "sha256": "cbe80cf2666cede619c70794c6caf9baa7da3881ba05c1a6670551fef081882a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11videoprocessoroutputview.h",
+      "bytes": 5666,
+      "gitSha": "50c7bac25c580887ad00c07d568871c7abbeb778",
+      "sha256": "69eaafd981eae0ffc35520c09f4fa36a8fc3a8ab4188334d6fe03de152cd37d0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11view.c",
+      "bytes": 5439,
+      "gitSha": "1ae26e64d2bc33de8e0ee816b2c343c1e9d01c50",
+      "sha256": "a45984d210c12427cc046662caf8fb7e1c63c5d84531b0709056fb32e70ec85b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d11view.h",
+      "bytes": 5058,
+      "gitSha": "c8f3b6ebd56ac3629c8b66c188b8e1f5120c31ad",
+      "sha256": "56093298aa53f18596c75e2d38e21bb1a99a402780c6a660918ce5cc40417e7d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandallocator.c",
+      "bytes": 4719,
+      "gitSha": "cce7c3f030675b4fab2893a9df5024b3d1bf399d",
+      "sha256": "e70d5dfed310f7b6a64f405fe589cc12a16619f4d11a0ef8c4a6ed0ae7b42a35"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandallocator.h",
+      "bytes": 5376,
+      "gitSha": "3b6c786e8e9d3e9c4ab53e2055d9a61d460d2079",
+      "sha256": "e85faab5d2bbdf686d4146493a6c986676631dd5e484cc2d16b029584d63cd99"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandlist.c",
+      "bytes": 4291,
+      "gitSha": "e527ac35aa085893f8081cf71f0c2f5c2d823183",
+      "sha256": "0c0e344e9737cb694a8904441001bdbdac862fa7d32a8aec5fa8e2bc8e33eb4a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandlist.h",
+      "bytes": 5302,
+      "gitSha": "4662bdec8e124fc23ac52cbb0f1218ffd47ca8bf",
+      "sha256": "a87917f388846e8833bbdc78dcaff5dd1bfb8f372cc858e7cabc6439c794f23b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandqueue.c",
+      "bytes": 9058,
+      "gitSha": "1a9c74400bd725290719491f5c2cc516a59ce99c",
+      "sha256": "220664115c5160dc29e7a4feef70446b44bd5d2c1b89f0594fdfb31ccfc2cf59"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandqueue.h",
+      "bytes": 9329,
+      "gitSha": "66a3fc9c6ed4fde65be5e76ea1c99cdc0f64b141",
+      "sha256": "7924021233860b69045faa683e382ef6683a99c534a90c56c10506a4ebf01a4f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandsignature.c",
+      "bytes": 4196,
+      "gitSha": "f28125852370e8d318dc608bd90e80d3a2530980",
+      "sha256": "95ba74bfe7d390512ab00474dd5cd34847772eef1a43a3c769bc3f63a8378f89"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12commandsignature.h",
+      "bytes": 5181,
+      "gitSha": "26cd1e8ecd003bda7df4b539f87413704fa39dbb",
+      "sha256": "eb5bbd4a56c4dde7bec51dae5d219ac45fd9f95bd01494bfcb92ef884a20f858"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12descriptorheap.c",
+      "bytes": 5865,
+      "gitSha": "04ef8e225526d36e4a066a905163b29c181b5a99",
+      "sha256": "0f573b7628017c05ae5cdf506a2cb8b6c1a1702ddcbf0dcf2128469217b77ffb"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12descriptorheap.h",
+      "bytes": 6255,
+      "gitSha": "66adce0483b6d8403b1dca159702041735af8dcd",
+      "sha256": "bb723c15836f80bdb935adec6892390a9fe92199ccab730f65a890e101a91010"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12device.c",
+      "bytes": 98516,
+      "gitSha": "4f11d13520383960919d21a7ceb96860b28ee76e",
+      "sha256": "2487ada1238c22b77d72f5b20e041f6351cee901f6fcfa81bbc0a9d229095582"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12device.h",
+      "bytes": 278256,
+      "gitSha": "aac25b77bc79b8d08085c716dc09faa968285843",
+      "sha256": "f6365e833e68bd9ad193061970618e4d53efc928e8fc100620d37b4f4ee80e6f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12devicechild.c",
+      "bytes": 5665,
+      "gitSha": "5fa7320869b9a3787b4fcb20bf800ad1aadfe115",
+      "sha256": "5fabc30f587080322a64c14a517b33a42acd22cee3d178941102571bfe26d088"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12devicechild.h",
+      "bytes": 5201,
+      "gitSha": "a11ae569d027987af066f0251e5a706aaf928cd4",
+      "sha256": "1cd0a86cbdcc2c5c95545cf688d00a6f06a6218a95a8ddc0300448e93eb211b2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12deviceconfiguration.c",
+      "bytes": 11275,
+      "gitSha": "75ebe9c2a66ac520a7ac5212b256c40015b7316c",
+      "sha256": "d5826d2d8af356751d1998b4672b1c3db66da9941a28b6ceace36286c51d742c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12deviceconfiguration.h",
+      "bytes": 9629,
+      "gitSha": "6ddfb7b2ffd403442aa6a8b539f435d789936201",
+      "sha256": "b259e67a9ce47019051561bcd93a2ac992b3dfbbe22fe71a774234a753f7eca2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12devicefactory.c",
+      "bytes": 9329,
+      "gitSha": "2a4d3f28f12687e2e1d4adb6f45a3e79eed0661f",
+      "sha256": "d713a3f94b132e18a9d44e7d4d74f5c73d74e7e2ade3a7b8d5949051e0e5b485"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12devicefactory.h",
+      "bytes": 6478,
+      "gitSha": "cbff53b8b061eef557e4c27a3f35093efc328d9c",
+      "sha256": "4b8b09fc32ee300a6d7af8dcf27f1d82b1ef7bf37261f113c2923b4758f172fc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddata.c",
+      "bytes": 8184,
+      "gitSha": "aebac9e0a431741a74d9253d82b5eb92a7a13e25",
+      "sha256": "931b3c3ad975a827e320e8ae3baf1e1f79882aa5ea5e72da5da4c7c4dcf318a0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddata.h",
+      "bytes": 12210,
+      "gitSha": "549ac7f5caadee5a36bce679a83e6465cc1bc994",
+      "sha256": "23c0cecc266b1ed3cff7c47af423ad949dd529b0bb0302b74aefc639f2feb996"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddatasettings.c",
+      "bytes": 8075,
+      "gitSha": "e3fb2644e28704d4c0459a5ed8f9c13af8fcc362",
+      "sha256": "fb7c43159cbb9998065ee5e591075a61ea6344d61659b128274f2a6a4f0fedd0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddatasettings.h",
+      "bytes": 12396,
+      "gitSha": "74b6bd8633d3bef85861f5e22dd22b5ea49c39a9",
+      "sha256": "7601ff33ae260cb8b282bf629b9dac96c97cf25b2fd477d6170b07bb21826538"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12fence.c",
+      "bytes": 6136,
+      "gitSha": "706eca3c0513b8eae0c13846ca28cc4bca132e04",
+      "sha256": "ce753202265156493320b24fe14d61a40b19238d08d89dddae9240239e20a938"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12fence.h",
+      "bytes": 8907,
+      "gitSha": "eaaf0f7ed8cccb475dd765303d2f7d77d877ad61",
+      "sha256": "3f35429035c7d11d7717a761f141733c37b8db233e56931048a2ca768909625f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12graphicscommandlist.c",
+      "bytes": 45078,
+      "gitSha": "ed59d76230459fb80bed492880215a31950f7c86",
+      "sha256": "f3a1c3be6d2de761282947b6b19bee7403e9e53436eeb46a6f68734311efcc69"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12graphicscommandlist.h",
+      "bytes": 212131,
+      "gitSha": "9ffcba1cd5fc847a4a1a44887508379e6e768e2c",
+      "sha256": "a8becedf56ae9101d87e25d20d686d5afdf4341b1bc7d88df5c7283b2c5c3ff2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12heap.c",
+      "bytes": 6849,
+      "gitSha": "50224fcf4ec09ffed71b72d054de9e836eeb749f",
+      "sha256": "e573ef92e94cb7a4e27a8c09278d9f9f727f84660a636080d953158d134d2748"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12heap.h",
+      "bytes": 8292,
+      "gitSha": "26bbb48454cacd72aa4ecb0ced15c5bd629aa2d8",
+      "sha256": "9c4ce4c380b330b19ba9d86d9dbd6c0fe2242205bcd67d97b617837ff36ac3f1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12lifetimeowner.c",
+      "bytes": 3998,
+      "gitSha": "db4a97eafec6f91f6aa347c6968882c9ef1d1cd5",
+      "sha256": "1b67212570a8595052b2ee39f1c6e6d3e49b1392c659ae460f9f5ec8e81f8f7a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12lifetimeowner.h",
+      "bytes": 4596,
+      "gitSha": "c6187699cc9c532b1e511f731f34d74c31cb4aca",
+      "sha256": "a1bbf83972e32ff61585fb16cbea491911713b454a1b5e36bb849f11b155d3c1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12lifetimetracker.c",
+      "bytes": 4742,
+      "gitSha": "73dd1fcc55d8208ed89cdc90234d5966f5a26cfb",
+      "sha256": "acf4e04f4c2bfd9e8c30d956f21f40ac905458830853c6eec963181369deef75"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12lifetimetracker.h",
+      "bytes": 5453,
+      "gitSha": "88afc3cedd4dfda7dd3f35189b1d656f4af45e4e",
+      "sha256": "1fec55fc3d1d60fa6793ec17f1301df5371ba9021474641a3be3e33466d611ec"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12metacommand.c",
+      "bytes": 4470,
+      "gitSha": "40bd5b57fdb33d71a4cac123f07a89b371e8b85f",
+      "sha256": "c0ea4673ff5e4e8f62eefba00d2fe51e91a839cce60760a381324ab28719da3d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12metacommand.h",
+      "bytes": 5466,
+      "gitSha": "af9f30c97e354654374a3981ef993e3e2e986eeb",
+      "sha256": "60234d64bb1ece9b4bb36d7c4bf657703eae84fef3ceb48a15633f779fb24f92"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12object.c",
+      "bytes": 5529,
+      "gitSha": "8761749f83b45be419d2325b21322cc07c4bb332",
+      "sha256": "e3d4b79b1d48fa1fad13c145cd5c9aaa3efbd309ff0596d1ed81b730dc1953b0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12object.h",
+      "bytes": 5309,
+      "gitSha": "ea65a31e60b5e179200110fb9fbef943d1c0d2ee",
+      "sha256": "149574bb55e414b3d876a3602d140082faa24d53151f93fda200233e87f433e3"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12pageable.c",
+      "bytes": 3895,
+      "gitSha": "460daae4b49d9c5af88bb3ccfe1c9571910600a2",
+      "sha256": "07e824a60765cde0545990672ba285229415f839e4709d692f2c9e8c33a0357f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12pageable.h",
+      "bytes": 5016,
+      "gitSha": "5cd2023ae3548013c5e21e2e39cff76caa4f4832",
+      "sha256": "ad7d7ff98b7540e23eb0bc13f5c225b7c46f6e2ab0c26c334934634cbc7b08f7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12pipelinelibrary.c",
+      "bytes": 10496,
+      "gitSha": "d1a77f72f7ff6094eed507653d9e5f1a42eabb7d",
+      "sha256": "7b885837dd84fe6fa1e478c17239faf13279850802c9a7fdcba0f79231ed34d6"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12pipelinelibrary.h",
+      "bytes": 11111,
+      "gitSha": "57534e99d1134da7a798099e982f86d9ae44c31f",
+      "sha256": "299eea6886c0bcdadfaa3e60ef040b0357ea4c6e2354d21ed818ffbc5b501139"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12pipelinestate.c",
+      "bytes": 5357,
+      "gitSha": "ddb4f36f1b69825bc6139b4f0715393092fafbc3",
+      "sha256": "7adfa02089b97c72b54feac8a6e3b78bdcbf4e033e3e771be3e3b7782d11cc39"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12pipelinestate.h",
+      "bytes": 5371,
+      "gitSha": "ae6c5f7d991f1fc094847cdf456b1f41b84dada9",
+      "sha256": "003854cbe6e2ccbb5a0d4e7caa320d352e22ed3edfe8c03ca47d20b87034c765"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12protectedresourcesession.c",
+      "bytes": 6556,
+      "gitSha": "9ea4c783d963e17e82cacfabee90d90d7d2b6216",
+      "sha256": "f9ce96681a89bc9192fbd132583a57e49b612f93feb873b53c6dbea221fa8de5"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12protectedresourcesession.h",
+      "bytes": 9864,
+      "gitSha": "bbe441a2dc6f0adfb48529314d65a144f8065b26",
+      "sha256": "1a11be695a7925b1ac4bd2448f4b2fe6f5b163f4cc6bebc041a4f72cd1a81fb2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12protectedsession.c",
+      "bytes": 6323,
+      "gitSha": "5e46c820bc99eea7e2636261e579695e6be3d788",
+      "sha256": "58b297bcdf0e063628e67f32762425a2dcc08c938b70b79ede7bd2a527e50b4b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12protectedsession.h",
+      "bytes": 5750,
+      "gitSha": "349f42116edd5c9d3f6420beabcc3d955860a6b7",
+      "sha256": "b9a6cc023acc22e7a88b323afb1dee04bf74839c9604540b14fda9bb11ae824d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12queryheap.c",
+      "bytes": 3958,
+      "gitSha": "d92d9db4e55be5e7856dfa14bf297599d50d50b1",
+      "sha256": "e0fdc9c87f29e7a0f0ef29af05d7918de51f7e6c2108b7d68f0e4c2c12895143"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12queryheap.h",
+      "bytes": 5034,
+      "gitSha": "d8a423a51769c632a5a1b4aee125688b1e0042d0",
+      "sha256": "68cdd1a78a3b852e4bf32355bfe100702ec3f862f44d3407bbd7b3a718818e0a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12resource.c",
+      "bytes": 11388,
+      "gitSha": "5541a893749398a5abed515056b4f76b6cdc928e",
+      "sha256": "cafdf57e98c1e4cbf8b573c36c16c4d47baf86c85c69a9ae0e52fcef81118b38"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12resource.h",
+      "bytes": 16071,
+      "gitSha": "6eb345dd1827a86b191486bed3e0c64c33d2a081",
+      "sha256": "62e90656e9e32b732760b388e8919eb22aada684e6c6d5bf5ff39e8ff84647d1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12rootsignature.c",
+      "bytes": 4065,
+      "gitSha": "8dc84f479cc0684b5f2f4a780bcd7d699318c106",
+      "sha256": "b95c84c0de6422ea4e2e9bbc3bbba4eb556bad2d324d00a33057be3c580cb19a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12rootsignature.h",
+      "bytes": 5121,
+      "gitSha": "4169ea05a5ddcb8554d9cd54d1de014b0cff54f2",
+      "sha256": "d0607c826dcb1cab428ecb5f8fd90123afcb7f5aaca0c51aea9f5c7aee0a4935"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12rootsignaturedeserializer.c",
+      "bytes": 4664,
+      "gitSha": "0fd71227fb02d9a46d3e7013ae22703a10ac76c5",
+      "sha256": "d21c98df08be2d0ce4356d328cd6da15d3f62d09f35d88985ab8a6122fad2ad8"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12rootsignaturedeserializer.h",
+      "bytes": 4868,
+      "gitSha": "ea758086ea3207aab24b16aa820b6bfa80288fdd",
+      "sha256": "65b778f010438c77f8963281588bf29b71822a99d6d20197b16f42677e3c142e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12sdkconfiguration.c",
+      "bytes": 7004,
+      "gitSha": "c5f839810edf38b7bc3480d334933bbef2236a45",
+      "sha256": "f1c0b34328b6449325f4f99af61ab101d8f9ddbbac01c9497547819e1a34c32b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12sdkconfiguration.h",
+      "bytes": 7488,
+      "gitSha": "755d7022ca8c624aa8cf471fe2369251f3187573",
+      "sha256": "36341cd7948e58c0490979c45715f9b79081550a98d1511d9c777f7de041681b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12shadercachesession.c",
+      "bytes": 6098,
+      "gitSha": "2d6321fba030fd4a2a837faa04f34bedf1a71b9b",
+      "sha256": "bddd4cff54a1e0f33ce58af6f5b2f5a305ce99785df013740733a94d4a5c57a2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12shadercachesession.h",
+      "bytes": 6502,
+      "gitSha": "91dc1825822b6ae939a4ee8e4d0041940a7d37d4",
+      "sha256": "2134e491d280276730fab814737cad66a3cd3e5858025dcdba008d63d35b1d48"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12stateobject.c",
+      "bytes": 4026,
+      "gitSha": "29b095233e3ce801aae75c347959147664b6e6bd",
+      "sha256": "7f309209a84d5b587c348a88252241a009f0f0ecb3f21d978051710df9ceb18b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12stateobject.h",
+      "bytes": 5076,
+      "gitSha": "06e7273591933cdfa44b22f3a75f2036447ed76d",
+      "sha256": "280908bf1912dd1da0c9e06ddcaa8147a6081370e0d1e4dcabda61318ad950c3"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12stateobjectproperties.c",
+      "bytes": 6987,
+      "gitSha": "16b9dd0599192886721a936dd8cd426f33830659",
+      "sha256": "a5893297170364ff3e6a22ba07260a79dc1b56f23a0fd1cf8958da96753fd8ec"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12stateobjectproperties.h",
+      "bytes": 8798,
+      "gitSha": "9a134dfe443aa1cfe0f3a8fe5aed895045238d26",
+      "sha256": "d56832f9d313873066b075d549896875d7ceb16dc967732b11256765c7dbdb1a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12swapchainassistant.c",
+      "bytes": 8556,
+      "gitSha": "4dfe34bae4402e05c7dad7aa96f63d1081119f26",
+      "sha256": "84d597792411d9d78334a1a77457bc137919b795d891e697e9a0d449094a182e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12swapchainassistant.h",
+      "bytes": 5643,
+      "gitSha": "28376907ee37ea8a317af8953ca29e109b1d950a",
+      "sha256": "efc368f2b85c8a234c7ec480ce0e74ce91f92200061487abae10895c804ae0d5"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12tools.c",
+      "bytes": 4034,
+      "gitSha": "40e6e2a0ecb35e167a08ae3aefd82419e72d4fa7",
+      "sha256": "4c81c966a444f4932bdf2f9e71dc9e550e1172b0dfe5e37d7090f9f30de237ec"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12tools.h",
+      "bytes": 4635,
+      "gitSha": "16a70dced01e8feeea7a118d218f40a8b36855ff",
+      "sha256": "83d06a48f361e1e4290e30fad207eeee54acea6fce070ff6885276a5bd5029c0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12versionedrootsignaturedeserializer.c",
+      "bytes": 5612,
+      "gitSha": "d6cff68f214c45651e18c1db296030bbf14836ac",
+      "sha256": "e9ae3716fcec0ba1b2602cf64110a1aa325e879a4fa2956fcfc8e128fb3dc94f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12versionedrootsignaturedeserializer.h",
+      "bytes": 5627,
+      "gitSha": "702e5d37324d84152790688c7266d9c0344fe84a",
+      "sha256": "5edcde7e0515268ef847af171f62b8c8587ffb153e2ebaf5948e5cce23ea015a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12virtualizationguestdevice.c",
+      "bytes": 4883,
+      "gitSha": "f78a7ed0b7e64c612d6d81da27559c0bb042d06e",
+      "sha256": "429211f48fec18dfd7dcb37c8b5eea29835ec0e2985c510d2d50a02cfa718324"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12virtualizationguestdevice.h",
+      "bytes": 5240,
+      "gitSha": "f091dbaba84d96077d666b1ce1b2789ce058927c",
+      "sha256": "3e93fe4dacf4f23768561a0b7cc577bd0781480904d7beaf48ba546a68445667"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12workgraphproperties.c",
+      "bytes": 9067,
+      "gitSha": "2592fd9c4a0507c698b2778eb30318f43506c9aa",
+      "sha256": "879ac7cfc3ecec7d62aa098dfec3b05a50ebb6c3943fec38fbd89efd5fe965cd"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3d12workgraphproperties.h",
+      "bytes": 8285,
+      "gitSha": "663ff53dbee76d1c4f76259ef2014d1338b32c98",
+      "sha256": "7cb848fbc0e2a48bd0f1ce5034d232f8de4a3c10dc15e2bdb199e70a7c846dc7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3ddestructionnotifier.c",
+      "bytes": 4918,
+      "gitSha": "05a54215d5a32ab9e9b809500a19bf63dcd02456",
+      "sha256": "1d6d8d7331565e8f6dae05df22e680b9ae1d3260d71baaf70cb47a969769767c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3ddestructionnotifier.h",
+      "bytes": 5098,
+      "gitSha": "5756fcc03b0082e6e1f2c247f0c8175e87c76cb9",
+      "sha256": "5e4c6e3845bd98d960e736bd0dab66aefd0add0b6a557f52f585292a0b77903c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3ddevicecontextstate.c",
+      "bytes": 4102,
+      "gitSha": "7340353cbde8ef1a67c3879cc9b76863df1aada4",
+      "sha256": "f193e050947a0fa0880241bf30a66746a89969d303f23e2a5ec367bcede14ef7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3ddevicecontextstate.h",
+      "bytes": 5067,
+      "gitSha": "4899268b0061fdb21428581043951696744d9909",
+      "sha256": "ab080120d2157bc87d50e4b71aad1e5e5b56d99e1aab99f67126a5572e79b12f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3duserdefinedannotation.c",
+      "bytes": 5046,
+      "gitSha": "44a8f197dd37ed137cc17dcf450aa6e1293e6da9",
+      "sha256": "c60d8be4f0336e4c5294893e496cb9dc7b4f116b20ed002cbf2f940c1bffc3b3"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_id3duserdefinedannotation.h",
+      "bytes": 5336,
+      "gitSha": "ab1fe3841e304ee9a1b2809ef25b1d133fffc589",
+      "sha256": "eeaaf60128929086f312dee7aeb0e9e5b6b1f12374b91c173e3e62ef3b64f815"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiadapter.c",
+      "bytes": 12593,
+      "gitSha": "c3f44291e217b9fb2f6d1ef091dc4268799488f6",
+      "sha256": "8ac63ee4334d0aca7e363bb30ea75d69ceecab6d7c5c8b41d8a8f3fcc1c1cb68"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiadapter.h",
+      "bytes": 22610,
+      "gitSha": "c02fd74941678e3bef24f29bea0fe5e641c6ba45",
+      "sha256": "53730447d394d238bc5420a23382e5406df5503bdc302e16b668994e6e9550a9"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidecodeswapchain.c",
+      "bytes": 7994,
+      "gitSha": "0aaa4ccad03f041647ab7ac2bb60d65c3111ed32",
+      "sha256": "50c9ded7bf7bcd22ed2b1d20b95f4a87a25d96f7b37f8a996578b5eda358ef27"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidecodeswapchain.h",
+      "bytes": 6758,
+      "gitSha": "933fd7be229b1642a176ae307948f5d0f3ef5ec8",
+      "sha256": "05daa1a5a3ff6ff865b044a4c7ceb413acf696242c859792447be482990f56bc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidevice.c",
+      "bytes": 14674,
+      "gitSha": "e99be88fc42ca72accb4c33ea0a5b2c5cf670411",
+      "sha256": "986eaf8428d7aabe1e7a9cf6385acdbfc090571afbe1975d7112689024ae1320"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidevice.h",
+      "bytes": 24480,
+      "gitSha": "469a0914f60fbffa96eb2d50230569e92a02ca7d",
+      "sha256": "59ae878812cc203d66e67d8559dced94b01242ad94b1887117311ea0431c41e1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidevicesubobject.c",
+      "bytes": 5772,
+      "gitSha": "56e5248b947d24ed8068965eefdb038cc69cf049",
+      "sha256": "4fc46468a36971bcd29474990565542890474ec2c0b3cfcc3c256fe8693d60f8"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidevicesubobject.h",
+      "bytes": 5286,
+      "gitSha": "a84add1177b872758f5ab6079457a8cc6993f6aa",
+      "sha256": "1015f625870e5b6d5da17bd58d187fe3add57e3f2695f9f1ee16dfd58cafe0ff"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidisplaycontrol.c",
+      "bytes": 4258,
+      "gitSha": "d147f695ddde735ca8e05c6b73b126f35694e9e3",
+      "sha256": "366c5ca44da85560782d3b672eab5329ffcb0696c2a41be014b9f6f2d0ca3eaf"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgidisplaycontrol.h",
+      "bytes": 4763,
+      "gitSha": "b03a2cc792c4d6d01ce056d82dc83e66728fe64b",
+      "sha256": "c3ec19b762c97d3086acc20fd9fe64d8842b22af949b73344c779e868eb2fb58"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgifactory.c",
+      "bytes": 30007,
+      "gitSha": "02c925126ffc9a1bd27fdbfe015c1f7064699510",
+      "sha256": "543d01d2279ca175f37af3791b59e62ecbb87c670a916a9f1da14d0748f409ca"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgifactory.h",
+      "bytes": 51143,
+      "gitSha": "59ace0f05a682e7f9fd1644e19e0403c0c25ec67",
+      "sha256": "2b028cb33c64b228fa2fa9fd5620842144d0bdcab5bde6dffbcee70ec5f925db"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgifactorymedia.c",
+      "bytes": 7498,
+      "gitSha": "917bfe762563ed66f799a50acbcd202018bb6c8e",
+      "sha256": "31d3c504f5be64693bd7cffb1bad3b6b22b681341344b224ccbc4bdcb2842d72"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgifactorymedia.h",
+      "bytes": 5510,
+      "gitSha": "26f5d8a0e100aa79dd5a8271cc5b0f59779415d4",
+      "sha256": "70a5cf226298e42637d2c112750597619833dfe069dc7b90be28023fdbba6f18"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgikeyedmutex.c",
+      "bytes": 5055,
+      "gitSha": "966aa98bd95aed1047ebf36f8884187ceb02296f",
+      "sha256": "30c94310ceb87d1231601f2e32640b8e2229ab5c80066de727b22a6f531ce75a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgikeyedmutex.h",
+      "bytes": 5551,
+      "gitSha": "ff4e2265efc4c74649ebf100029869ecec3d7240",
+      "sha256": "c0842e3d33eb43dae1d112b11fc3d1f2587618c3588e9458d49927aa81a2f0fe"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiobject.c",
+      "bytes": 6671,
+      "gitSha": "444da8e9467b70bc814d615493117327138ad433",
+      "sha256": "928d701ad523cdd3490f928b4c54b447e9bac8f55305498429719a80a20b5acc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiobject.h",
+      "bytes": 5324,
+      "gitSha": "577b18dcc42d6b8b581abf7e84744ef27310e322",
+      "sha256": "ef1bff0eaafdb009590c468e7bf69c410a269086e95020f64c025db0c3489efd"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgioutput.c",
+      "bytes": 19262,
+      "gitSha": "33ef0011f08331b68658b76b86fa5f73a6a2875e",
+      "sha256": "371cecc7bdbef41fa19375b6203fe71f0ff0a0b4f0c21a0d738edae41a618eaf"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgioutput.h",
+      "bytes": 43618,
+      "gitSha": "379d9f4a0f8f2d41cf6daeba027227c593c7f186",
+      "sha256": "6f6e7f5a94c939f90e9951fe1ec954b8acd54be90e25ee0b8c02aecc8626779d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgioutputduplication.c",
+      "bytes": 9176,
+      "gitSha": "8e2dce49240958b277a70f15d66605d75d595294",
+      "sha256": "23ad79faa08a04b1aeacb9d7dafd5b3ee6457422d9da440b25e8cbb59ff27b8d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgioutputduplication.h",
+      "bytes": 7848,
+      "gitSha": "c33eb23a023f30733a63c41e1e4a6e50457f3b9e",
+      "sha256": "a6a59402c0d69b04e5f031855312f163b26e0e30312e53b8223464e059750eee"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiresource.c",
+      "bytes": 8075,
+      "gitSha": "9340ada2019ccd65168c97e02eca9497fd4a1ea7",
+      "sha256": "b633b091c55bf76d6b3549421855dd3c80f5d1490ae9261b0facc0f079e280ec"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiresource.h",
+      "bytes": 10039,
+      "gitSha": "ac71b55ea2972e9507b2562bc36a3a9ddeb54f66",
+      "sha256": "24f1fad116a7fafdb7b91001dce62b04bd93d8b56da70c4a65da7a9c517392e4"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgisurface.c",
+      "bytes": 8702,
+      "gitSha": "418c11dcaf324a7a024bc3000a28f1715285cdc0",
+      "sha256": "ec1cc357f12ded20ba5e3a1cc2dced14f69e4aa7673a058d952ec8a654accc1e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgisurface.h",
+      "bytes": 12814,
+      "gitSha": "93a97198fc4de19c26d32abca3ef4209cae5bec1",
+      "sha256": "f7976315433672d6a97df681c7fa94538c460466bf7a41c4084794a8445649c2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiswapchain.c",
+      "bytes": 25999,
+      "gitSha": "a7fa05988e4a7c536eda3ede3d7ecf02d2b1cbac",
+      "sha256": "2ce65927e036bbdb0bcad8f12cd4a888a5067feee7d4bef40d2cc57f79ec79bf"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiswapchain.h",
+      "bytes": 39326,
+      "gitSha": "759f381e327dccafdfd2f31a71b38a07efc57864",
+      "sha256": "c9c4b46a3073b180e44525bb0faeda210ed46786dba6b1542ba595c48a106912"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiswapchainmedia.c",
+      "bytes": 5177,
+      "gitSha": "7ab0640379d7280ba7bbf89a56b67a50fe9cfde1",
+      "sha256": "7754626cda743179a142844e8ada65ec1ebac18a8ea1cc0ae02b193e602ba40e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_idxgiswapchainmedia.h",
+      "bytes": 5350,
+      "gitSha": "66d0cb4cdf51bf02dd4af50f1d44e8e4ba65b265",
+      "sha256": "385135f6ef0358ed9557c055eaab4f3fc502dae3041e9e7e626021a46ce6bbd2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_table.c",
+      "bytes": 45549,
+      "gitSha": "eaada77c3f25b4fc2d903ee57adc87c9e46d0b82",
+      "sha256": "e1416c3ff18e5ef84b6c9f2a94af5481bfbaac7f836da7755395944b58d708f9"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_client_table.h",
+      "bytes": 1833,
+      "gitSha": "ab15308b8bc3f21a92d38dc2e4cb20b9b892c02f",
+      "sha256": "a2bc93ddec5b79cf32f6825e20853cce85696baea0229065a90e84427e890017"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_codec_D3D12_PIPELINE_STATE_STREAM_DESC.h",
+      "bytes": 10524,
+      "gitSha": "d738cf8e84cb5a6123da6e7e0dd0975c5afe4a7c",
+      "sha256": "76b33218ccfc647893533de7450d89e84de6aaa444528063115ceff66c1c6e20"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_common_cs.h",
+      "bytes": 1648,
+      "gitSha": "99213b683d2fd56995a5600518c7259a4f5783e2",
+      "sha256": "6be1ede0e34a9440263282c357e2ab85dae17a16185e4fca2a9b200bb1ae64a1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_common_cs_helpers.h",
+      "bytes": 18575,
+      "gitSha": "10e17f7c4b038954e2eff59d3a54cb75f7a7acc0",
+      "sha256": "5440016bd9af6f4251d78273cbb9e955228bd0f6c9489f3507f2be704bc1c8c2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_common_types.h",
+      "bytes": 587464,
+      "gitSha": "c20b35af98b9f2874d1164a114312072d2ca5cea",
+      "sha256": "b8487ea761bca79ee4114f4829e70807b2f906eaaba90f567c49a197ed103c82"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_defs.h",
+      "bytes": 226245,
+      "gitSha": "cffc4e6201f24949ce0c4055387bc21447c0a571",
+      "sha256": "73294dda6367f51c88ba12be8e126b59605f5df565b892a19b0d5fad35d87a08"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_directx_types.h",
+      "bytes": 316197,
+      "gitSha": "d6496cb2517e17958a6eb329af597b924c4b8491",
+      "sha256": "05bef6a91d27b7e3cddfee4a90a9cb603b94380630df0e59e8949af6da1414f5"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest.h",
+      "bytes": 5674,
+      "gitSha": "1b91c31d4dde04e3a07fe6740534d7ad8490b19e",
+      "sha256": "55c46832348288a40e57e30f06911204d808644dbc0f31970fa67f2e148b1f0f"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_cs.h",
+      "bytes": 2945,
+      "gitSha": "cebb601c7a644711ead78c0e6c7581fc757f0c34",
+      "sha256": "8d297276432262661cd2973c57c09635ee5360cb7f83dbaebeedc5421c8ea626"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d10blob.h",
+      "bytes": 5413,
+      "gitSha": "b94618b0d05bffdb5801c5d0083c94062dc73713",
+      "sha256": "d690dcaebd444d9a3baf420a8237e5fac66d172a4d31f4e83ca8b6547da39b58"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11asynchronous.h",
+      "bytes": 5556,
+      "gitSha": "85c75565d71e77e9687cf6e12761849f991390b1",
+      "sha256": "1c074c6a8c33342eb5ec871ebb9ba1eb161da0c34491c61b00fc9071ecfeb3de"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11authenticatedchannel.h",
+      "bytes": 19957,
+      "gitSha": "d0fd645c623ae3a8dd0dbea1522f1981e701f102",
+      "sha256": "2da6099638baed8691a3c5eb9f79f01770c7f7e630c7a146642a05532f4738ea"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11blendstate.h",
+      "bytes": 11249,
+      "gitSha": "73ccc766fbec345e6d0eb3a8886a81d1c691e3ac",
+      "sha256": "f6117bc0995f193e808818b38a6115632673dc3c1edf21cef1d84fbf34e352e6"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11buffer.h",
+      "bytes": 5779,
+      "gitSha": "4c98276496ad16857a14f109890b8b0f4cef812f",
+      "sha256": "422fa093a0b39fea00e13a41195f2ecab05a6337b25626cfdc6b494f7cc4354b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11classinstance.h",
+      "bytes": 25991,
+      "gitSha": "11522b89b9ab18bd553f92405db480b19d03af7d",
+      "sha256": "4b749f8936e56bec46ee2e3a23f7f12372ca9775263af1fa61537053efdd1058"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11classlinkage.h",
+      "bytes": 19090,
+      "gitSha": "fbab02e459eaf2bfb95c60854247002ef2e37ac8",
+      "sha256": "b40c5ae41b172fb488e01f273d32009fde53cb0d5483ac3c7a231c9952b42483"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11commandlist.h",
+      "bytes": 5633,
+      "gitSha": "6f24d6d02ae7236337b8bae483e84239ca6a68d6",
+      "sha256": "1ab9535919ac5883042d2390c5e30ebd1871571fd309127f1936f7fa0c386e99"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11computeshader.h",
+      "bytes": 688,
+      "gitSha": "af1c5db49810756c06ce7823c35e41090945bec8",
+      "sha256": "6c18d5946bdd508eb53bda96346c0dca5f010782860e64ab8a3089849e25d516"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11counter.h",
+      "bytes": 5830,
+      "gitSha": "af915482bffa764f9bbdbd346fc9f32df803bc81",
+      "sha256": "fa5fe85e0e8bd3ad4cfe35322481cab59e345d8d05ab0c0afdedc34cee8e6310"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11cryptosession.h",
+      "bytes": 30690,
+      "gitSha": "773935811b79eaf1fdd04ae3b4d8d1e7a5e575d4",
+      "sha256": "ac35fc7f1babca366684e101f49314f168daf94e55f2a111d44d122b8dd214f4"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11depthstencilstate.h",
+      "bytes": 6292,
+      "gitSha": "58734f1f89920ff14cdc81a80c024442c97ecd28",
+      "sha256": "115f8219c2b39bf397aa8a4d7dd00c24fade5b3edba8d1ab0062feb8c874c520"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11depthstencilview.h",
+      "bytes": 6313,
+      "gitSha": "fbe09f3049a929f16bb30db2d2f9a690ccd5b471",
+      "sha256": "d6ef7008e7817140e384534a83a7bcbe0c87c42b8c23396dfb5fd5099d143f30"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11device.h",
+      "bytes": 502611,
+      "gitSha": "bd8fa89048a91cdd1156e739d1dc29a03c6a5b02",
+      "sha256": "c8b2401906eeceafceefba93de3e2e0dacc7bd8df59644cdcd92ef4d2a35b3e7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11devicechild.h",
+      "bytes": 27294,
+      "gitSha": "8b9ca2c0e644e3059d2e656f2f45abf8a8c6998d",
+      "sha256": "ea10ca90c027a52b72265cf2f3caa663b1d0a30bd502bd7297f544e4bca25235"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11devicecontext.h",
+      "bytes": 941092,
+      "gitSha": "465383ca4132c2e2c2a7c828b52cd4fb4474883b",
+      "sha256": "64b1bf06e2ca14a4b0f275c8072e9b83893ddc336f16a6ba201a0c0320080a0a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11domainshader.h",
+      "bytes": 684,
+      "gitSha": "360deeaaf6e92a3f3b666895d9fe36bcdd67e15e",
+      "sha256": "897597df470b7c3c7ec1c8cd203115550140c8e293c2f793febb7c808a6916cd"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11fence.h",
+      "bytes": 19216,
+      "gitSha": "d0e413ffa6fe9b3566201ed48c9e313e96f2284b",
+      "sha256": "04f63e6ead3819209c97b22e02c8441bcc1dec3c759e2626775336747089c753"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11geometryshader.h",
+      "bytes": 692,
+      "gitSha": "c2089a92828ea19a78b3002f8f0805110d171f22",
+      "sha256": "bd64497e44e8dcc5c8d8b20fe582c2c0b3ed1a3c42f9d6c775c9d1947191b09e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11hullshader.h",
+      "bytes": 676,
+      "gitSha": "9f24fdb402b7ba0410c4a679562ca8e698536980",
+      "sha256": "4cda69414dfb850666d433a90967a0ffd62852662207617ec8fd784a135a9197"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11inputlayout.h",
+      "bytes": 680,
+      "gitSha": "3e3eb93dd0b797773939d931a65dffc63b543d06",
+      "sha256": "14b3330a0586c48809b60095dbba08fb9f1227003c8a0db54907b3439caa0ee4"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11multithread.h",
+      "bytes": 18026,
+      "gitSha": "ec264a7756db8404d1fe5883a60c3d1e00b4754a",
+      "sha256": "bec08040bcaa9442c0ec080c47c29c35b21f68f28a7221a38c1a25482353d4ad"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11on12device.h",
+      "bytes": 44315,
+      "gitSha": "6604509ddff304f8b035596bb9888df9d5ab2efb",
+      "sha256": "80f1b582cc41ab7881de4d99b21f2399c6dcd3614e49713f9a4cc4c95ed5a61c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11pixelshader.h",
+      "bytes": 680,
+      "gitSha": "078e4047f55f0bb9274f902ee1a669ded773fa73",
+      "sha256": "aaf10f88d2857c7d289ee9433a094f6d298a9e5a4de0ceeb025ce47c6f210893"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11predicate.h",
+      "bytes": 672,
+      "gitSha": "19617b8cb6df28b3e18b2ba4cea6edae0bab5044",
+      "sha256": "dd9eccc93aff06b189d1040ea763a409a2c1a6092c9a0ba0023b810302c02b50"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11query.h",
+      "bytes": 10898,
+      "gitSha": "287691d06362bf6bb5e48f52287b6fc37c9cc9e8",
+      "sha256": "30159cc3b933d51d60775a5b7749054282191f3d95524eef8fd1de5cd3933231"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11rasterizerstate.h",
+      "bytes": 17300,
+      "gitSha": "c5f853edbe77fe45cedacf6a19d820e5a5f341b2",
+      "sha256": "29ce8fce4f093a845f979bac6764f027ae14f2dfd1a9df685a3ca10f828b7edd"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11rendertargetview.h",
+      "bytes": 12024,
+      "gitSha": "5145c4a648c717b4946087f539e6d14422e177ae",
+      "sha256": "dd7defdc210b201f88ac36ba11ff71290fffe22fc5bc7035424998b9628b1a07"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11resource.h",
+      "bytes": 15227,
+      "gitSha": "462dd90049f04f3d3932f56aa94921471e98b47a",
+      "sha256": "954c3df14888a0e74933775a76811cff8934b198d07765f0899d42e4f8ab211d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11samplerstate.h",
+      "bytes": 6025,
+      "gitSha": "758e972ecd9931f2def5572ac92c3da365e11a6f",
+      "sha256": "afe42155fdb52134ca7d4f3c7e8821a30bd7f0476843b5da7331b8687d3fcfce"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11shaderresourceview.h",
+      "bytes": 12220,
+      "gitSha": "4fde570efde6aa2181c86f19e1409a937c776657",
+      "sha256": "ad284277f79f5b797d579d931101c7b29cb7b3609e77b908cc997f447bd1a891"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11texture1d.h",
+      "bytes": 5932,
+      "gitSha": "43abbfdc030391f2d31e29ef7f829d8be046046e",
+      "sha256": "e6568733bd0485c71103c9326056603ee8760fb691829aff24f0c95bf9a9417a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11texture2d.h",
+      "bytes": 11271,
+      "gitSha": "ac7f7e5c8e18f6d2c7626f9dbd960e98a681d81c",
+      "sha256": "e4f88e954a974637ff6459bd54ed5fae0d283f9143861f061ef1882f4efd5ef9"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11texture3d.h",
+      "bytes": 11271,
+      "gitSha": "b73a03118194219ab82fa8df72346ad13daec6f2",
+      "sha256": "090fbeb8752e9ddbbb1788543751c8cacb8f958b3015ab1ae1d012df19ee01ca"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11unorderedaccessview.h",
+      "bytes": 12318,
+      "gitSha": "bafc3fefd030a81d4dab7848da2bc02fab1afe53",
+      "sha256": "1984ab53c8bc3b6bc675b37bf66c8a018fe0d3e8629617ddf3d2fc0e885bebc1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11vertexshader.h",
+      "bytes": 684,
+      "gitSha": "2e969558de137a2706bc0d6b481cd622cb72e243",
+      "sha256": "c758565937c4b4524c5b8c563ed67a26b454d7f96f0ded96c8c82fbe5fabfe89"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videocontext.h",
+      "bytes": 585312,
+      "gitSha": "c7600565fd5ca61d9f4db8f0cf2752244ccb7849",
+      "sha256": "eced3324825dc9d3f69fc0f24332464bf0a607255ef6c8a9e12f17aa34fd6ef1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videodecoder.h",
+      "bytes": 13905,
+      "gitSha": "cb2f3d4019d9c2d8927ce903d76a1ee31dd39766",
+      "sha256": "dd07adad27e6896714afdfc39896bb5609071475ce2a53333fcc1f166b165988"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videodecoderoutputview.h",
+      "bytes": 6631,
+      "gitSha": "75676dc00471082321e90ac520d71c8d943b5b91",
+      "sha256": "932d6badc62650cafc11fdc7ad7e5951e85b06c06ae3d71367391ed4fe89f5fc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videodevice.h",
+      "bytes": 191017,
+      "gitSha": "62ea044febf051720970592b6b28ed2f0a63dd51",
+      "sha256": "eeea5734117ea6a7de1c9cd04fd0d5fae9c10cdcb9a2d2f5d377fdb5dae3ece2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videoprocessor.h",
+      "bytes": 12666,
+      "gitSha": "cc0a6f9abba0e405f22ccfd32894aa84a40fd0c1",
+      "sha256": "e97ad6e4d971cdc01facb2b8ceaceb72fe68ab8ac9a8bb30cdc006b4d1bbc0fa"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videoprocessorenumerator.h",
+      "bytes": 55769,
+      "gitSha": "ef662334dad05cdcf463ed43eb4419e3d4887e87",
+      "sha256": "6086f2e658a494be790134b90ef8706278ae649b9cf0e4446bcd2a5e7e974f00"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videoprocessorinputview.h",
+      "bytes": 6682,
+      "gitSha": "c9bec4fec80983b527c62a234d070405d3b99a3d",
+      "sha256": "f81d08a3d38c15f951259e2cb9ed12ba1d00b35925e0e8c4af88f4c801f1ebc0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11videoprocessoroutputview.h",
+      "bytes": 6733,
+      "gitSha": "46a41acd89674988c7d055ec05104ac3be0d677a",
+      "sha256": "e22c16b640bc4915891fafa43daca5c8c43fd57bfb935edbcf4ded07812afa4c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d11view.h",
+      "bytes": 6520,
+      "gitSha": "55e5e6686bb16f6d63b1dd75d382d2c4efde3c75",
+      "sha256": "b5aa4b6894a60eaae9488d1e2c818d4b4b11b4591590ee172bd239fbd9393747"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12commandallocator.h",
+      "bytes": 5619,
+      "gitSha": "122392341b65eaf4948a1c533d05b50ac10c8b6e",
+      "sha256": "04facba51765e3696f8074397844f266c1e6377df9c8a034d2b17cb7c65881a6"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12commandlist.h",
+      "bytes": 5542,
+      "gitSha": "67ab2cdb732144b265b2627bc794ec0ea43de299",
+      "sha256": "029c5826cb027144ba2d8bab73d5fdcd5bafde7e0badac51705d82322ee4f7da"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12commandqueue.h",
+      "bytes": 69708,
+      "gitSha": "361d9c0641ba3a36a2ff2de664a478dba551302f",
+      "sha256": "c6f1d2bcb223cf27d6dab9f28c9049ab739b34f60c7a36951b788c8bb75d456c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12commandsignature.h",
+      "bytes": 700,
+      "gitSha": "bacd0db00aa431cdc3ddff7a7e65c82ee9d5a20d",
+      "sha256": "626b09a90e13d11bc6696fc3014de27edce771e785bcc3b253ff6b00da41a4c1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12descriptorheap.h",
+      "bytes": 17409,
+      "gitSha": "c8f6deee40825504dc31e11068c01f485c6ebfbf",
+      "sha256": "915f7585c3fe8596939e747403533947ef9235ec4ced415060dc0703f05a4e5a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12device.h",
+      "bytes": 624313,
+      "gitSha": "002f44e47cbc54104feb46ede558efd0360eb1ce",
+      "sha256": "52a8c8f6ca0fa4676066e148f8690f21a5f8905c4258b38c86b31651942bec2d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12devicechild.h",
+      "bytes": 7423,
+      "gitSha": "fecbeb5ca7efbd1d3347b0ad5d625133ea44686a",
+      "sha256": "9daf6aa976ce55abfc4f8cbc307f02e5d66cd79d29e9db8dbf1871cd89f9ba46"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12deviceconfiguration.h",
+      "bytes": 44773,
+      "gitSha": "12224f27fedb98f0f1b75a8d6db9124aebebed44",
+      "sha256": "33bc467a0ec6fa0555b8375fd6e08859bb5db1debdfd8e46c871f4282eb15818"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12devicefactory.h",
+      "bytes": 46591,
+      "gitSha": "72f6fedcb701094e127cbf48683bfaae6eeb5cbf",
+      "sha256": "26dd5a267b66fde78ad6c2dd453351602dc2637fb0def02c07a0670ff29a33ec"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12deviceremovedextendeddata.h",
+      "bytes": 41412,
+      "gitSha": "7ece19cc87173f1a3c2a54a8c4c162a4f763d6cc",
+      "sha256": "59b09264426501d13d902c45524c2415b458503062a11452c23e607b299a1fcf"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12deviceremovedextendeddatasettings.h",
+      "bytes": 25642,
+      "gitSha": "55c4c110e563c61aab04afa8e331db53f95c25f7",
+      "sha256": "06a86e77b46468e6e2b6a0b63e25729c16c8f0d28cb1cc843a14d26ba41a1523"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12fence.h",
+      "bytes": 21379,
+      "gitSha": "f4cf29c4a69af0d0011fc8ad15f068b9c68b8d7a",
+      "sha256": "ae95e0496be642b1ab6b266157637c3f543b8a38e8df52d11c5d7cff18eadfd0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12graphicscommandlist.h",
+      "bytes": 458109,
+      "gitSha": "101f1260a8ebee7d8eeedf0b79d54d32acd97681",
+      "sha256": "64042994484bd1223ebd8f241da54fc32e18fac11093eec649ee1e367dcd82d7"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12heap.h",
+      "bytes": 12708,
+      "gitSha": "c2c4ebddb52d2f5d678e0ccff046bd18088f613c",
+      "sha256": "869832c2ea044137372aa2f120e96e5432c283ef450b7deed9601c08e7159c0b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12lifetimeowner.h",
+      "bytes": 4932,
+      "gitSha": "4a41396d0c8c0d13a2a682f2dcb69a28945bae79",
+      "sha256": "1e6f3dc39516d0af5493458b89c8bbadb48ee44f005e4e7c28c14fe0143f82d0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12lifetimetracker.h",
+      "bytes": 6534,
+      "gitSha": "d9812573b11e8731900d5e6c5f819e7c75a1ee75",
+      "sha256": "643de451becc6e4b6895c669decdef9869273dcf85140e120c21874d0a715f47"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12metacommand.h",
+      "bytes": 7585,
+      "gitSha": "a2b8aca6d6866179ec71a74cc8317c374a16b641",
+      "sha256": "6d609f676b68f3027cf36e8dce4ab650b0b7d666dfe063c5a4042882d0b770af"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12object.h",
+      "bytes": 26194,
+      "gitSha": "8f0278a21d5c976732a1a56d613351bf753f9b1b",
+      "sha256": "830d31ab42ea8fae16ff4ee66295e26a3ad028610cec505d8de6a0f1011c3337"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12pageable.h",
+      "bytes": 668,
+      "gitSha": "800c61269033eea4303d85a54bb8f1f43d92c4da",
+      "sha256": "d13a5d7eab01eca40949b66b60c83d8c32c17fb980100dee10a833aab0a21c10"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12pipelinelibrary.h",
+      "bytes": 46223,
+      "gitSha": "2eff1050c2a687ef7c02f4e8890921125ed1a877",
+      "sha256": "dcbb71e58ff8da5b496e268c5962f164662127827835b7f49144867e7e403156"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12pipelinestate.h",
+      "bytes": 7112,
+      "gitSha": "0b2207e31a372df7f28b246b6c4f5107614dc88d",
+      "sha256": "9c9b2aa7fd807027a9995c34f94a6d1b5ff30304fa70484f7e2f707f6210576e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12protectedresourcesession.h",
+      "bytes": 11721,
+      "gitSha": "f53eb91c568b280058e78a5ddca97c9b4b9ce0da",
+      "sha256": "0fbb63894a23ecd6f4ec28df5dee011fc4db78d1bd19ff52286e2e3dfa6faee8"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12protectedsession.h",
+      "bytes": 13084,
+      "gitSha": "4f2f42d1925ffa0e18423946ad765b4a8d430bcb",
+      "sha256": "e145cdd46162dee5afd641cfb2ab12e2175ed984aee307e1190fb9f88ef5fd13"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12queryheap.h",
+      "bytes": 672,
+      "gitSha": "93133129f0aae72e0d2f66ba780ae3ee14fd70f7",
+      "sha256": "f5f61e22e89432108c5c4aaeaa515838a3f0d8e0f9f61fe6e6abcbd488b4ebbc"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12resource.h",
+      "bytes": 56876,
+      "gitSha": "ed9f1f25ac75a5a7d6b09d406de67e0bf2fedc58",
+      "sha256": "e922662cc5a22a1ec707dca2578f40220124c7c133a8cdae0a05ef1405d10a5c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12rootsignature.h",
+      "bytes": 688,
+      "gitSha": "74e8e6bf06f1068aba0e0ca08567ed606326da38",
+      "sha256": "77ca25a4f2d7cae798e1607a07beb3322b72ca84a77315cec8b8f6a93c478833"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12rootsignaturedeserializer.h",
+      "bytes": 736,
+      "gitSha": "087c4a7186e6c621fc2e7de1fc171fea951482e1",
+      "sha256": "59376ccc399b957cfc5318676641bcb15669f3645cb8542306a64bb86650a1ff"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12sdkconfiguration.h",
+      "bytes": 19590,
+      "gitSha": "32dba7650b7b97b7ec292f69fa797eaabf22c22c",
+      "sha256": "14de6db9922f69618b97e7861a9a2267a02d739fa1941e25c7843a2eb8b560fb"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12shadercachesession.h",
+      "bytes": 25445,
+      "gitSha": "89bc1139b8842b4b132240eb9143d2c628c7b9bf",
+      "sha256": "2467f6f352c0a5668b6e54cc3b928089cd5b53ac6c93e9fdae9b9d15ee82112b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12stateobject.h",
+      "bytes": 680,
+      "gitSha": "d2af3892e9d6d41adb7914be1af81d7a9b27b125",
+      "sha256": "7554e46b2c0c94cfc6f1203d24e5d08b99519b9dd3142cdfafd185f0eedd4dc3"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12stateobjectproperties.h",
+      "bytes": 24143,
+      "gitSha": "51bd555906e7295cd717442ecbcd3f31b929bbd1",
+      "sha256": "4769352c0fe74ac3685208c6139eaf3315509717d670361f688754507fb82cc1"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12swapchainassistant.h",
+      "bytes": 28247,
+      "gitSha": "959797fefd931b5f4ce0785813950581cf169605",
+      "sha256": "f85a3196f6661ebac3f693717d941509294503e0e145dfcedc20dd63b8f7aaad"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12tools.h",
+      "bytes": 9837,
+      "gitSha": "b2e711b6d7861394ecfecb18e235e2dbff932c8b",
+      "sha256": "d107e5973cf825f1993b85b81d15f3bcc7310273e2be3cdf82c42f713966d1d9"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12versionedrootsignaturedeserializer.h",
+      "bytes": 9065,
+      "gitSha": "ccb8a72d15f534435961b7b2549a307e2d08b37b",
+      "sha256": "212632cba7b07d59c2e9abeba7976a366d45fe9c813c22ca1d4526de35a8db7e"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12virtualizationguestdevice.h",
+      "bytes": 14886,
+      "gitSha": "fabbf9ee146d7c4bf9bbb221e1765a506c70cc66",
+      "sha256": "c122a29068886004843d79e2cbe59657e5c26c427309368dc6709f2b59d61f44"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3d12workgraphproperties.h",
+      "bytes": 71055,
+      "gitSha": "7f969694e5e332183c7fb365121278deb8cc1a82",
+      "sha256": "a397dd3e65dc6a341672bc2da6167b67cfc7c953ce5f447055033063c839ec44"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3ddestructionnotifier.h",
+      "bytes": 14709,
+      "gitSha": "8421787379b0ae866cce9ab37f804841f11b8f6e",
+      "sha256": "9589d61a73c9ebf8fee315f1bb323c3b765184d1a56d3105bb6996090678681a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3ddevicecontextstate.h",
+      "bytes": 700,
+      "gitSha": "c995f741c644816c489370b93216afdd9feb30bf",
+      "sha256": "577e2abee71e7efd575dbde977116da03ed75fdcfa5c1c4dae14e4413da6fe76"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_id3duserdefinedannotation.h",
+      "bytes": 21167,
+      "gitSha": "a16f0f329db862de1ab9444eb35288529fb40317",
+      "sha256": "692a1596a398e9c01c9d44c7c3f220eb6bbf14b9c0459d8f18f072234f4eadc0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgiadapter.h",
+      "bytes": 74763,
+      "gitSha": "827796a2a11546f6c9934026c45f9053ee12797e",
+      "sha256": "b74e1d4e1313e3b59f43466ad5c570ad41e4f9c19ca5281915ddce1c9c08b0bd"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgidecodeswapchain.h",
+      "bytes": 53575,
+      "gitSha": "333ffde262cedefe5b605a17c3d3f25f04bcb44e",
+      "sha256": "639ad9e65cce55ef49adcf47283611cc1b4216d1fb719e4282974fcab84fda5c"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgidevice.h",
+      "bytes": 83508,
+      "gitSha": "a29b7319f24944d221d2d0d61cea172b50bab090",
+      "sha256": "7a620a4c914de0c198dc5486468bd2aaca262ee26cee7302661d115e16635c9b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgidevicesubobject.h",
+      "bytes": 7526,
+      "gitSha": "e5ff392438ca332767f2de35bdab8229b46b8464",
+      "sha256": "624da5acab85f636cf8fdab0cdc20116938dfcc7ad04b8d16cd30854108d46e2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgidisplaycontrol.h",
+      "bytes": 9683,
+      "gitSha": "0590e6919bb37dbdd8a805e1df08f47e6f2f369a",
+      "sha256": "1eb909d525c56760bff7d6201fed5fa6e95f5b5587334e43bd0b1fc933960fb2"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgifactory.h",
+      "bytes": 167437,
+      "gitSha": "56245a977c9f9e969985727654ab35c215e46f53",
+      "sha256": "7c3ad36a7ff39640cf65752bb99549603356ebf1c1cb0e8ad10f5f0310751f9b"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgifactorymedia.h",
+      "bytes": 22176,
+      "gitSha": "72c14ae83dc3f5e68502f49e6b8ba20f0bff64b5",
+      "sha256": "d93f22b589edc296146b26ad1c2d83859d2e41340ecc6b117941443463718523"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgikeyedmutex.h",
+      "bytes": 11726,
+      "gitSha": "caea5e1c775b755fbb01f988101d119bfaed0843",
+      "sha256": "7260e796e54189c43dda3e8cf72bba70b2b71d3f5d1f6eb6a418e4472981d76a"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgiobject.h",
+      "bytes": 27055,
+      "gitSha": "ffe6fe7f4b28ae21110b8e7f044c31339e2cc1e0",
+      "sha256": "5aaf07a3753379500580314fc7d5d2fe73a34dc3f4ba883f2e09352a07b9adf0"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgioutput.h",
+      "bytes": 138596,
+      "gitSha": "cf1e80856eda83a1d4868c2fb3972b338c5c0461",
+      "sha256": "0d16bc6fba9d3f56fcf1c5719c1586e0322f89e6b5781699fe9bd661c205d37d"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgioutputduplication.h",
+      "bytes": 51744,
+      "gitSha": "a9b1b7b07723935a219b7553366146eb487679cd",
+      "sha256": "a5f64359ed56e48907a109de81f08efe21e3de1bb751badb82f750a38cb873e4"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgiresource.h",
+      "bytes": 38204,
+      "gitSha": "c872c5a06af1a20b47fd33cf1e4c03290d55a2e6",
+      "sha256": "c471ca4be17407086f66ab520932a28856daac9a5be7bcb4a1dce927b0953a91"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgisurface.h",
+      "bytes": 29220,
+      "gitSha": "bf1647aff30f221d2bcc75629dc5d395d1679d7d",
+      "sha256": "812414041e7891fb438a0300b239b6e6be992576d53cfe71647858bd549f8723"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgiswapchain.h",
+      "bytes": 203207,
+      "gitSha": "1ac81ead06ac4ff750328d7e6321061d48f0d2ec",
+      "sha256": "5f65bfaa54bedfe66729e14012ae15d7bafda519059078418366fa6800328f57"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_idxgiswapchainmedia.h",
+      "bytes": 21357,
+      "gitSha": "a281b928d5e6da1e0e358e2df0ec1fea32b2e1ce",
+      "sha256": "2bd9d100e552f84e21e206f1626ef72b70a82829f3009c209336f5eb4349abb5"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_structs.h",
+      "bytes": 1001361,
+      "gitSha": "bfe6cacfcd2ae618a62e303c54fa5d8ba001dd7f",
+      "sha256": "0eefa5011444a57c803363100ab5f4cc02a2721b7578501e6c6e0a7593c79a37"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_guest_toplevel.h",
+      "bytes": 91784,
+      "gitSha": "23c51776177385edc8dd047059303fe96e7c1fc2",
+      "sha256": "e33388313b58c871988c9bd0c0fedf25fad0fddb24c2739e625f5f9c0de4a110"
+    },
+    {
+      "path": "neptune-protocol/npt_protocol_transport.h",
+      "bytes": 26355,
+      "gitSha": "65066a4a45bd1ea8cc9ce044d7471ea4067f905a",
+      "sha256": "101919a54dad9568d15ce61b7face1caae16066813b8d5d229352a32503c2f35"
+    },
+    {
+      "path": "npt_blob.c",
+      "bytes": 2444,
+      "gitSha": "5de896199de2137fcb9ac4da4c4b0bd738e29b17",
+      "sha256": "33aa197dc33e90b6a48d10f6fbb3e848c02e0e06abeb0e2df702e163d949c2a1"
+    },
+    {
+      "path": "npt_blob.h",
+      "bytes": 633,
+      "gitSha": "72ab2ba8d74f44a2367ca038b40d3b855804bfba",
+      "sha256": "6fff9e21e12efc8acf99b366f04295b867bc69837b2ae204a737fe89ec363530"
+    },
+    {
+      "path": "npt_com.c",
+      "bytes": 37143,
+      "gitSha": "368a2a843085ac02e8e70b499dd47c1f04906339",
+      "sha256": "c310637e4f9786a7e10b2e4e9587e2c963395c7d138c90013100865ca22c57ab"
+    },
+    {
+      "path": "npt_com.h",
+      "bytes": 15665,
+      "gitSha": "f64f510a294713e2a2b329bc085524fdb147240d",
+      "sha256": "983517b0a3b6d19bcbaca93423d81b870098760ff9b9dcdf86cf47fce7c1ffcd"
+    },
+    {
+      "path": "npt_common.h",
+      "bytes": 9793,
+      "gitSha": "06afe892beae7eb1fd7810b14201ca8b46f6d780",
+      "sha256": "2dfc7d0f3ab85fd794c717d84793e06725a635a54a6ca00b03022348d811b22c"
+    },
+    {
+      "path": "npt_common_wine.c",
+      "bytes": 3118,
+      "gitSha": "4a510902e017b643183052052787a830f790d9ea",
+      "sha256": "4f74c094c9cf5784a370d6ba776eb6d85a3d2837214f924bbfb8ca0da5cf8d4a"
+    },
+    {
+      "path": "npt_cs.c",
+      "bytes": 2616,
+      "gitSha": "3c318e81251095e3c8b0ba591d5345b511acd7a7",
+      "sha256": "ea0e0dc5f3789fe71b067b5996c1e1424a1e57eea854a5c5dba77ac6438347e1"
+    },
+    {
+      "path": "npt_cs.h",
+      "bytes": 9025,
+      "gitSha": "9a370b5a62a13ce2b81f8ba5e2b35788be5fd5e2",
+      "sha256": "f835e8c162bd9b83a39b52a2ec8e03c46486b7f5b942441fbbc3b706cc0a33de"
+    },
+    {
+      "path": "npt_d3d12_heap.c",
+      "bytes": 11710,
+      "gitSha": "e92d59dde6ec4fd6aad910ae854aa007ed690e3c",
+      "sha256": "9e75249e9f770550e1b179162b3f599b555829036374d15e74af4dfcee30a914"
+    },
+    {
+      "path": "npt_d3d12_heap.h",
+      "bytes": 4339,
+      "gitSha": "3ca163093b654da3ca6fd5477d3fcf65b635f79d",
+      "sha256": "e349e502b81bd4ce1a1c7874618214b032dbcfcab76a408f8b92793da6b5180a"
+    },
+    {
+      "path": "npt_device.c",
+      "bytes": 26393,
+      "gitSha": "63f6238c5649e67eb02954cc10a59abd7082aaa3",
+      "sha256": "9d3b285e32f9655e332a5b18ca4c6dfd41d1d8870c3d7d42721adb405bcd9b6f"
+    },
+    {
+      "path": "npt_device.h",
+      "bytes": 9435,
+      "gitSha": "428824cb96b8c67afd173e2035974ec66d444196",
+      "sha256": "854a31fa4e17836be0402c350b23d3c15a0b242941d1057e9704c49fd726c021"
+    },
+    {
+      "path": "npt_dispatch.c",
+      "bytes": 26504,
+      "gitSha": "abaf13524566de3f949f331d5c8933fe9de09e12",
+      "sha256": "2f1fbce00156d7def58277bffb07a7b4039e7e992a26b98b9c7106c7b8d8825f"
+    },
+    {
+      "path": "npt_dispatch.h",
+      "bytes": 12102,
+      "gitSha": "822ded0946470e8ce0431fe64400ec76561f9f7b",
+      "sha256": "31f58be3891af0fb4de9510aa933513334adb2f58c45bb1f5d06a17221b2fe96"
+    },
+    {
+      "path": "npt_display.h",
+      "bytes": 1207,
+      "gitSha": "8383e13d1073cb002e48083574a6428d4ad0847a",
+      "sha256": "aadf62e1a49d52d7973e296fddaebca4c720df8049641b11bedf7990269ea3fb"
+    },
+    {
+      "path": "npt_entry_d3d11.c",
+      "bytes": 16224,
+      "gitSha": "189908b55c5be0f9bedfd526c8d581acd6f5b67c",
+      "sha256": "82b0171d9abaf96ace7413b2a6d661fcd9b91d2dd4373d9555e82ddfd4c28a2c"
+    },
+    {
+      "path": "npt_entry_d3d12.c",
+      "bytes": 14292,
+      "gitSha": "69aefb83306eaed42c9f8fe6c47b29247aa70cc6",
+      "sha256": "362bd8d11d2345a04294d0137e379dbb901d405eda1b2a92ed8f1c2a4beaba8a"
+    },
+    {
+      "path": "npt_entry_dxgi.c",
+      "bytes": 3750,
+      "gitSha": "8a496e54071300d6944884c1c1b57a13877f8060",
+      "sha256": "794616a1abf2d090c53d07667d664daf03269a15d572db6f0a5b34fe777b3d16"
+    },
+    {
+      "path": "npt_env.c",
+      "bytes": 2267,
+      "gitSha": "c915bd46a2becd7bfce2bec45c07add25ec5e55a",
+      "sha256": "963347fb8147ff3320485d95225e283839c3df23bd4c3ecb6847068d4a9d680a"
+    },
+    {
+      "path": "npt_env.h",
+      "bytes": 3645,
+      "gitSha": "92d5619ce1e247bb35a4a64b37cecd2879e1d156",
+      "sha256": "255fdd1de0a7a01cb38c4768c5556c81d7653011f0c9ffc2a8e484a41bcb1a63"
+    },
+    {
+      "path": "npt_event.c",
+      "bytes": 26883,
+      "gitSha": "55a35aff37c909799cbed789b5450f888bd5efb0",
+      "sha256": "df17d8054507ad5f495f2a07fb71f34b298c2c32927394ff97e88bbe86e28ebc"
+    },
+    {
+      "path": "npt_event.h",
+      "bytes": 4457,
+      "gitSha": "d53d6049bd4fdccd81524b7373d313f562d526ed",
+      "sha256": "454efcda254e4e49a06e0b98acb0e3b84c0ad0fc28abddf3119328addee4a517"
+    },
+    {
+      "path": "npt_host_address.c",
+      "bytes": 4195,
+      "gitSha": "f2e4c114968c47296bfb297475a596567ee891b9",
+      "sha256": "0c2602fdc6826738390ffc14678f81d4c0c6c81eb6d35dd0ef456ce0a49ceaed"
+    },
+    {
+      "path": "npt_log_win32.c",
+      "bytes": 2851,
+      "gitSha": "7aa2956bca36b23885ae06fa23c8a0fe47f747a1",
+      "sha256": "7f7cc3325b9984b27a8c8046e092ec4f4ded91b3f5c6de0e831ab4453f89e2af"
+    },
+    {
+      "path": "npt_object.h",
+      "bytes": 3916,
+      "gitSha": "ef2146886d687fc2b6ac2dea3baf4a4c76c880c5",
+      "sha256": "6263aea1c9d7c426dbc8dd2e364b45c67eebbe0805fe98fbe985ffb9b95dffd5"
+    },
+    {
+      "path": "npt_overrides.h",
+      "bytes": 3374,
+      "gitSha": "fbe526ec01bcfdf50651dbc00aa7ed5f0513909e",
+      "sha256": "989bfdaf129f2f1b920ef7089cd385da26a4869079b564e7299c1eba68ee641c"
+    },
+    {
+      "path": "npt_overrides_d3d11_buffer.c",
+      "bytes": 1181,
+      "gitSha": "74f1e5226a7c0201f4263844ebd072dca4b9f81c",
+      "sha256": "c87ceeb509729c5e1b91307d2969b8560c97ea0c3c9369c2212f048a3d8461ab"
+    },
+    {
+      "path": "npt_overrides_d3d11_context.c",
+      "bytes": 40960,
+      "gitSha": "7450dda6da21ac5f07960130f81b790ade9397cf",
+      "sha256": "9bf17af41e43446fea94895867074c924b100ead015550b591a7c67a4de88a46"
+    },
+    {
+      "path": "npt_overrides_d3d11_device.c",
+      "bytes": 23146,
+      "gitSha": "e6a1557662302487a235991d78197d882ed527fe",
+      "sha256": "4f07c3e3c8cfaad2215f5a2047109050174705d69a0b8fad77ae0b1c3134e8db"
+    },
+    {
+      "path": "npt_overrides_d3d11_feedback.h",
+      "bytes": 2195,
+      "gitSha": "ceaba3a2e0299f4700a332fbcaf135a1ddf710bb",
+      "sha256": "f29127416043e7599a6c9b3d83750b6684eb29a1b6e5083b6bea0e480897fa8e"
+    },
+    {
+      "path": "npt_overrides_d3d11_fence.c",
+      "bytes": 9103,
+      "gitSha": "7b3df52dfdd6f835b63e2ce52fcc70d1242840f2",
+      "sha256": "ab4b29797b1d659e96ed1c65e7616e1791960edca75ce38715b6519863a7454f"
+    },
+    {
+      "path": "npt_overrides_d3d11_query.c",
+      "bytes": 12267,
+      "gitSha": "83ba151286ec33896605ad1af6410ae80f511803",
+      "sha256": "b2c6b798a4092f6f912db8f3694ee1b437f12d64518aa4f7b696edbd78d1bef5"
+    },
+    {
+      "path": "npt_overrides_d3d11_texture.c",
+      "bytes": 3657,
+      "gitSha": "3b13659532f5561f8e3ee39c6b05b642954b3e5a",
+      "sha256": "c16c20be08097e5f5e940067e3ed47cb816ed96100479da440afda80e0c376b8"
+    },
+    {
+      "path": "npt_overrides_d3d12_device.c",
+      "bytes": 50404,
+      "gitSha": "86c587dd5084ea165ee964772585b74fa7dbaaff",
+      "sha256": "9ea2054abd824c33e2555503fa05f410f9762597763bb49040e9de5d797bce82"
+    },
+    {
+      "path": "npt_overrides_d3d12_fence.c",
+      "bytes": 12508,
+      "gitSha": "8b9fa587ee8f6e76ccb2e17bb75cc113dd1d1b06",
+      "sha256": "3ae07569cf709b4f7ed51c7cdd568b83f0e9ed61fc05afeba3be2f8c0e164c7c"
+    },
+    {
+      "path": "npt_overrides_d3d12_list.c",
+      "bytes": 23322,
+      "gitSha": "fbe7aa815ea48496e6ba81314563b1c63414c8a6",
+      "sha256": "f82d9678a0ab96e3f4ee25000606d3b98dfcf3408165ca51703ea75c0f777903"
+    },
+    {
+      "path": "npt_overrides_d3d12_queue.c",
+      "bytes": 3344,
+      "gitSha": "c91240bb4df0303b107d57c93e024b6d26a9ebef",
+      "sha256": "88b5d7f7fb62b80f05de9ee85d75cd79cb1ee7fcd3d7c9dd544093dc1a8e79c9"
+    },
+    {
+      "path": "npt_overrides_d3d12_resource.c",
+      "bytes": 29984,
+      "gitSha": "165905ce1a33561a95f7f3c7b3a823cb57a8b52d",
+      "sha256": "d9a4452445c2a1008243fa003e03e1089bbefd068beece2db8ba844519e8c7d8"
+    },
+    {
+      "path": "npt_overrides_dxgi_adapter.c",
+      "bytes": 5097,
+      "gitSha": "16d932088c7200518013f2024c6958fd82a69c37",
+      "sha256": "acf2732ae38dd2677baf6964bc73696adc86152dc3cbe3f20d33a8a382dd06fa"
+    },
+    {
+      "path": "npt_overrides_dxgi_factory.c",
+      "bytes": 11973,
+      "gitSha": "17c8ec9b5a1b26adf9c824450d0fc98dc9729580",
+      "sha256": "a377dd4531f9d92904351c1d810cce55f607dfe9c1b111b56086cb2a900b90bd"
+    },
+    {
+      "path": "npt_overrides_dxgi_factorymedia.c",
+      "bytes": 1976,
+      "gitSha": "d5cdc8b4db39e971f00a3f2a74c577140f6d680c",
+      "sha256": "6ff877ea8a651f68ffbf50913893fb451fbd7c9bb850182feb2ae5b0c8929d49"
+    },
+    {
+      "path": "npt_overrides_dxgi_output.c",
+      "bytes": 31304,
+      "gitSha": "5c81cf4b9d2879fb8e923eb34e56603ab07b0ca4",
+      "sha256": "f8b81627e6bc55de3542e8efb3242908efd34352be8106f1a5f3aad80719e0a5"
+    },
+    {
+      "path": "npt_overrides_event_handles.c",
+      "bytes": 9208,
+      "gitSha": "5e709ede9ecf0a261e6af238a1ce0f8590851243",
+      "sha256": "6709d3bd58e31544b99ae0e57f88c1ad2c707e24936480857575c04a3dff5ef8"
+    },
+    {
+      "path": "npt_present_convert_dxbc.h",
+      "bytes": 17587,
+      "gitSha": "4a6ba35b951fd75b658bed9defa494485cf60d17",
+      "sha256": "3383207d82777b48ace1b252cfd3eff5907e095114447ebef344fe5dd7cacb24"
+    },
+    {
+      "path": "npt_profile.c",
+      "bytes": 19046,
+      "gitSha": "b4cf656eba6bfe771fa3e57cf61e09a44ba25e5b",
+      "sha256": "80c8226b6c8d1464e8216d17ba3f8b34759e824119a60577e074b02c40fdf8e1"
+    },
+    {
+      "path": "npt_profile.h",
+      "bytes": 9659,
+      "gitSha": "0302e2bb771c75c98299cae4b0e55c0495ee6143",
+      "sha256": "ff95db7253bcd04295d9ce3aeb78b3cdb56f18a2c69a262507cbcde7fb2926ca"
+    },
+    {
+      "path": "npt_publisher_batch.h",
+      "bytes": 8179,
+      "gitSha": "468fc23834af5881c84f08be2a3356b0cd551229",
+      "sha256": "2536fa25d12454b652f9a78c26d0fe7e45f183316666cca17f3bd1e6d10614ca"
+    },
+    {
+      "path": "npt_renderer.h",
+      "bytes": 21234,
+      "gitSha": "84a5df3fe67b9f8d1bf045c6f59df849a3de9848",
+      "sha256": "2cd935c32f96a57de1e7cbb5511251fbf2c067f09e9105498cc786b9de8c38e7"
+    },
+    {
+      "path": "npt_renderer_virtgpu_win32.c",
+      "bytes": 74250,
+      "gitSha": "c89ccedf6817110640118c217d16adba1932eb88",
+      "sha256": "fde2e18f195871ef01167452617d39b6cadef29640ab84edfa081b9daa2046c7"
+    },
+    {
+      "path": "npt_renderer_virtgpu_wine.c",
+      "bytes": 12177,
+      "gitSha": "c15aaa331dd441f77f1353ffcca1cacb7e0b3008",
+      "sha256": "2d8b292a68abe120766896a39846442ced3c4f72f16a967f9643f98fbcfab5c2"
+    },
+    {
+      "path": "npt_renderer_vtest_protocol.c",
+      "bytes": 6924,
+      "gitSha": "1534666e22e0a1ca5c000a1a08525b9a3bc1f5a3",
+      "sha256": "9888db2af3f4cc5bb67040f3a8387bc357215d4cd4d08447bea271d809e5b354"
+    },
+    {
+      "path": "npt_renderer_vtest_protocol.h",
+      "bytes": 2609,
+      "gitSha": "5d2e2bc4cb7fc9baf27595f1332d0c97399eb894",
+      "sha256": "a3b59d6ccbabe90498f635e57153f28fcde331c77b0accd8b2c20959348e277a"
+    },
+    {
+      "path": "npt_renderer_vtest_wine.c",
+      "bytes": 10323,
+      "gitSha": "93028dec19642cb88a24d97a0efeeb7b07fe85da",
+      "sha256": "6a1c5f5673e14a76646f72edf6873df541b51ab9ee6cf26c4bb049160d136ddd"
+    },
+    {
+      "path": "npt_renderer_wine_common.c",
+      "bytes": 4750,
+      "gitSha": "b54f1693d7026b5180c01a7e21d41fa3c4ef7dcb",
+      "sha256": "01e70136c7763711defd58eeb02052302d8f475cb047805ba53a32b49274270a"
+    },
+    {
+      "path": "npt_renderer_wine_common.h",
+      "bytes": 727,
+      "gitSha": "0ff1c4d10639847c202a5ee90e0fc8fed74de19c",
+      "sha256": "6685f7f866e3586112b3ba6c99d1029fd6d3e22b7c5c00bd44f30c5c47e3ccea"
+    },
+    {
+      "path": "npt_resource.c",
+      "bytes": 53979,
+      "gitSha": "8aff3831cbd3d5958b219b1c4cd3f2e2e858ed8e",
+      "sha256": "9c75e50f2ed3c2156bf35c1ba814e3d003a221da9489c2d9f0b67e6856cac3a6"
+    },
+    {
+      "path": "npt_resource.h",
+      "bytes": 25021,
+      "gitSha": "01d1ba6d4ad9c177cbcaa6c7b4bfcbf28bebae6f",
+      "sha256": "3edff34f50e92befee7b7a0d6b28dfcfae00fc68fe06261dd40781032bb66ed4"
+    },
+    {
+      "path": "npt_ring.c",
+      "bytes": 65821,
+      "gitSha": "8bb4f46abe05dce248047f19c843cc8afb14db88",
+      "sha256": "cad17c5c63763ca2f43e4aa70bf018a09fb2ac97ac7863303c54ea3b7464b800"
+    },
+    {
+      "path": "npt_ring.h",
+      "bytes": 19398,
+      "gitSha": "0dfd68130f0607428fa806ac77f62db4a27534cd",
+      "sha256": "a06b8b1aec8e7696767a34fbf68af6c20d711044b0df090791bdce74e5e56ddf"
+    },
+    {
+      "path": "npt_runtime_stream.h",
+      "bytes": 1515,
+      "gitSha": "f05f4097665930dd8971ebb8a00ca6080d3ac14b",
+      "sha256": "2e3b16fa2b3bf3064bcbfd29a3e01afe12ee4ee3d0a39dfe97ecdfa1544a9e7b"
+    },
+    {
+      "path": "npt_shared_texture.c",
+      "bytes": 7888,
+      "gitSha": "869d0d865a94399cedc943325520ea8354761569",
+      "sha256": "600eba9eae30f2876d995afcd4b675c1bdf80b4460487857103b3966709fe759"
+    },
+    {
+      "path": "npt_shared_texture.h",
+      "bytes": 3976,
+      "gitSha": "81391420a0860cd95f2076c7ad539e2a8c3d244c",
+      "sha256": "e36b341f92630e17ecbc9f5dbe44f24049daacbd79841e0bfd4540f55cef9f55"
+    },
+    {
+      "path": "npt_shmem_pool.c",
+      "bytes": 1910,
+      "gitSha": "466555bf7a6ee96cc7f8cbc7a7f72b9e6fb582e9",
+      "sha256": "83098d097ebaa008f48ce13fa8d1a2918a88c78b32237ce471dbbac3bf18dd19"
+    },
+    {
+      "path": "npt_shmem_pool.h",
+      "bytes": 1087,
+      "gitSha": "96db72741b2337bbb56e61ff35d9a24a976794c3",
+      "sha256": "ae39051bf109199c3729bc941ff99bd196df3a99c9d70cccdc43829869ea3cf8"
+    },
+    {
+      "path": "npt_swapchain.c",
+      "bytes": 45293,
+      "gitSha": "a5cc7f68c1206857f2f2cccc9116e8c70f9b974c",
+      "sha256": "bf7e01aaa8287dcb4b76345672f35fa3413524f15a224b92c3e8e5a0fac0f140"
+    },
+    {
+      "path": "npt_swapchain.h",
+      "bytes": 1481,
+      "gitSha": "24ec486c5014130bca4dc7c6f891601cfe3582d1",
+      "sha256": "57264a1754ab09fbdaed56974450e5f94261868613fb0dbbd04a6fc60d4a1fab"
+    },
+    {
+      "path": "npt_swapchain12.c",
+      "bytes": 45498,
+      "gitSha": "1b8ab221f8429e0983b866631e4bc5b1936bc43d",
+      "sha256": "ef21f3deefa6ec2ce1808bf72a0ca2515439aeb6999382022546ea1aa4799264"
+    },
+    {
+      "path": "npt_swapchain12.h",
+      "bytes": 1579,
+      "gitSha": "69c19988f0ccfcfdf88e6b373e12b6fca2ae62e0",
+      "sha256": "c5cdce964f0705bbe34eea20df15eb9858499ae292bd2c6c2d98ce5c6cfd9e21"
+    },
+    {
+      "path": "npt_swapchain_common.c",
+      "bytes": 32422,
+      "gitSha": "eaa0970912a2849b7310f92dfad8da6cfde9de26",
+      "sha256": "c11224eba0938267c36cf47a0e29ec7f69b454e55e23447400e660bb3f34d138"
+    },
+    {
+      "path": "npt_swapchain_common.h",
+      "bytes": 12043,
+      "gitSha": "fc87e6406da90cbccac6954463984954ef5821ac",
+      "sha256": "3eac00cf49f562ae371533989d6a2aa96808734a548a43118f344f9dfdaf37c8"
+    },
+    {
+      "path": "npt_tls.c",
+      "bytes": 8741,
+      "gitSha": "c4748bfc8fb02a394c4308a17918bfe5f8411418",
+      "sha256": "e3c9d8023e5dbd60a4cbf09140c8a877f43a3586c13d17ddd19092fa8bab1a6d"
+    },
+    {
+      "path": "npt_tls.h",
+      "bytes": 2461,
+      "gitSha": "cd4894a208caf8c0c419cc70345f3a9cc56484ae",
+      "sha256": "5749aa03a977bb08f29cfd2c78f55795e5d59aa62274e527a07741a39ea8f988"
+    },
+    {
+      "path": "npt_workaround.h",
+      "bytes": 2200,
+      "gitSha": "f34830aed1bec65abaa8b25d74aff668f7a1903f",
+      "sha256": "7e77d710fcdf8d1c48bc9d8a68cfed8a9d8c24f4b7f90737605f636350ee0fab"
+    },
+    {
+      "path": "nptunix/meson.build",
+      "bytes": 6355,
+      "gitSha": "8d5a8ae22af85e1be55c798177d34a01742fab93",
+      "sha256": "fd2f6da7c3bf9f4f87c912fed32d759344105dd147f1a9b6dc0b2eb4131793b9"
+    },
+    {
+      "path": "nptunix/npt_display_drm.c",
+      "bytes": 9389,
+      "gitSha": "1176aaa6ac554c50af176e37f2908717f07f969a",
+      "sha256": "eaa5f618dbb1e766c13f68fe5830dd1380624672dafe54c5833e3e7f1c2523d5"
+    },
+    {
+      "path": "nptunix/npt_unix.c",
+      "bytes": 7499,
+      "gitSha": "eb06f181b6f78aef73641f96f0be725e570c8ca1",
+      "sha256": "ed992f7da2f81ebe25b069b33bb218dcca7c0eab1b75492395800fd6b25d1c83"
+    },
+    {
+      "path": "nptunix/npt_unix_internal.h",
+      "bytes": 1240,
+      "gitSha": "655718bd945701ed016b3cf6c80867207612ada3",
+      "sha256": "59ddd6df5dd34d69136b8981f25dd5cb967fcfcd78c27f62c59ae7279e9aab02"
+    },
+    {
+      "path": "nptunix/npt_unix_virtgpu.c",
+      "bytes": 4913,
+      "gitSha": "b323d16eb8e4bf8c70d4a89f5df014d5e49aae2c",
+      "sha256": "437ca8a3728d9809fbb5b51c980981fa39e72858d2dc8a7b987a28292651d49d"
+    },
+    {
+      "path": "nptunix/npt_unix_wsi.c",
+      "bytes": 13493,
+      "gitSha": "ecbd3126df24ab45de3dda6d8f0e91e155f26bcf",
+      "sha256": "cb005f9bbca0ea9f58f7f50e67671fa6d6979daa39992f82551d24cbdb5450b3"
+    },
+    {
+      "path": "nptunix/npt_unixlib.h",
+      "bytes": 6375,
+      "gitSha": "25883e94420b998c921cbbd0cfa02fe0b993f117",
+      "sha256": "3e56280bdbcc834cbef0c77747536e86c64d9081207115cf1fbc3e6ea782ba10"
+    },
+    {
+      "path": "nptunix/nptunix_pe.c",
+      "bytes": 500,
+      "gitSha": "92224fbb7203a2422bf2898d4adfb935da3a71ae",
+      "sha256": "5311e2b750149b60c2dffcf6e3d1197d6a39bf1a1a1d50b9bc349c10197de1b4"
+    },
+    {
+      "path": "triton/meson.build",
+      "bytes": 2795,
+      "gitSha": "62dc909cadf0f17562a878e451f380b6856c37c1",
+      "sha256": "c604b80e7184252a9d9e0f702efb1fe4c885c59eec9142e23536adec62c04e8c"
+    },
+    {
+      "path": "triton/neptune_umd.def",
+      "bytes": 70,
+      "gitSha": "34982673c9f06e56de4ac65d33aa455af503a5d2",
+      "sha256": "55b9ec835bc3ddaab010c131c5f45e6b05b0bfacc29d75a8dc701f470009320c"
+    },
+    {
+      "path": "triton/neptune_umd.rc",
+      "bytes": 1218,
+      "gitSha": "adc8c99ec7d63f96abfbdb62832dc57fb43cb474",
+      "sha256": "fba08487f5a7d93ca815fa11be278b765e9c0f841ef7a112b58e1b7255884049"
+    },
+    {
+      "path": "triton/tests/tritonDxbcTest.c",
+      "bytes": 32834,
+      "gitSha": "e44bd770fdc2e817aaa86e615e9c712296792902",
+      "sha256": "9e15aa0c0618a211881a45a77901e8cb1ee5c7094945bb5f6abbf84c99a0a2f2"
+    },
+    {
+      "path": "triton/tests/tritonDxilTest.cpp",
+      "bytes": 20262,
+      "gitSha": "5e644e87beb74c988fa4d5dfb69932dcb1f77e60",
+      "sha256": "7f120937f1b6bd3a582d7adbe5e0b1bbe31a8eca4034fbeb3167e4208873bb6c"
+    },
+    {
+      "path": "triton/tools/gen_triton12_stubs.py",
+      "bytes": 6715,
+      "gitSha": "c828bdf194f392fbf51b3aec95e270fabb61a2aa",
+      "sha256": "ffaf35ef5c1776c3629bc8084676f6dc3f9b440ea0cf703e5dcd65b34f89aa1a"
+    },
+    {
+      "path": "triton/tools/make-arm64x.bat",
+      "bytes": 11144,
+      "gitSha": "f18306e921ca68df911d8fac4b4ba39299fba7f0",
+      "sha256": "866b124e95966113aae9e70c59fec793fe7f73e4c46c66b8d3da6edd4b9ae815"
+    },
+    {
+      "path": "triton/triton.c",
+      "bytes": 991,
+      "gitSha": "2826778f02810b5bfe5cff59490e1d8fc192dba7",
+      "sha256": "24592d30d8b09932e0f5b77d992aa472b86c4e014d2efdad968d20ab77698861"
+    },
+    {
+      "path": "triton/triton.h",
+      "bytes": 28955,
+      "gitSha": "7d0712da79f0923bb7436d79c9fab410eeb28e0c",
+      "sha256": "c226633801a714fe5c1bf8f9f090cfde8dcdbf69dd5463799dc7a7e21c9a70c2"
+    },
+    {
+      "path": "triton/triton12.h",
+      "bytes": 25453,
+      "gitSha": "9eb6257df84fbe251ed437a1cbccd24f177e679e",
+      "sha256": "f801ae1d752b6954c885d603200dae41ed4aed6083d4e468e5c851f914d85a28"
+    },
+    {
+      "path": "triton/triton12_stubs.h",
+      "bytes": 16964,
+      "gitSha": "b9d3c5aeefcc923e2e30a306152e17d9cc3225b6",
+      "sha256": "627bcec7bffde3ceac88cde6f73a317b264e2ab843e4981de68c4596a7b0a7ab"
+    },
+    {
+      "path": "triton/triton12_tables.h",
+      "bytes": 33602,
+      "gitSha": "fa554af3201f02225576393d9d2452a875bca490",
+      "sha256": "c90979bb224398bff9d7af166c241b5c80baa4c173c4116a22a92c323f428b6f"
+    },
+    {
+      "path": "triton/tritonBlit.hlsl",
+      "bytes": 754,
+      "gitSha": "c87695a4e3a69e69d3d5a4a8c8e8ae0c1bfbe510",
+      "sha256": "a47a3460bb1897451d04e3b5ac1a1d0d332368cd45246803c381904aed058c7f"
+    },
+    {
+      "path": "triton/tritonBlitShaders.h",
+      "bytes": 12442,
+      "gitSha": "1009d7a7eff1f9095961e64063bd3cd0e0e04958",
+      "sha256": "f8e16221bfc842fd866c459b6c3c16ba229956c90391d56b5d38cdc25c7f92e9"
+    },
+    {
+      "path": "triton/tritonDDI.c",
+      "bytes": 85425,
+      "gitSha": "64e6351458328988e68c2a834157a26e53bfca55",
+      "sha256": "443c54378514cad5676e6765a37fba76c6b7bec11aa1c5915efd453c08bffab7"
+    },
+    {
+      "path": "triton/tritonDDI12.c",
+      "bytes": 69369,
+      "gitSha": "6fd9a4c72ccd1afda31c833457474b306d48ab60",
+      "sha256": "dee7069dd1d58c0332f3ad5ca785bd1b2576fcaa045ad181b3c10c5f2169ef21"
+    },
+    {
+      "path": "triton/tritonDescriptor12.c",
+      "bytes": 24589,
+      "gitSha": "537df8ddab855f6028b18f62a0e20ac2abc28137",
+      "sha256": "0ceabd15cd188dc12c7eb912f0669ae456c30571a22c521b78658f672170e223"
+    },
+    {
+      "path": "triton/tritonDxbc.c",
+      "bytes": 83454,
+      "gitSha": "b3902c19e71b6a20f57ab30f6247aeef5c17b17d",
+      "sha256": "3328e4201c66990338ab91ae8edd0015c6e6cfc52118a69cd0b60c2b9734b326"
+    },
+    {
+      "path": "triton/tritonDxbc.h",
+      "bytes": 3088,
+      "gitSha": "7b80b2ec1541aa9e6c0fbbd8434c291b01480b6a",
+      "sha256": "78d3d228af0c51b4f06e020cd7d4c9adf9b1b74185b22544d418ad062f5c0233"
+    },
+    {
+      "path": "triton/tritonDxgi.c",
+      "bytes": 84166,
+      "gitSha": "805244f27eecca8cc571cbc9e3bf1b18a628548a",
+      "sha256": "399cafd67947d639418859f2a7e04fd1283d5b773d27afef69ba818edf96a665"
+    },
+    {
+      "path": "triton/tritonDxgi.h",
+      "bytes": 1268,
+      "gitSha": "2c16e76c3b33e668b96c91b7f4611993392e423b",
+      "sha256": "5c0c71e18e257f8f93ba7a060f5876beca15a3d38714ef217547b9d90ebd520e"
+    },
+    {
+      "path": "triton/tritonDxil.c",
+      "bytes": 24087,
+      "gitSha": "f371e2b250c89172847631f366f890e05455a3d0",
+      "sha256": "6628fedf4a80c7207576b35d349ff07f742ac09df2ebb8c21d33cc09d7edadf6"
+    },
+    {
+      "path": "triton/tritonDxil.h",
+      "bytes": 1722,
+      "gitSha": "0c45f0018e4b400e61c645d4a011f0072c53fdb8",
+      "sha256": "dd83e5a89a6b910590441f9a4f004c014632092128a30c1d599b3ae5475b4d73"
+    },
+    {
+      "path": "triton/tritonHostCaps.c",
+      "bytes": 10617,
+      "gitSha": "9c00971df56914406febdd9386818e2291d6a183",
+      "sha256": "a8dfcf64ab5449c7f4b66cb7142081ed5b469e297b8901bd8b9c014db63fb10f"
+    },
+    {
+      "path": "triton/tritonHostCaps.h",
+      "bytes": 9369,
+      "gitSha": "d8014a261ff5a57dd1341be7e586e98be6b336b2",
+      "sha256": "8baca954c6414341dd103b43c10780b9b13950b7a414ab1578b1a3ea24de638b"
+    },
+    {
+      "path": "triton/tritonKm.c",
+      "bytes": 11840,
+      "gitSha": "e58e5125d14f8a5e60fd3553e201192d1221f90e",
+      "sha256": "f06645629d219cc8549c5678b83e22ec2e311fd183f1b3e4e0bdec4a756b95b1"
+    },
+    {
+      "path": "triton/tritonKm.h",
+      "bytes": 3785,
+      "gitSha": "f80a38fa319fc56c803c94f5fcdb4a75b127d453",
+      "sha256": "1376105c29221a6886bf514478ac25fe51fad1f987bdda8fa8ef04019e354230"
+    },
+    {
+      "path": "triton/tritonList12.c",
+      "bytes": 73671,
+      "gitSha": "117e4b2fa29ebf7c8ff7919a1e04b371d36cfb7e",
+      "sha256": "2c2fe150636fab3aaafca6de079c124120c99aaf4684eefd87f706e751d1a03c"
+    },
+    {
+      "path": "triton/tritonPipeline12.c",
+      "bytes": 46315,
+      "gitSha": "92cd8fcff294e3bab4be78320e204e6e5bbf04ba",
+      "sha256": "7bbf6d0e29eafde7751a19ac50cc687d9235d8c4d67b0082060cf9b24d6c9d12"
+    },
+    {
+      "path": "triton/tritonPresent.c",
+      "bytes": 2645,
+      "gitSha": "cbd19f54bab1402ce7c314a83b8d626a41ffcaa3",
+      "sha256": "4107f4f44f18d0390f3a661458a9244c4a0e1a8ae33c89430418547deb257caa"
+    },
+    {
+      "path": "triton/tritonPresent.h",
+      "bytes": 793,
+      "gitSha": "089c396999bad4b21848e3de4c8fc1cb9852197b",
+      "sha256": "826a64735af6a6d5da2441821fe8c214828022c182b4c0194dbfeb5d65ef31ea"
+    },
+    {
+      "path": "triton/tritonPresent12.c",
+      "bytes": 33292,
+      "gitSha": "033c07fc774c5e73f2a51a55aab71dde68a8ebc4",
+      "sha256": "d353a29f7e46a73af5269b30657c0acbe18580a352562c0aa70f9c88fd787d2c"
+    },
+    {
+      "path": "triton/tritonPresentTiming.h",
+      "bytes": 1478,
+      "gitSha": "6d9af957a0d3acb27f24963bf190e61fc6cc921d",
+      "sha256": "cdabf2b233736105d8d485f8b30ad2abc727bb5d3874947d95d3cd03729142cb"
+    },
+    {
+      "path": "triton/tritonQuery.c",
+      "bytes": 43737,
+      "gitSha": "d3e3d0f4caa39af9c2023fec23a7d185db8a0bb0",
+      "sha256": "7581bba263e6f0578da08f7ff6b1d1a82e2fe7ed56d9e340cf6c0afd177a147d"
+    },
+    {
+      "path": "triton/tritonQueue12.c",
+      "bytes": 31873,
+      "gitSha": "c658197cef0983600a3633b6a17b3291f57dfe13",
+      "sha256": "5f62d485db6d8a94eaf89463a5edeb412afbacb17ac2d988a3c32cf0cff707af"
+    },
+    {
+      "path": "triton/tritonResource.c",
+      "bytes": 83810,
+      "gitSha": "17dea8c5ddf53709ed9ceb4c064e5641313eda0f",
+      "sha256": "1652fb30d04f26599af09fd236eb236d2157424b217a714be9436cfeaa0a27ad"
+    },
+    {
+      "path": "triton/tritonResource12.c",
+      "bytes": 56981,
+      "gitSha": "2a23e5b2337ad695aa086e236d58419c034562ef",
+      "sha256": "f0eeda6ed01be546ccf12b29b1f23b6d3ae2b5c18952e8cb75da381bc3c0b894"
+    },
+    {
+      "path": "triton/tritonRuntimeWrites.h",
+      "bytes": 8793,
+      "gitSha": "2ea5b419e419902bfb933f5abec3606accc317e2",
+      "sha256": "7c87fab0cf6f3ed7c677ef2ccf894af18e57993ade1ce449befc567cb8a9118b"
+    },
+    {
+      "path": "triton/tritonShader.c",
+      "bytes": 37493,
+      "gitSha": "2d2518e4d1c1cc6121464dadc6ee64d00f7b596a",
+      "sha256": "1dce4f3eaaa6a7b31af259d339bb493b8fe763ab81d712d02f172d89a09dc5dd"
+    },
+    {
+      "path": "triton/tritonSharedBridge.c",
+      "bytes": 5815,
+      "gitSha": "03a9cfb2ab1606fe9cc7e71163caa77dd90b36dd",
+      "sha256": "6e483b7c3d65680ec17c42588447446f0948954a6be0b3f98a7708fe03579371"
+    },
+    {
+      "path": "triton/tritonSharedBridge.h",
+      "bytes": 4292,
+      "gitSha": "3332973f963001ac5de57fe3088f2ea86d6ff0e2",
+      "sha256": "28192f2395b401a92587f4a8487b7e0a06f22e20a3bc1e004f3ccba66ff45a18"
+    },
+    {
+      "path": "triton/tritonState.c",
+      "bytes": 32821,
+      "gitSha": "4bb0221a23f8dc98bcabb69af3e3f867dd9718cd",
+      "sha256": "c669edca2c33edcff4202e5bc9bb5fd8d49b9fb8f209a235c7b1679a4a23e627"
+    },
+    {
+      "path": "triton/tritonVideo.c",
+      "bytes": 53516,
+      "gitSha": "c0ffbd192ed48f4faaee0e90e18e2cd2b2c0d04b",
+      "sha256": "b71fcd1de8cf24cf25e6344140ea4f348a3c7efb900ea5dd77dd18f7538a6753"
+    },
+    {
+      "path": "triton/tritonVideo.h",
+      "bytes": 501,
+      "gitSha": "e31564d8ab8f69718162f99b4ea321e1f31de38d",
+      "sha256": "487ad744ff383a516ea05ce43648ca3dc801db6dd5fe1284719c8e6080e397a5"
+    },
+    {
+      "path": "triton/tritonView.c",
+      "bytes": 47971,
+      "gitSha": "fe79a17c70dead96ed61a2548c13d877d4419a96",
+      "sha256": "b02e3b374c4cba554756c133751a9096a8f64e66f69864419881cd32b2806439"
+    },
+    {
+      "path": "triton/triton_log.h",
+      "bytes": 3351,
+      "gitSha": "e2aa3e75fe4d9ba9d8578a130896d4b9bd12d24a",
+      "sha256": "2d4941de08bc9df27c7c0edb0d9cef25dd6e9f9a2cfcbd441bff5532ffce2d93"
+    }
+  ],
+  "artifact": {
+    "nativeAndAliasSha256": "2A7DC660ABF7AC3A6B49991C55FC7B44859F670ADE1D9E8033BE7F62B07E744D",
+    "ecSha256": "0D472DA041603FDF0182FF3D903848E10A4035404E3576C1D0E544B5FE7BBC32",
+    "nativeBytes": 1366528,
+    "ecBytes": 1276416
+  },
+  "runtime": "F91 KMD, NativeGpuJobV1=1; C37 renderer/C33 FP32 matched DXVK; RAM4/DPI200. Strict DWM/runtime/nowarp ON; qualified forcepresent OFF after proven new-boot driver identity.",
+  "limits": [
+    "27.5761 API-fps in matched 960x640 8s test; no smooth60 claim.",
+    "Hardware video drops and known RES_INFO/readback GPU failure remain unresolved.",
+    "No production release or main merge."
+  ]
+}

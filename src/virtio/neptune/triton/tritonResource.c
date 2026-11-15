@@ -9,6 +9,8 @@
 
 #include "triton.h"
 #include "triton_log.h"
+#include "tritonRuntimeWrites.h"
+#include "triton_log.h"
 #include "tritonVideo.h"
 
 volatile LONG g_tritonFmtLogCount = 0;
@@ -31,19 +33,21 @@ void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pRes)
 {
     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
     if (pD && r && (r->IsShared || r->IsPresentable || r->pPresentCompanion))
-        InterlockedExchange(&pD->SharedDirty, 1);
+        InterlockedOr(&pD->SharedDirty, tritonCanBatchPresentWrites(pD,r) ?
+            TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
 }
 
-void tritonSyncShared(PTRITON_DEVICE pD, const char *why)
+void tritonMarkSharedDrawWrite(PTRITON_DEVICE pD)
 {
-    if (!pD || !pD->pCtx1 || !InterlockedExchange(&pD->SharedDirty, 0))
-        return;
-    if (tritonSwitch("triton-asyncflush"))
-        return;
-    UINT32 seqno = 0;
-    struct npt_ring *ring = npt_com_object_ring_seqno(pD->pCtx1, &seqno);
-    if (!ring)
-        return;
+    if (pD && pD->OmShared)
+        InterlockedOr(&pD->SharedDirty,
+            pD->RuntimeStreamActive && !pD->RuntimeSharedChanging && npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
+            !pD->OmSharedNeedsWriteSync && !tritonSwitch("triton-presentwritesync") ?
+            TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
+}
+
+static void tritonWaitSharedSeqno(struct npt_ring *ring, UINT32 seqno, const char *why)
+{
     const DWORD t0 = GetTickCount();
     npt_ring_wait_seqno(ring, seqno);
     static volatile LONG n;
@@ -53,6 +57,88 @@ void tritonSyncShared(PTRITON_DEVICE pD, const char *why)
                (long)k, why, (unsigned long)(GetTickCount() - t0), (unsigned)seqno);
 }
 
+void tritonSyncShared(PTRITON_DEVICE pD, const char *why)
+{
+    if (!pD || !pD->pCtx1) return;
+    const BOOL runtime = pD->RuntimeStreamActive;
+    if (runtime) EnterCriticalSection(&pD->RuntimeWriteLock);
+    const LONG dirty = InterlockedExchange(&pD->SharedDirty, 0);
+    UINT32 seqno = 0;
+    struct npt_ring *ring = dirty ? npt_com_object_ring_seqno(pD->pCtx1, &seqno) : NULL;
+    if (runtime && dirty && (!ring ||
+        InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0) ||
+        !npt_runtime_owner_publish_checked(pD->RuntimeTransportOwner) ||
+        InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0) ||
+        pD->RuntimePendingWriteCount || pD->RuntimeActiveWriteCount)) {
+        InterlockedOr(&pD->SharedDirty,dirty | TRITON_SHARED_STRICT);
+        InterlockedExchange(&pD->RuntimeWriteFailed,1);
+        LeaveCriticalSection(&pD->RuntimeWriteLock);
+        TR_LOG("RUNTIME_WRITE strict publication unavailable; retaining dirty provenance");
+        tritonSetError(pD,D3DDDIERR_DEVICEREMOVED);
+        return;
+    }
+    if (runtime) LeaveCriticalSection(&pD->RuntimeWriteLock);
+    if (!dirty || !ring || tritonSwitch("triton-asyncflush")) return;
+    /* Never hold the write/record lock while waiting for host progress. */
+    tritonWaitSharedSeqno(ring,seqno,why);
+}
+
+/* One saturating process budget: at most32 records; keep the final16
+ * available for a positive qualified branch instead of startup strict noise. */
+static void tritonTraceQualifiedFlush(PTRITON_DEVICE pD, const char *why, LONG dirty,
+    BOOL allowQualified, BOOL qualified, UINT pending, UINT active, UINT contextType, UINT flushFlags)
+{
+    if (!dirty || tritonSwitch("triton-presentwritesync")) return;
+    static volatile LONG count;
+    LONG old=InterlockedCompareExchange(&count,0,0);
+    for (;;) {
+        if (old >= 32 || (!qualified && old >= 16)) return;
+        LONG seen=InterlockedCompareExchange(&count,old+1,old);
+        if (seen==old) break;
+        old=seen;
+    }
+    TR_LOG("QUALIFIED_FLUSH #%ld why=%s dev=%p thread=%lu dirtyMask=0x%lx "
+           "allowQualified=%d qualified=%d strictCpuWait=%d accepted=1 pending=%u active=%u contextType=0x%x flushFlags=0x%x",
+           (long)(old+1),why,(void*)pD,(unsigned long)GetCurrentThreadId(),
+           (unsigned long)dirty,allowQualified,qualified,!qualified,pending,active,contextType,flushFlags);
+}
+
+BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified, UINT contextType, UINT flushFlags)
+{
+    if (!pD || !pD->pCtx1) return FALSE;
+    if (!pD->RuntimeStreamActive) { tritonSyncShared(pD,why); return TRUE; }
+    EnterCriticalSection(&pD->RuntimeWriteLock);
+    const LONG dirty = InterlockedExchange(&pD->SharedDirty,0);
+    UINT32 seqno=0;
+    struct npt_ring *ring=npt_com_object_ring_seqno(pD->pCtx1,&seqno);
+    /* Flush was already encoded. This locked cut may include later work,
+     * but every encoded write has asserted its provenance under this lock. */
+    const BOOL accepted = ring && !InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0) &&
+        npt_runtime_owner_publish_checked(pD->RuntimeTransportOwner) &&
+        !pD->RuntimePendingWriteCount && !pD->RuntimeActiveWriteCount &&
+        !InterlockedCompareExchange(&pD->RuntimeWriteFailed,0,0);
+    if (!accepted) {
+        InterlockedOr(&pD->SharedDirty,dirty | TRITON_SHARED_STRICT);
+        InterlockedExchange(&pD->RuntimeWriteFailed,1);
+        LeaveCriticalSection(&pD->RuntimeWriteLock);
+        TR_LOG("RUNTIME_WRITE Flush publication unavailable; retaining dirty provenance");
+        tritonSetError(pD,D3DDDIERR_DEVICEREMOVED);
+        return FALSE;
+    }
+    const BOOL qualified = allowQualified && dirty == TRITON_SHARED_QUALIFIED &&
+        !pD->RuntimeSharedChanging &&
+        !(InterlockedCompareExchange(&pD->SharedDirty,0,0) & ~TRITON_SHARED_QUALIFIED) &&
+        npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
+        !tritonSwitch("triton-presentwritesync");
+    const UINT pending=pD->RuntimePendingWriteCount;
+    const UINT active=pD->RuntimeActiveWriteCount;
+    LeaveCriticalSection(&pD->RuntimeWriteLock);
+    tritonTraceQualifiedFlush(pD,why,dirty,allowQualified,qualified,pending,active,contextType,flushFlags);
+    /* Unknown bits, mixed/strict writes and unsupported Flush scope keep the
+     * old CPU-head wait. This is not a GPU completion or global async switch. */
+    if (dirty && !qualified) tritonWaitSharedSeqno(ring,seqno,why);
+    return TRUE;
+}
 
 static void tritonWaitHostNow(PTRITON_DEVICE pD, const char *op, BOOL perWrite)
 {
@@ -94,20 +180,57 @@ static BOOL tritonProcessIsDwm(void)
     return s == 2;
 }
 
+BOOL tritonLocalPresentBacking(const void *pRes)
+{
+    const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+    return r && r->RuntimeWriteClass == 1 && !r->RuntimeOpenedAllocation &&
+           r->BatchPresentWrites && r->hKMAllocation && !r->pPresentCompanion &&
+           !r->hImportAlloc && !r->hImportResKmt;
+}
+
+BOOL tritonCanBatchPresentWrites(PTRITON_DEVICE pD, const void *pRes)
+{
+    return pD && pD->RuntimeStreamActive && !pD->RuntimeSharedChanging &&
+           npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
+           tritonLocalPresentBacking(pRes) && !tritonSwitch("triton-presentwritesync");
+}
+
 void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pRes, const char *op)
 {
     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
     if (!pD) return;
     if (pRes && !(r->IsShared || r->IsPresentable || r->pPresentCompanion)) return;
+    /* Also covers legacy callsites such as GenerateMips/DxgiBlt that did not
+     * call tritonMarkSharedWrite before this post-operation helper. */
+    InterlockedOr(&pD->SharedDirty, r && tritonCanBatchPresentWrites(pD,r) ?
+        TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
     if (tritonSwitch("triton-nosharedwritesync")) return;
-    if (tritonProcessIsDwm() && !tritonSwitch("triton-dwmwritesync")) return;
+    if (tritonProcessIsDwm()) {
+        if (!pD->RuntimeStreamActive && !tritonSwitch("triton-dwmwritesync")) return;
+        /* C19: retain strict synchronization for shared atlases, imported
+         * surfaces and UAVs. Only the existing eligible present-buffer
+         * contract may batch on the negotiated runtime publisher. Present,
+         * Flush and ReleaseResource still publish and gate the whole frame. */
+        if (tritonCanBatchPresentWrites(pD, r)) return;
+    } else if (tritonCanBatchPresentWrites(pD, r)) {
+        return; /* Caller marked SharedDirty: preserve it through publication. */
+    }
     tritonWaitHostNow(pD, op, TRUE);
-    InterlockedExchange(&pD->SharedDirty, 0);
+    /* Do not clear device-global SharedDirty here: a different strict shared
+     * write cannot consume an outstanding batched present-buffer publication. */
 }
 
 void tritonSharedDrawDone(PTRITON_DEVICE pD, const char *op)
 {
     if (!pD || !pD->OmShared) return;
+    tritonMarkSharedDrawWrite(pD);
+    /* OmSharedNeedsWriteSync is true if ANY bound shared RTV is ineligible
+     * or an exported UAV is bound. Do not broaden that resource whitelist. */
+    if (pD->RuntimeStreamActive &&
+        npt_runtime_owner_publisher_v1(pD->RuntimeTransportOwner) &&
+        !pD->OmSharedNeedsWriteSync &&
+        !tritonSwitch("triton-presentwritesync"))
+        return;
     tritonSharedWriteDone(pD, NULL, op);
 }
 
@@ -266,7 +389,10 @@ tritonRegisterSharedBlob(PTRITON_DEVICE pD, PTRITON_RESOURCE r,
      * registry-log line never appeared).  The KMD ignores the contents. */
     VIOGPU_CREATE_RESOURCE_EXCHANGE rx;
     memset(&rx, 0, sizeof(rx));
-    rx.magic = 0x5254504eu; /* 'NPTR' */
+    rx.magic = 0x5254504eu; /* 'NPTR' legacy */
+    if (pD->RuntimeStreamActive)
+        rx.magic = (r->MiscFlags & D3DWDDM2_0DDI_RESOURCE_MISC_DISPLAYABLE_SURFACE) ?
+            TRITON_RUNTIME_RESOURCE_DISPLAYABLE : TRITON_RUNTIME_RESOURCE_ORDINARY;
 
     D3DDDICB_ALLOCATE cb;
     memset(&cb, 0, sizeof(cb));
@@ -307,7 +433,15 @@ tritonRegisterSharedBlob(PTRITON_DEVICE pD, PTRITON_RESOURCE r,
     }
     r->hKMAllocation = ai.hAllocation;
     r->IsShared      = pTex == r->pResource;
-    tritonKmRequestResidency(&pD->Km, ai.hAllocation);
+    if(pD->RuntimeStreamActive) {
+        HRESULT resident=tritonKmRequestResidencyOnContext(&pD->Km,pD->hKMContext,ai.hAllocation);
+        if(FAILED(resident)) {
+            TR_LOG("RUNTIME_WRITE export residency failed hr=0x%08lx",(unsigned long)resident);
+            InterlockedExchange(&pD->RuntimeWriteFailed,1);
+            tritonSetCreateError(pD,D3DDDIERR_DEVICEREMOVED);
+            return FALSE; /* device failure; never permit writing submission */
+        }
+    } else tritonKmRequestResidency(&pD->Km, ai.hAllocation);
     TR_LOG_HOT("shared: exporter blob_id=0x%llx alloc=0x%x %ux%u primary=%d",
                ax.OptionsShared.blob_id, ai.hAllocation, r->Width, r->Height,
                primary);
@@ -328,11 +462,18 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
     }
 
     r->hRTResource = hRTResource;
+    r->RuntimeOpenedAllocation = 0;
     r->Format      = pArgs->Format;
     r->MipLevels   = pArgs->MipLevels;
     r->ArraySize   = pArgs->ArraySize;
     r->BindFlags   = pArgs->BindFlags;
     r->MiscFlags   = pArgs->MiscFlags;
+    r->RuntimeWriteClass = (r->MiscFlags & D3DWDDM2_0DDI_RESOURCE_MISC_DISPLAYABLE_SURFACE) ? 1 : 0;
+    if (pD->RuntimeStreamActive && r->RuntimeWriteClass && pArgs->pInitialDataUP) {
+        InterlockedExchange(&pD->RuntimeWriteFailed,1);
+        TR_LOG("RUNTIME_WRITE displayable initial-data creation unsupported before allocation exists");
+        tritonSetCreateError(pD,D3DDDIERR_DEVICEREMOVED); return;
+    }
     r->MapFlags    = pArgs->MapFlags;
     r->Usage       = pArgs->Usage;
     r->SampleDesc  = pArgs->SampleDesc;
@@ -349,6 +490,7 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
                           pArgs->pPrimaryDesc != NULL;
     r->hKMAllocation    = 0;
     r->IsShared         = FALSE;
+    r->BatchPresentWrites = FALSE;
     r->hImportAlloc     = 0;
     r->hImportResKmt    = 0;
     r->pSysMem          = NULL;
@@ -395,6 +537,28 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
                     ((pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED) != 0 ||
                      (presentOnly && exportableShape));
     const BOOL needCompanion = presentOnly && !exportableShape;
+    /* Only directly exportable, non-MSAA buffers are covered. Companions must
+     * be copied/resolved at every publication, so they stay on the strict path.
+     * Whitelist original RTV/SRV/PRESENT binds: UAV and unknown binds are strict.
+     * DDI_SHARED is also set on runtime-created DXGI swapchain buffers; it does
+     * not identify application-requested sharing. Permit it only together with
+     * BIND_PRESENT + DISPLAYABLE_SURFACE, whose Present/Flush/Release publication
+     * gates are retained. Other shared/keyed/GDI/remote/unknown contracts are strict. */
+    const UINT batchBindAllowed = D3D10_DDI_BIND_PRESENT |
+                                  D3D10_DDI_BIND_RENDER_TARGET |
+                                  D3D10_DDI_BIND_SHADER_RESOURCE;
+    const BOOL displayablePresent =
+        (pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) != 0 &&
+        (pArgs->MiscFlags & D3DWDDM2_0DDI_RESOURCE_MISC_DISPLAYABLE_SURFACE) != 0;
+    const UINT batchMiscAllowed = D3D10_DDI_RESOURCE_MISC_DISCARD_ON_PRESENT |
+                                  D3DWDDM2_0DDI_RESOURCE_MISC_DISPLAYABLE_SURFACE |
+                                  (displayablePresent ? D3D10_DDI_RESOURCE_MISC_SHARED : 0);
+    r->BatchPresentWrites =
+        pArgs->ResourceDimension == D3D10DDIRESOURCE_TEXTURE2D &&
+        exportableShape && !needCompanion &&
+        (pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) != 0 &&
+        (pArgs->BindFlags & ~batchBindAllowed) == 0 &&
+        (pArgs->MiscFlags & ~batchMiscAllowed) == 0;
 
 
     /* Top-level dimensions come from the mip-0 entry of pMipInfoList. */
@@ -405,6 +569,14 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
     } else {
         r->Width = r->Height = r->Depth = 0;
     }
+
+    if ((pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) ||
+        (pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED))
+        TR_LOG("BATCH create res=%p %ux%u ddiBind=0x%x ddiMisc=0x%x "
+               "ddiShared=%u displayablePresent=%u primary=%u eligible=%u companion=%u",
+               (void *)r, r->Width, r->Height, pArgs->BindFlags, pArgs->MiscFlags,
+               !!(pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED),
+               displayablePresent, !!pArgs->pPrimaryDesc, r->BatchPresentWrites, needCompanion);
 
     /* A host create is asynchronous and reports nothing back, so a texture
      * whose format the host cannot make must be refused here: forwarded, the
@@ -653,7 +825,8 @@ tritonResourceSyncPresentCompanion(PTRITON_DEVICE pD, PTRITON_RESOURCE r)
 {
     if (!r->pPresentCompanion || !r->pResource)
         return;
-    InterlockedExchange(&pD->SharedDirty, 1);
+    InterlockedOr(&pD->SharedDirty, TRITON_SHARED_STRICT);
+    if (!trRuntimeWriteResourceBegin(pD,r)) return;
     if (r->SampleDesc.Count > 1)
         ID3D11DeviceContext1_ResolveSubresource(pD->pCtx1, r->pPresentCompanion, 0,
                                                 r->pResource, 0, r->Format);
@@ -661,6 +834,7 @@ tritonResourceSyncPresentCompanion(PTRITON_DEVICE pD, PTRITON_RESOURCE r)
         ID3D11DeviceContext1_CopySubresourceRegion(pD->pCtx1, r->pPresentCompanion,
                                                    0, 0, 0, 0, r->pResource, 0,
                                                    NULL);
+    trRuntimeWriteEnd(pD);
 }
 
 void APIENTRY
@@ -669,6 +843,21 @@ tritonDestroyResource(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hResource)
     PTRITON_RESOURCE r = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
     if (!r) return;
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+    if (pD) trRuntimePublishBeforeReuse(pD);
+    if(pD && pD->RuntimeStreamActive) {
+        TRITON_RUNTIME_WRITE_REF old=trRuntimeWriteRef(pD,r);
+        EnterCriticalSection(&pD->RuntimeWriteLock);
+        if(old.allocation) {
+        for(UINT i=0;i<8;++i) if(pD->RuntimeRtv[i].allocation==old.allocation) memset(&pD->RuntimeRtv[i],0,sizeof(old));
+        for(UINT i=0;i<64;++i) {
+            if(pD->RuntimeOmUav[i].allocation==old.allocation) memset(&pD->RuntimeOmUav[i],0,sizeof(old));
+            if(pD->RuntimeCsUav[i].allocation==old.allocation) memset(&pD->RuntimeCsUav[i],0,sizeof(old));
+        }
+        if(pD->RuntimeDsv.allocation==old.allocation) memset(&pD->RuntimeDsv,0,sizeof(old));
+        }
+        LeaveCriticalSection(&pD->RuntimeWriteLock);
+    }
+
 
     if (r->pSysMem) {
         free(r->pSysMem);
@@ -800,6 +989,13 @@ tritonOpenResource(D3D10DDI_HDEVICE hDevice, const D3D10DDIARG_OPENRESOURCE *pAr
     r->SampleDesc.Count   = so->sample_count ? so->sample_count : 1;
     r->SampleDesc.Quality = 0;
     r->IsShared           = TRUE;
+    r->RuntimeOpenedAllocation = pArgs->pOpenAllocationInfo[0].hAllocation;
+    r->RuntimeWriteClass = 2; /* old/untyped producer: never invent Displayable */
+    if (pArgs->PrivateDriverDataSize == sizeof(VIOGPU_CREATE_RESOURCE_EXCHANGE) && pArgs->pPrivateDriverData) {
+        ULONG magic = ((const VIOGPU_CREATE_RESOURCE_EXCHANGE *)pArgs->pPrivateDriverData)->magic;
+        if (magic == TRITON_RUNTIME_RESOURCE_DISPLAYABLE) r->RuntimeWriteClass=1;
+        if (magic == TRITON_RUNTIME_RESOURCE_ORDINARY) r->RuntimeWriteClass=0;
+    }
     if (triton_fmt_traced((UINT)so->format))
         TR_FMT_LOG("OpenResource imported fmt=%u %ux%u mips=%u arr=%u bind=0x%x misc=0x%x usage=%u "
                    "planes=%u pitch0=%llu allocSize=%llu type3d=%d",
@@ -874,6 +1070,26 @@ tritonOpenResource(D3D10DDI_HDEVICE hDevice, const D3D10DDIARG_OPENRESOURCE *pAr
         return;
     }
     r->pResource = (ID3D11Resource *)imported;
+    if(pD->RuntimeStreamActive && r->RuntimeWriteClass==1) {
+        HRESULT resident=tritonKmRequestResidencyOnContext(&pD->Km,pD->hKMContext,r->RuntimeOpenedAllocation);
+        if(FAILED(resident)) {
+            InterlockedExchange(&pD->RuntimeWriteFailed,1);
+            TR_LOG("RUNTIME_WRITE opened displayable residency failed hr=0x%08lx",(unsigned long)resident);
+            tritonSetCreateError(pD,D3DDDIERR_DEVICEREMOVED); return;
+        }
+    }
+    {
+        static volatile LONG openCount;
+        LONG n = InterlockedIncrement(&openCount);
+        if (n <= 128)
+            TR_LOG("HANDOFF Open #%ld res=%p backing=%p res_id=%u "
+                   "runtimeAlloc=0x%x importAlloc=0x%x importRes=0x%x "
+                   "size=%ux%u format=%u type=%u",
+                   (long)n, (void *)r, (void *)r->pResource, res_id,
+                   (unsigned)pArgs->pOpenAllocationInfo[0].hAllocation,
+                   (unsigned)r->hImportAlloc, (unsigned)r->hImportResKmt,
+                   r->Width, r->Height, (unsigned)r->Format, (unsigned)ax->Type);
+    }
     TR_LOG_HOT("shared: consumer opened res_id=%u %ux%u", res_id,
                r->Width, r->Height);
 }
@@ -890,6 +1106,14 @@ tritonResourceMap(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hResource,
 {
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
+    if (pD && r && pD->RuntimeStreamActive && DDIMap != D3D10_DDI_MAP_READ && r->RuntimeWriteClass) {
+        InterlockedExchange(&pD->RuntimeWriteFailed,1);
+        TR_LOG("RUNTIME_WRITE mapped displayable/unknown shared writes unsupported before CPU access");
+        tritonSetError(pD,D3DDDIERR_DEVICEREMOVED);
+        if(pMapped) { pMapped->pData=NULL; pMapped->RowPitch=pMapped->DepthPitch=0; }
+        return;
+    }
+    if(r) r->RuntimeMapWrites=DDIMap != D3D10_DDI_MAP_READ;
     if (r && r->pSysMem && pMapped) {
         pMapped->pData      = r->pSysMem;
         pMapped->RowPitch   = r->SysMemSize;
@@ -939,7 +1163,14 @@ tritonResourceUnmap(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE hResource, UINT
     PTRITON_DEVICE   pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     PTRITON_RESOURCE r  = (PTRITON_RESOURCE)(hResource.pDrvPrivate);
     if (!pD || !r || !r->pResource) return;
+    if (pD->RuntimeStreamActive) EnterCriticalSection(&pD->RuntimeWriteLock);
+    TRITON_RUNTIME_WRITE_REF mapref={0};
+    if(r->RuntimeMapWrites) mapref=trRuntimeWriteRef(pD,r);
+    BOOL mapWriteOk=trRuntimeWriteBegin(pD,&mapref,1);
+    if (pD->RuntimeStreamActive) LeaveCriticalSection(&pD->RuntimeWriteLock);
+    if (!mapWriteOk) return;
     ID3D11DeviceContext1_Unmap(pD->pCtx1, r->pResource, Subresource);
+    trRuntimeWriteEnd(pD);
     /* CPU writes to a shared surface (host replays them at Unmap): hand off like any other shared write. */
     tritonMarkSharedWrite(pD, r);
     tritonSharedWriteDone(pD, r, "Unmap");
@@ -974,9 +1205,11 @@ tritonResourceUpdateSubresourceUP(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOURCE h
                    pDstBox ? "yes" : "no", pDstBox ? pDstBox->left : 0, pDstBox ? pDstBox->top : 0,
                    pDstBox ? pDstBox->right : 0, pDstBox ? pDstBox->bottom : 0,
                    SrcRowPitch, SrcDepthPitch, (int)r->IsShared);
+    if (!trRuntimeWriteResourceBegin(pD,r)) return;
     ID3D11DeviceContext1_UpdateSubresource(
         pD->pCtx1, r->pResource, DstSubresource,
         (const D3D11_BOX *)(pDstBox), pSrc, SrcRowPitch, SrcDepthPitch);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, r, "UpdateSubresource");
 }
 
@@ -996,9 +1229,11 @@ tritonResourceUpdateSubresourceUP_11_1(D3D10DDI_HDEVICE hDevice, D3D10DDI_HRESOU
                    pDstBox ? "yes" : "no", pDstBox ? pDstBox->left : 0, pDstBox ? pDstBox->top : 0,
                    pDstBox ? pDstBox->right : 0, pDstBox ? pDstBox->bottom : 0,
                    SrcRowPitch, SrcDepthPitch, CopyFlags, (int)r->IsShared);
+    if (!trRuntimeWriteResourceBegin(pD,r)) return;
     ID3D11DeviceContext1_UpdateSubresource1(
         pD->pCtx1, r->pResource, DstSubresource,
         (const D3D11_BOX *)(pDstBox), pSrc, SrcRowPitch, SrcDepthPitch, CopyFlags);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, r, "UpdateSubresource1");
 }
 
@@ -1016,7 +1251,9 @@ tritonResourceCopy(D3D10DDI_HDEVICE hDevice,
                    (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, (int)d->IsShared,
                    (UINT)s->Format, (UINT)s->Width, (UINT)s->Height, (int)s->IsShared,
                    d->Format != s->Format ? " FORMAT-MISMATCH" : "");
+    if (!trRuntimeWriteResourceBegin(pD,d)) return;
     ID3D11DeviceContext1_CopyResource(pD->pCtx1, d->pResource, s->pResource);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, d, "CopyResource");
 }
 
@@ -1037,9 +1274,11 @@ tritonResourceCopyRegion(D3D10DDI_HDEVICE hDevice,
                    (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, DstX, DstY, (int)d->IsShared,
                    (UINT)s->Format, (UINT)s->Width, (UINT)s->Height, pSrcBox ? "yes" : "no", (int)s->IsShared,
                    d->Format != s->Format ? " FORMAT-MISMATCH" : "");
+    if (!trRuntimeWriteResourceBegin(pD,d)) return;
     ID3D11DeviceContext1_CopySubresourceRegion(
         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox));
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, d, "CopySubresourceRegion");
 }
 
@@ -1060,9 +1299,11 @@ tritonResourceCopyRegion_11_1(D3D10DDI_HDEVICE hDevice,
                    (UINT)d->Format, (UINT)d->Width, (UINT)d->Height, DstX, DstY, (int)d->IsShared,
                    (UINT)s->Format, (UINT)s->Width, (UINT)s->Height, pSrcBox ? "yes" : "no", (int)s->IsShared,
                    d->Format != s->Format ? " FORMAT-MISMATCH" : "");
+    if (!trRuntimeWriteResourceBegin(pD,d)) return;
     ID3D11DeviceContext1_CopySubresourceRegion1(
         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox), CopyFlags);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, d, "CopySubresourceRegion1");
 }
 
@@ -1077,8 +1318,10 @@ tritonResourceResolveSubresource(D3D10DDI_HDEVICE hDevice,
     PTRITON_RESOURCE s  = (PTRITON_RESOURCE)(hSrc.pDrvPrivate);
     if (!pD || !d || !s || !d->pResource || !s->pResource) return;
     tritonMarkSharedWrite(pD, d);
+    if (!trRuntimeWriteResourceBegin(pD,d)) return;
     ID3D11DeviceContext1_ResolveSubresource(
         pD->pCtx1, d->pResource, DstSubresource, s->pResource, SrcSubresource, Format);
+    trRuntimeWriteEnd(pD);
     tritonSharedWriteDone(pD, d, "ResolveSubresource");
 }
 
@@ -1207,32 +1450,271 @@ tritonSetHardwareProtectionState(D3D10DDI_HDEVICE hDev, BOOL flag)
     TR_STUB("SetHardwareProtectionState (no D3D11 equivalent)");
 }
 
-/* WDDM 2.1: sync-token acquire/release for cross-process shared-resource
- * handoff.  From the 2.1 interface up the runtime stops flushing around
- * shared/redirection surfaces itself and delegates producer-side
- * publication to pfnReleaseResource, so Release must flush the device's
- * pending work: the surface contents have to be submitted (and
- * host-ordered) before the consumer's acquire, or DWM composes whatever
- * bytes the surface happens to hold.
- *
- * Acquire needs no wait of its own: submissions execute in order on the
- * host ring, and dxgkrnl serializes the cross-process handoff on the KM
- * sync token before scheduling the acquirer. */
+/* WDDM 2.1 sync-token DDIs must forward the exact runtime token through
+ * the corresponding KT callback. A host ring is outside dxgkrnl's native
+ * execution queue: submit and observe the Flush before handing off the token.
+ * Release also drains shared/imported GPU reads, not just SharedDirty writes.
+ * No Triton lock is held across the runtime callback. */
+static void
+tritonHandoffTrace(const char *op, const char *phase, LONG serial,
+                    PTRITON_DEVICE pD, PTRITON_RESOURCE r, HANDLE token,
+                    BOOL gpuGateRequested, HRESULT hr)
+{
+    TR_LOG("HANDOFF %s %s #%ld dev=%p res=%p backing=%p token=%p "
+           "km=0x%x importAlloc=0x%x importRes=0x%x "
+           "size=%ux%u shared=%d presentable=%d batch=%d companion=%p "
+           "gpuGateRequested=%d acquireCb=%p releaseCb=%p hr=0x%08lx",
+           op, phase, (long)serial, (void *)pD, (void *)r,
+           r ? (void *)r->pResource : NULL, token,
+           r ? (unsigned)r->hKMAllocation : 0,
+           r ? (unsigned)r->hImportAlloc : 0,
+           r ? (unsigned)r->hImportResKmt : 0,
+           r ? r->Width : 0, r ? r->Height : 0,
+           r ? r->IsShared : 0, r ? r->IsPresentable : 0,
+           r ? r->BatchPresentWrites : 0,
+           r ? (void *)r->pPresentCompanion : NULL, gpuGateRequested,
+           pD ? (void *)pD->KTCallbacks.pfnAcquireResourceCb : NULL,
+           pD ? (void *)pD->KTCallbacks.pfnReleaseResourceCb : NULL,
+           (unsigned long)hr);
+}
+
+/* Opt-in native-token -> CPU completion bridge. Only the short native token/signal enqueue pair holds kmCtxLock; host
+ * preflush/GPU drain and the CPU wait run unlocked. Runtime/API serialization
+ * must also exclude concurrent direct Neptune publishers on this device. */
+static HRESULT
+tritonHandoffCpuToken(PTRITON_DEVICE pD, HANDLE token, BOOL acquire,
+                       BOOL gpuGateRequested)
+{
+    const ULONGLONG started = GetTickCount64();
+    static volatile LONG count, failures;
+    const LONG serial = InterlockedIncrement(&count);
+    const char *stage = "validate";
+    HANDLE context = pD ? pD->hKMContext : NULL;
+    HANDLE event = NULL;
+    PFND3DDDI_SYNCTOKENCB tokenCallback = pD ? (acquire ?
+        pD->KTCallbacks.pfnAcquireResourceCb : pD->KTCallbacks.pfnReleaseResourceCb) : NULL;
+    HRESULT tokenHr = E_PENDING, signalHr = E_PENDING, reason = E_FAIL;
+    HRESULT result = D3DDDIERR_DEVICEREMOVED;
+    BOOL tokenCalled = FALSE, signalCalled = FALSE, waitCalled = FALSE;
+    BOOL retained = FALSE, contextLocked = FALSE;
+    DWORD wait = WAIT_FAILED, waitError = 0;
+    ULONGLONG tokenMs = 0, signalMs = 0, waitMs = 0, lockMs = 0, tick = 0;
+    D3DDDICB_SYNCTOKEN cb;
+    D3DDDICB_SIGNALSYNCHRONIZATIONOBJECT2 signal;
+
+    if (!pD || !pD->pCtx1 || !pD->presentLockInit || !pD->hRTDevice.handle || !context || !tokenCallback ||
+        !pD->KTCallbacks.pfnSignalSynchronizationObject2Cb) {
+        reason = E_NOTIMPL;
+        goto done;
+    }
+    if (acquire) {
+        /* Fresh, nonsignaled and private to this one operation. Never reset. */
+        event = CreateEventW(NULL, FALSE, FALSE, NULL);
+        if (!event) {
+            stage = "create-event";
+            reason = HRESULT_FROM_WIN32(GetLastError());
+            goto done;
+        }
+    }
+    stage = "preflush";
+    if (gpuGateRequested)
+        tritonPresentPublishSharedWrites(pD);
+    else
+        ID3D11DeviceContext1_Flush(pD->pCtx1);
+    /* Preserve the existing host command-dispatch ordering before native CB. */
+    tritonWaitHostNow(pD, acquire ? "AcquireResourceCpuToken" : "ReleaseResourceCpuToken", FALSE);
+
+    memset(&cb, 0, sizeof(cb));
+    cb.hSyncToken = token; /* Opaque runtime token; never a Win32 wait handle. */
+    cb.BroadcastContextCount = 1;
+    cb.BroadcastContextArray = &context; /* HANDLE storage valid through CB. */
+    /* One thread at a time per HCONTEXT, also against concurrent PresentCb.
+     * No host flush/GPU drain and no CPU wait occur inside this section. */
+    tick = GetTickCount64();
+    EnterCriticalSection(&pD->kmCtxLock);
+    contextLocked = TRUE;
+    lockMs = GetTickCount64() - tick;
+    if (pD->hKMContext != context ||
+        InterlockedCompareExchange(&pD->handoffCpuBridgeFailed, 0, 0)) {
+        stage = "context-changed-or-device-latched";
+        reason = D3DDDIERR_DEVICEREMOVED;
+        goto done;
+    }
+    stage = "token-callback";
+    tick = GetTickCount64();
+    tokenCalled = TRUE;
+    tokenHr = tokenCallback(pD->hRTDevice.handle, &cb);
+    tokenMs = GetTickCount64() - tick;
+    if (tokenHr != S_OK) {
+        reason = tokenHr;
+        goto done;
+    }
+    if (!acquire) {
+        result = S_OK;
+        reason = S_OK;
+        stage = "release-explicit-context";
+        goto done;
+    }
+
+    memset(&signal, 0, sizeof(signal));
+    signal.hContext = context; /* SAME runtime context as the token broadcast. */
+    signal.ObjectCount = 0;
+    signal.Flags.EnqueueCpuEvent = 1;
+    signal.Flags.SignalAtSubmission = 0;
+    signal.BroadcastContextCount = 0; /* No additional contexts. */
+    signal.CpuEventHandle = event;
+    stage = "signal-callback";
+    tick = GetTickCount64();
+    signalCalled = TRUE;
+    signalHr = pD->KTCallbacks.pfnSignalSynchronizationObject2Cb(pD->hRTDevice.handle, &signal);
+    signalMs = GetTickCount64() - tick;
+    if (signalHr != S_OK) {
+        reason = signalHr;
+        goto done;
+    }
+    LeaveCriticalSection(&pD->kmCtxLock);
+    contextLocked = FALSE;
+    stage = "cpu-wait";
+    tick = GetTickCount64();
+    waitCalled = TRUE;
+    wait = WaitForSingleObject(event, 5000);
+    waitMs = GetTickCount64() - tick;
+    if (wait != WAIT_OBJECT_0) {
+        waitError = wait == WAIT_FAILED ? GetLastError() : ERROR_TIMEOUT;
+        reason = HRESULT_FROM_WIN32(waitError);
+        goto done;
+    }
+    result = S_OK;
+    reason = S_OK;
+    stage = "acquire-cpu-complete";
+
+done:
+    if (contextLocked)
+        LeaveCriticalSection(&pD->kmCtxLock);
+    /* Another concurrent operation may have made this device terminal. */
+    if (result == S_OK && pD &&
+        InterlockedCompareExchange(&pD->handoffCpuBridgeFailed, 0, 0)) {
+        stage = "device-latched";
+        reason = D3DDDIERR_DEVICEREMOVED;
+        result = D3DDDIERR_DEVICEREMOVED;
+    }
+    if (event) {
+        if (!signalCalled || (waitCalled && wait == WAIT_OBJECT_0)) {
+            /* No registration was attempted, or the unique signal was consumed. */
+            if (!CloseHandle(event)) {
+                reason = HRESULT_FROM_WIN32(GetLastError());
+                result = D3DDDIERR_DEVICEREMOVED;
+                stage = "close-event";
+            }
+        } else {
+            /* Callback failure/timeout may leave an event registration pending.
+             * Intentionally keep this process-owned HANDLE until process death:
+             * a late signal must never satisfy a reset/reused future barrier. */
+            retained = TRUE;
+        }
+    }
+    if (result != S_OK && pD)
+        InterlockedExchange(&pD->handoffCpuBridgeFailed, 1);
+    if (serial <= 128 || (result != S_OK && InterlockedIncrement(&failures) <= 32))
+        TR_LOG("CPU-BRIDGE #%ld process=%lu thread=%lu acquire=%d stage=%s "
+               "dev=%p token=%p context=%p event=%p gpuGateRequested=%d "
+               "lockWaitMs=%llu tokenCalled=%d tokenHr=0x%08lx tokenMs=%llu "
+               "signalCalled=%d signalHr=0x%08lx signalMs=%llu "
+               "waitCalled=%d wait=0x%08lx waitError=%lu waitMs=%llu "
+               "retained=%d reason=0x%08lx result=0x%08lx totalMs=%llu",
+               (long)serial, GetCurrentProcessId(), GetCurrentThreadId(), acquire, stage,
+               (void *)pD, token, context, event, gpuGateRequested,
+               (unsigned long long)lockMs, tokenCalled, (unsigned long)tokenHr, (unsigned long long)tokenMs,
+               signalCalled, (unsigned long)signalHr, (unsigned long long)signalMs,
+               waitCalled, (unsigned long)wait, (unsigned long)waitError,
+               (unsigned long long)waitMs, retained, (unsigned long)reason,
+               (unsigned long)result, (unsigned long long)(GetTickCount64() - started));
+    return result;
+}
+
+static HRESULT
+tritonHandoffToken(PTRITON_DEVICE pD, HANDLE token, BOOL acquire,
+                    BOOL gpuGateRequested)
+{
+    if (pD && InterlockedCompareExchange(&pD->handoffCpuBridgeFailed, 0, 0))
+        return D3DDDIERR_DEVICEREMOVED;
+    if (tritonSwitch("triton-acquirecpuwait"))
+        return tritonHandoffCpuToken(pD, token, acquire, gpuGateRequested);
+    if (!pD || !pD->pCtx1)
+        return E_FAIL;
+    if(pD->RuntimeStreamActive)
+        npt_runtime_owner_maintenance(pD->RuntimeTransportOwner); /* actual DDI caller */
+    PFND3DDDI_SYNCTOKENCB callback = acquire ?
+        pD->KTCallbacks.pfnAcquireResourceCb : pD->KTCallbacks.pfnReleaseResourceCb;
+    if (!callback)
+        return E_NOTIMPL;
+    if (gpuGateRequested) {
+        /* Includes read-only consumers even when SharedDirty is zero. */
+        tritonPresentPublishSharedWrites(pD);
+    } else {
+        ID3D11DeviceContext1_Flush(pD->pCtx1);
+    }
+    /* Flush is async on the guest wire. Order its host execution before the
+     * native callback even when this context has no tracked shared writes. */
+    tritonWaitHostNow(pD, acquire ? "AcquireResourceToken" : "ReleaseResourceToken", FALSE);
+    D3DDDICB_SYNCTOKEN cb;
+    memset(&cb, 0, sizeof(cb));
+    cb.hSyncToken = token; /* Runtime-owned, including a possible NULL token. */
+    if (pD->RuntimeStreamActive) {
+        HANDLE context = pD->hKMContext;
+        if (!context) return D3DDDIERR_DEVICEREMOVED;
+        cb.BroadcastContextCount = 1;
+        cb.BroadcastContextArray = &context;
+        EnterCriticalSection(&pD->kmCtxLock);
+        HRESULT hr = callback(pD->hRTDevice.handle, &cb);
+        LeaveCriticalSection(&pD->kmCtxLock);
+        return hr;
+    }
+    return callback(pD->hRTDevice.handle, &cb);
+}
+
+static void
+tritonHandoffError(PTRITON_DEVICE pD, const char *op, HANDLE token, HRESULT hr)
+{
+    if (!FAILED(hr))
+        return;
+    static volatile LONG count;
+    LONG n = InterlockedIncrement(&count);
+    if (n <= 16)
+        TR_LOG("HANDOFF %s failed #%ld token=%p hr=0x%08lx",
+               op, (long)n, token, (unsigned long)hr);
+    tritonSetError(pD, hr);
+}
 
 void APIENTRY
 tritonAcquireResource(D3D10DDI_HDEVICE hDev, D3D10DDI_HRESOURCE hRes, HANDLE h)
 {
-    (void)hDev;
-    (void)hRes;
-    (void)h;
+    PTRITON_DEVICE pD = (PTRITON_DEVICE)hDev.pDrvPrivate;
+    PTRITON_RESOURCE r = (PTRITON_RESOURCE)hRes.pDrvPrivate;
+    static volatile LONG count;
+    LONG n = InterlockedIncrement(&count);
+    if (n <= 128)
+        tritonHandoffTrace("Acquire", "begin", n, pD, r, h, FALSE, S_OK);
+    HRESULT hr = tritonHandoffToken(pD, h, TRUE, FALSE);
+    tritonHandoffError(pD, "Acquire", h, hr);
+    if (n <= 128)
+        tritonHandoffTrace("Acquire", "end", n, pD, r, h, FALSE, hr);
 }
 
 void APIENTRY
 tritonReleaseResource(D3D10DDI_HDEVICE hDev, D3D10DDI_HRESOURCE hRes, HANDLE h)
 {
-    PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDev.pDrvPrivate);
-    (void)hRes;
-    (void)h;
-    if (pD && pD->pCtx1)
-        ID3D11DeviceContext1_Flush(pD->pCtx1);
+    PTRITON_DEVICE pD = (PTRITON_DEVICE)hDev.pDrvPrivate;
+    PTRITON_RESOURCE r = (PTRITON_RESOURCE)hRes.pDrvPrivate;
+    /* hResource is optional. NULL may denote a context-wide handoff. */
+    const BOOL gpuGateRequested = !r || r->IsShared || r->IsPresentable ||
+        r->pPresentCompanion || r->hImportAlloc || r->hImportResKmt || r->BatchPresentWrites;
+    static volatile LONG count;
+    LONG n = InterlockedIncrement(&count);
+    if (n <= 128)
+        tritonHandoffTrace("Release", "begin", n, pD, r, h, gpuGateRequested, S_OK);
+    HRESULT hr = tritonHandoffToken(pD, h, FALSE, gpuGateRequested);
+    tritonHandoffError(pD, "Release", h, hr);
+    if (n <= 128)
+        tritonHandoffTrace("Release", "end", n, pD, r, h, gpuGateRequested, hr);
 }

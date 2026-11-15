@@ -48,6 +48,7 @@ npt_refcount_dec(struct npt_refcount *ref)
 }
 
 struct npt_renderer_shmem {
+   struct npt_renderer_shmem *runtime_deferred_next;
    struct npt_refcount refcount;
    uint32_t res_id;
    size_t size;
@@ -121,6 +122,12 @@ struct npt_renderer_shmem_ops {
 };
 
 struct npt_renderer_ops {
+   /* Explicit synchronous DDI reply failure only, never generic SetLost. */
+   void (*report_reply_error)(struct npt_renderer *renderer);
+   void (*defer_shmem_destroy)(struct npt_renderer *,struct npt_renderer_shmem *);
+   void (*drain_deferred_cleanup)(struct npt_renderer *);
+   void (*record_enter)(struct npt_renderer *renderer);
+   void (*record_leave)(struct npt_renderer *renderer);
    void (*destroy)(struct npt_renderer *renderer);
 
    /* Fire-and-forget on virtgpu (returns once descriptor is queued). */
@@ -251,6 +258,10 @@ struct npt_renderer {
     * Transports that only queue the create leave this false and pay
     * npt_ring_ensure_shmem_visible. */
    bool shmem_create_host_visible;
+   /* Immutable per-renderer opt-in: native D3D11 UMD + exact KMD DWORD1
+    * + negotiated host publisher capability. Other backends stay false. */
+   bool publisher_job_v1;
+   bool ddi_callbacks_only;
 
    /* Set (never cleared) when a ring blob CPU mapping is observed torn
     * down in place -- a guest WDDM TDR removes the whole D3DKMT device
@@ -273,11 +284,23 @@ npt_renderer_set_lost(struct npt_renderer *renderer)
    atomic_store_explicit(&renderer->lost, 1, memory_order_relaxed);
 }
 
+static inline void
+npt_renderer_report_reply_error(struct npt_renderer *renderer)
+{
+   npt_renderer_set_lost(renderer);
+   if (renderer->ops.report_reply_error)
+      renderer->ops.report_reply_error(renderer);
+}
+
 struct npt_renderer *
 npt_renderer_create_vtest(void);
 
 struct npt_renderer *
 npt_renderer_create_virtgpu(void);
+#if defined(_WIN32) && !defined(__WINE__)
+/* Native Win32 request gate; false outside the Triton D3D11 build. */
+bool npt_renderer_publisher_job_requested(void);
+#endif
 
 #ifdef _WIN32
 /* The running program's .exe file name in UTF-8, sent as the host context's

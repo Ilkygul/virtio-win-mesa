@@ -31,6 +31,7 @@
 #include "neptune-protocol/npt_protocol_transport.h"
 #include "npt_env.h"
 #include "npt_renderer.h"
+#include "npt_runtime_stream.h"
 
 #define VIRTGPU_PCI_VENDOR_ID 0x1af4
 #define VIRTGPU_PCI_DEVICE_ID 0x1050
@@ -61,6 +62,13 @@ struct npt_virtgpu_shmem {
 
 struct npt_virtgpu {
    struct npt_renderer base;
+   bool runtime_owned;
+   struct npt_runtime_stream runtime;
+   CRITICAL_SECTION runtime_cleanup_cs;
+   struct npt_renderer_shmem *runtime_cleanup_head,*runtime_cleanup_tail;
+   UINT runtime_primary_count;
+   unsigned runtime_primary_trace_count; /* diagnostic only; gpu->cs owns it */
+   D3DKMT_HANDLE runtime_primaries[D3DDDI_MAX_WRITTEN_PRIMARIES];
 
    /* Single global mutex guards the kernel-shared command buffer in
     * gpu->ctx; the kernel rotates pNew* pointers on every D3DKMTRender
@@ -145,6 +153,46 @@ struct npt_virtgpu {
    UINT patch_size;
 };
 
+/* HRESULT is recorded verbatim; NTSTATUS is only the legacy local transport
+ * success/failure carrier. No numeric reinterpretation of HRESULT/handles. */
+static NTSTATUS
+runtime_result(struct npt_virtgpu *gpu, const char *site, HRESULT hr)
+{
+   if (FAILED(hr)) {
+      npt_log("runtime transport callback failed site=%s hr=0x%08lx tid=%lu rtDevice=%p runtimeContext=%p virtioCtx=%u",
+              site, (unsigned long)hr, (unsigned long)GetCurrentThreadId(),
+              gpu->runtime.device, gpu->runtime.context, gpu->base.info.virtio_ctx_id);
+      npt_renderer_set_lost(&gpu->base);
+      return STATUS_UNSUCCESSFUL;
+   }
+   return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+runtime_allocate(struct npt_virtgpu *gpu, D3DKMT_CREATEALLOCATION *request)
+{
+   if (request->Flags.CreateShared) return STATUS_NOT_SUPPORTED;
+   if (request->NumAllocations != 1 || !request->pAllocationInfo ||
+       request->pAllocationInfo->pSystemMem)
+      return STATUS_INVALID_PARAMETER;
+   D3DDDI_ALLOCATIONINFO2 info = {0};
+   info.pPrivateDriverData = request->pAllocationInfo->pPrivateDriverData;
+   info.PrivateDriverDataSize = request->pAllocationInfo->PrivateDriverDataSize;
+   D3DDDICB_ALLOCATE cb = {0};
+   cb.pPrivateDriverData = request->pPrivateDriverData;
+   cb.PrivateDriverDataSize = request->PrivateDriverDataSize;
+   cb.NumAllocations = 1;
+   cb.pAllocationInfo2 = &info;
+   /* Internal transport/import allocations have no D3D runtime resource.
+    * Deallocate by the returned allocation list, not a fabricated hResource. */
+   HRESULT hr = gpu->runtime.callbacks.pfnAllocateCb(gpu->runtime.device, &cb);
+   if (SUCCEEDED(hr)) {
+      request->pAllocationInfo->hAllocation = info.hAllocation;
+      request->hResource = 0;
+   }
+   return runtime_result(gpu, "pfnAllocateCb", hr);
+}
+
 static inline uint64_t
 npt_align64(uint64_t v, uint64_t a)
 {
@@ -198,6 +246,17 @@ virtgpu_signal_event(struct npt_virtgpu *gpu, HANDLE event)
       .Flags = { .EnqueueCpuEvent = TRUE },
       .CpuEventHandle = event,
    };
+   if (gpu->runtime_owned) {
+      D3DDDICB_SIGNALSYNCHRONIZATIONOBJECT2 cb = {0};
+      cb.hContext = gpu->runtime.context;
+      cb.Flags.EnqueueCpuEvent = TRUE;
+      cb.CpuEventHandle = event;
+      EnterCriticalSection(gpu->runtime.context_lock);
+      HRESULT hr = gpu->runtime.callbacks.pfnSignalSynchronizationObject2Cb(
+         gpu->runtime.device, &cb);
+      LeaveCriticalSection(gpu->runtime.context_lock);
+      return runtime_result(gpu, "pfnSignalSynchronizationObject2Cb", hr);
+   }
    return gpu->cb.signalSynchronizationObject2(&signal);
 }
 
@@ -223,7 +282,19 @@ virtgpu_drain_monitored(struct npt_virtgpu *gpu)
       .ObjectHandleArray = &gpu->drain_fence,
       .MonitoredFenceValueArray = &value,
    };
-   NTSTATUS status = gpu->cb.signalSynchronizationObjectFromGpu(&signal);
+   NTSTATUS status;
+   if (gpu->runtime_owned) {
+      D3DDDICB_SIGNALSYNCHRONIZATIONOBJECTFROMGPU cb = {0};
+      cb.hContext = gpu->runtime.context;
+      cb.ObjectCount = 1;
+      cb.ObjectHandleArray = &gpu->drain_fence;
+      cb.MonitoredFenceValueArray = &value;
+      EnterCriticalSection(gpu->runtime.context_lock);
+      HRESULT hr = gpu->runtime.callbacks.pfnSignalSynchronizationObjectFromGpuCb(
+         gpu->runtime.device, &cb);
+      LeaveCriticalSection(gpu->runtime.context_lock);
+      status = runtime_result(gpu, "pfnSignalSynchronizationObjectFromGpuCb", hr);
+   } else status = gpu->cb.signalSynchronizationObjectFromGpu(&signal);
    LeaveCriticalSection(&gpu->drain_cs);
    if (!NT_SUCCESS(status)) {
       npt_log("virtgpu drain: SignalFromGpu failed 0x%lx (value=%llu)",
@@ -240,7 +311,15 @@ virtgpu_drain_monitored(struct npt_virtgpu *gpu)
       .ObjectHandleArray = &gpu->drain_fence,
       .FenceValueArray = &value,
    };
-   status = gpu->cb.waitForSynchronizationObjectFromCpu(&wait);
+   if (gpu->runtime_owned) {
+      D3DDDICB_WAITFORSYNCHRONIZATIONOBJECTFROMCPU cb = {0};
+      cb.ObjectCount = 1;
+      cb.ObjectHandleArray = &gpu->drain_fence;
+      cb.FenceValueArray = &value;
+      /* Existing explicit bootstrap/readback drain only. No token CPU wait. */
+      status = runtime_result(gpu, "pfnWaitForSynchronizationObjectFromCpuCb", gpu->runtime.callbacks.pfnWaitForSynchronizationObjectFromCpuCb(
+            gpu->runtime.device, &cb));
+   } else status = gpu->cb.waitForSynchronizationObjectFromCpu(&wait);
    if (!NT_SUCCESS(status)) {
       npt_log("virtgpu drain: WaitFromCpu failed 0x%lx", status);
       return false;
@@ -284,6 +363,14 @@ virtgpu_escape(struct npt_virtgpu *gpu, VIOGPU_ESCAPE *priv)
       .pPrivateDriverData = priv,
       .PrivateDriverDataSize = sizeof(*priv),
    };
+   if (gpu->runtime_owned) {
+      D3DDDICB_ESCAPE cb = {0};
+      cb.hDevice = gpu->runtime.device;
+      cb.pPrivateDriverData = priv;
+      cb.PrivateDriverDataSize = sizeof(*priv);
+      return runtime_result(gpu, "pfnEscapeCb", gpu->runtime.callbacks.pfnEscapeCb(
+         gpu->runtime.adapter, &cb));
+   }
    return gpu->cb.escape(&escape);
 }
 
@@ -314,6 +401,13 @@ virtgpu_query_adapter_info(struct npt_virtgpu *gpu, void *priv,
       .pPrivateDriverData = priv,
       .PrivateDriverDataSize = priv_size,
    };
+   if (gpu->runtime_owned) {
+      D3DDDICB_QUERYADAPTERINFO cb = {0};
+      cb.pPrivateDriverData = priv;
+      cb.PrivateDriverDataSize = priv_size;
+      return runtime_result(gpu, "query_adapter_info", gpu->runtime.query_adapter_info(
+         gpu->runtime.adapter, &cb));
+   }
    return gpu->cb.queryAdapterInfo(&query);
 }
 
@@ -355,6 +449,58 @@ virtgpu_submit_virtual_locked(struct npt_virtgpu *gpu, UINT type, UINT flags,
       .pPrivateDriverData = &priv,
       .PrivateDriverDataSize = sizeof(priv),
    };
+   if (gpu->runtime_owned) {
+      D3DDDICB_SUBMITCOMMAND cb = {0};
+      cb.Commands = VIRTGPU_SHMEM_GPU_BASE_VA;
+      cb.CommandLength = (UINT)total;
+      cb.BroadcastContextCount = 1;
+      cb.BroadcastContext[0] = gpu->runtime.context;
+      cb.pPrivateDriverData = &priv;
+      cb.PrivateDriverDataSize = sizeof(priv);
+      cb.NumPrimaries = gpu->runtime_primary_count;
+      memcpy(cb.WrittenPrimaries,gpu->runtime_primaries,
+             cb.NumPrimaries*sizeof(cb.WrittenPrimaries[0]));
+      /* Snapshot INPUTS before the callback can touch its mutable POD. No
+       * extra submit, wait, residency request or allocation lookup is added. */
+      const D3DDDICB_SUBMITCOMMAND trace_cb = cb;
+      const DWORD trace_tid = GetCurrentThreadId();
+      struct npt_command_header trace_header = {0};
+      struct npt_cmd_notify_ring_v2 trace_notify = {0};
+      if (payload && payload_size >= sizeof(trace_header)) {
+         memcpy(&trace_header, payload, sizeof(trace_header));
+         if (payload_size == sizeof(trace_notify) &&
+             trace_header.cmd_type == NPT_TRANSPORT_CMD_TYPE(NPT_TRANSPORT_SUBGROUP_RING,
+                                                            NPT_TRANSPORT_RING_NOTIFY_V2))
+            memcpy(&trace_notify, payload, sizeof(trace_notify));
+      }
+      EnterCriticalSection(gpu->runtime.context_lock);
+      HRESULT hr = gpu->runtime.callbacks.pfnSubmitCommandCb(
+         gpu->runtime.device, &cb);
+      LeaveCriticalSection(gpu->runtime.context_lock);
+      if (FAILED(hr) || (trace_cb.NumPrimaries && gpu->runtime_primary_trace_count < 16)) {
+         const unsigned sample = SUCCEEDED(hr) ? ++gpu->runtime_primary_trace_count : 0;
+         npt_log("RUNTIME_SUBMIT %s sample=%u hr=0x%08lx tid=%lu rtDevice=%p runtimeContext=%p virtioCtx=%u type=%u flags=0x%x ring=%u primaries=%u",
+                 FAILED(hr) ? "FAIL" : "PRIMARY_OK", sample, (unsigned long)hr,
+                 (unsigned long)trace_tid, gpu->runtime.device, gpu->runtime.context,
+                 gpu->base.info.virtio_ctx_id, type, flags, ring_idx, trace_cb.NumPrimaries);
+         npt_log("RUNTIME_SUBMIT_INPUT tid=%lu commands=0x%llx bytes=%u broadcast=%u ctx0=%p cbFlags=0x%x sequence=%u markerLogType=%u privateBytes=%u",
+                 (unsigned long)trace_tid, (unsigned long long)trace_cb.Commands,
+                 trace_cb.CommandLength, trace_cb.BroadcastContextCount, trace_cb.BroadcastContext[0],
+                 trace_cb.Flags.Value, trace_cb.RenderCBSequence, (unsigned)trace_cb.MarkerLogType,
+                 trace_cb.PrivateDriverDataSize);
+         npt_log("RUNTIME_SUBMIT_PREFIX tid=%lu inputBytes=%zu cmd=0x%08x cmdBytes=%u object=%llu cmdFlags=0x%x reserved=%u ringId=%llu generation=%llu serial=%llu endTail=%u",
+                 (unsigned long)trace_tid, payload_size, trace_header.cmd_type,
+                 trace_header.cmd_size, (unsigned long long)trace_header.object_id,
+                 trace_header.cmd_flags, trace_header.reserved,
+                 (unsigned long long)trace_notify.ring_id,
+                 (unsigned long long)trace_notify.generation,
+                 (unsigned long long)trace_notify.publish_serial, trace_notify.end_tail);
+         for (UINT i = 0; i < trace_cb.NumPrimaries && i < D3DDDI_MAX_WRITTEN_PRIMARIES; ++i)
+            npt_log("RUNTIME_SUBMIT_PRIMARY tid=%lu index=%u allocation=0x%x",
+                    (unsigned long)trace_tid, i, trace_cb.WrittenPrimaries[i]);
+      }
+      return runtime_result(gpu, "pfnSubmitCommandCb", hr);
+   }
    return gpu->cb.submitCommand(&submit);
 }
 
@@ -447,7 +593,14 @@ virtgpu_lock(struct npt_virtgpu *gpu, D3DKMT_HANDLE alloc, void **out_ptr)
       .hAllocation = alloc,
       .Flags = { .LockEntire = 1 },
    };
-   NTSTATUS status = gpu->cb.lock(&lock);
+   NTSTATUS status;
+   if (gpu->runtime_owned) {
+      D3DDDICB_LOCK cb = {0};
+      cb.hAllocation = alloc; cb.Flags.LockEntire = TRUE;
+      status = runtime_result(gpu, "pfnLockCb", gpu->runtime.callbacks.pfnLockCb(
+         gpu->runtime.device, &cb));
+      lock.pData = cb.pData;
+   } else status = gpu->cb.lock(&lock);
    if (!NT_SUCCESS(status))
       return status;
    *out_ptr = lock.pData;
@@ -462,6 +615,12 @@ virtgpu_unlock(struct npt_virtgpu *gpu, D3DKMT_HANDLE alloc)
       .NumAllocations = 1,
       .phAllocations = &alloc,
    };
+   if (gpu->runtime_owned) {
+      D3DDDICB_UNLOCK cb = {0};
+      cb.NumAllocations = 1; cb.phAllocations = &alloc;
+      return runtime_result(gpu, "pfnUnlockCb", gpu->runtime.callbacks.pfnUnlockCb(
+         gpu->runtime.device, &cb));
+   }
    return gpu->cb.unlock(&unlock);
 }
 
@@ -547,7 +706,8 @@ virtgpu_resource_create_blob(struct npt_virtgpu *gpu, uint32_t blob_mem,
          .CreateShared = is_shareable,
       },
    };
-   NTSTATUS status = gpu->cb.createAllocation(&alloc);
+   NTSTATUS status = gpu->runtime_owned ? runtime_allocate(gpu, &alloc) :
+      gpu->cb.createAllocation(&alloc);
    if (!NT_SUCCESS(status)) {
       npt_log("virtgpu: D3DKMTCreateAllocation failed 0x%lx", status);
       return status;
@@ -650,8 +810,13 @@ static NTSTATUS
 virtgpu_resource_destroy_blob(struct npt_virtgpu *gpu,
                               D3DKMT_HANDLE alloc, D3DKMT_HANDLE res_kmt)
 {
-   if (!virtgpu_drain(gpu))
+   if (!virtgpu_drain(gpu)) {
+      if(gpu->runtime_owned) {
+         npt_log("runtime shmem deallocation drain unknown; retaining node/owner");
+         for(;;) Sleep(1000);
+      }
       return STATUS_UNSUCCESSFUL;
+   }
 
    D3DKMT_DESTROYALLOCATION destroy = {
       .hDevice = gpu->device,
@@ -659,9 +824,19 @@ virtgpu_resource_destroy_blob(struct npt_virtgpu *gpu,
       .AllocationCount = res_kmt == 0 ? 1 : 0,
       .phAllocationList = res_kmt == 0 ? &alloc : NULL,
    };
-   NTSTATUS status = gpu->cb.destroyAllocation(&destroy);
+   NTSTATUS status;
+   if (gpu->runtime_owned) {
+      D3DDDICB_DEALLOCATE cb = {0};
+      cb.NumAllocations = 1; cb.HandleList = &alloc;
+      status = runtime_result(gpu, "pfnDeallocateCb", gpu->runtime.callbacks.pfnDeallocateCb(
+         gpu->runtime.device, &cb));
+   } else status = gpu->cb.destroyAllocation(&destroy);
    if (!NT_SUCCESS(status)) {
       npt_log("virtgpu: D3DKMTDestroyAllocation failed 0x%lx", status);
+      if(gpu->runtime_owned) {
+         npt_log("runtime shmem deallocation callback unknown; retaining node/owner");
+         for(;;) Sleep(1000);
+      }
       return status;
    }
    /* DestroyAllocation queues RESOURCE_UNREF on the control queue itself;
@@ -710,7 +885,8 @@ npt_vgw32_import_res(struct npt_renderer *r, uint32_t res_id, uint64_t size,
          .CreateResource = 1,
       },
    };
-   NTSTATUS status = gpu->cb.createAllocation(&alloc);
+   NTSTATUS status = gpu->runtime_owned ? runtime_allocate(gpu, &alloc) :
+      gpu->cb.createAllocation(&alloc);
    if (!NT_SUCCESS(status)) {
       npt_log("virtgpu: import_res res_id=%u failed 0x%lx", res_id, status);
       return false;
@@ -939,16 +1115,107 @@ npt_vgw32_shmem_destroy(struct npt_renderer *r, struct npt_renderer_shmem *_s)
    free(s);
 }
 
+static void npt_vgw32_defer_shmem_destroy(struct npt_renderer *r,struct npt_renderer_shmem *shmem)
+{
+   struct npt_virtgpu *gpu=(struct npt_virtgpu *)r;
+   shmem->runtime_deferred_next=NULL;
+   EnterCriticalSection(&gpu->runtime_cleanup_cs);
+   if(gpu->runtime_cleanup_tail) gpu->runtime_cleanup_tail->runtime_deferred_next=shmem;
+   else gpu->runtime_cleanup_head=shmem;
+   gpu->runtime_cleanup_tail=shmem;
+   LeaveCriticalSection(&gpu->runtime_cleanup_cs);
+}
+static void npt_vgw32_drain_deferred_cleanup(struct npt_renderer *r)
+{
+   struct npt_virtgpu *gpu=(struct npt_virtgpu *)r;
+   for(;;) {
+      EnterCriticalSection(&gpu->runtime_cleanup_cs);
+      struct npt_renderer_shmem *head=gpu->runtime_cleanup_head;
+      gpu->runtime_cleanup_head=gpu->runtime_cleanup_tail=NULL;
+      LeaveCriticalSection(&gpu->runtime_cleanup_cs);
+      if(!head) break;
+      while(head) {
+         struct npt_renderer_shmem *next=head->runtime_deferred_next;
+         npt_vgw32_shmem_destroy(r,head); /* DDI caller; existing protected drain */
+         head=next;
+      }
+   }
+}
+
+static void npt_vgw32_report_reply_error(struct npt_renderer *r)
+{
+   struct npt_virtgpu *gpu=(struct npt_virtgpu *)r;
+   if (gpu->runtime_owned && gpu->runtime.report_reply_error)
+      gpu->runtime.report_reply_error(gpu->runtime.write_owner);
+}
+
+static void npt_vgw32_record_enter(struct npt_renderer *r)
+{
+   struct npt_virtgpu *gpu=(struct npt_virtgpu *)r;
+   EnterCriticalSection(gpu->runtime.write_lock);
+}
+static void npt_vgw32_record_leave(struct npt_renderer *r)
+{
+   struct npt_virtgpu *gpu=(struct npt_virtgpu *)r;
+   LeaveCriticalSection(gpu->runtime.write_lock);
+}
+
+/* Only this exact publisher record authorizes a protected GPU prefix.
+ * Control submissions must never consume pending primary-write metadata. */
+static int runtime_publisher_notify_class(const void *data,size_t size)
+{
+   struct npt_command_header header;
+   if(!data || size<sizeof(header)) return -1;
+   memcpy(&header,data,sizeof(header));
+   if(header.cmd_type!=NPT_TRANSPORT_CMD_TYPE(NPT_TRANSPORT_SUBGROUP_RING,
+                                             NPT_TRANSPORT_RING_NOTIFY_V2)) return 0;
+   if(size!=sizeof(struct npt_cmd_notify_ring_v2)) return -1;
+   struct npt_cmd_notify_ring_v2 notify;
+   memcpy(&notify,data,sizeof(notify));
+   if(header.cmd_size!=sizeof(notify) || header.cmd_flags || header.object_id || header.reserved ||
+      !notify.ring_id || !notify.generation || !notify.publish_serial || notify.reserved) return -1;
+   return 1;
+}
+
 static bool
 npt_vgw32_submit_cmd(struct npt_renderer *r, const void *data, size_t size)
 {
    struct npt_virtgpu *gpu = (struct npt_virtgpu *)r;
 
+   const int prefix=gpu->runtime_owned ? runtime_publisher_notify_class(data,size) : 0;
+   if(prefix<0) {
+      npt_log("RUNTIME_PREFIX_FAIL tid=%lu runtimeContext=%p inputBytes=%zu",
+              (unsigned long)GetCurrentThreadId(),gpu->runtime.context,size);
+      runtime_result(gpu, "publisherNotifyValidation", E_INVALIDARG); return false;
+   }
+   UINT write_count=0;
+   D3DKMT_HANDLE writes[D3DDDI_MAX_WRITTEN_PRIMARIES];
+   if (gpu->runtime_owned) {
+      EnterCriticalSection(gpu->runtime.write_lock);
+      HRESULT hr=prefix ? gpu->runtime.collect_writes(gpu->runtime.write_owner,
+         writes,D3DDDI_MAX_WRITTEN_PRIMARIES,&write_count) : S_OK;
+      if (FAILED(hr)) {
+         LeaveCriticalSection(gpu->runtime.write_lock);
+         npt_log("RUNTIME_COLLECT_FAIL caller tid=%lu runtimeContext=%p prefix=%d capacity=%u returned=%u hr=0x%08lx",
+                 (unsigned long)GetCurrentThreadId(),gpu->runtime.context,prefix,
+                 (unsigned)D3DDDI_MAX_WRITTEN_PRIMARIES,write_count,(unsigned long)hr);
+         runtime_result(gpu, "collect_writes", hr); return false;
+      }
+   }
    EnterCriticalSection(&gpu->cs);
+   if(gpu->runtime_owned) {
+      gpu->runtime_primary_count=write_count;
+      memcpy(gpu->runtime_primaries,writes,write_count*sizeof(writes[0]));
+   }
    NTSTATUS status =
       virtgpu_send_cmd_locked(gpu, VIOGPU_CMD_SUBMIT,
                               VIOGPU_EXECBUF_RING_IDX, 0, data, size, 0);
+   if (gpu->runtime_owned) {
+      if (prefix && NT_SUCCESS(status)) gpu->runtime.submitted_writes(gpu->runtime.write_owner);
+      gpu->runtime_primary_count=0; /* other non-submit commands use no primary set */
+   }
    LeaveCriticalSection(&gpu->cs);
+   if (gpu->runtime_owned) LeaveCriticalSection(gpu->runtime.write_lock);
 
    if (!NT_SUCCESS(status)) {
       npt_log("virtgpu submit_cmd: render failed 0x%lx", status);
@@ -963,6 +1230,29 @@ npt_vgw32_submit_cmd_sync(struct npt_renderer *r, const void *data,
 {
    struct npt_virtgpu *gpu = (struct npt_virtgpu *)r;
 
+   /* A publisher DestroyRing must not overtake its last accepted
+    * NotifyV2 checkpoint. Ring teardown has joined all send tickets and
+    * admits no new writers, but SubmitCommand acceptance is not GPU
+    * retirement. Drain the SAME kernel context before asking the host
+    * to stop its decoder. No renderer/ring submission lock is held here. */
+   if (r->publisher_job_v1 && data && size >= sizeof(struct npt_command_header)) {
+      struct npt_command_header header;
+      memcpy(&header, data, sizeof(header));
+      if (header.cmd_type == NPT_TRANSPORT_CMD_TYPE(NPT_TRANSPORT_SUBGROUP_RING,
+                                                   NPT_TRANSPORT_RING_DESTROY)) {
+         struct npt_cmd_destroy_ring cmd;
+         if (size != sizeof(cmd) || header.cmd_size != sizeof(cmd) ||
+             header.cmd_flags || header.object_id || header.reserved) {
+            npt_renderer_set_lost(r);
+            return false;
+         }
+         memcpy(&cmd, data, sizeof(cmd));
+         if (!cmd.ring_id || !virtgpu_drain(gpu)) {
+            npt_renderer_set_lost(r);
+            return false;
+         }
+      }
+   }
    if (!npt_vgw32_submit_cmd(r, data, size))
       return false;
 
@@ -1064,13 +1354,27 @@ npt_vgw32_destroy(struct npt_renderer *r)
 {
    struct npt_virtgpu *gpu = (struct npt_virtgpu *)r;
 
-   if (gpu->context && gpu->cb.destroyContext) {
+   if (!gpu->runtime_owned && gpu->context && gpu->cb.destroyContext) {
       D3DKMT_DESTROYCONTEXT destroy = { .hContext = gpu->context };
       gpu->cb.destroyContext(&destroy);
    }
    /* After the context (no queued signal packet may outlive it), before
     * the device (device-scoped object). */
-   if (gpu->drain_fence && gpu->cb.destroySynchronizationObject) {
+   if(gpu->runtime_owned) npt_vgw32_drain_deferred_cleanup(r);
+   if (gpu->runtime_owned && gpu->drain_fence) {
+      if (!virtgpu_drain(gpu)) {
+         npt_log("runtime transport teardown drain unknown; retaining owner/context/fence");
+         for (;;) Sleep(1000); /* external device/VM recovery; never fake drained */
+      }
+      D3DDDICB_DESTROYSYNCHRONIZATIONOBJECT cb = {0};
+      cb.hSyncObject = gpu->drain_fence;
+      if(!NT_SUCCESS(runtime_result(gpu, "pfnDestroySynchronizationObjectCb", gpu->runtime.callbacks.pfnDestroySynchronizationObjectCb(
+            gpu->runtime.device,&cb)))) {
+         npt_log("runtime drain fence destroy unknown; retaining owner/context/fence");
+         for(;;) Sleep(1000);
+      }
+   }
+   if (!gpu->runtime_owned && gpu->drain_fence && gpu->cb.destroySynchronizationObject) {
       D3DKMT_DESTROYSYNCHRONIZATIONOBJECT destroy = {
          .hSyncObject = gpu->drain_fence,
       };
@@ -1087,6 +1391,7 @@ npt_vgw32_destroy(struct npt_renderer *r)
    if (gpu->gdi32)
       FreeLibrary(gpu->gdi32);
 
+   if(gpu->runtime_owned) DeleteCriticalSection(&gpu->runtime_cleanup_cs);
    DeleteCriticalSection(&gpu->drain_cs);
    DeleteCriticalSection(&gpu->cs);
    free(gpu);
@@ -1331,12 +1636,8 @@ enum virtgpu_open_result {
  * the viogpu adapter, create a device, validate the KMD and fetch the
  * host capset.  No kernel context is created. */
 static enum virtgpu_open_result
-virtgpu_open(struct npt_virtgpu *gpu, struct npt_capset *capset)
+virtgpu_mode_caps(struct npt_virtgpu *gpu, struct npt_capset *capset)
 {
-   if (!virtgpu_load_d3dkmt(gpu) || !virtgpu_find_adapter(gpu) ||
-       !virtgpu_create_device(gpu))
-      return VIRTGPU_OPEN_FAILED;
-
    VIOGPU_ADAPTERINFO info = { 0 };
    NTSTATUS status = virtgpu_query_adapter_info(gpu, &info, sizeof(info));
    if (!NT_SUCCESS(status)) {
@@ -1393,6 +1694,16 @@ virtgpu_open(struct npt_virtgpu *gpu, struct npt_capset *capset)
    return VIRTGPU_OPEN_HOST_OK;
 }
 
+static enum virtgpu_open_result
+virtgpu_open(struct npt_virtgpu *gpu, struct npt_capset *capset)
+{
+   if (!virtgpu_load_d3dkmt(gpu) || !virtgpu_find_adapter(gpu) ||
+       !virtgpu_create_device(gpu))
+      return VIRTGPU_OPEN_FAILED;
+
+   return virtgpu_mode_caps(gpu, capset);
+}
+
 static struct npt_adapter_probe g_adapter_probe;
 
 /* One-shot adapter/host capability probe on a throwaway D3DKMT device,
@@ -1429,8 +1740,32 @@ npt_adapter_probe(void)
    return &g_adapter_probe;
 }
 
-struct npt_renderer *
-npt_renderer_create_virtgpu(void)
+/* Resolve only the existing service DWORD; do not add a library dependency
+ * or write registry. Native D3D12/Wine/vtest do not enable this D3D11 mode. */
+bool
+npt_renderer_publisher_job_requested(void)
+{
+#ifdef NPT_TRITON_D3D11_UMD
+   HMODULE module = LoadLibraryExW(L"advapi32.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+   if (!module)
+      return false;
+   typedef LSTATUS (WINAPI *reg_get_value_fn)(HKEY, LPCWSTR, LPCWSTR, DWORD,
+                                             LPDWORD, PVOID, LPDWORD);
+   reg_get_value_fn get_value = (reg_get_value_fn)(void *)GetProcAddress(module, "RegGetValueW");
+   DWORD value = 0, type = 0, size = sizeof(value);
+   LSTATUS status = get_value ? get_value(HKEY_LOCAL_MACHINE,
+      L"SYSTEM\\CurrentControlSet\\Services\\VioGpu3D\\Parameters", L"NativeGpuJobV1",
+      RRF_RT_REG_DWORD | RRF_SUBKEY_WOW6464KEY, &type, &value, &size) : ERROR_PROC_NOT_FOUND;
+   FreeLibrary(module);
+   return status == ERROR_SUCCESS && type == REG_DWORD &&
+          size == sizeof(value) && value == 1;
+#else
+   return false;
+#endif
+}
+
+static struct npt_renderer *
+npt_renderer_create_virtgpu_impl(const struct npt_runtime_stream *runtime)
 {
    struct npt_virtgpu *gpu = npt_alloc(sizeof(*gpu));
    if (!gpu)
@@ -1438,15 +1773,45 @@ npt_renderer_create_virtgpu(void)
    InitializeCriticalSection(&gpu->cs);
    InitializeCriticalSection(&gpu->drain_cs);
 
+   if (runtime) {
+      gpu->runtime_owned = true;
+      InitializeCriticalSection(&gpu->runtime_cleanup_cs);
+      gpu->runtime = *runtime;
+      const D3DDDI_DEVICECALLBACKS *cb = &runtime->callbacks;
+      if (!runtime->write_lock || !runtime->write_owner || !runtime->collect_writes || !runtime->submitted_writes ||
+          !runtime->report_reply_error ||
+          !runtime->device || !runtime->adapter || !runtime->context ||
+          !runtime->context_lock || !cb->pfnAllocateCb || !cb->pfnDeallocateCb ||
+          !cb->pfnEscapeCb || !runtime->query_adapter_info || !cb->pfnSubmitCommandCb ||
+          !cb->pfnLockCb || !cb->pfnUnlockCb ||
+          !cb->pfnCreateSynchronizationObject2Cb || !cb->pfnDestroySynchronizationObjectCb ||
+          !cb->pfnSignalSynchronizationObject2Cb ||
+          !cb->pfnSignalSynchronizationObjectFromGpuCb ||
+          !cb->pfnWaitForSynchronizationObjectFromCpuCb)
+         goto fail;
+   }
    struct npt_capset capset;
    npt_log("virtgpu: creating renderer");
-   const enum virtgpu_open_result open_result = virtgpu_open(gpu, &capset);
+   enum virtgpu_open_result open_result;
+   if (runtime) {
+      open_result = virtgpu_mode_caps(gpu, &capset);
+      if (!gpu->wddm2) goto fail;
+   } else open_result = virtgpu_open(gpu, &capset);
    if (open_result != VIRTGPU_OPEN_HOST_OK) {
       npt_log("virtgpu: open failed (stage %d: 0=adapter/KMD, 1=host capset)",
               (int)open_result);
       goto fail;
    }
    npt_log("virtgpu: KMD mode %s", gpu->wddm2 ? "WDDM2 (GpuMmu)" : "WDDM 1.3");
+
+   const bool publisher_job_v1 = npt_renderer_publisher_job_requested();
+   if (publisher_job_v1 && !(capset.caps_flags & NPT_CAPSET_CAP_PUBLISHER_JOB_V1)) {
+      npt_log("virtgpu: NativeGpuJobV1 requested but host lacks exact publisher v1");
+      goto fail;
+   }
+   if (runtime && !publisher_job_v1) goto fail;
+   gpu->base.publisher_job_v1 = publisher_job_v1;
+   gpu->base.ddi_callbacks_only = runtime!=NULL;
 
    VIOGPU_ESCAPE ctx_init = {
       .Type = VIOGPU_CTX_INIT,
@@ -1468,7 +1833,15 @@ npt_renderer_create_virtgpu(void)
    npt_log("virtgpu: CTX_INIT ok (ctx %u)", ctx_init.CtxInit.CtxId);
 
    npt_env_init();
-   if (gpu->wddm2 && virtgpu_create_context_virtual(gpu)) {
+   if (runtime) {
+      D3DDDICB_CREATESYNCHRONIZATIONOBJECT2 cb = {0};
+      cb.Info.Type = D3DDDI_MONITORED_FENCE;
+      if (!NT_SUCCESS(runtime_result(gpu, "pfnCreateSynchronizationObject2Cb", runtime->callbacks.pfnCreateSynchronizationObject2Cb(runtime->device, &cb))))
+         goto fail;
+      gpu->drain_fence = cb.hSyncObject;
+      gpu->drain_fence_cpu_va = cb.Info.MonitoredFence.FenceValueCPUVirtualAddress;
+      gpu->virtual_ctx = true;
+   } else if (gpu->wddm2 && virtgpu_create_context_virtual(gpu)) {
       gpu->virtual_ctx = true;
       npt_log("virtgpu: kernel context virtual (native WDDM2 submit)");
    } else if (!virtgpu_create_context(gpu))
@@ -1481,6 +1854,13 @@ npt_renderer_create_virtgpu(void)
     * present submits this transport's WSI_PRESENT bytes. */
    gpu->base.info.virtio_ctx_id = ctx_init.CtxInit.CtxId;
 
+   if(runtime) {
+      gpu->base.ops.defer_shmem_destroy=npt_vgw32_defer_shmem_destroy;
+      gpu->base.ops.drain_deferred_cleanup=npt_vgw32_drain_deferred_cleanup;
+      gpu->base.ops.report_reply_error=npt_vgw32_report_reply_error;
+      gpu->base.ops.record_enter=npt_vgw32_record_enter;
+      gpu->base.ops.record_leave=npt_vgw32_record_leave;
+   }
    gpu->base.ops.destroy = npt_vgw32_destroy;
    gpu->base.ops.submit_cmd = npt_vgw32_submit_cmd;
    gpu->base.ops.submit_cmd_sync = npt_vgw32_submit_cmd_sync;
@@ -1513,6 +1893,16 @@ npt_renderer_create_virtgpu(void)
 fail:
    npt_vgw32_destroy(&gpu->base);
    return NULL;
+}
+
+struct npt_renderer *npt_renderer_create_virtgpu(void)
+{
+   return npt_renderer_create_virtgpu_impl(NULL);
+}
+struct npt_renderer *npt_renderer_create_runtime_stream(const struct npt_runtime_stream *stream)
+{
+   if (!stream) return NULL;
+   return npt_renderer_create_virtgpu_impl(stream);
 }
 
 struct npt_renderer *

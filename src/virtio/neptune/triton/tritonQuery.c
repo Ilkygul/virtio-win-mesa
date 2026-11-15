@@ -14,6 +14,8 @@
 
 #include "triton.h"
 #include "triton_log.h"
+#include "tritonRuntimeWrites.h"
+#include "triton_log.h"
 #include "tritonSharedBridge.h"
 
 static D3D11_QUERY tritonQueryDdiToD3D11(D3D10DDI_QUERY q)
@@ -450,7 +452,7 @@ static UINT tritonMsaaFamilyQuality(PTRITON_DEVICE pD, DXGI_FORMAT Format,
 
 
 /* ---------- experiment switches (see triton.h) ---------- */
-#define TRITON_SWITCH_MAX 8
+#define TRITON_SWITCH_MAX 32
 BOOL tritonSwitch(const char *name)
 {
     static struct { char name[32]; volatile LONG state; volatile LONG tick; volatile LONG logged; } sw[TRITON_SWITCH_MAX];
@@ -681,24 +683,32 @@ tritonDiscard(D3D10DDI_HDEVICE hDevice, D3D11DDI_HANDLETYPE HandleType,
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD || !hResourceOrView) return;
     ID3D11View *pView = NULL;
+    PTRITON_RESOURCE wr = NULL;
     switch (HandleType) {
     case D3D10DDI_HT_RESOURCE: {
         PTRITON_RESOURCE r = (PTRITON_RESOURCE)(hResourceOrView);
-        if (r->pResource)
-            ID3D11DeviceContext1_DiscardResource(pD->pCtx1, r->pResource);
+        if (r->pResource) {
+            if (!trRuntimeWriteResourceBegin(pD,r)) return;
+            ID3D11DeviceContext1_DiscardResource(pD->pCtx1,r->pResource);
+            trRuntimeWriteEnd(pD);
+        }
         return;
     }
     case D3D10DDI_HT_SHADERRESOURCEVIEW:
         pView = (ID3D11View *)((PTRITON_SRVIEW)hResourceOrView)->pSRV;
+        wr=((PTRITON_SRVIEW)hResourceOrView)->pResource;
         break;
     case D3D10DDI_HT_RENDERTARGETVIEW:
         pView = (ID3D11View *)((PTRITON_RTVIEW)hResourceOrView)->pRTV;
+        wr=((PTRITON_RTVIEW)hResourceOrView)->pResource;
         break;
     case D3D10DDI_HT_DEPTHSTENCILVIEW:
         pView = (ID3D11View *)((PTRITON_DSVIEW)hResourceOrView)->pDSV;
+        wr=((PTRITON_DSVIEW)hResourceOrView)->pResource;
         break;
     case D3D11DDI_HT_UNORDEREDACCESSVIEW:
         pView = (ID3D11View *)((PTRITON_UAVIEW)hResourceOrView)->pUAV;
+        wr=((PTRITON_UAVIEW)hResourceOrView)->pResource;
         break;
     default:
         return;
@@ -707,11 +717,13 @@ tritonDiscard(D3D10DDI_HDEVICE hDevice, D3D11DDI_HANDLETYPE HandleType,
         return;
     /* With rectangles only those regions are discarded; the rest of the
      * view keeps its contents. */
+    if (!trRuntimeWriteResourceBegin(pD,wr)) return;
     if (pRects && NumRects)
         ID3D11DeviceContext1_DiscardView1(pD->pCtx1, pView,
                                           (const D3D11_RECT *)pRects, NumRects);
     else
         ID3D11DeviceContext1_DiscardView(pD->pCtx1, pView);
+    trRuntimeWriteEnd(pD);
 }
 
 void APIENTRY
@@ -736,8 +748,12 @@ tritonClearView(D3D10DDI_HDEVICE hDevice, D3D11DDI_HANDLETYPE HandleType,
     default: break;
     }
     if (pView) {
+        PTRITON_RESOURCE wr = HandleType == D3D10DDI_HT_RENDERTARGETVIEW ?
+            ((PTRITON_RTVIEW)hView)->pResource : ((PTRITON_UAVIEW)hView)->pResource;
+        if (!trRuntimeWriteResourceBegin(pD,wr)) return;
         ID3D11DeviceContext1_ClearView(pD->pCtx1, pView, Color,
                                        (const D3D11_RECT *)(pRect), NumRects);
+        trRuntimeWriteEnd(pD);
 
         {
             PTRITON_RESOURCE rr = NULL;
