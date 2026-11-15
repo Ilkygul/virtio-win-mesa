@@ -1,0 +1,13 @@
+--- a/src/gallium/frontends/wgl/stw_device.c
++++ b/src/gallium/frontends/wgl/stw_device.c
+@@
+ #include <windows.h>
++#include <mmsystem.h>
++#pragma comment(lib, "winmm.lib")
+@@ stw_init(const struct stw_winsys *stw_winsys)
+ {
++   /* Z1 timer (Fold/DroidVM): Venus waits for the host GPU with short Sleep() backoffs, and Windows' default
++    * 15.6 ms timer turns every wait into a whole tick (zink capped at ~31 fps). 1 ms resolution for this
++    * process while OpenGL is in use; off with C:\Users\Public\zink-notimer. */
++   if (GetFileAttributesA("C:\\Users\\Public\\zink-notimer") == INVALID_FILE_ATTRIBUTES)
++      timeBeginPeriod(1);
