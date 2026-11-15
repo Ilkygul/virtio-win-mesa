@@ -956,6 +956,15 @@ Correctie CLIpatronenzonderspaties werkt. Capture4724/kernel+Win32/HighestSessio
 
 Bewijs evidence/c46-dbgview-kernel-r2/analysis.json SHA4e2fae43b41698fbce031d8e88a95db4989150c98178c1ad92b974ebd95e5241. **Volgende kleinste onderscheidendeproef:** éénCDPcaptureScreenshotophetzelfdeownedtesttarget metexplicietgrotereclip, omReadMap>16MiB aftevragen, gelijktijdigbegrensdestandaardkernel+Win32capture enbestaanderegistrysnapshot. Geenandereapp/DPI/driver/backendwijziging ofnieuwealgemenecapturetool. Daarnaeigenbrowsernormaaluit. Als32MiBslagt, geenoorspraak/identiekeherhaling; danactuelepool/geheugentoestandonderscheiden metnieuwebewijzen. C46 blijftgedeeltelijk,testVMonly/doelOPEN, geenproductiemerge/release.
 
+
+### C46 gerichte grote readback slaagt; afzonderlijke RAM-proef door gebruiker gevraagd
+
+EénexplicieteCDPscreenshotopzelfdeownedYouTube-target, zonderDPI/driver/backendwijziging:2432×1800PNGom11:42:54.794Z. Geldigestandaardcapture3824/60s/natuurlijkexit0 toont **res1055 CREATE33554432, map_info80000001/pooloffset1cd5e000 enbruikbareUserVA1859ED60000**. Dusookdeze32MiB-poolgroeislaagt; groottealleenreproduceertdeoudemislukkingniet. GeenreparatieofRAM-tekortclaim. Eigenbrowser8408normaalgesloten11:43:31.506Z/3eigentabs/exittrue. Bewijs evidence/c46-large-read-r1/analysis.json SHA6b79eff5973deca9b6e4cd9368c9762c674267abb8afbf3aeb791f1362c8a9f8.
+
+**Nieuwe expliciete gebruikersopdracht via RAM/DPI-chat:** eerst6GiBWindows-RAMproberen,kortgebruiksverschil+Androiddrukmeten, uitslaghiercommittenvóórverderedriverwijzigingen. Rootvoertuit; anderechatwijzigtgeenVMconfig. ZelfdezelfstandigetestUUIDc1003be0-3fa5-427c-9aae-1056cc4865d6/C46child+privateVARS/DPI200. Geen8/10GiBnu. Baseline4GiB: ongewijzigde30s-videotaak11:34:16.746–11:34:47.771Z (kernelcapturestarttefeitelijkniet),27,209counter/s,982/1798drops,WindowsCPU10,031%;tweede27,631/CPU10,140metkernelcapturelaatste10s issecundair. Windowszichtbaar3402936KiB,postvideo411248KiBvrij11:40:21. DezegetallenbewijzennoggeenoorzaakvandeMapfout.
+
+HypotheseRAMproef:6GiBgeeftWindowsmeerwerkmarge enmogelijkmerkbaarbeterezelfdegebruikstaak; geenGPUdriverfixclaim. NormaleWindowsafsluiting, bestaandevolledigeVMM/native-mapdrain, hugepagesterugnaarAndroid,vóórenRAM-onlyconfigwijziging6144MiB metcoldconfigbackup/terugweg4096. DaarnaexactzelfdeC46disk/VARS/werkelijk--mem6144/guestzichtbaarRAM/Code0/geladen2A/DPI200bewijzen. ReservevoldoendehugepagesmetbestaandeAndroidfloor; geenactievepoolontladenofveiligheidsgrensblindomzeilen. Eénzelfde30s-video+CPU/guestfreeRAM/nativebeeld/AndroidPSI/LMK.6GiBbehoudenalleenbijbruikbaarheid/gezondeAndroid; resultaatscopeenbootconfoundeerlijknoteren. DoelOPEN/testVMonly.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
