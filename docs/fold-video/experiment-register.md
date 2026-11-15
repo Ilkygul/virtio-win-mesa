@@ -390,6 +390,17 @@ De gastbron corrigeert een mogelijke verkeerde vervolgrichting: de actieve C20-d
 
 **Beslissing:** geen extra CPUsetter-/poll-/decoderoptimalisatie op basis van deze meting. Onderzoek eerst met bestaande gegevens waar de doorvoer tussen CS-output en gewone presentatie verloren gaat, inclusief daadwerkelijke Windows-publicatie/callbackduur. Er is nog geen bewijs dat3.8ms-CSduur de circa30browserframes/s veroorzaakt. Alleen eigen YouTube-target5C83A5CACCBCB3E8AD90B2BDE4AD6856 gesloten02:49:01Z. Normale shutdown02:49:02Z, volledigeC13-drainPASS/pooluit; volledigeC37-configterugrol wordt afgerond. Productie uit, bouw-pc uit, algemeen doel open.
 
+
+### C37 volledig hersteld na C39; volgende bronkeuze blijft open
+
+C39 is normaal afgesloten, volledige native/maps/disk/VARS-drain bevestigd en de pool netjes uitgeschakeld. Zowel persistente als volledige liveconfiguratie zijn exact naar C37 `C6278CED…B434` hersteld; alle vier daemonresponses succesvol. Verse C37-boot **02:54:58.339Z**, main6970/start1838014/renderroot7016. Echte descriptors tonen uitsluitend C35/C37-childRW, bevroren C33-parentRO en eigen C35-VARS. De werkelijke C37-lib/server en C33-DXVK-paar zijn opnieuw gemapt. F91 signedValid, C20-UMDs57899…/9CC9…, Native1/runtime/strict/nowarp en whitelist ongewijzigd; **GPU Code0**, huidig DbgLog0 zonder de gecontroleerde unsupportedpower/invalidreplyhits. Native bureaublad zichtbaar; beide tracebestanden afwezig. Geen productie- of globale binaire wijziging. C38-child blijft definitief onbruikbaar.
+
+Herstelbewijs: `evidence/c39-cs-completion-diagnostic-r1/trial-and-restoration-receipt.json` met bijbehorende werkelijke host-/gast-/configbestanden. Dit is herstel van de eerder geteste C37-configuratie, geen nieuwe zesactie-UI-/3D-snelheidsmeting. De eerdere C37-winst blijft: leesbaar ongewijzigd Taakbeheer/Start en complete directe3D op22.36API/s; video is nog niet vloeiend.
+
+Aanvullende gastbron: ook VideoProcessorBlt en de vijf setters zijn al asynchroon. Iedere C20-call publiceert een eigen NotifyV2; de bestaande `NPT_DEBUG=profile` kan per methode de gecombineerde submitduur meten, maar isoleert SubmitCommandCb niet. Bestaande C18/C20-profielen zijn3D en bevatten geen relevante Edge-video85/46-metingen. Er is dus **nog geen bewezen Windows-callbackstall** en geen reden om nu een nieuwe functionele patch te kiezen. Bronanker `evidence/c39-video-guest-profile-source-audit-r1/analysis.json`, SHA8EBB1D27F23B8B1232ED0ABFAF1CB866688E59F54AD6674DF860A8BE04A10BBD.
+
+Volgende veilige stap is bestaande publicatie-/presentatieprofilering aan de echte Edge-route koppelen, zonder nieuwe build of algemeen captureharnas. Eerst vaststellen waar gebruiksdoorvoer verloren gaat; geen ongefundeerde CPUtail-, CS- of pollvariant. **Algemeen doel blijft open; geen productie-release of merge.**
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
