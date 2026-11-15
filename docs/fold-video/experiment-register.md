@@ -571,6 +571,15 @@ NativeARM64 enARM64EC elk289/289 exit0; alle443werkelijke compilerbronnen gecont
 
 C43oorspronkelijkeforcepresent-marker06:11:50Zteruggeplaatst/ACLbehouden/dwmforceAAN, normaalafgesloten06:11:51Z. Oude main22777/start2914076verdwenen enfullC13drain/pooluitbevestigd. VerseC35/C33koudeketen enmetadata gecontroleerd; nieuweC44sibling/eigenVARSwordtgemaakt. C43/C42blijvenbehoudenuit, C35bevroren. Alleen korte raw-scopeobservatie voorzien; geenfps-/CPU-/vloeiendheidsclaim engeenproductie/merge/release. Doelopen.
 
+
+### C44 geïnstalleerd en echt geladen; korte raw-scopeobservatie gereed
+
+Verse siblingC44/check0/C35RO/C33RO/privateVARS; persist/liveconfig **869EB9F0…AEB588B** exactgelijk enalleen disk+VARSverschillendvanC43. Eerste startguard weigerde een racyprocessmappingread vóórVMstart; versefullDRAIN slaagde, geenforce/driverwijziging. Eersteinstallboot7603/start3042339/Windows06:15:41.728Z bevestigt oudeC20UMDs/F91signedValid/Code0/Native1/whitelist6864/allestriktemarkers0B. PS5.1parse/scope/all9stagehashesPASS, 3DLLtransactiongeslaagd. Werkelijkopgehaaldeintent **DB5D9ACB…A6F464B**, receipt **F2A48A39…D47CDF1**, allThreeVerifiedtrue. Normaleshutdown06:18:25Z/fullC13drain/pooluit.
+
+NieuweWindowsboot **06:19:54.686Z**, main **13085/start3067672**, render **13146**, echteFDsC44RW/C35RO/C33RO/eigenVARSrw/config869E. VerseDWM **1340/birth06:20:00.9464495Z**, Explorer enEdge mappen nieuwe nativeE4A745…9DD25E; EC4B06…1A6FBFopschijf. RuntimepublisherV1/writefeed1positief, F91/Native1/C37host/C33FP32/cachebehouden. Alleforce/runtime/nowarpmarkersnog0BAAN, broadbypassesafwezig. Nativeconsoleunlocked/noRDP, fysiekeheadergezien;fullscreen2448×1848 ingestelddaarnaPS5.1console/shortvideowrapperPASS06:21:38Z.
+
+Activatiebestandalleenvooractueleboot/DWMbirth/newnativegebonden, gestaged/hashgecontroleerd maarNOGNIETuitgevoerd. Nu bestaandehardwareclip openen met bestaandeNode/preparatie,20sopwarming/8sdiagnostischeobservatie zonderCPUsampler; eerstzichtbaar/unpaused video bevestigen. Pasdan alleenforcepresentUIT, dwmforceAAN; na5sTTL eerste16rawscopewaardenuitlezen. Dit is argumentdiagnose, geensnelheids-/pixelvrijgave. Productieuit/doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
