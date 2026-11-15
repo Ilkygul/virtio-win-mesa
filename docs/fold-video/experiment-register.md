@@ -4,6 +4,8 @@ Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-pr
 
 ## Algemene doelstatus
 
+**15 nov 20:10 — productie op legacy-route, bureaubladdoel (punten 1–5) gehaald; 2-uurs stabiliteitsproef loopt.** NativeGpuJobV1=0, marker `triton-runtimestream` uit (`.uit`), `triton-dwmwritesync` uit, `triton-presentwritesync` aan. Meting met [meet/meet.sh](meet/meet.sh) op het Fold-scherm, zie "Bureaubladvloeiendheid" onderaan. Onderstaande tabel beschrijft de Native1-stand van vóór deze overgang.
+
 **Gedeeltelijk gerealiseerd — C33 herstelt de native Windows-interface en de directe hardware-3D-route geeft complete beelden. Het algemene doel blijft OPEN: video en 3D stotteren nog en de bekende GPU-/mappinguitval is niet gerepareerd.**
 
 | Onderdeel | Actuele stand |
@@ -1147,3 +1149,17 @@ Bewijs lokaal `evidence/production-c46-ram6-20261115-r1/completion.json`, `final
 Voor de productieprioriteit werd de gepubliceerde echteF91bron92565841 onderzocht: `VioGpuWaitCtxCompleteCB` signaleertKeSetEvent vóór de normaleDPC-epiloog `pvbuf->auto_release` leest. Een gewektecaller kan intussenWaitCtxFinish/ReleaseBuffer uitvoeren; FreeBuf kan het bufferobject verwijderen of hergebruiken. Een begrensdCPUmodel met de daadwerkelijke twee waitfuncties/DPC-epiloog en expliciet gemockteWindowsprimitieven/scheduler/allocator reproduceert ASan-use-after-free(exit-6) en hergebruik waarbij oudecompletion een nieuwcommandobject vrijgeeft(exit2). Bestaand bewijs `evidence/f91-map-vbuf-lifetime-r1/result.json` SHA`fa1fc6456b1dba77541131246116a99d094fc6974dee6af16f47bdceca733d05`; fixtureSHA`3df17c001a037f84fcfc2d37143a6e62b7e6ee22f000ec474f7aee6828ae6fa3`.
 
 Dit bewijst een lifetimefout in die interleaving, **niet** dat dit de historischeRES_INFO-/mappinguitval veroorzaakte. Geen kernelwijziging, nieuwecandidate/build of hardwareproef uitgevoerd. Alleenauto_release eerder lezen is onvoldoende wegens legitiem verlatenwaiters; een toekomstigecorrectie moet bufferownership door callback/epiloog en precieséénrelease voor normale/timeout/reject/recycle/closepaden bewaren. Eerst die concreteownershipcorrectie en noodzakelijke kleinevalidatie; C47/C48 niet hervatten.
+
+
+## Bureaubladvloeiendheid (15 november 2026)
+
+Eén meetscript: [meet/meet.sh](meet/meet.sh) + gasthulp [meet/meethulp.ps1](meet/meethulp.ps1) (taak `meethulp`). SurfaceFlinger-presenttijden van de DroidVM-laag; Start via Win-toets, flyout via tik, slepen met muis (SendInput), scrollen met aanraakswipe, video via CDP `getVideoPlaybackQuality`. Doelen: 1 ≤300 ms, 2 ≥55 fps/gat ≤35 ms, 3 ≥55 fps, 4 ≥55 fps/<2% drops.
+
+| Proef | Hypothese / wijziging | Cijfers (1 Start·flyout / 2 slepen·scrollen / 3 cursor / 4 video) | Besluit |
+|---|---|---|---|
+| D1 Native1 nulmeting | productiestand C46/F91, Native1 + runtime-marker, beide syncs aan | 0,7–1,3 s (oude meetwijze) / 12–14 fps · 32–36 fps, gaten tot 208 ms / 39 fps / 17,5 fps SF, 77% drops | te traag |
+| D2 legacy | NativeGpuJobV1=0, marker uit, één koude Windowsstart; syncs aan | Start ±0,3 s / muisslepen ~18–30 fps (vaste 33–100 ms-stappen) · 36–60 fps / 59 fps (44 onder last) / 56–59 fps, 1,0–1,6% drops | video gehaald; blijft productie |
+| D3 legacy + DWM-sync uit | per-write wacht in dwm.exe beperkt DWM tot ~30/s | Start 259–277 ms · flyout 374–400 ms / 55–58 fps, max gat 33 ms · 59 fps / 59 fps (59 onder last) / 58,5 fps, 1,4% drops. Taakbeheer, Start, Verkenner, cmd, Terminal visueel schoon (geen wit/magenta) | aan houden: productie |
+| D4 + Present-sync uit | extra winst zonder Present-wacht? | gelijk (slepen 57 fps maar gat 54 ms), video 1,3% | geen winst → Present-sync weer AAN |
+
+Stap 3 (privé-kopie bij Present) en 4 (hardware-cursor) zijn niet gebouwd: Present-sync kost meetbaar niets en de cursor haalt al 59 fps onder last. Flyout (punt 1) blijft ~390 ms: 16–18 vloeiende frames van Windows' eigen inschuifanimatie (MinAnimate staat al uit). Bij de eerste koude start na een telefoonherstart trad eenmalig MEMORY_MANAGEMENT 0x1A (0x4477) op; tweede start schoon. Meetfout onderweg: een aanraak-/muissleeptest verplaatste een bureaubladsnelkoppeling (teruggezet); slepen gaat nu alleen nog via de titelbalk van eigen testvensters.
