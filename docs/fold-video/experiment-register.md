@@ -580,6 +580,19 @@ NieuweWindowsboot **06:19:54.686Z**, main **13085/start3067672**, render **13146
 
 Activatiebestandalleenvooractueleboot/DWMbirth/newnativegebonden, gestaged/hashgecontroleerd maarNOGNIETuitgevoerd. Nu bestaandehardwareclip openen met bestaandeNode/preparatie,20sopwarming/8sdiagnostischeobservatie zonderCPUsampler; eerstzichtbaar/unpaused video bevestigen. Pasdan alleenforcepresentUIT, dwmforceAAN; na5sTTL eerste16rawscopewaardenuitlezen. Dit is argumentdiagnose, geensnelheids-/pixelvrijgave. Productieuit/doelopen.
 
+
+### C44 raw-scopeproef geslaagd — concrete uitsluiting is FlushFlags1
+
+C44nieuweDLLs en runtimepublisherpositief; forcepresentAAN tijdensfullscreen enopenenhardwareclip. Vóóractivatie: echtefysiekevideozichtbaar enbestaandepreparatieunpaused/1920×1080. Pasdaarna06:22:56.871Z uitsluitendforcepresent0Bnaar eigenherstelbestand verplaatst, dwmforce/runtime/nowarpAAN. Eerste16begrensdehuidigeDWM1340-regels tonen **ContextType0x0(ALL), FlushFlags0x1**, allemaal accepted1/pending0/active0/allowQualified0/qualified0. Eerste writeMask3(gemengd) blijftterechtstrict; deandere15hebbenwriteMask1(positiefgekwalificeerd). Voor deze15is de flags==0scopevoorwaarde dusdeconcreteuitsluitingsreden, niet het ontbrekenvan publicatiebevoegdheid. Dit bewijst niet alleFlushes of algemeneGPUveiligheid.
+
+DezelfdebestaandeNode/prep/publicclip,20swarmup/8sdiagnostiek; formeel06:22:50.083–06:22:59.310Z,9zichtbare/unpausedsamples en7.991smediaadvance/errors[]. Na5sTTL kunnen de eerstelogregelsnetbuiten dat8svenstervallen; keeptargets pauzeert declipniet. Geen exacteGetTickCount→UTCjoin of fpsvergelijking. D3D11VideoDecoder/platformtrue1920×1080; host18351/c2.qti.av1.decoderRUNNING07:22:27.699lokale tijd/hwvideocodec/swcodecno. GeenCPUsamplerdoeldbewust; geenCPU-/vloeiendheidsvrijgave. Wrapperexit0maar gerapporteerdeNodeexitNULLnietals0opgevoerd. Recorder45sexit0/film32550907B, logcatnormaaltimeout124. Eigenbrowser2040normaalgesloten06:25:02Z,3bekendepagina's; geenkill.
+
+De primaire [Microsoft-vlagdefinitie](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/d3d10umddi/ne-d3d10umddi-d3d11_1_ddi_flush_flags) zegt dat UNLESS_NO_COMMANDS redundante commandosubmission beperkt wanneer geen nieuweopdrachtenbestaan; de exactgecontroleerdeWDKheader definieertdieals1 enTRIM_MEMORYals2. [Flush-contract](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d11_1ddi_flush) vereist succesvolle submission onafhankelijkvanverdereactiesin deapp-usermodecontext. Dit ondersteunt de volgende gerichte inferentie: onderdezelfdevollediggeaccepteerdeprefix/uitsluitendQschrijfset mag ook flags1 zonderextraCPUheadwait; dit geeftgeenrecht GPUcompletion-/Present-/Acquire-/Release-/lifetimegateswegtehalen.
+
+**Beslissing:** observatievraagbeantwoord, geen herhalingofbudgetverhoging. Nu éénkleinefunctioneleC45broncorrectie: uitsluitend flags0OFgedocumenteerdeUNLESS_NO_COMMANDS1 bijexactALL/3D; mixedwriteMask3, trim2/3, onbekendevlaggen/context, misluktepublicatieblijvenstrict/failclosed. Echtebuild enpositievequalified1activatie plusdezelfdezichtbarevideozijnnogvereist vóórwinstclaim; daarnaalleenbenodigderegressies. C44voorlopigidlealleenin test-VM, beideoudersRO/C43/C42bewaarduit. Geenproductie-update/merge/release; algemeendoelopen.
+
+Bewijs evidence/c44-flush-scope-log-r1/trial-and-current-state-receipt.json SHA8FAFE53F043240E67A4A76F8DE1BCB672A6F9BE1A504356B123F5E881719A4B3; raw-flush-scope-after-activation.txt, video-guest/report.json, fysiekePNGs/phone.mp4 enpostvideo-neptune.lognaastdiefile. Dezeuitkomstisvóórvolgendevariantvastgelegd.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
