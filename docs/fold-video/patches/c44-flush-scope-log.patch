@@ -1,0 +1,94 @@
+--- a/triton/triton.h
++++ b/triton/triton.h
+@@ -568,7 +568,7 @@
+ struct _TRITON_RESOURCE_FWD;
+ void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pResource /* PTRITON_RESOURCE */);
+ void tritonSyncShared(PTRITON_DEVICE pD, const char *why);
+-BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified);
++BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified, UINT contextType, UINT flushFlags);
+ void tritonMarkSharedDrawWrite(PTRITON_DEVICE pD);
+ BOOL tritonLocalPresentBacking(const void *pResource);
+ 
+--- a/triton/tritonResource.c
++++ b/triton/tritonResource.c
+@@ -86,7 +86,7 @@
+ /* One saturating process budget: at most32 records; keep the final16
+  * available for a positive qualified branch instead of startup strict noise. */
+ static void tritonTraceQualifiedFlush(PTRITON_DEVICE pD, const char *why, LONG dirty,
+-    BOOL allowQualified, BOOL qualified, UINT pending, UINT active)
++    BOOL allowQualified, BOOL qualified, UINT pending, UINT active, UINT contextType, UINT flushFlags)
+ {
+     if (!dirty || tritonSwitch("triton-presentwritesync")) return;
+     static volatile LONG count;
+@@ -98,12 +98,12 @@
+         old=seen;
+     }
+     TR_LOG("QUALIFIED_FLUSH #%ld why=%s dev=%p thread=%lu dirtyMask=0x%lx "
+-           "allowQualified=%d qualified=%d strictCpuWait=%d accepted=1 pending=%u active=%u",
++           "allowQualified=%d qualified=%d strictCpuWait=%d accepted=1 pending=%u active=%u contextType=0x%x flushFlags=0x%x",
+            (long)(old+1),why,(void*)pD,(unsigned long)GetCurrentThreadId(),
+-           (unsigned long)dirty,allowQualified,qualified,!qualified,pending,active);
+-}
+-
+-BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified)
++           (unsigned long)dirty,allowQualified,qualified,!qualified,pending,active,contextType,flushFlags);
++}
++
++BOOL tritonSyncSharedFlush(PTRITON_DEVICE pD, const char *why, BOOL allowQualified, UINT contextType, UINT flushFlags)
+ {
+     if (!pD || !pD->pCtx1) return FALSE;
+     if (!pD->RuntimeStreamActive) { tritonSyncShared(pD,why); return TRUE; }
+@@ -133,7 +133,7 @@
+     const UINT pending=pD->RuntimePendingWriteCount;
+     const UINT active=pD->RuntimeActiveWriteCount;
+     LeaveCriticalSection(&pD->RuntimeWriteLock);
+-    tritonTraceQualifiedFlush(pD,why,dirty,allowQualified,qualified,pending,active);
++    tritonTraceQualifiedFlush(pD,why,dirty,allowQualified,qualified,pending,active,contextType,flushFlags);
+     /* Unknown bits, mixed/strict writes and unsupported Flush scope keep the
+      * old CPU-head wait. This is not a GPU completion or global async switch. */
+     if (dirty && !qualified) tritonWaitSharedSeqno(ring,seqno,why);
+--- a/triton/tritonView.c
++++ b/triton/tritonView.c
+@@ -359,11 +359,11 @@
+     if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
+     ID3D11DeviceContext1_Flush(pD->pCtx1);
+     tritonFlushGpuTailDiagnostic(pD, "Flush", D3DWDDM2_0DDI_CONTEXTTYPE_ALL, 0);
+-    (void)tritonSyncSharedFlush(pD, "Flush", TRUE);
++    (void)tritonSyncSharedFlush(pD, "Flush", TRUE, D3DWDDM2_0DDI_CONTEXTTYPE_ALL, 0);
+ }
+ 
+ static BOOL
+-tritonFlush11_1Scoped(D3D10DDI_HDEVICE hDevice, UINT FlushFlags, BOOL graphics)
++tritonFlush11_1Scoped(D3D10DDI_HDEVICE hDevice, UINT FlushFlags, BOOL graphics, UINT contextType)
+ {
+     (void)FlushFlags;
+     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
+@@ -371,13 +371,13 @@
+     if(pD->RuntimeStreamActive) npt_runtime_owner_maintenance(pD->RuntimeTransportOwner);
+     ID3D11DeviceContext1_Flush(pD->pCtx1);
+     tritonFlushGpuTailDiagnostic(pD, "Flush11_1", D3DWDDM2_0DDI_CONTEXTTYPE_ALL, FlushFlags);
+-    return tritonSyncSharedFlush(pD, "Flush11_1", graphics && FlushFlags == 0);
++    return tritonSyncSharedFlush(pD, "Flush11_1", graphics && FlushFlags == 0, contextType, FlushFlags);
+ }
+ 
+ BOOL APIENTRY
+ tritonFlush11_1(D3D10DDI_HDEVICE hDevice, UINT FlushFlags)
+ {
+-    return tritonFlush11_1Scoped(hDevice,FlushFlags,TRUE);
++    return tritonFlush11_1Scoped(hDevice,FlushFlags,TRUE,D3DWDDM2_0DDI_CONTEXTTYPE_ALL);
+ }
+ 
+ void APIENTRY
+@@ -1026,9 +1026,9 @@
+         tritonFlushGpuTailDiagnostic(pD, "Flush_WDDM2", ContextType, FlushFlags);
+         const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
+             ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
+-        return tritonSyncSharedFlush(pD, "Flush_WDDM2", graphics && FlushFlags == 0);
++        return tritonSyncSharedFlush(pD, "Flush_WDDM2", graphics && FlushFlags == 0, ContextType, FlushFlags);
+     }
+     const BOOL graphics = ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_ALL ||
+         ContextType == D3DWDDM2_0DDI_CONTEXTTYPE_3D;
+-    return tritonFlush11_1Scoped(hDevice, FlushFlags, graphics);
+-}
++    return tritonFlush11_1Scoped(hDevice, FlushFlags, graphics, ContextType);
++}
