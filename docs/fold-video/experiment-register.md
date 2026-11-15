@@ -713,13 +713,22 @@ NPT-profilerlaatook7.6sreplytotalsbijCheckFormatSupport/CheckMultisampleQualityL
 
 ### C45 completionpad — één gecombineerde bestaande GPU/C22-diagnose zonder herstart
 
-Vorige goalbeurt=PROGRESS: echteCPU/Presenttimingsveranderdenvolgendebeslissing; geenstatusherhaling. Verse07:55:43controle: dezelfde06:55Windowsboot/GPUCode0/2448×1848/forcepresentOFF+dwmforceON+nowarpON, eigenappweg/WPRnietactief. Zelfdehostmain14210/start3278332/server14282/start3278849. Eenmisdadigdebusyboxpadcontrole127isnietalsafwezigbewijsgebruikt; hersteldegefilterdeproccontrolebevestigt **NPT_NATIVE_JOB_TRACE_FILE=/data/adb/fold-vm/npt/codex-c35-job-trace-r1** inalbeideprocessen, markerABSENT. Bestaande128jobs/process-C22diagnosekan duslaatwordengeactiveerdzonderVMMherstart. Geenfence_traceenvreloadofdriverbuildnodig.
+Vorige goalbeurt=PROGRESS: echteCPU/Presenttimingsveranderdenvolgendebeslissing; geenstatusherhaling. Verse07:55:43controle: dezelfde06:55Windowsboot/GPUCode0/2448×1848/forcepresentOFF+dwmforceON+nowarpON, eigenappweg/WPRnietactief. Zelfdehostmain14210/start3278332/server14282/start3278849. Een mislukte busyboxpadcontrole127isnietalsafwezigbewijsgebruikt; hersteldegefilterdeproccontrolebevestigt **NPT_NATIVE_JOB_TRACE_FILE=/data/adb/fold-vm/npt/codex-c35-job-trace-r1** inalbeideprocessen, markerABSENT. Bestaande128jobs/process-C22diagnosekan duslaatwordengeactiveerdzonderVMMherstart. Geenfence_traceenvreloadofdriverbuildnodig.
 
 **Nieuwevraag:** in deactueleC45/directe3Dtaak, die werkelijk~30msopPresentcompletionwacht, overheerstWDDMqueuevóórDMA, virtualDMAservice/retirement, ofhostnativecheckpointwerk? C37oudereC20UMDproeftoonde0.608msp50hostjoblatentie; dieandereboot/UMD/dataiseengeenactueleC45kruiskoppeling. Weherhalengeenpollvariant. NieuweaanwijzingisdepositieveC45Present-stack+timinglokalisatie.
 
 **Eénproef:** dezelfdeimmutable15kubussen/defaultcaption/privatecopy0,15sdiagnose; bestaandWPRGPU8s naechteforegroundmeetfase, eigenWPRfinallystop. Alleenbestaandepresent/gate/eventtimingsinverskind, geenvolledigeNPTstartupcapsprofiler. NaWPR-start pasbestaandelegeC22marker2splaatsen, eigenaar/inodebewarenenalleeneigenmarkerweghalen. Markerremovalstoptgelatchtprocesniet; vaste128budgetblijft. Gefilterdebestaandevirgl_render_serverlogcatbegrensd. Geenherstart/nieuwharnas/driverconfigwijziging.
 
 **Beoordeling:** apparaat/procesownershipviadeechteDevice→Contextlifetime; Queue178/179/180enDMA175/177/176metexactcontext/sequence/submission-ID, onbekendepairsongeclaimd. HostC22alleennieuweappctx/PIDenexactehostjobtuples. Klokkenhebbenverschillendeoorsprong; geenrawtimestampaftrekkingof1nativejob=1Presentclaim. SamengevoegdetijdlijnenalleenbijechteF91-fencebrug; andersfasekostenafzonderlijkrapporteren. Bronplannen9C80285B…3774A en5F0E77E4…5EEAAB12. C45bestedeelresultaatblijftbehouden; productieuit/geenrelease/doelopen.
+
+
+### C45 GPU-opname geldig; hostactivering viel buiten het meetvenster
+
+Dezelfde app1884/runtimecontext307 draaide 15,030s met 427Presents, natuurlijk exit0, lege stderr, geen fouten of foregroundverlies. Native515D is tijdens de echte meetfase gemapt. Dit is een diagnose met meetbelasting, geen frameratevergelijking. De bestaande GPU-opname liep van08:01:32.545 tot08:01:41.144Z en is met stop0 om08:01:44.768Z opgeslagen:184549376bytes.
+
+De observer zag om08:01:33 een geldige meetfase, maar de root-bediening activeerde de hostmarker pas om08:01:52. De app was om08:01:46 al klaar. Daardoor zijn de344 C22-regels van andere contexten; **nul regels horen bij appcontext307**. Dit is geen gekoppelde hostmeting. Het oude traceAge-veld uit een eerder toolantwoord mag niet als actuele tijd worden behandeld. Eigen lege markerinode398419 is om08:01:54 weer verwijderd; de oorspronkelijke afwezigheid is hersteld. Logcat eindigde normaal op zijn begrensde timeout124.
+
+Bewijs: evidence/c45-direct-gpu-host15-r1/trial-receipt.json SHA8B447D331DA9D0AD5D935BA2963B86E046E0BA63A321E7945F41FAB80D1393C8. **Beslissing:** eerst de geldige GPU-opname uitlezen. Geen herhaalde GPU-opname alleen wegens de mislukte hosttiming. Indien nog nodig: één losse hostproef met vooraf opgebouwde bediening die observer→actuele-tijdcontrole→marker binnen dezelfde uitvoer doet, zonder tussenliggende modelbeurt. Geen driverwijziging, herstart of productierelease.
 
 ## Exacte kandidaat-identiteiten
 
