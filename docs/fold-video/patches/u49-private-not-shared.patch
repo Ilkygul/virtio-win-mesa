@@ -1,0 +1,55 @@
+diff -ruN a/src/virtio/neptune/triton/tritonQuery.c b/src/virtio/neptune/triton/tritonQuery.c
+--- a/src/virtio/neptune/triton/tritonQuery.c	2026-11-16 00:23:10
++++ b/src/virtio/neptune/triton/tritonQuery.c	2026-11-16 00:23:10
+@@ -200,9 +200,24 @@
+  * E_INVALIDARG are how the API reports an unsupported format; anything else
+  * (device removed, transport failure) is no answer, and a zero cached from
+  * it would outlive the failure. */
++/* U49: every host reply is an answer except a lost transport/device: those must not be cached.  Before
++ * U49 only S_OK/E_FAIL/E_INVALIDARG counted, so any other "no" (E_NOTIMPL, DXGI_ERROR_UNSUPPORTED, ...)
++ * left the format/MSAA caches empty and every runtime query became a synchronous host round trip
++ * (drawbench: ~1500 CheckFormatSupport + ~700 CheckMultisampleQualityLevels per second, ~90 us each).
++ * C:\Users\Public\triton-noformatcache restores the old rule. */
+ static BOOL tritonHostAnswered(HRESULT hr)
+ {
+-    return SUCCEEDED(hr) || hr == E_FAIL || hr == E_INVALIDARG;
++    if (SUCCEEDED(hr) || hr == E_FAIL || hr == E_INVALIDARG)
++        return TRUE;
++    if (tritonSwitch("triton-noformatcache"))
++        return FALSE;
++    const BOOL lost = hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_HUNG ||
++                      hr == DXGI_ERROR_DEVICE_RESET || hr == DXGI_ERROR_DRIVER_INTERNAL_ERROR ||
++                      hr == E_OUTOFMEMORY || hr == (HRESULT)0x887a0007L /* DXGI_ERROR_DEVICE_RESET alias */;
++    static volatile LONG n;
++    if (InterlockedIncrement(&n) <= 20)
++        TR_LOG("U49 format query hr=0x%08lx counted as %s", (unsigned long)hr, lost ? "NOT answered (transport)" : "answered");
++    return !lost;
+ }
+ 
+ /* Every DXGI typeless format family: the typeless parent together with all
+@@ -525,6 +540,9 @@
+     UINT s1 = 0;
+     HRESULT cfsHr = ID3D11Device1_CheckFormatSupport(pD->pDev1, Format, &s1);
+     if (FAILED(cfsHr)) {
++        /* U49: an unsupported format is an answer too; remember the zero mask. */
++        if (tritonHostAnswered(cfsHr) && (UINT)Format < 256u && !tritonSwitch("triton-noformatcache"))
++            InterlockedExchange64(&s_fmtCache[Format], TRITON_CACHE_VALID | 0);
+         /* E_FAIL for an unsupported format is normal; anything else during
+          * device finalization is a transport/host failure worth seeing. */
+         TR_LOG_HOT("CheckFormatSupport fmt=%u: host CFS failed 0x%08lx",
+diff -ruN a/src/virtio/neptune/triton/tritonResource.c b/src/virtio/neptune/triton/tritonResource.c
+--- a/src/virtio/neptune/triton/tritonResource.c	2026-11-16 00:23:10
++++ b/src/virtio/neptune/triton/tritonResource.c	2026-11-16 00:23:10
+@@ -701,6 +701,12 @@
+          * above does. */
+         misc |= D3D11_RESOURCE_MISC_SHARED;
+     }
++    /* U49: a private-copy back buffer (U48) is read by nobody but this device; only its companion is shared.
++     * Keeping the runtime's DDI_SHARED on the private storage made the host treat it as a shared surface
++     * and synchronise after every draw into it (DXVK NPT_SHARED_DRAW_SYNC): ~0.55 ms per draw. */
++    if (presentCopy && !tritonSwitch("triton-privatekeepshared"))
++        misc &= ~(UINT)(D3D11_RESOURCE_MISC_SHARED | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX |
++                        D3D11_RESOURCE_MISC_SHARED_NTHANDLE);
+ 
+     BOOL initOom;
+     D3D11_SUBRESOURCE_DATA *initData = tritonBuildInitData(pArgs, &initOom);
