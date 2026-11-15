@@ -462,6 +462,19 @@ DWM/flip enEdgebron liggen beide circa29/s terwijl virtueleVSync circa59/s loopt
 
 Het bestaande BatchPresentWrites-predicaat omvat ook PRESENT/misc0, terwijl WrittenPrimaries alleen explicietDISPLAYABLE/class1 dekt. Daarom geen algemene “redundante gate”-claim. Een kleine drivercorrectie die de bundelingsbevoegdheid tot positief bewezenclass1 beperkt wordt eerst bronmatig beoordeeld. De huidige C37 blijft ongewijzigd, productie uit; algemeen doel open.
 
+
+## C42 — echte drivercorrectie voor gekwalificeerde presentbuffers, bron gereed
+
+**Hypothese:** geforceerde per-write-CPUheadwachten maken onnodig veel publicaties bij gewone schermbuffers; per-frame-publicatie moet de wachtrijdruk verminderen zonder GPUvoltooiing, WrittenPrimaries of resource-lifetime te verzwakken. Dit volgt uit C41queuepressure en een afzonderlijke C40DWMDrawIndexedwait15ms. Het bewijst nog geen winst. C38/C39CPUsetter/decoder-tailrichting blijft geparkeerd; C42 verandert de echte schermbuffer-publicatiebevoegdheid, niet opnieuw die setters.
+
+Drie C20-UMDbestanden gewijzigd: triton.h, tritonResource.c, tritonView.c. Nieuwe helper vereist RuntimeStreamActive én onderhandelde publisherV1, RuntimeWriteClass1, lokalehKM, geen geopend/importhandvat, geencompanion en alle bestaande shape/bind/miscguards. GemengdeRTVs/UAVs blijven strikt. De brede nonDWM-uitzondering verdwijnt. Actieve runtime-DWMwrites mogen de strict-route voor ongeschikte buffers ook zonder dwmwritesync-marker niet meer overslaan; oud legacygedrag blijft buiten deze runtime. Dit maakt de correctheid van de native route minder afhankelijk van een debugschakelaar.
+
+Bestaande runtime-init vereist expliciet NativeGpuJobV1DWORD1 plus hostpublishercapability; ontbrekende onderhandeling weigert runtime-init. WrittenPrimariesactive/pending-union blijft tot acceptedNotifyV2, echte GPUcompletion/ledger en alle Present/publicatie/hergebruik/destroy/rotategrenzen blijven ongewijzigd. PlainFlush is publicatie en niet automatisch een extraGPUwait. Geen WARP, appuitzondering, timerwijziging, asyncflush- of nosharedwritesync-bypass toegevoegd.
+
+[Bronpatch](patches/c42-qualified-present-batch.patch), commitc182420e37f6533e8d957e46662d691ae3074845, SHA847AEBD09A6988F55002FD7457AA5BECC654386037FE3430687FDD46624E4158. Manifest772527D47D8D6F15F0261B1457B85B8C095B80237BFE5463CF22BB724C78F288. Exact3bestanden/BOM/CRLF/tempapplyPASS; bestaande actual-functionfixture hergebruikt,2683ASan/UBSanchecksPASS inclusief320resourcematrix,10gemengdeRTV/UAVgevallen en11oude-basis-tegenvoorbeelden. Dit zijn bronchecks, geen volledigeWindowscompile of werkelijkeGPU-/pixel-/performancevrijgave.
+
+Root heeft het concrete voorstel beoordeeld. Nu bestaande beschermde Windows-UMDbouwrecept hergebruiken, met volledige actueleC20basis443 en header2536FA…614CA; uitsluitend deze3deltas, C38headernietmeenemen. Nieuwe ARM64native+ARM64ECpair; C37host/C33FP32/F91 blijven. Test pas na echtebuild en verse koude afzonderlijke testchild/eigenVARS. In die proef alleen presentwritesync-forceOFF, dwmwritesyncON en overige ownership-/GPUgates behouden. Begin met één zichtbare videotaak; alleen bij winst de korte benodigde UI/directe3Dregressies. Geen actuele VM-/markerwijziging uitgevoerd; productie uit, geen merge/release en algemeen doel open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
