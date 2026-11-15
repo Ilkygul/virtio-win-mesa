@@ -821,6 +821,14 @@ Belangrijk: top-level errors[]betreftcollector/CDP, nietalleMediafouten. EénDEC
 
 Eigen geïsoleerdeEdge7328 op09:29:22Z normaal Browser.close en exitbevestigd; geen anderebrowsergeraakt. Bewijs evidence/c46-present-tail-pair-r1/video-analysis.json SHA2a6cf3723f399a77a4a2cb564a6a8f624d37a45ac7d01e392592e29bc9eb1085. **Beslissing:** C46 behoudt gedeeltelijke3D/UIwinst als diagnosekandidaat, maar geen algemenevervanging. C45 blijft bestbekende gecombineerdeherstelversie; C46-oorzaakisnogonbewezen. EerstdezeGPUexitgerichtlokaliseren metbestaandebrowserlogging enpositieveoudeGPUidentiteit, vóóreenandereprestatiepatch. Geenproductie/mainmerge/release; doelOPEN.
 
+### C46 gerichte GPU-exitdiagnose r1 — één herhaling met ontbrekend foutbewijs
+
+Nieuwe reden voor dezelfde videotaak: de eerste opname bewijst een postformale GPU/media-disconnect, maar mist de oorspronkelijke guestGPUidentiteit en browserexitreden. De hostfilter bevatte bovendien geen NptHwDec-tag; afwezige decoderfouten waren geen volledig negatief bewijs.
+
+**Hypothese/vraag:** browserlogging kan vaststellen of de oorspronkelijke hardwareGPU door watchdog, exception/device-error of een andere browserreden verdwijnt rond de postformale edge://gpu/screenshotfase. Geen voorafgaande C46-oorzaakclaim en geen nieuwe drivervariant.
+
+Eén bestaande30scollector/prep/20sCPUtaak op dezelfde C46boot/config. Nieuw eigen tasklabel kopieert de bestaande geïsoleerdeEdge-actie met alleen Chromium --enable-logging --v=1; oorspronkelijke task blijft gelijk, chrome_debug.log moet eerst ontbreken. Tijdens echte meetfase de ownedbrowser/GPU-PID/birth/parent/modulehashes vastleggen. Zelfde65s fysiekeopname; hostfilter90s omvat nu NptHwDec en loopt voorbij de eerder gemiste fouttijd. Diagnosebelasting maakt dit geen snelheidsvergelijking. Na afloop uitsluitend eigenBrowser.close, log behouden vóór een volgende browserstart. Geen nieuw algemeen captureharnas/WPR ofdriverwijziging. C45herstelpunt blijftbestbekendealgemeneversie, doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
