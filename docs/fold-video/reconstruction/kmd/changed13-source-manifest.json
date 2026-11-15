@@ -1,0 +1,85 @@
+{
+  "status": "C13_COMPLETE_SOURCE_PACKET_PENDING_ROOT_BUILD_SCRIPT_REVIEW_NO_PC_AUTHORIZATION",
+  "patchSha256": "ca08b3134f9a6885539ea0c82bd3ddcbed7c0b8e988b39f42d9718f9dc6de2a7",
+  "files": [
+    {
+      "path": "viogpu/viogpu3d/viogpu_adapter.cpp",
+      "baselineSha256": "45232c0f7762efd5bf91dee9b6069b223ce3d951422b271a398f1f63d78c91d8",
+      "proposedSha256": "16cf6953700a778a716f0f7bbc2168bb233916f9d2d3955fbb228c98bcb43535"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_adapter.h",
+      "baselineSha256": "2800b1caa0fbf06943e6e6b303df6337d5539cbe9d24a14d20833ec9c12fedb9",
+      "proposedSha256": "7d1704b357f1b0bf72e2918af2812f48e651d2e905ec9bef6a241b739141c420"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_device.cpp",
+      "baselineSha256": "282c5f453d4afdd98c06438184aee71d2909f9831c3ed1c5851f25abbbb5c1b3",
+      "proposedSha256": "fb69f51b60a86746febd0e6c6b44bdcca807709d8147d88e3eed697a713eace8"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_device.h",
+      "baselineSha256": "164287c8de2d61dd1d036dd300ef15293a6e5115339e5c7c327ee1dc564a3ea2",
+      "proposedSha256": "1cffa418c0cc098b6ac39841e954ce3efbe15136cf28a0cfacd4e5771489b02f"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_command.cpp",
+      "baselineSha256": "942189a1e1e3288a4ed36d0450806cda24ee35c7d3cec7317af5f4fc014e9978",
+      "proposedSha256": "1c506bc2d90639d2e4ac3c26fe87ecb304e70a411b2858dc83e774e4ae05ac67"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_command.h",
+      "baselineSha256": "72890693648fc5d54c8e954ab0e62141102b0edd2d5f0519a25b2454dedfe180",
+      "proposedSha256": "cc8faa305adc954f16011358f2ad016a70a0f42f3485ca37878415785b97661f"
+    },
+    {
+      "path": "viogpu/viogpu3d/driver.cpp",
+      "baselineSha256": "8bc41fda10f948c5077282a98da8a03599f344a8f73c50de4ceb9b9a507a6e94",
+      "proposedSha256": "9ef7ac0db2e7f1fe076390f292827273e0d6abe420a09adbee1a371c25c8366a"
+    },
+    {
+      "path": "viogpu/common/viogpu_queue.cpp",
+      "baselineSha256": "1a4394ff918e8af5d6d46c6b6bbcf80dadd9e41de149a0559c0c8711d25401f8",
+      "proposedSha256": "7772143d1d33fc015563723888199b173c3e4a3da752e78839ec4ed7b0d1f306"
+    },
+    {
+      "path": "viogpu/common/viogpu_queue.h",
+      "baselineSha256": "9519bb4041b7eac99d952e144ad12ce8044b95c5f1ff736b155b26c264502974",
+      "proposedSha256": "ea4b43ced79a2fdcfbf14c85b51cad8505622f0f0c59f72381a32fe25f4a86ba"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_allocation.h",
+      "baselineSha256": "059b8367e734a6f34212be7f30d255825345114c3e5ca625d89872a53ca7944b",
+      "proposedSha256": "e9048a52e766aa630edbb1341299223131a359c662de0ab8712104463766c02e"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_allocation.cpp",
+      "baselineSha256": "0fda769eac2e2f77cbc35e0f9229990df655b4f1b6b0e9f6fcf6f90295ce2aaa",
+      "proposedSha256": "f79be68fae54aee68b97052f5a8986dd03d3a592db619d8024db5238500fa20d"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_vidpn.h",
+      "baselineSha256": "a8c7b18dd07127cceb9c11ccb2d52bb916b985cc123305be2d47988c389ea8cc",
+      "proposedSha256": "5bbd7414e31ec2bdd50142a89c28971eda9a99c95c0893ad5f57abe8f48a17de"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_vidpn.cpp",
+      "baselineSha256": "a60f88687fe1b9416f9876c2659fb4c654d6ab2543fbe972122d651d2c5a23fe",
+      "proposedSha256": "9b350d862035f277d59c2699760befe0ad9040baddd5245dddc43ef289fef5c6"
+    }
+  ],
+  "noOriginalChanges": true,
+  "noRuntimeOrDeploymentApproval": true,
+  "compilerOnlyRetry": {
+    "originalPatchSha256": "2af4c404848468283a2c22665855e5e29a4583f88601f364b95c234ca01ea10a",
+    "declarationPatchSha256": "098019f41db6c8288805c9e44d7107cc7671c53a34935d497873f2c6926562a1",
+    "failedRunPreserved": "nativejob-20261114-013248-r1"
+  },
+  "sourceProvenance": {
+    "original1CA13baselineLeases": "unchanged",
+    "actualSuccessfulC12CompletePatchSha256": "114783b967a56b01836de85d425bbcde7cbb9f3465087300eda3e029760eaf86",
+    "traceOnlyDeltaSha256": "bc56bb3de964fcc4023bebaf79fbce4c769733f858631dcbaf8d94c274707556",
+    "completeCompiledSourceClaim": "ca08b3134f9a6885539ea0c82bd3ddcbed7c0b8e988b39f42d9718f9dc6de2a7"
+  },
+  "publicationNormalization": "Removed only personal absolute baselinePath fields; hashes and source payloads unchanged. Original manifest hash recorded by publication manifest."
+}

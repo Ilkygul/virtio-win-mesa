@@ -1,0 +1,302 @@
+{
+  "schema": "fold-retained-c46-c37-c33-handoff-v1",
+  "status": "PARTIAL_RETAINED_TESTED_STACK_GENERAL_GOAL_OPEN",
+  "releaseTag": "fold-retained-c46-c37-c33-20261115-r1",
+  "releaseUrl": "https://github.com/Ilkygul/virtio-win-mesa/releases/tag/fold-retained-c46-c37-c33-20261115-r1",
+  "sourceCommits": {
+    "windows": {
+      "repository": "Ilkygul/virtio-win-mesa",
+      "commit": "27cbe9982e4255b727878f34d5e582a1f99ccab8",
+      "buildRecipeCommit": "03d9542512919a0a729b6a485754dcbaab89b3c0"
+    },
+    "kmd": {
+      "component": "kmd",
+      "repository": "Ilkygul/viogpu3d-pvm",
+      "branch": "codex/fold-f91-retained-20261115",
+      "commit": "925658417bde30c74ae1069fa5dc8eb08516a7cf",
+      "tree": "69f11c9344fe51ba4e33da0cb917f6eca8266055",
+      "files": 104,
+      "originalGitHead": null,
+      "originalRemote": null,
+      "published": true
+    },
+    "virgl": {
+      "component": "virgl",
+      "repository": "Ilkygul/virglrenderer",
+      "branch": "codex/fold-c37-retained-20261115",
+      "commit": "43753f2ffb42a9a3627a9ea708961efb162c8edc",
+      "tree": "94133e5c7c43456f72b9fe1ddab341ae27368fae",
+      "originalShallowHead": "4d54b39e7ec8733faf9ebe97de0a217fbe7bbb53",
+      "archiveSha256": "12C959F22D28AD69FFF1749737BD886ADEFAAAF15AE04E23E527BE0DC2C863D2",
+      "files": 707,
+      "published": true,
+      "publishedUtc": "2026-11-15T13:48:27.357052+00:00"
+    },
+    "dxvk": {
+      "component": "dxvk",
+      "repository": "Ilkygul/dxvk",
+      "branch": "codex/fold-c33-fp32-retained-20261115",
+      "commit": "b7e4b740e589a83cdae360b7e57978e4c32634e2",
+      "tree": "86ea3ef6b13dd376ff5fbf03362c1a89d8c05b6a",
+      "originalShallowHead": "c8cf25a65f4151634b4e8ab4ad48fc37937d63be",
+      "archiveSha256": "639A8824271D4F6E52AB4B6FC106941968791B4DA767B58AED7BCE0989C8243D",
+      "files": 1268,
+      "published": true,
+      "publishedUtc": "2026-11-15T13:48:31.812086+00:00"
+    },
+    "rust": {
+      "component": "rust",
+      "repository": "Ilkygul/crosvm",
+      "branch": "codex/fold-c15-runtime-retained-20261115",
+      "commit": "75203094a00250cecdf5da90f92ba1d7edb00f47",
+      "tree": "5c372b634d1d1c46a7cc70a8d6e6c5bedc55cfa4",
+      "originalShallowHead": "8db213546ca924a33ce5c14dfb04efbce9badadb",
+      "archiveSha256": "0728C42E381C76062EE013393FD38ED397B63877FD55E09A15556B47F90C1EA8",
+      "files": 1856,
+      "published": true,
+      "publishedUtc": "2026-11-15T13:48:34.579902+00:00"
+    }
+  },
+  "runtimeBinaries": [
+    {
+      "path": "windows/umd/neptune_umd.dll",
+      "bytes": 1366528,
+      "sha256": "2A7DC660ABF7AC3A6B49991C55FC7B44859F670ADE1D9E8033BE7F62B07E744D",
+      "component": "C46 Windows UMD",
+      "sourceArtifact": "artifacts/c46-umd-build/session-20261115-present-pair-r1/umd-success/retrieval/out/native-alias/neptune_umd.dll",
+      "sourceOrigin": {
+        "publishedSourceCommitReportedByRoot": "27cbe998",
+        "publishedRecipesCommitReportedByRoot": "03d95425",
+        "fullC8ToC46PatchSha256": "8240EEE61E0088BAD6CD3BEB5CF29B29F3B21A1823DBAD865F96269A16C27B41",
+        "sourceSnapshotFiles": 443,
+        "originalMesaHead": "fc5f1fc8a389e125e7d5f979f7b88a2708d161ee",
+        "publishedSourceRepository": "Ilkygul/virtio-win-mesa",
+        "publishedSourceCommit": "27cbe9982e4255b727878f34d5e582a1f99ccab8"
+      }
+    },
+    {
+      "path": "windows/umd/neptune_umd_arm64.dll",
+      "bytes": 1366528,
+      "sha256": "2A7DC660ABF7AC3A6B49991C55FC7B44859F670ADE1D9E8033BE7F62B07E744D",
+      "component": "C46 Windows UMD",
+      "sourceArtifact": "artifacts/c46-umd-build/session-20261115-present-pair-r1/umd-success/retrieval/out/native-alias/neptune_umd_arm64.dll",
+      "sourceOrigin": {
+        "publishedSourceCommitReportedByRoot": "27cbe998",
+        "publishedRecipesCommitReportedByRoot": "03d95425",
+        "fullC8ToC46PatchSha256": "8240EEE61E0088BAD6CD3BEB5CF29B29F3B21A1823DBAD865F96269A16C27B41",
+        "sourceSnapshotFiles": 443,
+        "originalMesaHead": "fc5f1fc8a389e125e7d5f979f7b88a2708d161ee",
+        "publishedSourceRepository": "Ilkygul/virtio-win-mesa",
+        "publishedSourceCommit": "27cbe9982e4255b727878f34d5e582a1f99ccab8"
+      }
+    },
+    {
+      "path": "windows/umd/neptune_umd_ec.dll",
+      "bytes": 1276416,
+      "sha256": "0D472DA041603FDF0182FF3D903848E10A4035404E3576C1D0E544B5FE7BBC32",
+      "component": "C46 Windows UMD",
+      "sourceArtifact": "artifacts/c46-umd-build/session-20261115-present-pair-r1/umd-success/retrieval/out/native-alias/neptune_umd_ec.dll",
+      "sourceOrigin": {
+        "publishedSourceCommitReportedByRoot": "27cbe998",
+        "publishedRecipesCommitReportedByRoot": "03d95425",
+        "fullC8ToC46PatchSha256": "8240EEE61E0088BAD6CD3BEB5CF29B29F3B21A1823DBAD865F96269A16C27B41",
+        "sourceSnapshotFiles": 443,
+        "originalMesaHead": "fc5f1fc8a389e125e7d5f979f7b88a2708d161ee",
+        "publishedSourceRepository": "Ilkygul/virtio-win-mesa",
+        "publishedSourceCommit": "27cbe9982e4255b727878f34d5e582a1f99ccab8"
+      }
+    },
+    {
+      "path": "windows/kmd/viogpu3d-nativejob.sys",
+      "bytes": 248184,
+      "sha256": "F91D91416051A6C9E2BBFC7E312BB0579A5F099C2F297115BA71D7D868D038D7",
+      "component": "F91 signed KMD",
+      "sourceArtifact": "artifacts/c13-windows-build/session-20261114-030611/kmd-success/retrieval/artifact/viogpu3d-nativejob.sys",
+      "sourceOrigin": {
+        "sourcePatchSha256": "CA08B3134F9A6885539EA0C82BD3DDCBED7C0B8E988B39F42D9718F9DC6DE2A7",
+        "sourceManifestSha256": "3D59D411141013B2A16D2BDCB93A2A11B8C08BBEB7FCEC9510AACE571616AA1B",
+        "publicationTargetRepository": "Ilkygul/viogpu3d-pvm",
+        "originalRepository": null,
+        "originalGitHead": null,
+        "originalAncestry": "not attested; chosen publication target is not origin proof",
+        "actualSourceSnapshotFiles": 104,
+        "sourceSnapshotManifestSha256": "565E867568CFF138555A4E316D2D0911763C33E960EE0D7229524B7FBFB82409",
+        "completeCleanRebuild": "not claimed; original private virtiolib.lib SHA7ECA4DFA0062B7FC0FE1D0B8CF0468B29C637755A991F1FDC849EA958D012535 not retrieved",
+        "publishedSourceRepository": "Ilkygul/viogpu3d-pvm",
+        "publishedSourceCommit": "925658417bde30c74ae1069fa5dc8eb08516a7cf"
+      }
+    },
+    {
+      "path": "android/aarch64/libvirglrenderer.so",
+      "bytes": 4691248,
+      "sha256": "B5A31380261A48350795F35F0C017785F0937C0C9B7015676D357960415870C7",
+      "component": "C37 Virgl",
+      "sourceArtifact": "artifacts/c37-gpu-poll-host-build/session-20261115-poll-r1/success-retrieval/retrieval/host/libvirglrenderer.so",
+      "sourceOrigin": {
+        "baseGitHead": "4d54b39e7ec8733faf9ebe97de0a217fbe7bbb53",
+        "originalRemote": "Droid-VM/virglrenderer",
+        "sourceArchiveSha256": "12C959F22D28AD69FFF1749737BD886ADEFAAAF15AE04E23E527BE0DC2C863D2",
+        "publishedSourceRepository": "Ilkygul/virglrenderer",
+        "publishedSourceCommit": "43753f2ffb42a9a3627a9ea708961efb162c8edc"
+      },
+      "elf": {
+        "machine": "AArch64",
+        "needed": [
+          "libcutils.so",
+          "liblog.so",
+          "libc++.so",
+          "libc.so",
+          "libm.so",
+          "libdl.so"
+        ],
+        "runpath": []
+      }
+    },
+    {
+      "path": "android/aarch64/virgl_render_server",
+      "bytes": 3002312,
+      "sha256": "E1204FDD39D2B17A5089F2A99ECA8BEE35C6221AE2752897D34D559890EFE604",
+      "component": "C37 Virgl",
+      "sourceArtifact": "artifacts/c37-gpu-poll-host-build/session-20261115-poll-r1/success-retrieval/retrieval/host/virgl_render_server",
+      "sourceOrigin": {
+        "baseGitHead": "4d54b39e7ec8733faf9ebe97de0a217fbe7bbb53",
+        "originalRemote": "Droid-VM/virglrenderer",
+        "sourceArchiveSha256": "12C959F22D28AD69FFF1749737BD886ADEFAAAF15AE04E23E527BE0DC2C863D2",
+        "publishedSourceRepository": "Ilkygul/virglrenderer",
+        "publishedSourceCommit": "43753f2ffb42a9a3627a9ea708961efb162c8edc"
+      },
+      "elf": {
+        "machine": "AArch64",
+        "needed": [
+          "libcutils.so",
+          "liblog.so",
+          "libc++.so",
+          "libc.so",
+          "libm.so",
+          "libdl.so"
+        ],
+        "runpath": [
+          "$ORIGIN:$ORIGIN/../lib"
+        ]
+      }
+    },
+    {
+      "path": "android/aarch64/libdxvk_d3d11.so",
+      "bytes": 5906440,
+      "sha256": "B964E83618F109C8E68DD69FF3BC192A3470D34E4B53CEB89308654FA39404DE",
+      "component": "C33 DXVK FP32 pair",
+      "sourceArtifact": "artifacts/c33-fp32-dxvk-build/session-20261114-fp32-r1/success-retrieval/retrieval/dxvk/libdxvk_d3d11.so",
+      "sourceOrigin": {
+        "baseGitHead": "c8cf25a65f4151634b4e8ab4ad48fc37937d63be",
+        "originalRemote": "osy/dxvk",
+        "sourceArchiveSha256": "639A8824271D4F6E52AB4B6FC106941968791B4DA767B58AED7BCE0989C8243D",
+        "publishedSourceRepository": "Ilkygul/dxvk",
+        "publishedSourceCommit": "b7e4b740e589a83cdae360b7e57978e4c32634e2"
+      },
+      "elf": {
+        "machine": "AArch64",
+        "needed": [
+          "libdxvk_dxgi.so",
+          "libmediandk.so",
+          "libnativewindow.so",
+          "liblog.so",
+          "libdl.so",
+          "libc.so"
+        ],
+        "runpath": [
+          "$ORIGIN"
+        ]
+      }
+    },
+    {
+      "path": "android/aarch64/libdxvk_dxgi.so",
+      "bytes": 3871041,
+      "sha256": "5E6E08A4592A6BAE52B87FCE4442369E11B631D0BBAB5CB7905CADD2E5224740",
+      "component": "C33 DXVK FP32 pair",
+      "sourceArtifact": "artifacts/c33-fp32-dxvk-build/session-20261114-fp32-r1/success-retrieval/retrieval/dxvk/libdxvk_dxgi.so",
+      "sourceOrigin": {
+        "baseGitHead": "c8cf25a65f4151634b4e8ab4ad48fc37937d63be",
+        "originalRemote": "osy/dxvk",
+        "sourceArchiveSha256": "639A8824271D4F6E52AB4B6FC106941968791B4DA767B58AED7BCE0989C8243D",
+        "publishedSourceRepository": "Ilkygul/dxvk",
+        "publishedSourceCommit": "b7e4b740e589a83cdae360b7e57978e4c32634e2"
+      },
+      "elf": {
+        "machine": "AArch64",
+        "needed": [
+          "libm.so",
+          "libdl.so",
+          "libc.so"
+        ],
+        "runpath": [
+          "$ORIGIN"
+        ]
+      }
+    },
+    {
+      "path": "android/aarch64/crosvm",
+      "bytes": 13081544,
+      "sha256": "6ACBBCAEC64A67501DB335EEA70E4CA5CA4E49C047AA9447E08AA7048DC7ABD7",
+      "component": "C15 crosvm6AC",
+      "sourceArtifact": "artifacts/c15-host-finalize/session-r2/success-retrieval/retrieval/host/crosvm",
+      "sourceOrigin": {
+        "baseGitHead": "8db213546ca924a33ce5c14dfb04efbce9badadb",
+        "originalRemote": "Droid-VM/crosvm",
+        "sourceArchiveSha256": "0728C42E381C76062EE013393FD38ED397B63877FD55E09A15556B47F90C1EA8",
+        "fourNativeJobRustPostimages": "C15 compiled snapshot; exact selected Rust source separately staged1856 entries",
+        "publishedSourceRepository": "Ilkygul/crosvm",
+        "publishedSourceCommit": "75203094a00250cecdf5da90f92ba1d7edb00f47"
+      },
+      "elf": {
+        "machine": "AArch64",
+        "needed": [
+          "libaaudio.so",
+          "libcap.so",
+          "liblog.so",
+          "libc++.so",
+          "libbinder_ndk.so",
+          "libnativewindow.so",
+          "libvncserver.so",
+          "libbase.so",
+          "libgfxstream_backend.so",
+          "libvirglrenderer.so",
+          "libcutils.so",
+          "libminijail.so",
+          "libprocessgroup.so",
+          "libc.so",
+          "libm.so",
+          "libdl.so"
+        ],
+        "runpath": [
+          "$ORIGIN:$ORIGIN/../../lib64"
+        ]
+      }
+    }
+  ],
+  "platformPrerequisites": {
+    "platform": "Existing rooted Samsung Fold / compatible Gunyah DroidVM environment required. This is not an Android system image or installer.",
+    "droidvmPackage": "cn.classfun.droidvm",
+    "versionName": "0.0.6.r262.gfd985b62",
+    "versionCode": 2920,
+    "apkSha256": "94a41b1736f658f040887fffa19fab3a73ee9be3496e44c087f17811693629f5",
+    "firmwareFingerprint": "samsung/h8qxeea/h8q:17/CP2A.260605.016/F971BXXU3AZI5_OXM3AZI5:user/release-keys",
+    "turnipMainSha256": "49cad8ac6f98fdd48b8142f714cb69e5b474eab00afa5b482ced4d4dbd68b541",
+    "turnipBytes": 13894456,
+    "icdSha256": "244daa24aa0eb8b73e047bc4a25b38c96218d8fa889078c6cec5470fe764d2b0",
+    "icdApiVersion": "1.4.354",
+    "icdLibraryArch": "64",
+    "sourceOrigin": "Pre-existing platform dependency, not rebuilt by C46/C37/C33. Exact original Turnip source revision not established by these receipts; no source revision invented.",
+    "packageCompleteness": "Nine selected rebuilt runtime binaries are packaged. DroidVM APK, Turnip and Android/system/extra platform libraries are external prerequisites, not redistributed. Keep the recorded matching pre-existing platform."
+  },
+  "buildRecipeCommits": {
+    "windows": "03d9542512919a0a729b6a485754dcbaab89b3c0",
+    "host": "1bbfcb075f95c0941b45ee722baefd0ec1323769"
+  },
+  "sourceHistoryLimit": "Host snapshots are exact archived compiled states, not reconstructed missing original shallow ancestry. F91 source104 subset has no attested original repository/HEAD.",
+  "cleanBuildLimits": [
+    "Original F91 static VirtioLib7ECA prerequisite not present; no bit-identical clean KMD rebuild/signing claim.",
+    "Host build uses the recorded AOSP/Soong environment; complete independent AOSP platform manifest not supplied.",
+    "Android/APK/Turnip/system/kernel dependencies are pre-existing prerequisites, not redistributed."
+  ],
+  "decision": "C47 no useful gain; park entire optimization family, C48 unbuilt. Retain C46/F91/C37/C33 with RAM4/DPI200. Next repair task is first RES_INFO/mapping failure, not another automatic Present variant."
+}

@@ -1,0 +1,54 @@
+{
+  "scope": "Configuration subset for an already provisioned compatible rooted DroidVM test environment, not a whole VM config or installer. Keep ordinary Windows disk untouched.",
+  "memory_mb": 4096,
+  "cpu_count": 6,
+  "hypervisor": "gunyah",
+  "protected_vm": "protected_without_firmware",
+  "hugepages": true,
+  "swiotlb_mb": 256,
+  "gpu_context_types": "virgl2:venus:neptune",
+  "gpu_mode": "vulkan",
+  "gpu_backend": "gpu_virglrenderer",
+  "gpu_venus_pool_mb": 512,
+  "gpu_guest_pool_mb": 512,
+  "gpu_guest_prealloc_mb": 512,
+  "gpu_guest_step_mb": 0,
+  "gpu_guest_max_grants": 0,
+  "native_display_enabled": true,
+  "requestedNativeDisplay": {
+    "width": 2448,
+    "height": 1848,
+    "refresh_rate": 60,
+    "dpi_h": 160,
+    "dpi_v": 160
+  },
+  "windowsDpiPercent": 200,
+  "windowsNativeGpuJobV1": 1,
+  "markers": {
+    "triton-nowarp": "empty ON",
+    "triton-runtimestream": "empty ON",
+    "triton-dwmwritesync": "empty ON",
+    "triton-presentwritesync": "initial safe boot ON; qualified OFF only after actual new-boot DWM C46 identity verification"
+  },
+  "environmentExample": {
+    "NPT_D3D11_LIBRARY_PATH": "<private-stack>/dxvk-c33/libdxvk_d3d11.so",
+    "NPT_DXGI_LIBRARY_PATH": "<private-stack>/dxvk-c33/libdxvk_dxgi.so",
+    "DXVK_SHADER_CACHE_PATH": "<private-stack>/dxvk-c33/cache",
+    "DXVK_WSI_DRIVER": "Headless",
+    "DXVK_A8_AS_R8": "1",
+    "VK_ICD_FILENAMES": "<existing-matching-platform>/freedreno_icd.json",
+    "NPT_NATIVE_JOB_GPU_RETIRE": "1",
+    "NPT_NATIVE_JOB_VIDEO_RETIRE": "1"
+  },
+  "serverOption": [
+    "--gpu-render-server",
+    "path=<private-stack>/renderer-c37/virgl_render_server"
+  ],
+  "librarySearchOrder": [
+    "<private-stack>/renderer-c37",
+    "<private-stack>/dxvk-c33",
+    "<existing-DroidVM-platform-libs>",
+    "<existing-matching-Turnip-libs>"
+  ],
+  "cachePolicy": "Use an isolated C33 cache. Do not reuse older F19 minimum-precision shader cache; no C34 cache-key code was included. Preserve the existing usable C33 cache and never clear user caches as a test."
+}

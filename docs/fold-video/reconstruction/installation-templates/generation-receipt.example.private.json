@@ -1,0 +1,21 @@
+{
+  "schema": "codex-c46-root-generation-v1",
+  "runId": "c46-present-tail-pair-r1",
+  "runDir": "C:\\Users\\Public\\hwdec\\codex\\gpu-test-c23-r1\\umd-runtime-c46-present-tail-pair-r1",
+  "nonce": "__C46_ROOT_FRESH_NONCE__",
+  "generationId": "__C46_ROOT_FRESH_GENERATIONID__",
+  "newNativeSha256": "__C46_NEW_NATIVE_SHA256__",
+  "newEcSha256": "__C46_NEW_EC_SHA256__",
+  "newNativeBytes": "__C46_NEW_NATIVE_BYTES__",
+  "newEcBytes": "__C46_NEW_EC_BYTES__",
+  "phoneBootId": "__C46_ROOT_FRESH_PHONEBOOTID__",
+  "mainPid": "__C46_ROOT_FRESH_MAINPID__",
+  "mainStartTicks": "__C46_ROOT_FRESH_MAINSTARTTICKS__",
+  "fds": "__C46_ROOT_FRESH_FDS__",
+  "fdProofSha256": "__C46_ROOT_FRESH_FDPROOFSHA256__",
+  "windowsBoot": "__C46_ROOT_FRESH_WINDOWSBOOT__",
+  "observedGuestUtc": "__C46_ROOT_FRESH_OBSERVEDGUESTUTC__",
+  "createdUtc": "__C46_ROOT_FRESH_CREATEDUTC__",
+  "kernelSha256": "F91D91416051A6C9E2BBFC7E312BB0579A5F099C2F297115BA71D7D868D038D7",
+  "hostConfigSha256": "__C46_ROOT_FRESH_HOSTCONFIGSHA256__"
+}

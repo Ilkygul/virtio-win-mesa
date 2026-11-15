@@ -1,0 +1,5 @@
+# Historical protected C45-to-C46 UMD transaction templates
+
+These are the existing reviewed C46 templates, not newly generated installation automation and not a ready-to-run installer. All ROOT/actual-build/generation tokens must remain unresolved until fresh device, cold-disk, FD, Windows-boot, marker, signature, architecture and artifact evidence is bound. Original path/VM identities are historical examples, not permission to reuse a live VM or its parents. The C45 old-DLL hashes are intentionally preserved in this historical transaction; a different baseline requires an explicit new binding.
+
+The guard, transactional deploy/restore implementation and preflight/install wrappers are archived so reconstruction does not depend on a local workspace. Preserve the real GPU/ownership/completion and file/ACL backup gates. Never fabricate receipts, remove unresolved-token checks, reuse old boot-bound receipts or change the ordinary Windows disk. The runtime ZIP deliberately runs none of these scripts.

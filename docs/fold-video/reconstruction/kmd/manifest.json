@@ -1,0 +1,50 @@
+{
+  "schema": "f91-c13-source-publication-r1",
+  "status": "EXACT_RETRIEVED_SOURCE_SNAPSHOT_NO_NEW_BUILD_OR_SIGN",
+  "publicationTargetRepository": "Ilkygul/viogpu3d-pvm",
+  "originalRepository": null,
+  "originalGitHead": null,
+  "originStatus": "Not attested by examined C13 retrieval. Publish snapshot without ancestry claim.",
+  "sourceFiles": 104,
+  "postimageReplacements": 13,
+  "freshActualBuildTranslationUnits": 15,
+  "completePatchSha256": "CA08B3134F9A6885539EA0C82BD3DDCBED7C0B8E988B39F42D9718F9DC6DE2A7",
+  "originalSourceManifestSha256": "3D59D411141013B2A16D2BDCB93A2A11B8C08BBEB7FCEC9510AACE571616AA1B",
+  "source104ManifestSha256": "565E867568CFF138555A4E316D2D0911763C33E960EE0D7229524B7FBFB82409",
+  "sourceSnapshotTreeSha1": "69f11c9344fe51ba4e33da0cb917f6eca8266055",
+  "signedArtifact": {
+    "sha256": "F91D91416051A6C9E2BBFC7E312BB0579A5F099C2F297115BA71D7D868D038D7",
+    "bytes": 248184
+  },
+  "missingRebuildInput": {
+    "path": "VirtIO/objfre_win11_arm64/arm64/virtiolib.lib",
+    "sha256": "7ECA4DFA0062B7FC0FE1D0B8CF0468B29C637755A991F1FDC849EA958D012535",
+    "foundInCheckedLocalC11C12C13ArtifactSets": false,
+    "virtioSourcesAndProjectIncluded": true
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3729,
+      "sha256": "1439B85EAD2C34CDEA3D2EDCF41F5984B6E5EF87EB5CDA264D2A792CFFBF0269"
+    },
+    {
+      "path": "changed13-source-manifest.json",
+      "bytes": 4315,
+      "sha256": "1103BBAF1C954B3C3BCFDA7D714C9D22044BA90195924CC3E90FBF32924362BC"
+    },
+    {
+      "path": "original1CA-to-F91-C13.patch",
+      "bytes": 83710,
+      "sha256": "CA08B3134F9A6885539EA0C82BD3DDCBED7C0B8E988B39F42D9718F9DC6DE2A7"
+    },
+    {
+      "path": "source104-postimages.json",
+      "bytes": 26724,
+      "sha256": "565E867568CFF138555A4E316D2D0911763C33E960EE0D7229524B7FBFB82409"
+    }
+  ],
+  "publishedSourceCommit": "925658417bde30c74ae1069fa5dc8eb08516a7cf",
+  "publicationStatus": "EXACT104_SOURCE_SNAPSHOT_PUBLISHED_NO_NEW_BUILD",
+  "fullHistoricalSourceBuildPackage": "f91-c13-exact-source-snapshot-r1.zip"
+}

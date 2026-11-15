@@ -1,0 +1,2045 @@
+--- a/viogpu/viogpu3d/viogpu_adapter.cpp
++++ b/viogpu/viogpu3d/viogpu_adapter.cpp
+@@ -31,6 +31,12 @@
+ #include "driver.h"
+ #include "viogpu_adapter.h"
+ #include "baseobj.h"
++
++// ntifs.h declares this native HANDLE wait but cannot coexist with the
++// ntddk.h display-miniport headers. Signature matches WDK 10.0.26100.0.
++extern "C" NTSYSAPI NTSTATUS NTAPI ZwWaitForSingleObject(
++    _In_ HANDLE Handle, _In_ BOOLEAN Alertable, _In_opt_ PLARGE_INTEGER Timeout);
++
+ #include "bitops.h"
+ #include "viogpum.h"
+ #include "viogpu_rdma.h"
+@@ -50,6 +56,22 @@
+ C_ASSERT(sizeof(VIOGPU_DMA_PRIVATE) == 1040);
+ C_ASSERT(FIELD_OFFSET(VIOGPU_DMA_PRIVATE, cmdRaw) == 0);
+ 
++static DECLSPEC_NORETURN void NativeAdapterHoldForVmStop()
++{
++    KEVENT hold; KeInitializeEvent(&hold, NotificationEvent, FALSE);
++    for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++}
++class NativeAdapterControl {
++    KMUTEX *m_Mutex;
++  public:
++    explicit NativeAdapterControl(KMUTEX *mutex) : m_Mutex(mutex) {
++        if (mutex && KeWaitForSingleObject(mutex, Executive, KernelMode, FALSE, NULL) != STATUS_SUCCESS) {
++            NativeAdapterHoldForVmStop();
++        }
++    }
++    ~NativeAdapterControl() { if (m_Mutex) { KeReleaseMutex(m_Mutex, FALSE); } }
++};
++
+ static UINT g_InstanceId = 0;
+ 
+ // HWClose waits this many 1s rounds for the worker thread before giving up on
+@@ -88,6 +110,7 @@
+     UINT Node;
+     UINT Engine;
+     BOOLEAN Raised;
++    BOOLEAN ResetBlocked;
+     // Set when this call acked a pending preempt: the caller releases the
+     // commander, which discards queued packets with ids <= DropThrough.
+     BOOLEAN PreemptAcked;
+@@ -101,10 +124,92 @@
+     // Completed path: deferred monitored-fence writes the advanced
+     // watermark released; the caller writes + completes them.
+     LIST_ENTRY Ready;
++    LIST_ENTRY NativeRetired;
+ };
+ 
+ static void MFenceDeferWriteReadyLocked(VioGpuAdapter *a, LIST_ENTRY *done);
+ static void PreemptAckLocked(VioGpuAdapter *a, FENCE_REPORT_CONTEXT *ctx);
++
++// Actual accepted jobs own their ledger node. No window capacity prevents
++// another context from admitting the command that resolves a GPU Wait.
++// All list mutations are in the existing interrupt synchronization domain.
++struct NATIVE_DMA_CONTEXT {
++    VioGpuAdapter *Adapter;
++    NATIVE_DMA_RECORD *Record;
++    UINT FenceId;
++    UINT Node;
++    UINT Engine;
++    NTSTATUS Status;
++    BOOLEAN Found;
++};
++static BOOLEAN NativeRegisterSync(PVOID opaque)
++{
++    NATIVE_DMA_CONTEXT *c = (NATIVE_DMA_CONTEXT *)opaque;
++    VioGpuAdapter *a = c->Adapter;
++    c->Status = STATUS_INVALID_DEVICE_STATE;
++    if (a->m_NativeGpuFault || c->Node != 0 || c->Engine != 0 || !c->Record ||
++        c->Record->State != 0 || !c->Record->Owner) { return TRUE; }
++    if ((LONG)(c->Record->FenceId - (UINT)a->m_LastCompletedFenceId) <= 0) {
++        c->Status = STATUS_INVALID_PARAMETER; return TRUE;
++    }
++    if (!IsListEmpty(&a->m_NativeDmaList)) {
++        NATIVE_DMA_RECORD *tail = CONTAINING_RECORD(a->m_NativeDmaList.Blink, NATIVE_DMA_RECORD, Link);
++        if ((LONG)(c->Record->FenceId - tail->FenceId) <= 0) {
++            c->Status = STATUS_INVALID_PARAMETER; return TRUE;
++        }
++    }
++    c->Record->State = 1;
++    InsertTailList(&a->m_NativeDmaList, &c->Record->Link);
++    ++a->m_NativeDmaCount;
++    c->Status = STATUS_SUCCESS;
++    return TRUE;
++}
++static BOOLEAN NativeStartSync(PVOID opaque)
++{
++    NATIVE_DMA_CONTEXT *c = (NATIVE_DMA_CONTEXT *)opaque;
++    VioGpuAdapter *a = c->Adapter;
++    for (LIST_ENTRY *e = a->m_NativeDmaList.Flink; e != &a->m_NativeDmaList; e = e->Flink) {
++        NATIVE_DMA_RECORD *r = CONTAINING_RECORD(e, NATIVE_DMA_RECORD, Link);
++        if (r->FenceId == c->FenceId && r->State == 1) {
++            r->State = 2; c->Found = TRUE; return TRUE;
++        }
++    }
++    return TRUE;
++}
++static BOOLEAN NativeOutstandingSync(PVOID opaque)
++{
++    NATIVE_DMA_CONTEXT *c = (NATIVE_DMA_CONTEXT *)opaque;
++    c->Found = !IsListEmpty(&c->Adapter->m_NativeDmaList);
++    return TRUE;
++}
++NTSTATUS VioGpuAdapter::NativeRegisterFence(NATIVE_DMA_RECORD *record, UINT node, UINT engine)
++{
++    NATIVE_DMA_CONTEXT c = {this, record, 0, node, engine, STATUS_UNSUCCESSFUL, FALSE};
++    BOOLEAN ran = FALSE;
++    NTSTATUS st = m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
++        NativeRegisterSync, &c, 0, &ran);
++    return NT_SUCCESS(st) && ran ? c.Status : STATUS_UNSUCCESSFUL;
++}
++BOOLEAN VioGpuAdapter::NativeStartFence(UINT id)
++{
++    NATIVE_DMA_CONTEXT c = {this, NULL, id, 0, 0, STATUS_UNSUCCESSFUL, FALSE};
++    BOOLEAN ran = FALSE;
++    NTSTATUS st = m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
++        NativeStartSync, &c, 0, &ran);
++    return (BOOLEAN)(NT_SUCCESS(st) && ran && c.Found);
++}
++BOOLEAN VioGpuAdapter::NativeHasOutstanding()
++{
++    NATIVE_DMA_CONTEXT c = {this, NULL, 0, 0, 0, STATUS_UNSUCCESSFUL, TRUE};
++    BOOLEAN ran = FALSE;
++    NTSTATUS st = m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
++        NativeOutstandingSync, &c, 0, &ran);
++    return (BOOLEAN)(!NT_SUCCESS(st) || !ran || c.Found);
++}
++void VioGpuAdapter::NativeFail()
++{
++    InterlockedExchange(&m_NativeGpuFault, 1);
++}
+ 
+ static BOOLEAN ReportCompletedSyncRoutine(PVOID ctx_void)
+ {
+@@ -112,6 +217,32 @@
+     VioGpuAdapter *a = ctx->pAdapter;
+     DXGKRNL_INTERFACE *dxgk = ctx->pDxgk;
+ 
++    if (a->m_NativeGpuJobV1)
++    {
++        if (a->m_NativeGpuFault) { return TRUE; }
++        BOOLEAN found = FALSE;
++        for (LIST_ENTRY *e = a->m_NativeDmaList.Flink; e != &a->m_NativeDmaList; e = e->Flink) {
++            NATIVE_DMA_RECORD *r = CONTAINING_RECORD(e, NATIVE_DMA_RECORD, Link);
++            if (r->FenceId == ctx->FenceId && r->State == 2) {
++                r->State = 3; found = TRUE; break;
++            }
++        }
++        if (!found) { a->m_NativeGpuFault = 1; return TRUE; }
++        UINT completed = (UINT)a->m_LastCompletedFenceId;
++        while (!IsListEmpty(&a->m_NativeDmaList)) {
++            NATIVE_DMA_RECORD *r = CONTAINING_RECORD(a->m_NativeDmaList.Flink, NATIVE_DMA_RECORD, Link);
++            if (r->State != 3) { break; }
++            completed = r->FenceId;
++            RemoveEntryList(&r->Link);
++            r->State = 4;
++            InsertTailList(&ctx->NativeRetired, &r->Link);
++            --a->m_NativeDmaCount;
++        }
++        if ((LONG)(completed - (UINT)a->m_LastCompletedFenceId) <= 0) { return TRUE; }
++        a->m_LastCompletedFenceId = (LONG)completed;
++    }
++    else
++    {
+     const LONG last = a->m_LastCompletedFenceId;
+     if ((LONG)(ctx->FenceId - (UINT)last) <= 0)
+     {
+@@ -165,6 +296,8 @@
+             return TRUE;
+         }
+         a->m_LastCompletedFenceId = (LONG)a->m_WinBase;
++    }
++
+     }
+ 
+     // Publish every fence value the new watermark covers BEFORE telling
+@@ -205,6 +338,22 @@
+     const UINT lastSubmitted = (UINT)a->m_LastSubmittedFenceId;
+ 
+     a->m_PreemptPending = FALSE;
++    if (a->m_NativeGpuJobV1) {
++        for (LIST_ENTRY *e = a->m_NativeDmaList.Flink; e != &a->m_NativeDmaList;) {
++            NATIVE_DMA_RECORD *r = CONTAINING_RECORD(e, NATIVE_DMA_RECORD, Link);
++            e = e->Flink;
++            if ((LONG)(r->FenceId - lastSubmitted) <= 0) {
++                if (r->State != 1) { a->m_NativeGpuFault = 1; return; }
++                // Only unstarted packets are explicitly re-owned. The command
++                // remains in the submitted queue for Discard/restamp; no GPU
++                // completion or allocation release is invented for this id.
++                RemoveEntryList(&r->Link);
++                InitializeListHead(&r->Link);
++                r->State = 0;
++                --a->m_NativeDmaCount;
++            }
++        }
++    } else {
+     a->m_PreemptSkipThroughFenceId = (LONG)lastSubmitted;
+     RtlZeroMemory(a->m_Win, sizeof(a->m_Win));
+     if ((LONG)(lastSubmitted - a->m_WinBase) > 0)
+@@ -214,6 +363,7 @@
+     if ((LONG)(a->m_WinBase - (UINT)a->m_LastCompletedFenceId) > 0)
+     {
+         a->m_LastCompletedFenceId = (LONG)a->m_WinBase;
++    }
+     }
+     // Nothing above the target ever ran, so no deferred write is newer than
+     // the watermark; this only publishes leftovers of the completed set.
+@@ -255,6 +405,17 @@
+ {
+     FENCE_REPORT_CONTEXT *ctx = (FENCE_REPORT_CONTEXT *)ctx_void;
+     VioGpuAdapter *a = ctx->pAdapter;
++
++    // Authority is THIS interrupt-domain transaction, shared with native
++    // registration/completion. An outer empty-list check cannot authorize a
++    // later reset after a concurrent submit has registered new GPU ownership.
++    if (a->m_NativeGpuJobV1 &&
++        (a->m_NativeGpuFault || !IsListEmpty(&a->m_NativeDmaList))) {
++        a->m_NativeGpuFault = 1;
++        ctx->ResetBlocked = TRUE;
++        ctx->FenceId = (UINT)a->m_LastCompletedFenceId;
++        return TRUE; // no skip/window/watermark/deferred-write mutation
++    }
+ 
+     // Same shape as the preempt ack, minus the interrupt: after a reset
+     // dxgkrnl owns every packet it submitted, so declare them all complete,
+@@ -288,16 +449,22 @@
+     return TRUE;
+ }
+ 
+-UINT VioGpuAdapter::ResetFenceStateFromTimeout(void)
++UINT VioGpuAdapter::ResetFenceStateFromTimeout(BOOLEAN *blocked)
+ {
+     FENCE_REPORT_CONTEXT ctx = {};
+     ctx.pAdapter = this;
+     ctx.pDxgk = &m_DxgkInterface;
+     InitializeListHead(&ctx.Dropped);
+     InitializeListHead(&ctx.Ready);
+-    BOOLEAN bRet;
+-    m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
++    InitializeListHead(&ctx.NativeRetired);
++    BOOLEAN bRet = FALSE;
++    NTSTATUS syncStatus = m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
+                                                ResetFenceStateSyncRoutine, &ctx, 0, &bRet);
++    if (m_NativeGpuJobV1 && (!NT_SUCCESS(syncStatus) || !bRet)) {
++        NativeFail();
++        ctx.ResetBlocked = TRUE;
++    }
++    if (blocked) { *blocked = ctx.ResetBlocked; }
+     if (ctx.PreemptAcked)
+     {
+         // Resume the held commander; DropThrough 0 discards nothing (id 0
+@@ -323,9 +490,17 @@
+     ctx.Engine = engine;
+     InitializeListHead(&ctx.Dropped);
+     InitializeListHead(&ctx.Ready);
+-    BOOLEAN bRet;
+-    m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
++    InitializeListHead(&ctx.NativeRetired);
++    BOOLEAN bRet = FALSE;
++    NTSTATUS syncStatus = m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
+                                                ReportCompletedSyncRoutine, &ctx, 0, &bRet);
++    if (m_NativeGpuJobV1 && (!NT_SUCCESS(syncStatus) || !bRet)) { NativeFail(); }
++    while (!IsListEmpty(&ctx.NativeRetired)) {
++        NATIVE_DMA_RECORD *r = CONTAINING_RECORD(RemoveHeadList(&ctx.NativeRetired), NATIVE_DMA_RECORD, Link);
++        InitializeListHead(&r->Link);
++        InterlockedExchange(&r->Owner->m_NativeLedgerRetired, 1);
++        commander.QueueRunning(r->Owner);
++    }
+     // Values were published inside the sync routine (before the
+     // interrupt); only the bookkeeping happens out here.
+     while (!IsListEmpty(&ctx.Ready))
+@@ -360,9 +535,11 @@
+     ctx.PreemptTarget = target;
+     InitializeListHead(&ctx.Dropped);
+     InitializeListHead(&ctx.Ready);
+-    BOOLEAN bRet;
+-    m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
++    InitializeListHead(&ctx.NativeRetired);
++    BOOLEAN bRet = FALSE;
++    NTSTATUS syncStatus = m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
+                                                ReportPreemptedSyncRoutine, &ctx, 0, &bRet);
++    if (m_NativeGpuJobV1 && (!NT_SUCCESS(syncStatus) || !bRet)) { NativeFail(); }
+     while (!IsListEmpty(&ctx.Ready))
+     {
+         MFENCE_DEFER *d = CONTAINING_RECORD(RemoveHeadList(&ctx.Ready), MFENCE_DEFER, Entry);
+@@ -386,6 +563,7 @@
+ 
+ void VioGpuAdapter::CompleteFenceWithoutWork(UINT fenceId, UINT node, UINT engine)
+ {
++    if (m_NativeGpuJobV1) { NativeFail(); return; }
+     InterlockedExchange(&m_LastSubmittedFenceId, (LONG)fenceId);
+     ReportDmaCompleted(fenceId, node, engine);
+ }
+@@ -441,6 +619,7 @@
+     // Pool memory is NOT zeroed, and the vsync fence echo reports these
+     // as completed ids from the first tick.
+     m_LastCompletedFenceId = 0;
++    InitializeListHead(&m_NativeDmaList);
+     m_PreemptSkipThroughFenceId = 0;
+     m_LastSubmittedFenceId = 0;
+     m_PreemptPending = FALSE;
+@@ -449,6 +628,8 @@
+     m_PreemptEngine = 0;
+     m_PreemptTargetFenceId = 0;
+     KeInitializeEvent(&m_ConfigUpdateEvent, SynchronizationEvent, FALSE);
++    KeInitializeMutex(&m_NativeConfigMutex, 0);
++    KeInitializeMutex(&m_NativeDeviceStopMutex, 0);
+     m_bStopWorkThread = FALSE;
+     m_pWorkThread = NULL;
+     m_ResolutionEvent = NULL;
+@@ -613,6 +794,7 @@
+         DbgPrint(TRACE_LEVEL_WARNING, ("GetRegisterInfo failed with status 0x%X\n", Status));
+     }
+ 
++    NativeAdapterControl control(m_NativeGpuJobV1 ? &m_NativeDeviceStopMutex : NULL);
+     Status = GetPCIInfo();
+     if (!NT_SUCCESS(Status))
+     {
+@@ -682,7 +864,13 @@
+ NTSTATUS VioGpuAdapter::StopDevice(VOID)
+ {
+     PAGED_CODE();
++    NativeAdapterControl control(m_NativeGpuJobV1 ? &m_NativeDeviceStopMutex : NULL);
++    if (m_NativeGpuJobV1) {
++        vidpn.StopNativeWorker();
++        NativeJoinConfigWorker();
++    }
+     commander.Stop();
++    if (m_NativeGpuJobV1) { NativeDrainOutputReads(); }
+ 
+     m_Flags.DriverStarted = FALSE;
+     return STATUS_SUCCESS;
+@@ -771,6 +959,29 @@
+ 
+     if (HardwareUid == DISPLAY_ADAPTER_HW_ID)
+     {
++        if (m_NativeGpuJobV1) {
++            BOOLEAN terminal = (BOOLEAN)(ActionType == PowerActionShutdown ||
++                ActionType == PowerActionShutdownReset || ActionType == PowerActionShutdownOff);
++            BOOLEAN resumeClosed = (BOOLEAN)((DevicePowerState == PowerDeviceD0 ||
++                DevicePowerState == PowerDeviceUnspecified) &&
++                InterlockedCompareExchange(&m_NativeTerminalPower, 0, 0) != 0);
++            if ((DevicePowerState == PowerDeviceD3 && !terminal) || resumeClosed) {
++                // Controlled phase only: no partial teardown and no fictitious
++                // healthy D0 with closed workers/rundown. ANY hit invalidates
++                // the trial; full sleep/resume remains required before shipping.
++                static volatile LONG powerRejectLogs = 0;
++                if (InterlockedIncrement(&powerRejectLogs) <= 16) {
++                    VioGpuRegLog("C12_UNSUPPORTED_POWER uid=%u state=%u action=%u closed=%d\n",
++                        HardwareUid, (UINT)DevicePowerState, (UINT)ActionType,
++                        InterlockedCompareExchange(&m_NativeTerminalPower, 0, 0));
++                    VioGpuRegLogFlush();
++                }
++                return STATUS_NOT_SUPPORTED;
++            }
++            if (DevicePowerState == PowerDeviceD3 && terminal) {
++                InterlockedExchange(&m_NativeTerminalPower, 1);
++            }
++        }
+         if (DevicePowerState == PowerDeviceD0)
+         {
+             vidpn.AcquirePostDisplayOwnership();
+@@ -812,8 +1023,14 @@
+                 break;
+             case PowerDeviceD3:
+                 {
+-                    vidpn.Powerdown();
+-                    VioGpuAdapterClose();
++                    if (m_NativeGpuJobV1) {
++                        // Close joins producers/readers and drains actual host
++                        // source reads before its own final Powerdown frees FB.
++                        VioGpuAdapterClose();
++                    } else {
++                        vidpn.Powerdown();
++                        VioGpuAdapterClose();
++                    }
+                 }
+                 break;
+         }
+@@ -1866,6 +2083,16 @@
+     {
+         SetPowerState(DISPLAY_ADAPTER_HW_ID, PowerDeviceD0, PowerActionNone);
+     }
++    if (m_NativeGpuJobV1) {
++        NativeAdapterControl control(&m_NativeDeviceStopMutex);
++        vidpn.StopNativeWorker();
++        NativeJoinConfigWorker();
++        commander.Stop();
++        NativeDrainOutputReads(); // before framebuffer/source backing can be freed
++        vidpn.ReleasePostDisplayOwnership(TargetId, pDisplayInfo);
++        m_Flags.DriverStarted = FALSE;
++        return STATUS_SUCCESS;
++    }
+     vidpn.ReleasePostDisplayOwnership(TargetId, pDisplayInfo);
+     return StopDevice();
+ }
+@@ -2295,6 +2522,7 @@
+ // packet completed, the moment the contract requires the value.
+ static BOOLEAN MFenceDeferReadyLocked(VioGpuAdapter *a, UINT fenceId)
+ {
++    if (a->m_NativeGpuJobV1 && a->m_NativeGpuFault) { return FALSE; }
+     return (LONG)((UINT)a->m_LastCompletedFenceId - fenceId) >= 0;
+ }
+ 
+@@ -2611,18 +2839,29 @@
+     VioGpuAdapter *pAdapter;
+     VioGpuAdapter::MFENCE_DEFER *pDefer;
+     BOOLEAN Inserted;
++    BOOLEAN NativeWritten;
++    BOOLEAN NativeBlocked;
+ };
+ 
+ static BOOLEAN MFenceDeferInsertRoutine(PVOID ctx_void)
+ {
+     MFENCE_INSERT_CONTEXT *ctx = (MFENCE_INSERT_CONTEXT *)ctx_void;
+     VioGpuAdapter *a = ctx->pAdapter;
++    if (a->m_NativeGpuJobV1 && a->m_NativeGpuFault) {
++        ctx->NativeBlocked = TRUE; return TRUE;
++    }
+     if (MFenceDeferReadyLocked(a, ctx->pDefer->FenceId))
+     {
+         // Already covered (preempt skip-through ran the watermark past
+         // this id): no later completion is guaranteed to pop the entry,
+         // so the caller writes immediately.
+         ctx->Inserted = FALSE;
++        if (a->m_NativeGpuJobV1) {
++            // Authoritative readiness and publication stay in one IRQ domain.
++            *ctx->pDefer->Kva = ctx->pDefer->Value;
++            KeMemoryBarrier();
++            ctx->NativeWritten = TRUE;
++        }
+         return TRUE;
+     }
+     InsertTailList(&a->m_MFenceDeferList, &ctx->pDefer->Entry);
+@@ -2635,6 +2874,10 @@
+     MFENCE_DEFER *d = new (NonPagedPoolNx) MFENCE_DEFER;
+     if (d == NULL)
+     {
++        if (m_NativeGpuJobV1) {
++            NativeFail();
++            return; // Keep the existing KVA cache pin; never write/unpin unknown work.
++        }
+         // OOM: early visibility over a lost signal.
+         *kva = value;
+         KeMemoryBarrier();
+@@ -2649,9 +2892,18 @@
+     MFENCE_INSERT_CONTEXT sctx = {};
+     sctx.pAdapter = this;
+     sctx.pDefer = d;
+-    BOOLEAN bRet;
+-    m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
++    BOOLEAN bRet = FALSE;
++    NTSTATUS syncStatus = m_DxgkInterface.DxgkCbSynchronizeExecution(m_DxgkInterface.DeviceHandle,
+                                                MFenceDeferInsertRoutine, &sctx, 0, &bRet);
++    if (m_NativeGpuJobV1) {
++        if (!NT_SUCCESS(syncStatus) || !bRet || sctx.NativeBlocked ||
++            (!sctx.Inserted && !sctx.NativeWritten)) {
++            NativeFail();
++            return; // Retain d plus pin (linked or unlinked) until VM stop.
++        }
++        if (sctx.NativeWritten) { MFenceMapUnpin(phys); delete d; }
++        return;
++    }
+     if (!sctx.Inserted)
+     {
+         *kva = value;
+@@ -2673,6 +2925,7 @@
+         {
+             while ((pvbuf = ctrlQueue.DequeueBuffer(&len)) != NULL)
+             {
++                if (pvbuf->completion_length) { *pvbuf->completion_length = len; }
+                 DbgPrint(TRACE_LEVEL_VERBOSE, ("---> %s ctrlQueue pvbuf = %p len = %d\n", __FUNCTION__, pvbuf, len));
+ 
+                 PGPU_CTRL_HDR pcmd = (PGPU_CTRL_HDR)pvbuf->buf;
+@@ -2991,6 +3244,22 @@
+ NTSTATUS VioGpuAdapter::GetRegisterInfo(void)
+ {
+     PAGED_CODE();
++    if (!m_NativeModeRead) {
++    // Shared selector with C12 UMD: exact service Parameters DWORD, boot-read.
++    ULONG nativeValue = 0;
++    ULONG nativeDefault = 0;
++    RTL_QUERY_REGISTRY_TABLE nativeQuery[2] = {};
++    nativeQuery[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK;
++    nativeQuery[0].Name = (PWSTR)L"NativeGpuJobV1";
++    nativeQuery[0].EntryContext = &nativeValue;
++    nativeQuery[0].DefaultType = (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_DWORD;
++    nativeQuery[0].DefaultData = &nativeDefault;
++    nativeQuery[0].DefaultLength = sizeof(nativeDefault);
++    NTSTATUS nativeStatus = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
++        L"VioGpu3D\\Parameters", nativeQuery, NULL, NULL);
++    m_NativeGpuJobV1 = (BOOLEAN)(NT_SUCCESS(nativeStatus) && nativeValue == 1);
++    m_NativeModeRead = TRUE;
++    }
+ 
+     NTSTATUS Status = STATUS_SUCCESS;
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("---> %s\n", __FUNCTION__));
+@@ -3148,6 +3417,11 @@
+     {
+         virtio_device_ready(&m_VioDev);
+         SetHardwareInit(TRUE);
++        if (m_NativeGpuJobV1) {
++            LARGE_INTEGER due;
++            due.QuadPart = -10000LL * VIOGPU_GATE_EXPIRY_PERIOD_MS;
++            KeSetTimerEx(&m_GateExpiryTimer, due, VIOGPU_GATE_EXPIRY_PERIOD_MS, &m_GateExpiryDpc);
++        }
+     }
+     else
+     {
+@@ -3163,17 +3437,25 @@
+ void VioGpuAdapter::VioGpuAdapterClose()
+ {
+     PAGED_CODE();
++    NativeAdapterControl control(m_NativeGpuJobV1 ? &m_NativeDeviceStopMutex : NULL);
+     DbgPrint(TRACE_LEVEL_FATAL, ("---> %s\n", __FUNCTION__));
+ 
++    if (m_NativeGpuJobV1) {
++        vidpn.StopNativeWorker();
++        NativeJoinConfigWorker();
++        commander.Stop();
++        NativeDrainOutputReads();
++    }
+     if (IsHardwareInit())
+     {
++        if (m_NativeGpuJobV1) { KeCancelTimer(&m_GateExpiryTimer); }
+         // The ISR samples IsHardwareInit() and then dereferences
+         // ctrlQueue / m_CursorQueue / m_VioDev. Flip the flag and
+         // disable interrupts under DxgkCb-synchronisation so the
+         // ISR cannot read TRUE here and then touch state that the
+         // teardown below is about to invalidate.
+         BOOLEAN syncRet = FALSE;
+-        m_DxgkInterface.DxgkCbSynchronizeExecution(
++        NTSTATUS syncStatus = m_DxgkInterface.DxgkCbSynchronizeExecution(
+             m_DxgkInterface.DeviceHandle,
+             [](PVOID p) -> BOOLEAN {
+                 VioGpuAdapter *self = (VioGpuAdapter *)p;
+@@ -3183,6 +3465,19 @@
+                 return TRUE;
+             },
+             this, 0, &syncRet);
++        if (m_NativeGpuJobV1) {
++            if (!NT_SUCCESS(syncStatus) || !syncRet || KeGetCurrentIrql() != PASSIVE_LEVEL) {
++                NativeFail();
++                // No proven ISR exclusion means no queue reset/free permission.
++                KEVENT hold;
++                KeInitializeEvent(&hold, NotificationEvent, FALSE);
++                for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++            }
++            // A strict callback may have queued final command cleanup before
++            // its DPC returns to ReleaseBuffer. Stop's job join alone does not
++            // join that final DPC tail. IRQ is now proven disabled; drain it.
++            KeFlushQueuedDpcs();
++        }
+         virtio_device_reset(&m_VioDev);
+         virtio_delete_queues(&m_VioDev);
+         ctrlQueue.Close();
+@@ -3377,6 +3672,15 @@
+         return status;
+     }
+ 
++    if (m_NativeGpuJobV1) {
++        if (KeWaitForSingleObject(&m_NativeConfigMutex, Executive, KernelMode, FALSE, NULL) != STATUS_SUCCESS) {
++            NativeFail(); return STATUS_UNSUCCESSFUL;
++        }
++        if (m_pWorkThread || m_NativeConfigUnknown) {
++            NativeFail(); KeReleaseMutex(&m_NativeConfigMutex, FALSE); return STATUS_INVALID_DEVICE_STATE;
++        }
++        m_bStopWorkThread = FALSE;
++    }
+     status = PsCreateSystemThread(&threadHandle,
+                                   (ACCESS_MASK)0,
+                                   NULL,
+@@ -3387,10 +3691,12 @@
+ 
+     if (!NT_SUCCESS(status))
+     {
++        if (m_NativeGpuJobV1) { KeReleaseMutex(&m_NativeConfigMutex, FALSE); }
+         DbgPrint(TRACE_LEVEL_FATAL, ("%s failed to create system thread, status %x\n", __FUNCTION__, status));
+         VioGpuDbgBreak();
+         return status;
+     }
++    if (m_NativeGpuJobV1) { m_NativeConfigUnknown = TRUE; }
+     // ObReferenceObjectByHandle must succeed or HWClose has no way to
+     // wait on / dereference the running kernel thread. On failure,
+     // signal the thread to exit and fail HWInit so no orphan worker
+@@ -3401,7 +3707,7 @@
+                                        KernelMode,
+                                        (PVOID *)(&m_pWorkThread),
+                                        NULL);
+-    ZwClose(threadHandle);
++    if (!m_NativeGpuJobV1) { ZwClose(threadHandle); }
+     if (!NT_SUCCESS(status))
+     {
+         DbgPrint(TRACE_LEVEL_FATAL,
+@@ -3410,8 +3716,24 @@
+         m_pWorkThread = NULL;
+         m_bStopWorkThread = TRUE;
+         KeSetEvent(&m_ConfigUpdateEvent, IO_NO_INCREMENT, FALSE);
++        if (m_NativeGpuJobV1) {
++            NTSTATUS joined = ZwWaitForSingleObject(threadHandle, FALSE, NULL);
++            if (!NT_SUCCESS(joined)) {
++                NativeFail();
++                KEVENT hold; KeInitializeEvent(&hold, NotificationEvent, FALSE);
++                for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++            }
++            m_NativeConfigUnknown = FALSE;
++            ZwClose(threadHandle);
++            KeReleaseMutex(&m_NativeConfigMutex, FALSE);
++        }
+         VioGpuDbgBreak();
+         return status;
++    }
++    if (m_NativeGpuJobV1) {
++        m_NativeConfigUnknown = FALSE;
++        ZwClose(threadHandle);
++        KeReleaseMutex(&m_NativeConfigMutex, FALSE);
+     }
+ 
+     // FIXME: bar 0 is not required to be present
+@@ -3453,9 +3775,49 @@
+     return status;
+ }
+ 
++void VioGpuAdapter::NativeDrainOutputReads()
++{
++    PAGED_CODE();
++    if (m_NativeReadDrained) { return; } // known never-started or already drained
++    if (!IsHardwareInit() || !ctrlQueue.NativeDrainDisplayReads()) {
++        NativeFail(); NativeAdapterHoldForVmStop();
++    }
++    // Matched C12 host processes this CPU response only AFTER every earlier
++    // ResourceFlush FD is terminal. A terminal GPU error is safe for teardown
++    // but is NOT positive image/acceptance evidence. Not old-host GPU proof.
++    m_NativeReadDrained = TRUE;
++}
++
++void VioGpuAdapter::NativeJoinConfigWorker()
++{
++    PAGED_CODE();
++    if (KeWaitForSingleObject(&m_NativeConfigMutex, Executive, KernelMode, FALSE, NULL) != STATUS_SUCCESS) {
++        NativeFail();
++        KEVENT hold; KeInitializeEvent(&hold, NotificationEvent, FALSE);
++        for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++    }
++    m_bStopWorkThread = TRUE;
++    KeSetEvent(&m_ConfigUpdateEvent, IO_NO_INCREMENT, FALSE);
++    BOOLEAN unknown = m_NativeConfigUnknown;
++    if (m_pWorkThread) {
++        NTSTATUS joined = KeWaitForSingleObject(m_pWorkThread, Executive, KernelMode, FALSE, NULL);
++        if (joined == STATUS_SUCCESS) {
++            ObDereferenceObject(m_pWorkThread);
++            m_pWorkThread = NULL;
++        } else { unknown = TRUE; }
++    }
++    if (unknown) {
++        NativeFail();
++        KEVENT hold; KeInitializeEvent(&hold, NotificationEvent, FALSE);
++        for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++    }
++    KeReleaseMutex(&m_NativeConfigMutex, FALSE);
++}
++
+ NTSTATUS VioGpuAdapter::HWClose(void)
+ {
+     PAGED_CODE();
++    if (m_NativeGpuJobV1) { NativeJoinConfigWorker(); }
+     DbgPrint(TRACE_LEVEL_INFORMATION, ("---> %s\n", __FUNCTION__));
+     SetHardwareInit(FALSE);
+ 
+--- a/viogpu/viogpu3d/viogpu_adapter.h
++++ b/viogpu/viogpu3d/viogpu_adapter.h
+@@ -166,7 +166,9 @@
+     volatile ULONG m_PendingWorks;
+     KEVENT m_ConfigUpdateEvent;
+     PETHREAD m_pWorkThread;
+-    BOOLEAN m_bStopWorkThread;
++    volatile BOOLEAN m_bStopWorkThread;
++    KMUTEX m_NativeConfigMutex;
++    BOOLEAN m_NativeConfigUnknown = FALSE;
+     PKEVENT m_ResolutionEvent;
+     HANDLE m_ResolutionEventHandle;
+ 
+@@ -403,6 +405,24 @@
+     // interrupt lock instead -- both operations run inside a
+     // SynchronizeExecution routine.
+     BOOLEAN ReportDmaCompleted(UINT fenceId, UINT node, UINT engine);
++
++    // C12 boot-immutable opt-in. All native scheduler fences are registered
++    // before execution; only registered positive completions can retire them.
++    BOOLEAN m_NativeGpuJobV1 = FALSE;
++    BOOLEAN m_NativeModeRead = FALSE;
++    volatile LONG m_NativeGpuFault = 0;
++    LIST_ENTRY m_NativeDmaList;
++    UINT m_NativeDmaCount = 0;
++    NTSTATUS NativeRegisterFence(NATIVE_DMA_RECORD *record, UINT node, UINT engine);
++    BOOLEAN NativeStartFence(UINT fenceId);
++    BOOLEAN NativeHasOutstanding();
++    void NativeFail();
++    void NativeJoinConfigWorker();
++    void NativeDrainOutputReads();
++    volatile LONG m_NativeTerminalPower = 0;
++    BOOLEAN m_NativeReadDrained = TRUE; // no output reader exists before VidPN start
++    KMUTEX m_NativeDeviceStopMutex;
++
+     // Record the request; acks immediately when nothing is executing, else
+     // the ack rides the completion that reaches the target.
+     void ReportDmaPreempted(UINT preemptFenceId, UINT node, UINT engine);
+@@ -423,7 +443,7 @@
+     // m_LastSubmittedFenceId forever and the node never restarts.  Runs the
+     // sync-up under the interrupt lock for the same atomicity reason as the
+     // preempt ack above.  Returns the fence id everything was synced to.
+-    UINT ResetFenceStateFromTimeout(void);
++    UINT ResetFenceStateFromTimeout(BOOLEAN *blocked = NULL);
+ 
+     // ---- present-fence tokens (render -> flip ordering) ------------------
+     //
+--- a/viogpu/viogpu3d/viogpu_device.cpp
++++ b/viogpu/viogpu3d/viogpu_device.cpp
+@@ -65,6 +65,7 @@
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<--> %s\n", __FUNCTION__));
+ 
+     m_pAdapter = pAdapter;
++    ExInitializeRundownProtection(&m_NativeJobRundown);
+ }
+ 
+ VioGpuDevice::~VioGpuDevice()
+@@ -75,6 +76,9 @@
+     // The stamp table compares device pointers, so nothing may stay bound
+     // to this one once its address can be reused.
+     m_pAdapter->commander.FreeStamped(this);
++    // PASSIVE, no queue/source/IRQ lock. Unknown GPU jobs never release this
++    // rundown; VM teardown must stop vCPUs rather than free live backing.
++    ExWaitForRundownProtectionRelease(&m_NativeJobRundown);
+ }
+ 
+ NTSTATUS VioGpuDevice::GenerateBltPresent(DXGKARG_PRESENT *pPresent, VioGpuDeviceAllocation *srcDev, VioGpuDeviceAllocation *dstDev)
+@@ -514,6 +518,31 @@
+     }
+ 
+ 
++    // Source-only bounded diagnostic proposal. NativeGpuJobV1 is the existing
++    // controlled-trial opt-in; no rendering or return-status change.
++    if (m_pAdapter->m_NativeGpuJobV1 &&
++        (pPresent->Flags.SrcColorKey || pPresent->Flags.DstColorKey)) {
++        static volatile LONG colorKeyLogs = 0;
++        LONG n = InterlockedIncrement(&colorKeyLogs);
++        if (n <= 32) {
++            VioGpuAllocation *colorSrc = src ? src->GetAllocation() : NULL;
++            VioGpuAllocation *colorDst = dst ? dst->GetAllocation() : NULL;
++            VioGpuRegLog("CAPTION_COLORKEY n=%d flags=0x%x color=0x%08x src=%u dst=%u sb=%u sc=%u db=%u dc=%u "
++                "sr=(%ld,%ld,%ld,%ld) dr=(%ld,%ld,%ld,%ld) rects=%u\n",
++                n, pPresent->Flags.Value, pPresent->Color,
++                colorSrc ? colorSrc->GetId() : 0u,
++                colorDst ? colorDst->GetId() : 0u,
++                colorSrc ? (UINT)colorSrc->IsBlob() : 0u,
++                colorSrc ? (UINT)colorSrc->IsCoherent() : 0u,
++                colorDst ? (UINT)colorDst->IsBlob() : 0u,
++                colorDst ? (UINT)colorDst->IsCoherent() : 0u,
++                pPresent->SrcRect.left, pPresent->SrcRect.top,
++                pPresent->SrcRect.right, pPresent->SrcRect.bottom,
++                pPresent->DstRect.left, pPresent->DstRect.top,
++                pPresent->DstRect.right, pPresent->DstRect.bottom, pPresent->SubRectCnt);
++        }
++    }
++
+     if (pPresent->Flags.Blt)
+     {
+         // The blt-present src is the back buffer DWM just rendered into.
+@@ -659,7 +688,12 @@
+                                         pRender->DmaBufferPrivateDataSize);
+     }
+     cmd->SetDmaBuf(pDmaBufStart);
+-    cmd->AttachAllocations(pRender->pAllocationList, pRender->AllocationListSize);
++    NTSTATUS nativeAttach = cmd->AttachAllocations(pRender->pAllocationList, pRender->AllocationListSize);
++    if (m_pAdapter->m_NativeGpuJobV1 && !NT_SUCCESS(nativeAttach)) {
++        m_pAdapter->commander.Unstamp(cmd);
++        delete cmd;
++        return nativeAttach;
++    }
+ 
+     // Mirror the built body for SubmitCommandVirtual.  A render
+     // that exceeds the mirror window is captured on the command here (the
+--- a/viogpu/viogpu3d/viogpu_device.h
++++ b/viogpu/viogpu3d/viogpu_device.h
+@@ -63,6 +63,9 @@
+ 
+     CtrlQueue *GetCtrlQueue();
+ 
++    EX_RUNDOWN_REF m_NativeJobRundown;
++    volatile LONG m_NativeProofLogs = 0;
++
+     VioGpuContext m_Context;
+     VioGpuContext m_Virgl;
+ 
+--- a/viogpu/viogpu3d/viogpu_command.cpp
++++ b/viogpu/viogpu3d/viogpu_command.cpp
+@@ -3,12 +3,38 @@
+ #include "viogpu_adapter.h"
+ #include "baseobj.h"
+ 
++// ntifs.h declares this native HANDLE wait but cannot coexist with the
++// ntddk.h display-miniport headers. Signature matches WDK 10.0.26100.0.
++extern "C" NTSYSAPI NTSTATUS NTAPI ZwWaitForSingleObject(
++    _In_ HANDLE Handle, _In_ BOOLEAN Alertable, _In_opt_ PLARGE_INTEGER Timeout);
++
++
+ // Declared only in ntifs.h, which cannot coexist with the ntddk.h this
+ // display miniport pulls in.
+ extern "C" NTSYSAPI ULONG NTAPI RtlRandomEx(_Inout_ PULONG Seed);
+ 
+ #pragma code_seg(push)
+ #pragma code_seg()
++
++static DECLSPEC_NORETURN void NativeWaitForVmStop()
++{
++    // Only called at PASSIVE with no queue/IRQ/source lock held. Unknown
++    // lifetime never returns to an object/backing free; external VM stop wins.
++    KEVENT hold;
++    KeInitializeEvent(&hold, NotificationEvent, FALSE);
++    for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++}
++
++class NativeControlGuard {
++    KMUTEX *m_Mutex;
++  public:
++    explicit NativeControlGuard(KMUTEX *mutex) : m_Mutex(mutex) {
++        if (mutex && KeWaitForSingleObject(mutex, Executive, KernelMode, FALSE, NULL) != STATUS_SUCCESS) {
++            NativeWaitForVmStop();
++        }
++    }
++    ~NativeControlGuard() { if (m_Mutex) { KeReleaseMutex(m_Mutex, FALSE); } }
++};
+ 
+ VioGpuCommand::VioGpuCommand(VioGpuAdapter *adapter)
+ {
+@@ -41,6 +67,20 @@
+ 
+     m_allocations = NULL;
+     m_allocationsLength = 0;
++    m_AllocationHolds = NULL;
++    m_NativeLifetime = FALSE;
++    m_NativePrepareOk = TRUE;
++    m_NativeContext = FALSE;
++    m_NativeRequiresGpuProof = FALSE;
++    m_NativeReplyLength = 0;
++    m_NativeReply = 0;
++    m_AdmissionHeld = 0;
++    InitializeListHead(&m_NativeRecord.Link);
++    m_NativeRecord.Owner = this;
++    m_NativeRecord.FenceId = 0;
++    m_NativeRecord.State = 0;
++    m_NativeCompletionRecorded = 0;
++    m_NativeLedgerRetired = 0;
+ 
+     list_entry.Blink = NULL;
+     list_entry.Flink = NULL;
+@@ -72,6 +112,12 @@
+         m_privBodyCopy = NULL;
+     }
+ 
++    ReleaseNativeLifetime();
++    for (UINT i = 0; m_AllocationHolds && i < m_allocationsLength; ++i) {
++        if (m_AllocationHolds[i] & 1) { m_allocations[i]->Release(); }
++    }
++    delete[] m_AllocationHolds;
++    delete[] m_allocations;
+     m_pCommander->Unstamp(this);
+ }
+ 
+@@ -119,6 +165,14 @@
+     // the runtime's submission-overhead profiling does not actually
+     // execute the body.
+     m_NullRendering = pSubmitCommand->Flags.NullRendering ? TRUE : FALSE;
++    PrepareNativeLifetime();
++    const VIOGPU_DMA_PRIVATE *nativePriv =
++        (const VIOGPU_DMA_PRIVATE *)pSubmitCommand->pDmaBufferPrivateData;
++    if (m_NativeContext && nativePriv &&
++        pSubmitCommand->DmaBufferPrivateDataSize >= sizeof(*nativePriv) &&
++        nativePriv->magic == VIOGPU_DMA_PRIV_MAGIC && nativePriv->bodySize && !m_pCommand) {
++        m_NativePrepareOk = FALSE; // Never turn body-copy loss into a completed no-op.
++    }
+ }
+ 
+ void VioGpuCommand::MirrorBody(void *priv, ULONG privSize, const void *body, SIZE_T size)
+@@ -229,6 +283,81 @@
+ 
+     m_pDevice = VioGpuDevice::FromHandle(pSubmitCommand->hContext);
+     m_NullRendering = pSubmitCommand->Flags.NullRendering ? TRUE : FALSE;
++    PrepareNativeLifetime();
++    const VIOGPU_DMA_PRIVATE *nativePriv =
++        (const VIOGPU_DMA_PRIVATE *)pSubmitCommand->pDmaBufferPrivateData;
++    if (m_NativeContext && nativePriv &&
++        pSubmitCommand->DmaBufferPrivateDataSize >= sizeof(*nativePriv) &&
++        nativePriv->magic == VIOGPU_DMA_PRIV_MAGIC && nativePriv->bodySize && !m_pCommand) {
++        m_NativePrepareOk = FALSE; // Never turn body-copy loss into a completed no-op.
++    }
++}
++
++#pragma code_seg(pop)
++
++#pragma code_seg(push)
++#pragma code_seg()
++
++// Mirror of the negotiated C12 transport NotifyV2 only; no generated ABI
++// dependency and no pointer/handle in the wire record. Never infer end_tail.
++struct C12_NOTIFY_V2 {
++    ULONG Type, Flags;
++    ULONGLONG Object;
++    ULONG Size, HeaderReserved;
++    ULONGLONG RingId, Generation, PublishSerial;
++    ULONG EndTail, Reserved;
++};
++C_ASSERT(sizeof(C12_NOTIFY_V2) == 56);
++C_ASSERT(FIELD_OFFSET(C12_NOTIFY_V2, EndTail) == 48);
++static LONG NativeNotifyClass(const void *body, ULONG bytes)
++{
++    if (bytes < sizeof(ULONG)) { return 0; }
++    ULONG type = 0;
++    RtlCopyMemory(&type, body, sizeof(type));
++    if (type != 0x00010009u) { return 0; }
++    if (bytes != sizeof(C12_NOTIFY_V2)) { return -1; }
++    C12_NOTIFY_V2 n;
++    RtlCopyMemory(&n, body, sizeof(n));
++    return n.Flags == 0 && n.Object == 0 && n.Size == sizeof(n) &&
++        n.HeaderReserved == 0 && n.RingId != 0 && n.Generation != 0 &&
++        n.PublishSerial != 0 && n.Reserved == 0 ? 1 : -1;
++}
++
++void VioGpuCommand::PrepareNativeLifetime()
++{
++    m_NativeContext = (BOOLEAN)(m_pAdapter->m_NativeGpuJobV1 && m_pDevice &&
++        m_pDevice->m_Context.GetCapset() == VIRTIO_GPU_CAPSET_NEPTUNE);
++    if (!m_NativeContext || m_NativeLifetime) { return; }
++    m_NativePrepareOk = FALSE;
++    if (!ExAcquireRundownProtection(&m_pDevice->m_NativeJobRundown)) { return; }
++    m_NativeLifetime = TRUE;
++    m_pCommander->NativeLifetimeStarted();
++    for (UINT i = 0; m_AllocationHolds && i < m_allocationsLength; ++i) {
++        if ((m_AllocationHolds[i] & 1) &&
++            !ExAcquireRundownProtection(&m_allocations[i]->m_NativeJobRundown)) { return; }
++        if (m_AllocationHolds[i] & 1) { m_AllocationHolds[i] |= 2; }
++    }
++    m_NativePrepareOk = TRUE;
++}
++void VioGpuCommand::ReleaseNativeLifetime()
++{
++    for (UINT i = 0; m_AllocationHolds && i < m_allocationsLength; ++i) {
++        if (m_AllocationHolds[i] & 2) {
++            ExReleaseRundownProtection(&m_allocations[i]->m_NativeJobRundown);
++            m_AllocationHolds[i] &= (UCHAR)~2;
++        }
++    }
++    if (m_NativeLifetime) {
++        m_NativeLifetime = FALSE;
++        ExReleaseRundownProtection(&m_pDevice->m_NativeJobRundown);
++        m_pCommander->NativeLifetimeEnded();
++    }
++}
++void VioGpuCommand::ReleaseAdmission()
++{
++    if (InterlockedExchange(&m_AdmissionHeld, 0) != 0) {
++        m_pCommander->AdmissionReleased();
++    }
+ }
+ 
+ #pragma code_seg(pop)
+@@ -240,6 +369,20 @@
+     PAGED_CODE();
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<---> %s\n", __FUNCTION__));
+ 
++    if (InterlockedExchange(&m_NativeReplyLog, 0) && m_NativeRequiresGpuProof && m_NativeLifetime) {
++        LONG n = InterlockedIncrement(&m_pDevice->m_NativeProofLogs);
++        if (n <= 8 || (n <= 8192 && (n % 256) == 0)) {
++            VioGpuRegLog("C12 GPU_REPLY ctx=%u hostFence=%llu nativeFence=%u len=%u type=0x%x flags=0x%x valid=%d sample=%d\n",
++                m_NativeResponseContext, m_NativeResponseFence, m_FenceId, m_NativeReplyLength,
++                m_NativeResponseType, m_NativeResponseFlags, m_NativeReply, n);
++        }
++    }
++    if (!m_NativePrepareOk || (m_pAdapter->m_NativeGpuJobV1 && m_pAdapter->m_NativeGpuFault) ||
++        InterlockedCompareExchange(&m_NativeReply, 0, 0) < 0) {
++        m_pAdapter->NativeFail();
++        DbgPrint(TRACE_LEVEL_ERROR, ("C12 poisoned job fence=%u; retaining refs, no DMA completion\n", m_FenceId));
++        return;
++    }
+     if (m_NullRendering)
+     {
+         // The runtime asked us to simulate insertion of the DMA buffer
+@@ -280,7 +423,8 @@
+             DbgPrint(TRACE_LEVEL_ERROR,
+                      ("%s fence_id=%d truncated command header (%Iu bytes left)\n",
+                       __FUNCTION__, m_FenceId, (size_t)(m_pEnd - m_pCommand)));
+-            goto end;
++            if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
++                        goto end;
+         }
+ 
+         VIOGPU_COMMAND_HDR *cmdHdr = (VIOGPU_COMMAND_HDR *)m_pCommand;
+@@ -292,7 +436,8 @@
+                      ("%s fence_id=%d command body size=%u exceeds %Iu bytes left\n",
+                       __FUNCTION__, m_FenceId, cmdHdr->size,
+                       (size_t)(m_pEnd - m_pCommand)));
+-            goto end;
++            if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
++                        goto end;
+         }
+ 
+         void *cmdBody = m_pCommand;
+@@ -304,8 +449,8 @@
+         {
+             case VIOGPU_CMD_SUBMIT:
+                 {
+-                    PBYTE submitCmd = new (NonPagedPoolNx) BYTE[cmdHdr->size];
+-                    if (!submitCmd)
++                    PBYTE submitCmd = cmdHdr->size ? new (NonPagedPoolNx) BYTE[cmdHdr->size] : NULL;
++                    if (cmdHdr->size && !submitCmd)
+                     {
+                         DbgPrint(TRACE_LEVEL_ERROR,
+                                  ("%s fence_id=%d OOM allocating submit buffer (size=%u); skipping command\n",
+@@ -315,9 +460,10 @@
+                         // A preceding ring submit may have deferred its kick
+                         // to this command; flush before bailing.
+                         m_pAdapter->ctrlQueue.FlushKick();
++                        if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
+                         goto end;
+                     }
+-                    RtlCopyMemory(submitCmd, cmdBody, cmdHdr->size);
++                    if (cmdHdr->size) { RtlCopyMemory(submitCmd, cmdBody, cmdHdr->size); }
+ 
+                     if ((cmdHdr->flags & VIOGPU_EXECBUF_RING_IDX) != 0 && cmdHdr->ring_idx != 0)
+                     {
+@@ -372,6 +518,37 @@
+                         break;
+                     }
+ 
++                    if (m_NativeContext &&
++                        (cmdHdr->flags & VIOGPU_EXECBUF_RING_IDX) && cmdHdr->ring_idx == 0 &&
++                        !(cmdHdr->flags & VIOGPU_EXECBUF_VIRGL)) {
++                        LONG notify = NativeNotifyClass(submitCmd, cmdHdr->size);
++                        if (notify < 0 || (notify == 1 && m_pCommand != m_pEnd)) {
++                            delete[] submitCmd;
++                            InterlockedExchange(&m_NativeReply, -1);
++                            m_pAdapter->NativeFail();
++                            return;
++                        }
++                        m_NativeRequiresGpuProof = (BOOLEAN)(notify == 1);
++                        AddPending();
++                        InterlockedExchange(&m_NativeReply, 0);
++                        BOOLEAN owned = FALSE;
++                        BOOLEAN accepted = m_pAdapter->ctrlQueue.SubmitNativeGpuJob(submitCmd,
++                            cmdHdr->size, m_pDevice->m_Context.GetId(), NativeGpuReply, this,
++                            m_NativeRequiresGpuProof, &m_NativeReplyLength, &owned);
++                        if (!owned) { delete[] submitCmd; DropPending(); }
++                        if (!accepted) {
++                            InterlockedExchange(&m_NativeReply, -1);
++                            m_pAdapter->NativeFail();
++                            return; // No queue transfer or positive GPU evidence.
++                        }
++                        // Only admission is released. Command/body/context/allocation
++                        // ownership persists until the validated actual GPU callback.
++                        // A terminal submit has no undispatched remainder for
++                        // a later scheduler job to overtake. New NotifyV2's
++                        // negotiated wrapper is exactly one command per packet.
++                        if (m_pCommand == m_pEnd) { ReleaseAdmission(); }
++                        return;
++                    }
+                     AddPending();
+                     if (!m_pAdapter->ctrlQueue.SubmitCommand(submitCmd,
+                                                              cmdHdr->size,
+@@ -391,7 +568,8 @@
+                         delete[] submitCmd;
+                         if (DropPending() == 0)
+                         {
+-                            goto end;
++                            if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
++                        goto end;
+                         }
+                     }
+                     return;
+@@ -408,6 +586,7 @@
+                         DbgPrint(TRACE_LEVEL_ERROR,
+                                  ("%s fence_id=%d GATE with short body (%u)\n",
+                                   __FUNCTION__, m_FenceId, cmdHdr->size));
++                        if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
+                         break;
+                     }
+                     ULONGLONG token;
+@@ -429,6 +608,7 @@
+                         DbgPrint(TRACE_LEVEL_ERROR,
+                                  ("%s fence_id=%d PRESENT_WAIT in a UMD-authored body; ignored\n",
+                                   __FUNCTION__, m_FenceId));
++                        if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
+                         break;
+                     }
+                     if (cmdHdr->size < sizeof(ULONGLONG))
+@@ -436,6 +616,7 @@
+                         DbgPrint(TRACE_LEVEL_ERROR,
+                                  ("%s fence_id=%d PRESENT_WAIT with short body (%u)\n",
+                                   __FUNCTION__, m_FenceId, cmdHdr->size));
++                        if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
+                         break;
+                     }
+                     ULONGLONG token;
+@@ -453,6 +634,7 @@
+                         DbgPrint(TRACE_LEVEL_ERROR,
+                                  ("%s fence_id=%d TRANSFER with short body (%u)\n",
+                                   __FUNCTION__, m_FenceId, cmdHdr->size));
++                        if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
+                         goto end;
+                     }
+                     VIOGPU_TRANSFER_CMD *transferCmd = (VIOGPU_TRANSFER_CMD *)cmdBody;
+@@ -473,7 +655,8 @@
+                                   __FUNCTION__, m_FenceId, transferCmd->res_id));
+                         if (DropPending() == 0)
+                         {
+-                            goto end;
++                            if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
++                        goto end;
+                         }
+                     }
+                     return;
+@@ -585,8 +768,10 @@
+                             valid = FALSE; break;
+                         }
+                     }
+-                    if (!valid)
++                    if (!valid) {
++                        if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
+                         goto end;
++                    }
+ 
+                     // Issue each map/unmap that actually changes state, every
+                     // one carrying QueueRunningCb. A loop guard holds one
+@@ -627,9 +812,10 @@
+                 }
+ 
+             case VIOGPU_CMD_NOP:
++                break; // explicit known no-op only
+             default:
+                 {
+-                    // DO NOTHING
++                    if (m_NativeContext) { m_pAdapter->NativeFail(); return; }
+                     break;
+                 }
+         }
+@@ -637,18 +823,23 @@
+ 
+ end:
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<---> %s finished fence_id=%d, this=%p, m_pAdapter=%p\n", __FUNCTION__, m_FenceId, this, m_pAdapter));
+-
+-    delete[] m_allocations;
+ 
+     // Retire the DXGK fence. For a command with outstanding async submissions
+     // (the render hot path) this already fired from the response DPC via
+     // QueueRunningCb -> NotifyCompletion() -- the reliable delivery path -- and
+     // is a guarded no-op here. Commands that finish synchronously in Run()
+     // (NullRendering, empty bodies) have no DPC callback and retire here.
+-    NotifyCompletion();
+-
+-    m_pCommander->CommandFinished();
+-
++    ReleaseAdmission();
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        if (InterlockedExchange(&m_NativeCompletionRecorded, 1) == 0) {
++            NotifyCompletion(); // adapter queues final cleanup after prefix retirement
++            return;
++        }
++        if (!InterlockedCompareExchange(&m_NativeLedgerRetired, 0, 0)) { return; }
++    } else {
++        NotifyCompletion();
++    }
++    m_pCommander->Wake();
+     delete this;
+ }
+ 
+@@ -659,6 +850,7 @@
+     // A monitored-fence signal must NOT be written here -- the packets queued
+     // ahead of it were handed back too and have not executed -- it rides
+     // along to the resubmission instead.
++    ReleaseNativeLifetime();
+     if (m_Cookie != 0)
+     {
+         DbgPrint(TRACE_LEVEL_ERROR,
+@@ -685,8 +877,6 @@
+         m_pAdapter->MFenceMapUnpin(m_MFencePhys);
+         m_MFenceKva = NULL;
+     }
+-    delete[] m_allocations;
+-    m_allocations = NULL;
+     delete this;
+ }
+ 
+@@ -702,6 +892,12 @@
+         return STATUS_INSUFFICIENT_RESOURCES;
+     }
+     m_allocationsLength = allocationListLength;
++    RtlZeroMemory(m_allocations, sizeof(*m_allocations) * allocationListLength);
++    if (m_pAdapter->m_NativeGpuJobV1 && allocationListLength) {
++        m_AllocationHolds = new (NonPagedPoolNx) UCHAR[allocationListLength];
++        if (!m_AllocationHolds) { return STATUS_INSUFFICIENT_RESOURCES; }
++        RtlZeroMemory(m_AllocationHolds, allocationListLength);
++    }
+     for (UINT i = 0; i < allocationListLength; i++)
+     {
+         VioGpuDeviceAllocation *deviceAllocation =
+@@ -709,6 +905,9 @@
+         if (deviceAllocation)
+         {
+             m_allocations[i] = deviceAllocation->GetAllocation();
++            if (m_AllocationHolds) {
++                m_allocations[i]->AddRef(); m_AllocationHolds[i] = 1;
++            }
+         }
+         else
+         {
+@@ -761,6 +960,30 @@
+     }
+ }
+ 
++void VioGpuCommand::NativeGpuReply(void *opaque, void *request, void *response)
++{
++    VioGpuCommand *self = (VioGpuCommand *)opaque;
++    GPU_CTRL_HDR *q = (GPU_CTRL_HDR *)request;
++    GPU_CTRL_HDR *r = (GPU_CTRL_HDR *)response;
++    const ULONG common = VIRTIO_GPU_FLAG_FENCE | VIRTIO_GPU_FLAG_RING_IDX;
++    const ULONG expected = common | (self->m_NativeRequiresGpuProof ? VIOGPU_NATIVE_JOB_DONE_V1 : 0u);
++    BOOLEAN valid = (BOOLEAN)(self->m_NativeReplyLength == sizeof(GPU_CTRL_HDR) &&
++        q && r && q->type == VIRTIO_GPU_CMD_SUBMIT_3D && r->type == VIRTIO_GPU_RESP_OK_NODATA &&
++        r->flags == expected && r->ctx_id == q->ctx_id &&
++        q->ring_idx == 0 && r->ring_idx == 0 && r->fence_id == q->fence_id &&
++        ((q->flags & VIOGPU_NATIVE_JOB_REQUEST_V1) != 0) == (self->m_NativeRequiresGpuProof != FALSE));
++    self->m_NativeResponseType = r ? r->type : 0;
++    self->m_NativeResponseFlags = r ? r->flags : 0;
++    self->m_NativeResponseContext = r ? r->ctx_id : 0;
++    self->m_NativeResponseFence = r ? r->fence_id : 0;
++    InterlockedExchange(&self->m_NativeReplyLog, 1);
++    // May run inline under ctrlQueue lock: POD/atomics + existing queue wake only.
++    // No callback takes IRQ synchronization, releases an allocation or waits.
++    InterlockedExchange(&self->m_NativeReply, valid ? 1 : -1);
++    if (!valid) { self->m_pAdapter->NativeFail(); }
++    if (self->DropPending() == 0) { self->QueueRunning(); }
++}
++
+ void VioGpuCommand::QueueRunningCb(void *cmd, void *, void *)
+ {
+     VioGpuCommand *self = (VioGpuCommand *)cmd;
+@@ -786,7 +1009,7 @@
+         // engine (submitted==completed). The worker still re-enters Run() to do
+         // the paged cleanup (delete); its NotifyCompletion() is a
+         // guarded no-op.
+-        if (self->m_pCommand >= self->m_pEnd)
++        if (!self->m_pAdapter->m_NativeGpuJobV1 && self->m_pCommand >= self->m_pEnd)
+         {
+             self->NotifyCompletion();
+         }
+@@ -814,6 +1037,12 @@
+     KeInitializeSpinLock(&m_Lock);
+ 
+     m_running = 0;
++    m_NativeLifetimes = 0;
++    m_NativeStopping = 0;
++    m_NativeLifecycle = 0;
++    KeInitializeMutex(&m_NativeStopMutex, 0);
++    ExInitializeRundownProtection(&m_SubmitRundown);
++    KeInitializeEvent(&m_NativeIdle, NotificationEvent, TRUE);
+     KeInitializeSpinLock(&m_StampLock);
+     InitializeListHead(&m_StampList);
+     m_StampCounter = 0;
+@@ -829,12 +1058,26 @@
+     PAGED_CODE();
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<---> %s\n", __FUNCTION__));
+ 
++    NativeControlGuard control(m_pAdapter->m_NativeGpuJobV1 ? &m_NativeStopMutex : NULL);
+     HANDLE threadHandle = 0;
++    if (m_pAdapter->m_NativeGpuJobV1 && m_NativeLifecycle != 0 && m_NativeLifecycle != 3) {
++        return STATUS_INVALID_DEVICE_STATE;
++    }
++    if (m_pAdapter->m_NativeGpuJobV1) { m_bStopWorkThread = FALSE; }
++    if (m_pAdapter->m_NativeGpuJobV1 && m_NativeStopping) {
++        if (m_pAdapter->m_NativeGpuFault || m_NativeLifetimes || m_pAdapter->m_NativeDmaCount) {
++            return STATUS_INVALID_DEVICE_STATE;
++        }
++        ExReInitializeRundownProtection(&m_SubmitRundown);
++        m_NativeStopping = 0;
++        m_bStopWorkThread = FALSE;
++    }
+ 
+     LARGE_INTEGER pc = KeQueryPerformanceCounter(NULL);
+     ULONG seed = pc.LowPart ^ (ULONG)(ULONG_PTR)this;
+     m_StampSecret = ((ULONGLONG)RtlRandomEx(&seed) << 32) | RtlRandomEx(&seed);
+ 
++    if (m_pAdapter->m_NativeGpuJobV1) { InterlockedExchange(&m_NativeLifecycle, 1); }
+     NTSTATUS status = PsCreateSystemThread(&threadHandle,
+                                            (ACCESS_MASK)0,
+                                            NULL,
+@@ -845,6 +1088,7 @@
+ 
+     if (!NT_SUCCESS(status))
+     {
++        if (m_pAdapter->m_NativeGpuJobV1) { InterlockedExchange(&m_NativeLifecycle, 0); }
+         DbgPrint(TRACE_LEVEL_FATAL, ("%s failed to create command worker thread, status %x\n", __FUNCTION__, status));
+         VioGpuDbgBreak();
+         return status;
+@@ -860,7 +1104,7 @@
+                                        (PVOID *)(&m_pWorkThread),
+                                        NULL);
+ 
+-    ZwClose(threadHandle);
++    if (!m_pAdapter->m_NativeGpuJobV1) { ZwClose(threadHandle); }
+ 
+     if (!NT_SUCCESS(status))
+     {
+@@ -871,10 +1115,20 @@
+         m_pWorkThread = NULL;
+         m_bStopWorkThread = TRUE;
+         KeSetEvent(&m_QueueEvent, IO_NO_INCREMENT, FALSE);
++        if (m_pAdapter->m_NativeGpuJobV1) {
++            InterlockedExchange(&m_NativeLifecycle, 4);
++            NTSTATUS joined = ZwWaitForSingleObject(threadHandle, FALSE, NULL);
++            if (!NT_SUCCESS(joined)) { m_pAdapter->NativeFail(); NativeWaitForVmStop(); }
++            ZwClose(threadHandle);
++            InterlockedExchange(&m_NativeLifecycle, 0); // actual owned thread joined
++        }
+         VioGpuDbgBreak();
+         return status;
+     }
+-
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        InterlockedExchange(&m_NativeLifecycle, 2);
++        ZwClose(threadHandle);
++    }
+     return status;
+ }
+ 
+@@ -883,9 +1137,49 @@
+     PAGED_CODE();
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<---> %s\n", __FUNCTION__));
+ 
++    NativeControlGuard control(m_pAdapter->m_NativeGpuJobV1 ? &m_NativeStopMutex : NULL);
+     LARGE_INTEGER timeout = {0};
+     timeout.QuadPart = Int32x32To64(1000, -10000);
+ 
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        InterlockedExchange(&m_NativeStopping, 1);
++        ExWaitForRundownProtectionRelease(&m_SubmitRundown);
++        LONG life = InterlockedCompareExchange(&m_NativeLifecycle, 0, 0);
++        if (life == 0 || life == 3) {
++            // The entry rundown is CLOSED. No worker ever ran, or a previous
++            // full join proved the ledger empty. Do not call an IRQ callback
++            // before bringup or after IRQ shutdown on a second Stop.
++            KIRQL irql;
++            LockQueue(&irql);
++            BOOLEAN empty = (BOOLEAN)(IsListEmpty(&m_SubmittedQueue) && IsListEmpty(&m_RunningQueue));
++            UnlockQueue(irql);
++            if (!m_pAdapter->m_NativeGpuFault && !m_NativeLifetimes && !m_running &&
++                !m_pAdapter->m_NativeDmaCount && empty && m_pWorkThread == NULL) {
++                FreeStamped(NULL);
++                InterlockedExchange(&m_NativeLifecycle, 3);
++                return;
++            }
++            m_pAdapter->NativeFail(); NativeWaitForVmStop();
++        }
++        if (life != 2 || !m_pWorkThread) { m_pAdapter->NativeFail(); NativeWaitForVmStop(); }
++        FreeStamped(NULL); // never-submitted commands have no GPU ownership
++        for (;;) {
++            // Clear-before-read closes the last-release-before-wait race.
++            KeClearEvent(&m_NativeIdle);
++            BOOLEAN queuesEmpty;
++            KIRQL irql;
++            LockQueue(&irql);
++            queuesEmpty = (BOOLEAN)(IsListEmpty(&m_SubmittedQueue) && IsListEmpty(&m_RunningQueue));
++            UnlockQueue(irql);
++            if (!m_pAdapter->m_NativeGpuFault &&
++                InterlockedCompareExchange(&m_NativeLifetimes, 0, 0) == 0 &&
++                InterlockedCompareExchange(&m_running, 0, 0) == 0 && queuesEmpty &&
++                !m_pAdapter->NativeHasOutstanding()) { break; }
++            KeWaitForSingleObject(&m_NativeIdle, Executive, KernelMode, FALSE, NULL);
++        }
++        // The worker and queues stay alive while joining native jobs. Unknown
++        // GPU state never reaches this point; external VM stop is recovery.
++    }
+     m_bStopWorkThread = TRUE;
+     KeSetEvent(&m_QueueEvent, IO_NO_INCREMENT, FALSE);
+ 
+@@ -896,7 +1190,14 @@
+         return;
+     }
+ 
+-    if (KeWaitForSingleObject(m_pWorkThread, Executive, KernelMode, FALSE, &timeout) == STATUS_TIMEOUT)
++    NTSTATUS joined = KeWaitForSingleObject(m_pWorkThread, Executive, KernelMode, FALSE,
++        m_pAdapter->m_NativeGpuJobV1 ? NULL : &timeout);
++    if (m_pAdapter->m_NativeGpuJobV1 && joined != STATUS_SUCCESS) {
++        m_pAdapter->NativeFail();
++        // Never return to adapter destruction without a proven thread join.
++        NativeWaitForVmStop();
++    }
++    if (joined == STATUS_TIMEOUT)
+     {
+         DbgPrint(TRACE_LEVEL_FATAL, ("---> Failed to exit the worker thread; leaking it to avoid a UAF\n"));
+         VioGpuDbgBreak();
+@@ -905,7 +1206,7 @@
+ 
+     ObDereferenceObject(m_pWorkThread);
+     m_pWorkThread = NULL;
+-
++    if (m_pAdapter->m_NativeGpuJobV1) { InterlockedExchange(&m_NativeLifecycle, 3); }
+     FreeStamped(NULL);
+ }
+ 
+@@ -944,6 +1245,7 @@
+ 
+         while (m_running < VIOGPU_MAX_RUNNING)
+         {
++            if (m_pAdapter->m_NativeGpuJobV1 && m_pAdapter->m_NativeGpuFault) { break; }
+             VioGpuCommand *command = NULL;
+             BOOLEAN drop = FALSE;
+             KIRQL oldIrql;
+@@ -970,10 +1272,17 @@
+             if (drop)
+             {
+                 command->Discard();
++                KeSetEvent(&m_NativeIdle, IO_NO_INCREMENT, FALSE);
+                 continue;
+             }
++            InterlockedExchange(&command->m_AdmissionHeld, 1);
++            InterlockedIncrement(&m_running);
++            if (m_pAdapter->m_NativeGpuJobV1 &&
++                !m_pAdapter->NativeStartFence(command->FenceId())) {
++                m_pAdapter->NativeFail();
++                InterlockedExchange(&command->m_NativeReply, -1);
++            }
+             QueueRunning(command);
+-            m_running++;
+         }
+ 
+         DbgPrint(TRACE_LEVEL_VERBOSE, ("%s Running command\n", __FUNCTION__));
+@@ -998,11 +1307,36 @@
+     PAGED_CODE();
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<---> %s", __FUNCTION__));
+ 
+-    m_running--;
++    AdmissionReleased();
++}
++
++PAGED_CODE_SEG_END
++#pragma code_seg(push)
++#pragma code_seg()
++
++void VioGpuCommander::AdmissionReleased()
++{
++    InterlockedDecrement(&m_running);
++    Wake();
++}
++void VioGpuCommander::Wake()
++{
+     KeSetEvent(&m_QueueEvent, IO_NO_INCREMENT, FALSE);
+-}
+-
+-PAGED_CODE_SEG_END
++    KeSetEvent(&m_NativeIdle, IO_NO_INCREMENT, FALSE);
++}
++
++void VioGpuCommander::NativeLifetimeStarted()
++{
++    InterlockedIncrement(&m_NativeLifetimes);
++}
++
++void VioGpuCommander::NativeLifetimeEnded()
++{
++    InterlockedDecrement(&m_NativeLifetimes);
++    Wake();
++}
++
++#pragma code_seg(pop)
+ 
+ #pragma code_seg(push)
+ #pragma code_seg()
+@@ -1104,9 +1438,25 @@
+ 
+ #pragma code_seg(push)
+ #pragma code_seg()
++class NativeSubmitGuard {
++    EX_RUNDOWN_REF *m_Ref;
++    BOOLEAN m_Entered;
++  public:
++    explicit NativeSubmitGuard(EX_RUNDOWN_REF *ref) : m_Ref(ref), m_Entered(TRUE) {
++        if (ref) { m_Entered = ExAcquireRundownProtection(ref); }
++    }
++    ~NativeSubmitGuard() { if (m_Ref && m_Entered) { ExReleaseRundownProtection(m_Ref); } }
++    BOOLEAN Entered() const { return m_Entered; }
++};
++
+ NTSTATUS VioGpuCommander::SubmitCommand(const DXGKARG_SUBMITCOMMAND *pSubmitCommand)
+ {
+     VIOGPU_ASSERT(pSubmitCommand != NULL);
++    NativeSubmitGuard entry(m_pAdapter->m_NativeGpuJobV1 ? &m_SubmitRundown : NULL);
++    if (!entry.Entered()) { return STATUS_DEVICE_NOT_READY; }
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        if (InterlockedCompareExchange(&m_NativeStopping, 0, 0)) { return STATUS_DEVICE_NOT_READY; }
++    }
+ 
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("---> %s fence_id=%d\n", __FUNCTION__, pSubmitCommand->SubmissionFenceId));
+ 
+@@ -1133,6 +1483,10 @@
+ 
+     if (!cmd)
+     {
++        if (m_pAdapter->m_NativeGpuJobV1) {
++            m_pAdapter->NativeFail();
++            return STATUS_INSUFFICIENT_RESOURCES;
++        }
+         DbgPrint(TRACE_LEVEL_ERROR,
+                  ("%s failed to allocate command; completing fence_id=%d without work\n",
+                   __FUNCTION__,
+@@ -1144,6 +1498,17 @@
+     }
+ 
+     cmd->PrepareSubmit(pSubmitCommand);
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        cmd->m_NativeRecord.FenceId = pSubmitCommand->SubmissionFenceId;
++        NTSTATUS reg = m_pAdapter->NativeRegisterFence(&cmd->m_NativeRecord,
++            pSubmitCommand->NodeOrdinal, pSubmitCommand->EngineOrdinal);
++        if (!NT_SUCCESS(reg)) {
++            m_pAdapter->NativeFail();
++            // Keep this accepted object's body and refs. Unknown registration
++            // cannot be converted to a successful no-op or reused GPU memory.
++            return reg;
++        }
++    }
+     InterlockedExchange(&m_pAdapter->m_LastSubmittedFenceId, pSubmitCommand->SubmissionFenceId);
+     QueueSubmitted(cmd);
+ 
+@@ -1154,6 +1519,11 @@
+ NTSTATUS VioGpuCommander::SubmitCommandVirtual(const DXGKARG_SUBMITCOMMANDVIRTUAL *pSubmitCommand)
+ {
+     VIOGPU_ASSERT(pSubmitCommand != NULL);
++    NativeSubmitGuard entry(m_pAdapter->m_NativeGpuJobV1 ? &m_SubmitRundown : NULL);
++    if (!entry.Entered()) { return STATUS_DEVICE_NOT_READY; }
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        if (InterlockedCompareExchange(&m_NativeStopping, 0, 0)) { return STATUS_DEVICE_NOT_READY; }
++    }
+ 
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("---> %s fence_id=%d\n", __FUNCTION__, pSubmitCommand->SubmissionFenceId));
+ 
+@@ -1181,6 +1551,10 @@
+         cmd = new (NonPagedPoolNx) VioGpuCommand(m_pAdapter);
+         if (!cmd)
+         {
++            if (m_pAdapter->m_NativeGpuJobV1) {
++                m_pAdapter->NativeFail();
++                return STATUS_INSUFFICIENT_RESOURCES;
++            }
+             DbgPrint(TRACE_LEVEL_ERROR,
+                      ("%s failed to allocate command; completing fence_id=%d without work\n",
+                       __FUNCTION__,
+@@ -1193,6 +1567,17 @@
+     }
+ 
+     cmd->PrepareSubmitVirtual(pSubmitCommand);
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        cmd->m_NativeRecord.FenceId = pSubmitCommand->SubmissionFenceId;
++        NTSTATUS reg = m_pAdapter->NativeRegisterFence(&cmd->m_NativeRecord,
++            pSubmitCommand->NodeOrdinal, pSubmitCommand->EngineOrdinal);
++        if (!NT_SUCCESS(reg)) {
++            m_pAdapter->NativeFail();
++            // Keep this accepted object's body and refs. Unknown registration
++            // cannot be converted to a successful no-op or reused GPU memory.
++            return reg;
++        }
++    }
+     InterlockedExchange(&m_pAdapter->m_LastSubmittedFenceId, pSubmitCommand->SubmissionFenceId);
+     QueueSubmitted(cmd);
+ 
+--- a/viogpu/viogpu3d/viogpu_command.h
++++ b/viogpu/viogpu3d/viogpu_command.h
+@@ -10,6 +10,16 @@
+ class VioGpuContext;
+ class VioGpuAllocation;
+ class VioGpuCommander;
++class VioGpuCommand;
++
++// Embedded in the already-owned command: no fixed completion-window capacity
++// may block admission of a different context that supplies a future signal.
++struct NATIVE_DMA_RECORD {
++    LIST_ENTRY Link;
++    VioGpuCommand *Owner;
++    UINT FenceId;
++    UCHAR State; // 0unregistered,1reserved,2started,3positive-done,4retired
++};
+ 
+ // DMA private data (VIOGPU_DMA_PRIVATE, viogpum.h).  SubmitCommandVirtual
+ // also runs for dxgkrnl-originated paging packets whose private data is not
+@@ -53,6 +63,7 @@
+ class VioGpuCommand final : public HandleBase<"VIOGCOMM"_M, VioGpuCommand>
+ {
+     friend class VioGpuCommander;
++    friend class VioGpuAdapter;
+ 
+   public:
+     VioGpuCommand(VioGpuAdapter *adapter);
+@@ -87,6 +98,11 @@
+     void RecoverMirroredBody(const void *pPrivateData, ULONG privateDataSize);
+     void QueueRunning();
+     static void QueueRunningCb(void *cmd, void *, void *);
++    static void NativeGpuReply(void *cmd, void *request, void *response);
++    void PrepareNativeLifetime();
++    void ReleaseNativeLifetime();
++    BOOLEAN NativePrepared() const { return m_NativePrepareOk; }
++    void ReleaseAdmission();
+ 
+     // Fire the DXGK DMA_COMPLETED interrupt for this command's fence and
+     // advance m_LastCompletedFenceId. Once-guarded (m_notified) so it runs
+@@ -140,6 +156,21 @@
+ 
+     VioGpuAllocation **m_allocations;
+     UINT m_allocationsLength;
++    UCHAR *m_AllocationHolds;
++    BOOLEAN m_NativeLifetime;
++    BOOLEAN m_NativePrepareOk;
++    BOOLEAN m_NativeContext;
++    BOOLEAN m_NativeRequiresGpuProof;
++    volatile LONG m_NativeReplyLog = 0;
++    ULONG m_NativeResponseType = 0, m_NativeResponseFlags = 0, m_NativeResponseContext = 0;
++    ULONGLONG m_NativeResponseFence = 0;
++    volatile ULONG m_NativeReplyLength;
++    volatile LONG m_NativeReply;
++    volatile LONG m_AdmissionHeld;
++    NATIVE_DMA_RECORD m_NativeRecord;
++    volatile LONG m_NativeCompletionRecorded;
++    volatile LONG m_NativeLedgerRetired;
++
+ 
+     UINT m_FenceId;
+ 
+@@ -212,6 +243,10 @@
+     void Stop();
+ 
+     void CommandFinished();
++    void AdmissionReleased();
++    void Wake();
++    void NativeLifetimeStarted();
++    void NativeLifetimeEnded();
+ 
+     NTSTATUS Patch(const DXGKARG_PATCH *pPatch);
+     NTSTATUS SubmitCommand(const DXGKARG_SUBMITCOMMAND *pSubmitCommand);
+@@ -267,7 +302,13 @@
+ 
+     KSPIN_LOCK m_Lock;
+ 
+-    UINT m_running;
++    volatile LONG m_running;
++    volatile LONG m_NativeLifetimes;
++    volatile LONG m_NativeStopping;
++    KMUTEX m_NativeStopMutex;
++    volatile LONG m_NativeLifecycle; // 0never/failed-before-start,1starting,2active,3clean-joined,4unknown
++    EX_RUNDOWN_REF m_SubmitRundown;
++    KEVENT m_NativeIdle;
+ 
+     KSPIN_LOCK m_StampLock;
+     LIST_ENTRY m_StampList;
+--- a/viogpu/viogpu3d/driver.cpp
++++ b/viogpu/viogpu3d/driver.cpp
+@@ -615,6 +615,7 @@
+         VioGpuAllocation *allocation = VioGpuAllocation::FromHandle(pDestroyAllocation->pAllocationList[i]);
+         if (allocation != NULL)
+         {
++            ExWaitForRundownProtectionRelease(&allocation->m_NativeJobRundown);
+             // Release the DXGK reference. Async paths that took an extra
+             // ref (e.g. the vsync DPC) complete the deletion.
+             allocation->Release();
+@@ -1798,7 +1799,18 @@
+     // an uninitialised id.  There is one node here, so an engine reset is the
+     // adapter-wide fence sync-up: everything submitted is declared
+     // aborted/complete and the node is ready for new packets.
+-    UINT syncedTo = pAdapter->ResetFenceStateFromTimeout();
++    if (pAdapter->m_NativeGpuJobV1 && (pAdapter->m_NativeGpuFault || pAdapter->NativeHasOutstanding())) {
++        // DISPATCH: no wait, no reset-success fiction while GPU work can live.
++        pAdapter->NativeFail();
++        pResetEngine->LastAbortedFenceId = 0; // failure asserts no abort/completion
++        return STATUS_UNSUCCESSFUL;
++    }
++    BOOLEAN resetBlocked = FALSE;
++    UINT syncedTo = pAdapter->ResetFenceStateFromTimeout(&resetBlocked);
++    if (resetBlocked) {
++        pResetEngine->LastAbortedFenceId = 0;
++        return STATUS_UNSUCCESSFUL;
++    }
+     pResetEngine->LastAbortedFenceId = syncedTo;
+ 
+     DbgPrint(TRACE_LEVEL_ERROR,
+@@ -1875,7 +1887,13 @@
+         // completions are squashed by the skip window the sync-up sets);
+         // tearing them down here would race the host responses that still
+         // reference them.
+-        UINT syncedTo = adapter->ResetFenceStateFromTimeout();
++        if (adapter->m_NativeGpuJobV1 && (adapter->m_NativeGpuFault || adapter->NativeHasOutstanding())) {
++            adapter->NativeFail();
++            return STATUS_UNSUCCESSFUL;
++        }
++        BOOLEAN resetBlocked = FALSE;
++        UINT syncedTo = adapter->ResetFenceStateFromTimeout(&resetBlocked);
++        if (resetBlocked) { return STATUS_UNSUCCESSFUL; }
+         DbgPrint(TRACE_LEVEL_ERROR, ("<---> %s fence state synced to %u\n", __FUNCTION__, syncedTo));
+     }
+ 
+--- a/viogpu/common/viogpu_queue.cpp
++++ b/viogpu/common/viogpu_queue.cpp
+@@ -434,6 +434,51 @@
+     return TRUE;
+ }
+ 
++struct NATIVE_READ_DRAIN {
++    KEVENT Event;
++    volatile LONG Refs;
++    volatile ULONG UsedLength;
++    GPU_CTRL_HDR Reply;
++};
++static void NativeReadDrainReply(void *opaque, void *, void *response)
++{
++    NATIVE_READ_DRAIN *c = (NATIVE_READ_DRAIN *)opaque;
++    if (response) { RtlCopyMemory(&c->Reply, response, sizeof(c->Reply)); }
++    KeSetEvent(&c->Event, IO_NO_INCREMENT, FALSE);
++    if (InterlockedDecrement(&c->Refs) == 0) { delete c; }
++}
++BOOLEAN CtrlQueue::NativeDrainDisplayReads()
++{
++    PAGED_CODE();
++    NATIVE_READ_DRAIN *c = new (NonPagedPoolNx) NATIVE_READ_DRAIN();
++    if (!c) { return FALSE; }
++    KeInitializeEvent(&c->Event, NotificationEvent, FALSE);
++    c->Refs = 1;
++    GPU_RESP_DISP_INFO *response = reinterpret_cast<GPU_RESP_DISP_INFO *>(
++        new (NonPagedPoolNx) BYTE[sizeof(GPU_RESP_DISP_INFO)]);
++    if (!response) { delete c; return FALSE; }
++    RtlZeroMemory(response, sizeof(*response));
++    PGPU_VBUFFER vbuf;
++    PGPU_CTRL_HDR cmd = (PGPU_CTRL_HDR)AllocCmdResp(&vbuf, sizeof(GPU_CTRL_HDR), response, sizeof(*response));
++    if (!cmd) { delete[] reinterpret_cast<PBYTE>(response); delete c; return FALSE; }
++    RtlZeroMemory(cmd, sizeof(*cmd));
++    cmd->type = VIRTIO_GPU_CMD_GET_DISPLAY_INFO;
++    vbuf->completion_length = &c->UsedLength;
++    vbuf->complete_cb = NativeReadDrainReply;
++    vbuf->complete_ctx = c;
++    vbuf->auto_release = TRUE; // caller NEVER reads/releases the queue buffer
++    InterlockedIncrement(&c->Refs); // queue owns its ref before inline callback
++    QueueBuffer(vbuf);
++    LARGE_INTEGER timeout;
++    timeout.QuadPart = -10000LL * 10000; // bounded wait; unknown owner must retain backing
++    NTSTATUS waited = KeWaitForSingleObject(&c->Event, Executive, KernelMode, FALSE, &timeout);
++    BOOLEAN ok = (BOOLEAN)(waited == STATUS_SUCCESS && c->UsedLength == sizeof(GPU_RESP_DISP_INFO) &&
++        c->Reply.type == VIRTIO_GPU_RESP_OK_DISPLAY_INFO && c->Reply.flags == 0 &&
++        c->Reply.fence_id == 0 && c->Reply.ctx_id == 0 && c->Reply.ring_idx == 0);
++    if (InterlockedDecrement(&c->Refs) == 0) { delete c; }
++    return ok; // default/null/local callback and timeout cannot be success
++}
++
+ BOOLEAN CtrlQueue::AskEdidInfo(PGPU_VBUFFER *buf, UINT id)
+ {
+     PAGED_CODE();
+@@ -1112,6 +1157,35 @@
+ 
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<--- %s\n", __FUNCTION__));
+     return TRUE;
++}
++
++BOOLEAN CtrlQueue::SubmitNativeGpuJob(void *cmdbuf, ULONG size, ULONG ctx_id,
++                                           void (*cb)(void *, void *, void *), void *ctx,
++                                           BOOLEAN requestGpu, volatile ULONG *replyLength, BOOLEAN *owned)
++{
++    PAGED_CODE();
++    *owned = FALSE;
++    PGPU_VBUFFER vbuf;
++    PGPU_CMD_SUBMIT cmd = (PGPU_CMD_SUBMIT)AllocCmd(&vbuf, sizeof(*cmd));
++    if (!cmd) { return FALSE; }
++    RtlZeroMemory(cmd, sizeof(*cmd));
++    cmd->hdr.type = VIRTIO_GPU_CMD_SUBMIT_3D;
++    cmd->hdr.flags = VIRTIO_GPU_FLAG_FENCE | VIRTIO_GPU_FLAG_RING_IDX;
++    if (requestGpu) { cmd->hdr.flags |= VIOGPU_NATIVE_JOB_REQUEST_V1; }
++    cmd->hdr.fence_id = InterlockedIncrement64(&m_FenceIdr);
++    cmd->hdr.ctx_id = ctx_id;
++    cmd->hdr.ring_idx = 0;
++    cmd->size = size;
++    vbuf->data_buf = cmdbuf;
++    vbuf->data_size = size;
++    vbuf->complete_cb = cb;
++    vbuf->complete_ctx = ctx;
++    *replyLength = 0;
++    vbuf->completion_length = replyLength;
++    *owned = TRUE; // QueueBuffer owns even its synchronous failure path.
++    BOOLEAN accepted = FALSE;
++    QueueBuffer(vbuf, TRUE, &accepted);
++    return accepted; // Never inspect vbuf: a callback may already have freed it.
+ }
+ 
+ BOOLEAN CtrlQueue::TransferHostCmd(bool to_host,
+@@ -1661,13 +1735,15 @@
+     return TRUE;
+ }
+ 
+-UINT CtrlQueue::QueueBuffer(PGPU_VBUFFER buf, BOOLEAN kick)
++UINT CtrlQueue::QueueBuffer(PGPU_VBUFFER buf, BOOLEAN kick, BOOLEAN *accepted)
+ {
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("---> %s\n", __FUNCTION__));
+ 
+     VirtIOBufferDescriptor sg[SGLIST_SIZE];
+     UINT outcnt = 0, incnt = 0;
+     KIRQL SavedIrql;
++
++    if (accepted) { *accepted = FALSE; }
+ 
+     // Protected VM: copy the command/data into shared memory first; the descriptors are built
+     // from that copy (here and again if the vbuf has to be parked and resubmitted).
+@@ -1746,6 +1822,9 @@
+             Kick();
+         }
+     }
++    // Publish ownership result before another CPU can dequeue this buffer.
++    // A parked buffer is owned and will be submitted by the normal DPC drain.
++    if (accepted) { *accepted = (BOOLEAN)(pended || rc >= 0); }
+     Unlock(SavedIrql);
+ 
+     if (pended)
+--- a/viogpu/common/viogpu_queue.h
++++ b/viogpu/common/viogpu_queue.h
+@@ -28,6 +28,12 @@
+  */
+ 
+ #pragma once
++
++// Versioned, response-only proof cannot be forged by an old host echoing input.
++#define VIOGPU_NATIVE_JOB_REQUEST_V1 0x40000000u
++#define VIOGPU_NATIVE_JOB_DONE_V1 0x80000000u
++
++
+ #include "viogpu.h"
+ 
+ #pragma pack(1)
+@@ -51,6 +57,9 @@
+ 
+     char *resp_buf;
+     int resp_size;
++    // Optional trusted nonpaged target for a strict completion's actual used length.
++    volatile ULONG *completion_length;
++
+     LIST_ENTRY list_entry;
+     /* Links the vbuf on CtrlQueue::m_PendingBufs while it waits for ring
+      * descriptors.  A separate field because list_entry is claimed by
+@@ -321,7 +330,7 @@
+     // following QueueBuffer(kick=TRUE) or FlushKick() -- before anything
+     // waits on this buffer's response.  Failure paths inside always kick,
+     // so an earlier deferred buffer is never stranded by a failed later one.
+-    UINT QueueBuffer(PGPU_VBUFFER buf, BOOLEAN kick = TRUE);
++    UINT QueueBuffer(PGPU_VBUFFER buf, BOOLEAN kick = TRUE, BOOLEAN *accepted = NULL);
+     PGPU_VBUFFER DequeueBuffer(_Out_ UINT *len);
+ 
+     void CreateResource(UINT res_id, UINT format, UINT width, UINT height);
+@@ -337,6 +346,12 @@
+     // kick=FALSE defers the virtqueue notify (see QueueBuffer); the caller
+     // owns issuing a later kick.
+     BOOLEAN SubmitCommand(void *cmdbuf, ULONG size, ULONG ctx_id, BOOL has_ring, ULONG ring_idx, void (*complete_cb)(void *, void *, void *), void *complete_ctx, BOOLEAN kick = TRUE);
++    // C12: Owned becomes TRUE as soon as the queue owns body/vbuf, including
++    // inline failure callbacks. TRUE return additionally means queued/parked.
++    BOOLEAN SubmitNativeGpuJob(void *cmdbuf, ULONG size, ULONG ctx_id,
++                              void (*complete_cb)(void *, void *, void *), void *complete_ctx,
++                              BOOLEAN requestGpu, volatile ULONG *replyLength, BOOLEAN *owned);
++
+     BOOLEAN TransferHostCmd(bool to_host,
+                             ULONG ctx_id,
+                             BOOL has_ring,
+@@ -369,6 +384,7 @@
+ 
+     BOOLEAN GetDisplayInfo(PGPU_VBUFFER buf, UINT id, PULONG xres, PULONG yres);
+     BOOLEAN AskDisplayInfo(PGPU_VBUFFER *buf);
++    BOOLEAN NativeDrainDisplayReads(); // paired C12 host control-FIFO read barrier
+     BOOLEAN AskEdidInfo(PGPU_VBUFFER *buf, UINT id);
+     BOOLEAN GetEdidInfo(PGPU_VBUFFER buf, UINT id, PBYTE edid, PULONG size);
+     BOOLEAN AskCapsetInfo(PGPU_VBUFFER *buf, ULONG idx);
+--- a/viogpu/viogpu3d/viogpu_allocation.h
++++ b/viogpu/viogpu3d/viogpu_allocation.h
+@@ -64,6 +64,10 @@
+     // DxgkDestroyAllocation; the matching Release runs after the pointer
+     // is dropped. Object is deleted when the count reaches zero.
+     void AddRef();
++    // A native GPU job's WDDM allocation ownership survives until positive
++    // completion, including DestroyAllocation. Never equate AddRef with VidMM pin.
++    EX_RUNDOWN_REF m_NativeJobRundown;
++
+     // AddRef only while the object is still live: lookup tables keep an entry
+     // until the destructor unlinks it, so a lookup can find an object whose
+     // last reference is already gone.
+--- a/viogpu/viogpu3d/viogpu_allocation.cpp
++++ b/viogpu/viogpu3d/viogpu_allocation.cpp
+@@ -36,6 +36,7 @@
+     m_DxPhysicalAddress = 0;
+ 
+     ExInitializeFastMutex(&m_Lock);
++    ExInitializeRundownProtection(&m_NativeJobRundown);
+ 
+     m_refCount = 1;
+     m_deferReleaseItem = IoAllocateWorkItem(m_adapter->GetPhysicalDevice());
+--- a/viogpu/viogpu3d/viogpu_vidpn.h
++++ b/viogpu/viogpu3d/viogpu_vidpn.h
+@@ -43,6 +43,7 @@
+     NTSTATUS AcquirePostDisplayOwnership();
+     void ReleasePostDisplayOwnership(D3DDDI_VIDEO_PRESENT_TARGET_ID TargetId, DXGK_DISPLAY_INFORMATION *pDisplayInfo);
+     void Powerdown();
++    void StopNativeWorker(); // join only, no flip/address/framebuffer mutation
+ 
+     NTSTATUS IsVidPnSourceModeFieldsValid(CONST D3DKMDT_VIDPN_SOURCE_MODE *pSourceMode) const;
+     NTSTATUS IsVidPnPathFieldsValid(CONST D3DKMDT_VIDPN_PRESENT_PATH *pPath) const;
+@@ -325,5 +326,7 @@
+     // tell whether the reference is still theirs to drop.  Checked builds
+     // fill fresh objects with 0xCD rather than zeroes.
+     PETHREAD m_pFlipThread = NULL;
+-    BOOL m_shouldFlipStop = false;
++    volatile BOOL m_shouldFlipStop = false;
++    KMUTEX m_NativeStopMutex;
++    BOOLEAN m_NativeFlipUnknown = FALSE;
+ };
+--- a/viogpu/viogpu3d/viogpu_vidpn.cpp
++++ b/viogpu/viogpu3d/viogpu_vidpn.cpp
+@@ -2,6 +2,12 @@
+ #include "viogpu_adapter.h"
+ #include "bitops.h"
+ #include "baseobj.h"
++
++// ntifs.h declares this native HANDLE wait but cannot coexist with the
++// ntddk.h display-miniport headers. Signature matches WDK 10.0.26100.0.
++extern "C" NTSYSAPI NTSTATUS NTAPI ZwWaitForSingleObject(
++    _In_ HANDLE Handle, _In_ BOOLEAN Alertable, _In_opt_ PLARGE_INTEGER Timeout);
++
+ #include "edid.h"
+ #include "trace.h"
+ 
+@@ -60,6 +66,7 @@
+ 
+     m_SystemDisplaySourceId = D3DDDI_ID_UNINITIALIZED;
+     KeInitializeSpinLock(&m_sourceLock);
++    KeInitializeMutex(&m_NativeStopMutex, 0);
+     // Auto-reset: each retiring present fence is one promotion opportunity,
+     // and TryPromoteFlip re-checks the latch anyway, so a coalesced signal
+     // can never strand an armed flip.
+@@ -75,6 +82,7 @@
+ VioGpuVidPN::~VioGpuVidPN()
+ {
+     PAGED_CODE();
++    if (m_pAdapter->m_NativeGpuJobV1) { StopNativeWorker(); }
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<--- %s\n", __FUNCTION__));
+ 
+     DestroyFrameBufferObj(TRUE);
+@@ -205,12 +213,42 @@
+     }
+ 
+     HANDLE threadHandle = 0;
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        m_pAdapter->m_NativeReadDrained = FALSE; // before any output read can be enqueued
++        if (KeWaitForSingleObject(&m_NativeStopMutex, Executive, KernelMode, FALSE, NULL) != STATUS_SUCCESS) {
++            m_pAdapter->NativeFail();
++            return STATUS_UNSUCCESSFUL;
++        }
++    }
+     m_shouldFlipStop = false;
+     Status = PsCreateSystemThread(&threadHandle, (ACCESS_MASK)0, NULL, (HANDLE)0, NULL, VioGpuVidPN::FlipThread, this);
+-
+-    ObReferenceObjectByHandle(threadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (PVOID *)(&m_pFlipThread), NULL);
+-
+-    ZwClose(threadHandle);
++    if (m_pAdapter->m_NativeGpuJobV1) {
++        if (!NT_SUCCESS(Status)) { KeReleaseMutex(&m_NativeStopMutex, FALSE); return Status; }
++        m_NativeFlipUnknown = TRUE;
++        NTSTATUS referenced = ObReferenceObjectByHandle(threadHandle, THREAD_ALL_ACCESS, NULL,
++            KernelMode, (PVOID *)(&m_pFlipThread), NULL);
++        if (!NT_SUCCESS(referenced)) {
++            m_pFlipThread = NULL;
++            m_shouldFlipStop = TRUE;
++            KeSetEvent(&m_flipReadyEvent, IO_NO_INCREMENT, FALSE);
++            NTSTATUS joined = ZwWaitForSingleObject(threadHandle, FALSE, NULL);
++            if (!NT_SUCCESS(joined)) {
++                m_pAdapter->NativeFail();
++                KEVENT hold; KeInitializeEvent(&hold, NotificationEvent, FALSE);
++                for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++            }
++            m_NativeFlipUnknown = FALSE;
++            ZwClose(threadHandle);
++            KeReleaseMutex(&m_NativeStopMutex, FALSE);
++            return referenced;
++        }
++        m_NativeFlipUnknown = FALSE;
++        ZwClose(threadHandle);
++        KeReleaseMutex(&m_NativeStopMutex, FALSE);
++    } else {
++        ObReferenceObjectByHandle(threadHandle, THREAD_ALL_ACCESS, NULL, KernelMode, (PVOID *)(&m_pFlipThread), NULL);
++        ZwClose(threadHandle);
++    }
+ 
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("---> %s\n", __FUNCTION__));
+ 
+@@ -240,6 +278,7 @@
+                                               DXGK_DISPLAY_INFORMATION *pDisplayInfo)
+ {
+     D3DDDI_VIDEO_PRESENT_SOURCE_ID SourceId = FindSourceForTarget(TargetId, TRUE);
++    if (m_pAdapter->m_NativeGpuJobV1) { StopNativeWorker(); }
+     m_sourceAddress.QuadPart = 0;
+ 
+     LARGE_INTEGER timeout = {0};
+@@ -285,8 +324,35 @@
+     pDisplayInfo->AcpiId = m_CurrentModes[0].DispInfo.AcpiId;
+ }
+ 
++void VioGpuVidPN::StopNativeWorker()
++{
++    PAGED_CODE();
++    if (KeWaitForSingleObject(&m_NativeStopMutex, Executive, KernelMode, FALSE, NULL) != STATUS_SUCCESS) {
++        m_pAdapter->NativeFail();
++        KEVENT hold; KeInitializeEvent(&hold, NotificationEvent, FALSE);
++        for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++    }
++    m_shouldFlipStop = TRUE;
++    KeSetEvent(&m_flipReadyEvent, IO_NO_INCREMENT, FALSE);
++    BOOLEAN unknown = m_NativeFlipUnknown;
++    if (m_pFlipThread) {
++        NTSTATUS joined = KeWaitForSingleObject(m_pFlipThread, Executive, KernelMode, FALSE, NULL);
++        if (joined == STATUS_SUCCESS) {
++            ObDereferenceObject(m_pFlipThread);
++            m_pFlipThread = NULL;
++        } else { unknown = TRUE; }
++    }
++    if (unknown) {
++        m_pAdapter->NativeFail();
++        KEVENT hold; KeInitializeEvent(&hold, NotificationEvent, FALSE);
++        for (;;) { KeWaitForSingleObject(&hold, Executive, KernelMode, FALSE, NULL); }
++    }
++    KeReleaseMutex(&m_NativeStopMutex, FALSE);
++}
++
+ void VioGpuVidPN::Powerdown()
+ {
++    if (m_pAdapter->m_NativeGpuJobV1) { StopNativeWorker(); }
+     DestroyFrameBufferObj(TRUE);
+     m_CurrentModes[0].Flags.FrameBufferIsActive = FALSE;
+     m_CurrentModes[0].FrameBuffer.Ptr = NULL;

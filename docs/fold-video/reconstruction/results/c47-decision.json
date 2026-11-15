@@ -1,0 +1,64 @@
+{
+  "utc": "2026-11-15T13:19:23.199373+00:00",
+  "status": "NO_MEASURED_SPEED_GAIN_IN_MATCHED_SHORT_HARDWARE_TASK",
+  "baseline": {
+    "native": "2A7D",
+    "report": "c46-ram4-baseline-r2-guest-run/benchmark.json",
+    "measured": {
+      "seconds": 8.01418484375,
+      "successfulPresents": 221,
+      "drawCalls": 3315,
+      "framesPerSecond": 27.576104658,
+      "occludedPresents": 0,
+      "minimizedIterations": 0,
+      "exitedEarly": false,
+      "backBufferWidth": 960,
+      "backBufferHeight": 640
+    },
+    "frameIntervalMs": {
+      "samples": 220,
+      "p50": 34.28125,
+      "p95": 54.0040625,
+      "p99": 74.4194791667,
+      "max": 79.2704166667,
+      "over16_7": 220,
+      "over25": 210
+    }
+  },
+  "candidate": {
+    "native": "38DC",
+    "report": "c47-native8-guest-run/benchmark.json",
+    "measured": {
+      "seconds": 8.02735984375,
+      "successfulPresents": 218,
+      "drawCalls": 3270,
+      "framesPerSecond": 27.1571231692,
+      "occludedPresents": 0,
+      "minimizedIterations": 0,
+      "exitedEarly": false,
+      "backBufferWidth": 960,
+      "backBufferHeight": 640
+    },
+    "frameIntervalMs": {
+      "samples": 217,
+      "p50": 35.1688541667,
+      "p95": 53.94078125,
+      "p99": 67.5294791667,
+      "max": 90.2721354167,
+      "over16_7": 216,
+      "over25": 211
+    }
+  },
+  "fpsPercent": -1.519364297446013,
+  "sharedConditions": "SameC47child/RAM4096/DPI200/native2448x1848/960x640/vsync1/privatecopy0/defaultcaption/immutableEXE/Native1/F91/C37C33; normalfreshbootbetweenDLLversions",
+  "observed": "Both naturalexit0/noerrors/deviceRemoved/occlusion/focusloss. Entirephoneclips/contactsheetshow15cubesandreadablecaption; notallframespixelcertified. C47neptune38DCactuallyloadedinDWM1332andapp3544.",
+  "decision": "Do notrepeatC47unchanged or claim smoothness. Sourcefollowup: Present premaintenance npt_device.c796-806 unconditionallypublishes pendingbeforepair; preserveCOMrelease/MapSlotlifetimefrontiers. NoC48patchyet.",
+  "scope": "NoCPUfallback/productionmerge/release/videoimprovementclaim",
+  "files": {
+    "c46-ram4-baseline-r2-phone.mp4": "8a6234bd9b9f6ba59a8d47b376c9b1210d871343b8944e41bd0a463926a6c241",
+    "c47-native8-phone.mp4": "5d06ec15021203ada84e8f7fb97f70182351c565a30656f8a143989db4963b72",
+    "new-driver-boot-modules-r2.json": "d2f4451149f0fe9281f3e0bc3597d6dedecd033c451cee51e544ae9a1879fb40",
+    "c47-native8-running-modules.json": "e994ce67326ec1cf306d6beeb27540c6d15cb667e133b51736925bf1b468b906",
+    "installed-pending-reboot.json": "1ea8bb6a658225a767299e6d733a194d78c141d023d3d043d1b897bd8e309001"
+  }
+}

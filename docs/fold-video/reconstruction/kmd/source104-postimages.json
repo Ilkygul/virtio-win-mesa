@@ -1,0 +1,740 @@
+{
+  "schema": "f91-actual-c13-source104-r1",
+  "sourceFiles": 104,
+  "changedFilesFromOriginal1CA": 13,
+  "gitTreeSha1": "69f11c9344fe51ba4e33da0cb917f6eca8266055",
+  "baseGitHead": null,
+  "sourceRemote": null,
+  "sourceOriginAttested": "C:\\winbuild\\src; source HEAD/remote not captured in examined C13 retrieval",
+  "scope": "Exact declared104-file compiled driver/build input subset, not claimed full upstream repository. Git file mode normalized100644; Windows source did not attest executable bits.",
+  "files": [
+    {
+      "path": "VirtIO/.clang-format",
+      "bytes": 2903,
+      "sha256": "3E0FB47D448F0F5585E79A384C85D0BA40581EA6214CCFA41E5FD9CE03EDFB0B",
+      "gitBlobSha1": "704cedeed40757e83cbc421e2d266ae4b2e3015b",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/LICENSE",
+      "bytes": 1536,
+      "sha256": "5B1E464508BF9CEF1016BC67B3619B785B87E73FED56E6110BCA846A42427724",
+      "gitBlobSha1": "37c2078ccc42c654742783182f4c7d1524ae073a",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtIO.h",
+      "bytes": 3445,
+      "sha256": "DA13A031F9BCF801B363FF3FA8D7773F1E0F6939FE49C2438C8CCA7BBF918067",
+      "gitBlobSha1": "6d2ccce96e8ec649e87bc5a710c866396ade0572",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtIOPCICommon.c",
+      "bytes": 11728,
+      "sha256": "6B23D993C8E9EF3CEE0DAC3F438D1A36E27E69DF1178F8B9CD8CB494F96BB1CD",
+      "gitBlobSha1": "cb26872e880886952b7951d5a24bfdb0ee4efc8e",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtIOPCILegacy.c",
+      "bytes": 9790,
+      "sha256": "20A3087BE185D32714DB70E47540E2FA98387DF79FEF06217BECB4174A29C054",
+      "gitBlobSha1": "22b75070da7189f0552d8a20daa41090ef59035d",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtIOPCIModern.c",
+      "bytes": 21939,
+      "sha256": "30CF76602ACBF7C4D5595EB4E737C3A87B960D515E46FD4814B5C49E07C1E141",
+      "gitBlobSha1": "d3d1b664adc8307f57385f9d6c420f5c072e122e",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtIORing-Packed.c",
+      "bytes": 21812,
+      "sha256": "7DA98D0AE8DE3F2E0F6E7A2BEC845DF65FEE8D9C438493BACC98B740C37D39A4",
+      "gitBlobSha1": "824ad95d929228fa84654346c4fc2689a3e44200",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtIORing.c",
+      "bytes": 19110,
+      "sha256": "70E798A7375847D571E39C73FAB2F3B829CF31FFA1ED91CAFAA0D2037AFD9267",
+      "gitBlobSha1": "8fe44afca9db35718c6e26b5b85b420005e12dd6",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtioLib.sln",
+      "bytes": 3825,
+      "sha256": "9C33B62CBA7B51911B00CD9CC4491014D31AB6B711E3AABDB85324649F0FD10B",
+      "gitBlobSha1": "1c13ca01829cddd4f2b515715351072b00cd8a56",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtioLib.vcxproj",
+      "bytes": 10262,
+      "sha256": "0B2EA924C7F85978CDBED6E96B0EF72D3CDC089D511336031B18DA3488407D9E",
+      "gitBlobSha1": "1132df9f75befb694c00f887aa431ea12425e9ef",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/VirtioLib.vcxproj.filters",
+      "bytes": 2236,
+      "sha256": "EAD18419753F06021A7F6A97BDC761F799B9C585B340EE0A22F277F0E1784AE9",
+      "gitBlobSha1": "03d0606f88f394a9a3a5c3db48385f16474aff27",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/Callbacks.c",
+      "bytes": 7057,
+      "sha256": "6F28ABD2218DDBE7BD5EE9FAE219D1F5E387CDD9901E1DEDA4833CCFA0434B84",
+      "gitBlobSha1": "d789e3926f6376882f316c84455dacfed87facfc",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/Dma.c",
+      "bytes": 17156,
+      "sha256": "2BDF55BF8814D72D185D5655DD4D3619620726CFBA2094105EBC6E95B4D2C2C7",
+      "gitBlobSha1": "33a62c382207f20a3499885fd75aeca283594961",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/LICENSE",
+      "bytes": 1477,
+      "sha256": "F29053F48DCAC1F6F5E4722F1FE9CA62807D88B03B70E4FE2819DBF1DF018B04",
+      "gitBlobSha1": "e0285e8979d0f6d5b54e8426e8655c1b6221b47e",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/MemPortIO.c",
+      "bytes": 3220,
+      "sha256": "38FC1030215C606F7B289F03E7623AEA0983353B6DCAB9842D1574542F64ACF1",
+      "gitBlobSha1": "3cc6d7c45667c566804e2195aeb31797e8da3588",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/PCI.c",
+      "bytes": 6602,
+      "sha256": "ED66E7C1E637633FF77F3C5E957235C2138D22A96A72C36BE0AB23A0DD84ACB6",
+      "gitBlobSha1": "43c1d591a2606076f3d956c4a22e586d31efa71c",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/VirtIOWdf.c",
+      "bytes": 10949,
+      "sha256": "BB5248F76295D32586F18DA58D2909D9EDF6C9C50FAB42295676271B3ED142E9",
+      "gitBlobSha1": "fa73765bbb59464299e4d1ddda7339042839c979",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/VirtIOWdf.h",
+      "bytes": 9936,
+      "sha256": "F7E118C236520486B720F85DEF8045A08DBF0CDFDD3E2E15790BCD81A33E68F8",
+      "gitBlobSha1": "62ceaff9444a6d9f84cbac59a39cdb5c0ba263ae",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/VirtioLib-WDF.vcxproj",
+      "bytes": 6764,
+      "sha256": "344B3A49C2688C8D91E464FE8768FFDD1FD9F0D4DFCCC786413D9D12C512BB14",
+      "gitBlobSha1": "7516e160a9b4eed9007dc67107f72e69c45a4d60",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/VirtioLib-WDF.vcxproj.filters",
+      "bytes": 1499,
+      "sha256": "172612D2D452F975E2F69E42523AC8723C790BB4E65449F19DAF3D7A55D4807D",
+      "gitBlobSha1": "6a668e2f38a2b774a65a60dfc77e11fdb3068aeb",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/clean.bat",
+      "bytes": 37,
+      "sha256": "B40DBB89253434A22134F8FC1565F3C47B82314AD84FF7F167B351046E8FF5B8",
+      "gitBlobSha1": "41690facf4d8c3372ed06a7c3ea60c493edce2ee",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/WDF/private.h",
+      "bytes": 3642,
+      "sha256": "A0928CB8EA193A0FE5AE66A7EBD05ACCDD36CBB12D0CC663FCEFE4765344D6CD",
+      "gitBlobSha1": "1a6c14cbf0b75bc95f7884979032e01bbd276058",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/buildAll.bat",
+      "bytes": 178,
+      "sha256": "B3C548E19DAEFDACA7603470017E91F82992E3E586AE5267C97302972D640EFF",
+      "gitBlobSha1": "9db1540dc6f3a699486c0fcdf0fb889cc8efe11e",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/clean.bat",
+      "bytes": 769,
+      "sha256": "6BC2856C4A591F663EC18607E1722858F4BB8A3D188D27F1C2BA733B37002935",
+      "gitBlobSha1": "3b954e4b4b02ea4945f5a151bd1730862319d541",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/kdebugprint.h",
+      "bytes": 595,
+      "sha256": "DBA05D1C27D9D86C6A490903B45B0A2DED6AD3E12058038C9BD74BE2F03FEDD2",
+      "gitBlobSha1": "b05e4eac40054596fa8aa6a4ab5f71b5fd685865",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/linux/types.h",
+      "bytes": 408,
+      "sha256": "D8C58325A1E0EDA6E48A1F9C85E2EE37BCFAD93EF787CF6D56B1EF5ED22F2D9D",
+      "gitBlobSha1": "64130878c2971f59555818fdc57d6a5512fa99fc",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/linux/virtio_config.h",
+      "bytes": 3589,
+      "sha256": "B7C183B7C354F49299283B40F3C713CEF4DD56D901C540522FAAB6077BC697E3",
+      "gitBlobSha1": "88c0b671133354654f33bfad91025af760670178",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/linux/virtio_types.h",
+      "bytes": 2141,
+      "sha256": "8553C2BBCD3479026D5D19ACA008874ACF940E78ED20892E2742599DCF66D928",
+      "gitBlobSha1": "fcda3e10a2388693fecd309862aab10d96fee226",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/osdep.h",
+      "bytes": 793,
+      "sha256": "FE63D10CAF9AD18C8B89A27EE5C2A1822DA58BFAE65B56FB451278ACAC617B57",
+      "gitBlobSha1": "aa1929e21a8bad28237c3120b87cd9b54496050e",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/virtio_pci.h",
+      "bytes": 17025,
+      "sha256": "0FE2A690E6211C89C65EF74A3167FC7807FFF28E20AE1F57769FBC002FACE58A",
+      "gitBlobSha1": "028103578753b22370643371cb77f1cd42a3e824",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/virtio_pci_common.h",
+      "bytes": 4239,
+      "sha256": "74861C644EA015E925553994F44C6621DD57C982073F00E8541A4099E73D6569",
+      "gitBlobSha1": "5a4d52b97eca67c03c12dfef745e0aecbd8a9044",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/virtio_ring.h",
+      "bytes": 2575,
+      "sha256": "761059069099B1DB929C3523622D3F43B24EAF421EC3DAA726C47AF17470B2FF",
+      "gitBlobSha1": "3c8cee4ba16595132bfcdfc1e42af1d48cad28ad",
+      "gitMode": "100644"
+    },
+    {
+      "path": "VirtIO/windows/virtio_ring_allocation.h",
+      "bytes": 957,
+      "sha256": "7984931AEBFF88EF99824AA580A3B26D9EA85630A2F5C3391F8BC72F88C8234D",
+      "gitBlobSha1": "2826281a5628f5e538300cdf5508b1f8fbc5cec3",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.Common.props",
+      "bytes": 4463,
+      "sha256": "41CDEF75EC9A18F94E5454276571F6A59433688D754683F2E93A69370374EFA3",
+      "gitBlobSha1": "2b1d7109f8ea0f502ecb282d852cafae47ad94ef",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.Common.targets",
+      "bytes": 5447,
+      "sha256": "79432795E82AD7267E07CF772F5A043EB1F3DE77F2EB3B769DB81B02F81A2DB0",
+      "gitBlobSha1": "0aafbc30f80288fe6344ac1032c980cc645aa906",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.Initial.props",
+      "bytes": 1354,
+      "sha256": "31BF5B3B181198959CDFD4814F75E72F80D8C6FE40770579621B0B0C5D52DDAF",
+      "gitBlobSha1": "efe679dc7d68f96110198e50b1de04e0a41183c4",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.PackOne.targets",
+      "bytes": 7265,
+      "sha256": "A08CC1F92F9E9555BFEA457B87DE3029A77B791FD6486546156D547021CDFAC2",
+      "gitBlobSha1": "7114808c0a836f346931279523c4e7128457cc33",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.Platform.props",
+      "bytes": 1388,
+      "sha256": "82CB92F3593C8CE846FDBBCBC7134416EEE284F5816B2DEFDF70DAF83A3BF343",
+      "gitBlobSha1": "14c4f99b671b7a3cb340a462fa6f152e0ad26df7",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.RHEL.props",
+      "bytes": 5520,
+      "sha256": "E4A7BB3E2C607E950CA0BF447734E3AAB49DBF308572D5EFA69AA1B2475A7AE6",
+      "gitBlobSha1": "b2c5965158af53ea7def42e03ba53198c690da3f",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.VZ.props",
+      "bytes": 6933,
+      "sha256": "CE59C6A93F91CB7C94546C8270F4E507B8B4247C9DB2691A2C6D69BF70DEABB1",
+      "gitBlobSha1": "57f4817310ae45e6d756ec06329b75c789dca3f4",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/Driver.Vendor.props",
+      "bytes": 2410,
+      "sha256": "8AC481AB3FCD055311266B95E0181B8D4F61A5355C3A15909D93C7CB6E5DF77F",
+      "gitBlobSha1": "8dd5e85d2ee8b0c06028793c866bbc72da9fa210",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/SetVsEnv.bat",
+      "bytes": 1285,
+      "sha256": "4D2ED044070135A1AC8B7DB437AD0CEEF2E195E473FFFA420E451B6DE0269FF3",
+      "gitBlobSha1": "8ed8b1064d7e994a60cf86ed8adf8334f0ad8d6e",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/build.bat",
+      "bytes": 10514,
+      "sha256": "D9FC3F319E6D8082198B70E61A586063EAB0F3BD3ADCE8AAC9596D3B85CB165F",
+      "gitBlobSha1": "a786a99f968012311b711fe9b0fafc9c2b962b8f",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/clean.bat",
+      "bytes": 1420,
+      "sha256": "C86F02E2B21E6805602BB0F2504A90EB7DEEF23552C309823D26EB0DA4DD65A6",
+      "gitBlobSha1": "25b090c82bd8c76311d63a65fb5d0c1302386e1a",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/makeLegacyDVLs.bat",
+      "bytes": 3497,
+      "sha256": "5A1E39B53A3F3089CBC723E65862845E2FA0F9107505A9D790E58C6421C507D5",
+      "gitBlobSha1": "b4b449dfef3a264bdc6f152cb264b8930c6e85a9",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/prebuild_x86_libs.bat",
+      "bytes": 1454,
+      "sha256": "992FEA5BE6FC58E99844666B4A592706DF0DD41FA5349E3EAAA0144CE580DD99",
+      "gitBlobSha1": "5f4e254dff86cc26161dadc9523e9265012b78bd",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/readme_msbuild.txt",
+      "bytes": 1112,
+      "sha256": "86703092B624DF2AC2575F81F3D9C8A5A1B51A805D7ED3976601184D47250A72",
+      "gitBlobSha1": "2cf23841ce48f2cd59411aab752c06d0c66cfafa",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/rhel.ver",
+      "bytes": 2714,
+      "sha256": "E73BEF8534A73C77F2F8229AC0181A3FB37BD8C561E351EA5D8DCE5B5A8D292F",
+      "gitBlobSha1": "f0f80fe9e634ffe7b9da8db4e82d9b1dfd82695c",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/signAll.bat",
+      "bytes": 747,
+      "sha256": "5B0D5A3B45B8F77D2DC29797E34E74926B698609AED42032A2FDAEADFBDCBC5A",
+      "gitBlobSha1": "1f2129aa60a433db67a77990ec1392ba2c001def",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/vendor.ver",
+      "bytes": 3583,
+      "sha256": "4574C06E06F6E73A06DFE5E018C44AD44475271B0DCC3F755DBAC2DBE78620CC",
+      "gitBlobSha1": "daae09d66791504bf3335b8a8a5ce97420a20184",
+      "gitMode": "100644"
+    },
+    {
+      "path": "build/vz.ver",
+      "bytes": 3069,
+      "sha256": "91E59C5E8F3A4C7B38A08B883415F934C4BF6AFDE9783EFBBDA6234052C8DD29",
+      "gitBlobSha1": "6d48842e83224128e8c7d8405e407228c5619df1",
+      "gitMode": "100644"
+    },
+    {
+      "path": "rdmapool/rdmaclient.c",
+      "bytes": 18477,
+      "sha256": "76278F67EED39DEFDD10DA0D77D12D0EB86511E76C5B31EC1E1A5250BAA8F4F4",
+      "gitBlobSha1": "2916b33d3523a9b6a53c06f3480a1aed9e2c87f2",
+      "gitMode": "100644"
+    },
+    {
+      "path": "rdmapool/rdmaclient.h",
+      "bytes": 8182,
+      "sha256": "AA26DEBAB55091F066C4DA51F04186B1F86EC747091CAA94BF09EAFC3B0F10C3",
+      "gitBlobSha1": "add786cc9d4c9a1eaab74907aca48b4100970462",
+      "gitMode": "100644"
+    },
+    {
+      "path": "rdmapool/rdmapool_interface.h",
+      "bytes": 3349,
+      "sha256": "F464EDE20606E0CFD046F581CE1AE5C4AC920451E7885615E11DBFC237055E6A",
+      "gitBlobSha1": "f910a71a48ef6efc26295a8224a6a5a7a8ba194a",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/baseobj.cpp",
+      "bytes": 2227,
+      "sha256": "7CA1A132A26BDF5EA2DC93261AB3C4BAC785AF5D4C326927B1E4782FA7073854",
+      "gitBlobSha1": "e404d10fab122a695c44a08193005dac43dbd0f3",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/baseobj.h",
+      "bytes": 718,
+      "sha256": "4DBC0538C11703E4A6475841AC5E892252982EAE21860599EA1D99A4324C7C19",
+      "gitBlobSha1": "1f2e18c3a8cca37a56c85cb8743113a8faf8bd27",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/bitops.cpp",
+      "bytes": 6802,
+      "sha256": "9C4B3BFB87FDAED92FC3F12220DB08091DC11F623B007C4A4B79205B7F8C94FA",
+      "gitBlobSha1": "300956e019cff04cf2b549d3f08d034379436952",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/bitops.h",
+      "bytes": 728,
+      "sha256": "9E1D0770FB6B9B9023098AE20C4014F8A71AEC0F47C732CF6F607B48C52BA608",
+      "gitBlobSha1": "7f0fd171d4b26e6358569efb5f9936c4593e1ce3",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/edid.cpp",
+      "bytes": 6816,
+      "sha256": "D5067FCB16FAAFC55C174BA8772465628E60DBA15CE44B863456D4B13FA72BE0",
+      "gitBlobSha1": "d758f43b12ea819d0c6ed3ffc8bf3714a8fdb476",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/edid.h",
+      "bytes": 6108,
+      "sha256": "4C0423A0AA59EABBC7163E450D6BF29A9DC76FB771ACF7A3272A1456EF4B1770",
+      "gitBlobSha1": "88b169b9e9aca7b673bc0dc08664f46aa2da3603",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/handle.h",
+      "bytes": 1002,
+      "sha256": "87B56EF0FA1F512FAE76384FA68B56F35E369787B2ADF53C9042E1ABDBC895C0",
+      "gitBlobSha1": "2f9e92e93ebbf1a3325c59c32f640c63d391a797",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/helper.h",
+      "bytes": 5532,
+      "sha256": "D19741D28BBECF00867FDB829005A567937F57F5F0FC912351AB1C3958FBD4E1",
+      "gitBlobSha1": "787f5908c499fe5e3ec46edd79c6752a48f75a27",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/linked_list.h",
+      "bytes": 3659,
+      "sha256": "D05FE0B91BD6C8C19849BDB2F673B9D3CBC16A8C439259062BCB14E5BE641B1C",
+      "gitBlobSha1": "7b3d8944e8d02217a5a18fcc019223c9432ea179",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/venus_hw.h",
+      "bytes": 3230,
+      "sha256": "7BC1A8195294D681F4081719E7C4DFEA396765E82B5583A2471FAD9705AAB64E",
+      "gitBlobSha1": "3ef774b8259d3b54cff65956884ccbe28c8ccd2c",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu.h",
+      "bytes": 14843,
+      "sha256": "A4CF4F44BF04106114893E1154490C7033F49E688D03DF6B828333342233FE6A",
+      "gitBlobSha1": "109303060d61868daa0d8afb2b844975a4c50fc9",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_idr.cpp",
+      "bytes": 5426,
+      "sha256": "8BD614B04320140219B363A8A39CCE1825E5607F89AF1FEA2D1A111F3B97D30D",
+      "gitBlobSha1": "ffa06281572a2b5120b413ce41109a4ab76cebab",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_idr.h",
+      "bytes": 2691,
+      "sha256": "215D332BD65C074222E03D886633FA5F399F88B730D1454188B7F7CF43AB949B",
+      "gitBlobSha1": "16c5b7689c88fb6bf67006f292e8dd48525a0e1f",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_pci.cpp",
+      "bytes": 20789,
+      "sha256": "A04FEF923312A9E41558CDAFA04509FFE82F2C9A11181C9A8067FBB391CBF9A3",
+      "gitBlobSha1": "cc482cfe1fabe4b2bd83e917625cb2cb37c81456",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_pci.h",
+      "bytes": 2598,
+      "sha256": "0CF9850BB35DFCAAD6CF2223BD8D03828EACC6FD39ED371A25071D22288FB0DD",
+      "gitBlobSha1": "e7bffbc2a03bf4d785ec6605c11811e4c3dc3eae",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_pnp_fixup.cpp",
+      "bytes": 13950,
+      "sha256": "234A0471623471030747FB404F430B45586C9AC7DC42CEEA69F079EE761A6BDB",
+      "gitBlobSha1": "883e1862c0ae7368a87112759d7efa5149439420",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_pnp_fixup.h",
+      "bytes": 2837,
+      "sha256": "BD7CEF291A852B736569136310622121427CAC648FF171D6CF96CD2CBB0948DD",
+      "gitBlobSha1": "06320cafdcef99eb6d557b9dde11189e58562e91",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_queue.cpp",
+      "bytes": 80998,
+      "sha256": "7772143D1D33FC015563723888199B173C3E4A3DA752E78839EC4ED7B0D1F306",
+      "gitBlobSha1": "c9a9113dcebda212fa18625967774e08684a58e7",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_queue.h",
+      "bytes": 15501,
+      "sha256": "EA4B43CED79A2FDCFBF14C85B51CAD8505622F0F0C59F72381A32FE25F4A86BA",
+      "gitBlobSha1": "34f240368408aeae693918bc16d03a609b55b561",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_rdma.cpp",
+      "bytes": 13513,
+      "sha256": "182CF08EE7B2343EB4D677DAEEF913410E8910AC757C56DC850C1B7351FCBCA8",
+      "gitBlobSha1": "11ccb144b2786567ff84aa55082a6affbc8624c7",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/viogpu_rdma.h",
+      "bytes": 2752,
+      "sha256": "1C0D7D6EB4B87662EFBBF16CC0DB3D1F277051DDF6C5043A4EA9EA947EDEF2D6",
+      "gitBlobSha1": "139f31d8cda1aa5bb3273ae3701931b512669ff9",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/common/virgl_hw.h",
+      "bytes": 1013,
+      "sha256": "020CDFDF701C3B6C3E2C33B657FB53848D2718D4E9267E391D006336B8C8864B",
+      "gitBlobSha1": "cc383176ab0d05bda1c32bf5648dde52e893fdba",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/shared/log.cpp",
+      "bytes": 1374,
+      "sha256": "F589FFC1DF028F0EE9E77BE5F0B2810F7BC2781285EEC12956B491E9C2B54A51",
+      "gitBlobSha1": "3ae910a11733e92be86d8acb831a4af231a5541c",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/shared/log.h",
+      "bytes": 140,
+      "sha256": "88EAC5380508DF53E8842E95F1DF4EC89D5BD30CBE80E16A06D6B3B4EF134C25",
+      "gitBlobSha1": "1bcd6d733e9ab5be71933a9ef5c115d144ade857",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/shared/pipe.cpp",
+      "bytes": 8203,
+      "sha256": "7BCD7A01EA65F1794F84405A043494CD4F9AB988E0AECBDEE422BC024884B707",
+      "gitBlobSha1": "25c29a668c43f7f7aab915dee60f08ba90a71c43",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/shared/pipe.h",
+      "bytes": 1510,
+      "sha256": "1F3FE69A07DF69CDD6B84188D138C1147669CE90F86B2B4203112F04603C53E7",
+      "gitBlobSha1": "c99e6ab9c6499c0b777f7b29d985841e7592fb90",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/shared/viogpum.h",
+      "bytes": 23186,
+      "sha256": "E47AFF6EE3EBC9A5C5CA930FC203B9FD493487E8599ACA025C0C0258FF73FFFE",
+      "gitBlobSha1": "9251d2ce6221d497467de295b93466f828db2538",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/BUILDING.md",
+      "bytes": 13704,
+      "sha256": "B3B201B2B1083A8C0F266DDE712BE7EC75452B51581D74A85439A8E369F6293F",
+      "gitBlobSha1": "d6cacd76cec6d89dbdc302d546e0fee776145fb9",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/clean.bat",
+      "bytes": 315,
+      "sha256": "2490922C12DA68FD10E1111A0CA493A5624542BF4F0B0F81CD45BC1EC57DB25B",
+      "gitBlobSha1": "10b762c79eb40939089b93478f20849b20c63a14",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/driver.cpp",
+      "bytes": 77819,
+      "sha256": "9EF7AC0DB2E7F1FE076390F292827273E0D6ABE420A09ADBEE1A371C25C8366A",
+      "gitBlobSha1": "31596ac54efe329ae6fa8a16f3cea64aef30bc72",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/driver.h",
+      "bytes": 11660,
+      "sha256": "F7B43710C063EDD6CE1B06DB2DAD160445A924A95875D3BDF21BF4CF35189EC1",
+      "gitBlobSha1": "d56e93bf66891a7ccfdcae336c5eb1c441e887f3",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/resource.h",
+      "bytes": 359,
+      "sha256": "B8FE378AB0B36E079A81D9D6651FA622C10BF36C6783160B1ABBA0B2B1CB520D",
+      "gitBlobSha1": "bd9c9593508e530f7a85ee97088e690f2b2860cd",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/tools/update_icd_jsons.ps1",
+      "bytes": 1386,
+      "sha256": "33F1C93D4CAF8367D0E06F629B96D65923F6A2F68BBD060AF7908332CCD94B34",
+      "gitBlobSha1": "c87870ba2d544c1e81e195ded917071cb03c2aa8",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/trace.h",
+      "bytes": 2921,
+      "sha256": "58C5B65BB2D9682725874D98185930AC5BE3E59C2BF9E7E0B98FE1ACA534DC35",
+      "gitBlobSha1": "02db7f9fabaeb483925a352c7ca9ebd823b9cfbe",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu3d.inx",
+      "bytes": 4079,
+      "sha256": "F346CDC8DB00C051A729223A0B4D4B2AFB46202FB865968D6DE9C39B89E8AD0F",
+      "gitBlobSha1": "611c0f3d3611990bc9b7dfa5a1ac90286fc935e7",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu3d.props",
+      "bytes": 1019,
+      "sha256": "A5A624621B88CB34AAF6432793D18F26252E6C8C8A7918C356A92116CE20BB28",
+      "gitBlobSha1": "13f12a0846222f4960fe3347ac7e406383e7e656",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu3d.rc",
+      "bytes": 4450,
+      "sha256": "65A26A47D8D915EC9F7DA451E6CDB492B4BD5E33660EE4EAA4FA87F5F3DEBB5F",
+      "gitBlobSha1": "d2b228c4784153b040e108b335ce8d08ee4c04fd",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu3d.vcxproj",
+      "bytes": 35154,
+      "sha256": "FC6FF9E6790A178C47FFD1996570AE9BABB6A832532866579209F98378BE0B66",
+      "gitBlobSha1": "a4fde2efc6840e681907bad2ad1a85dd2a10b77d",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu3d.vcxproj.filters",
+      "bytes": 3954,
+      "sha256": "CEE23BE9E578616DD0C51A3097B20F9DA1ACC70337FBDDCDA7BD780FFB5AB36C",
+      "gitBlobSha1": "47537f6a312606a7a48083bdfa18300c099cc740",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_adapter.cpp",
+      "bytes": 189472,
+      "sha256": "16CF6953700A778A716F0F7BBC2168BB233916F9D2D3955FBB228C98BCB43535",
+      "gitBlobSha1": "16354344964d25787461341891f5051841143e76",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_adapter.h",
+      "bytes": 43903,
+      "sha256": "7D1704B357F1B0BF72E2918AF2812F48E651D2E905EC9BEF6A241B739141C420",
+      "gitBlobSha1": "8159a5bd7219fac125c234b538136f20fffa3d35",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_allocation.cpp",
+      "bytes": 91897,
+      "sha256": "F79BE68FAE54AEE68B97052F5A8986DD03D3A592DB619D8024DB5238500FA20D",
+      "gitBlobSha1": "cb3c2191674aa4f3a51e3d64470cad6696a84ff9",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_allocation.h",
+      "bytes": 15745,
+      "sha256": "E9048A52E766AA630EDBB1341299223131A359C662DE0AB8712104463766C02E",
+      "gitBlobSha1": "fc15df450526123c301fde5518ac413ae03b5f4b",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_command.cpp",
+      "bytes": 74718,
+      "sha256": "1C506BC2D90639D2E4AC3C26FE87ECB304E70A411B2858DC83E774E4AE05AC67",
+      "gitBlobSha1": "dd10c22706091fadc141e19ab5e0273b3189c794",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_command.h",
+      "bytes": 12866,
+      "sha256": "CC8FAA305ADC954F16011358F2AD016A70A0F42F3485CA37878415785B97661F",
+      "gitBlobSha1": "49ebfa28ec42e9bd56c49bf30a753ca9df36cb3a",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_device.cpp",
+      "bytes": 40211,
+      "sha256": "FB69F51B60A86746FEBD0E6C6B44BDCCA807709D8147D88E3EED697A713EACE8",
+      "gitBlobSha1": "26e25e5c5aa881bffb2ec502415a73a9d2571256",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_device.h",
+      "bytes": 3097,
+      "sha256": "1CFFA418C0CC098B6AC39841E954CE3EFBE15136CF28A0CFACD4E5771489B02F",
+      "gitBlobSha1": "104681e6b4b13b975e2edf1a2cbb5bf63e9c468a",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_vidpn.cpp",
+      "bytes": 131685,
+      "sha256": "9B350D862035F277D59C2699760BEFE0AD9040BADDD5245DDDC43EF289FEF5C6",
+      "gitBlobSha1": "baffd8eed6da19cce33968e8da4081c508320463",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpu3d/viogpu_vidpn.h",
+      "bytes": 15325,
+      "sha256": "5BBD7414E31EC2BDD50142A89C28971EDA9A99C95C0893AD5F57ABE8F48A17DE",
+      "gitBlobSha1": "9e9de525fb8a967913e6e54b9a50c333f812c708",
+      "gitMode": "100644"
+    },
+    {
+      "path": "viogpu/viogpudo/viogpudo.h",
+      "bytes": 14777,
+      "sha256": "8AD280E9E33C6C87E7F349F51667D34D3755B04CA802F1CC326AEBC8CA69B5FA",
+      "gitBlobSha1": "05bad6060e9e2691320843c5b92ee0a6ea841ac4",
+      "gitMode": "100644"
+    }
+  ]
+}
