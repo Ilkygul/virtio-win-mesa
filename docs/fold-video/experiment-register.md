@@ -438,6 +438,17 @@ GPU944 produceerde geen profilerregels en ook geen gewone DLL_ATTACH-regels. Nie
 
 **Volgende diagnose C41:** ingebouwde Windows GPU-/compositietrace gebruiken om submit/completion/presentatie te onderscheiden, zonder softwarefallback, browser-sandboxwijziging of nieuwe driverbuild. Read-only inventaris bevestigt WPR, tracerpt en logman aanwezig, profielen GPU/Video/DesktopComposition beschikbaar en WPR niet actief. Eerst de beschikbare profieldefinities controleren; dan één korte gerichte trace bij de bestaande videotaak. Alleen concrete wachttijd-/foutgegevens rechtvaardigen een volgende functionele driverpatch. Algemeen doel open; geen productie-release.
 
+
+### C41 trace uitgevoerd — echte Windows-submit/completion/present-events beschikbaar
+
+Dezelfde C37/F91/C20-driver en hardwarebrowserflags, verse eigen Edgebrowser7812/GPU3540; gewone Edge2808 bleef intact. Native console actief, GPU Code0 en2448×1848. Bestaande clip/collector10s warmup/30s meting03:45:42.355–03:46:13.705Z, rapport errors[]. De kwaliteitscounter30.435/s (1786totaal/873drops) is geen winstclaim: dit is een geïnstrumenteerde proef, zonder driverwijziging.
+
+Inbox WPR GPU+DesktopComposition gestart na de meetfaseovergang03:45:42.662Z, stop aangevraagd03:45:51.274Z en succesvol gestopt55.841Z. ETL176160768B, 2110515 events, 0 events lost volgens tracerpt. WPR daarna expliciet niet actief. Fysieke75s-opname92320824B bewaard. Eigen browser7812 normaal gesloten03:47:13.570Z; gewone Edge2808 bleef aanwezig.
+
+De standaard-export bevat daadwerkelijke Edge-DXGI Present42/43, DxgKrnl QueuePacket178/179/180 en DmaPacket175/176/177, PresentHistory, DWM en virtuele VSync. Lokale analyse: evidence/c41-inbox-gpu-trace-r1/video-guest/gpu-events.jsonl (362063 geselecteerde events), event-inventory.json, ETL/schema/summary en fysieke film. De ingebouwde verboseprofielen hebben meetoverhead; daarom geen algemene snelheidsconclusie. Een virtuale DMA-lifetime omvat host-CS/codec/GPU/FIFO/retirement en is geen zuivere Qualcomm-GPUtijd.
+
+Volgende stap is analyse van deze bestaande opname, geen nieuwe proefvariant: exacte context/sequence koppelen, CPU-Presentduur onderscheiden van native completion en compositorwachttijd. Geen FIFO-, ownership- of completiongate verwijderen zonder aangetoonde fout. Relatieve tijd en header-FILETIME gebruiken: tracerpt rendert een inconsistent +00:59-offsetlabel. Bronmapping evidence/f91-etw-completion-mapping-r1/analysis.json SHA261CC6FBADF8CEE16B925478EC2476AF77C1914B99C9C5A57E7D3100B79FF2F0. Productie blijft uit; algemeen doel open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
