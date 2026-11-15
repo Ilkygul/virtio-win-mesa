@@ -1,0 +1,166 @@
+{
+  "schema": "c46-windows-repro-publication-r1",
+  "status": "PUBLICATION_BUNDLE_SOURCE_AND_HISTORICAL_RECIPES_NO_BUILD_RUN",
+  "source443Manifest": "source443-sha256.json",
+  "fullPatchSha256": "8240EEE61E0088BAD6CD3BEB5CF29B29F3B21A1823DBAD865F96269A16C27B41",
+  "historicalPacketSha256": "D053FDDAE97F1B08F148904C15B0B6E6E6A0E26D3D7DC319892F0FA0BF240D15",
+  "originalMesaGitHead": "fc5f1fc8a389e125e7d5f979f7b88a2708d161ee",
+  "originalMesaGitHeadStatus": "Read directly on original build VM; original440 bytes/sizes match. Dirty baseline captured separately; final443 source is committed.",
+  "members": [
+    {
+      "path": "BUILD.md",
+      "bytes": 8435,
+      "sha256": "A3FEFD81FEAAFB486F001B4C2BEC24812C33C104D3144A61B6F114402F3EA3F7"
+    },
+    {
+      "path": "actual-commands/build-ec-command.json",
+      "bytes": 430,
+      "sha256": "ED4E39FE47DBCC0672647630E0CA9B1F0D497A14372C7DADCDACC1003982F96E"
+    },
+    {
+      "path": "actual-commands/build-native-command.json",
+      "bytes": 428,
+      "sha256": "CF3821BF65FCFD2789A09E1DB6EEC069795E70497A69ECF3B574E6E29C14A2B0"
+    },
+    {
+      "path": "actual-commands/configure-ec-command.json",
+      "bytes": 1664,
+      "sha256": "92BD86D0062DE158031C3F7C25A757BEEC8A747CA838A61A95299F28BCF96949"
+    },
+    {
+      "path": "actual-commands/configure-native-command.json",
+      "bytes": 1603,
+      "sha256": "4F290A17698D674EC67D3C9A4F1298CD0CBF2EDDD1C986E04E498ED020114E8A"
+    },
+    {
+      "path": "c8-to-c46-complete.patch",
+      "bytes": 185180,
+      "sha256": "8240EEE61E0088BAD6CD3BEB5CF29B29F3B21A1823DBAD865F96269A16C27B41"
+    },
+    {
+      "path": "inputs/changes.json",
+      "bytes": 8828,
+      "sha256": "CAA208AD325BC1798752322E9F575C28FB209C90A46595E0984F0D1A014B673B"
+    },
+    {
+      "path": "inputs/compiler-prerequisite-manifest.json",
+      "bytes": 1153,
+      "sha256": "B6DF641FD938A51AAA69948749385D52416FF4FEAE5A74E65740F0D498E4039A"
+    },
+    {
+      "path": "inputs/complete-postimage.json",
+      "bytes": 9333,
+      "sha256": "F20BDD9E1DD273B1DC729544B3682724F7AC9F72D006E669D60FA3AE5D5F61C6"
+    },
+    {
+      "path": "inputs/complete-private-neptune-postimage.json",
+      "bytes": 95933,
+      "sha256": "B7A52554B65F4A0AB5FF2A0A244432208BF4FEE850E5E9C5635E30C3851DCE17"
+    },
+    {
+      "path": "inputs/original-c8-source-leases.json",
+      "bytes": 5349,
+      "sha256": "FC9B496BB9BB061F6067D5C885D95D5DA8C511DF673BC8C90AD1346D4E56647E"
+    },
+    {
+      "path": "inputs/original-neptune-gitblobs.json",
+      "bytes": 70204,
+      "sha256": "B341120DD1081366762AF6DB02264C7026635E83B60F8D3A36D1930DC03839DB"
+    },
+    {
+      "path": "inputs/original-neptune-hashes.json",
+      "bytes": 102698,
+      "sha256": "80C9496726BB7967E0979FB7CA94894304372FBA2D43C46BE28A615B8A111340"
+    },
+    {
+      "path": "inputs/packet-manifest.json",
+      "bytes": 13655,
+      "sha256": "D053FDDAE97F1B08F148904C15B0B6E6E6A0E26D3D7DC319892F0FA0BF240D15"
+    },
+    {
+      "path": "inputs/toolchain-hashes.json",
+      "bytes": 1247,
+      "sha256": "641F2FCFE02081891B3E39E69FDE03D47395EA642A4D1B4D9DA25013BD0055CE"
+    },
+    {
+      "path": "inputs/umd-artifact-manifest.json",
+      "bytes": 1025,
+      "sha256": "24A00B0296A0E84973E4C9F08A3E135E9FDADDAF9FC8675DEBE4850CAEE81FB2"
+    },
+    {
+      "path": "inputs/wddm_hw.h",
+      "bytes": 23190,
+      "sha256": "8C499B12D6EABD8BEE555F4F79F824EAE210849BC4CD4CA7E55476AE17BDD5B2"
+    },
+    {
+      "path": "recipes/arm64-cross.ini",
+      "bytes": 1367,
+      "sha256": "F290AA957A2957B5645E14C027BA8FC0AC07AD78772E50F22CBD8888507705A6"
+    },
+    {
+      "path": "recipes/arm64ec-cross.ini",
+      "bytes": 1843,
+      "sha256": "48CBCAABF6D3BDEA83FBCA3057211E713B13A6E15A35114696272E46EEA3348B"
+    },
+    {
+      "path": "recipes/assert-actual-prior-outputs.ps1",
+      "bytes": 8791,
+      "sha256": "5ADBFB4DFF0BB65B8830CB5CD163EABDE81F30013D211D8413C1C08392AF4669"
+    },
+    {
+      "path": "recipes/build-private-umd.ps1",
+      "bytes": 6730,
+      "sha256": "69F68975F693ADF095519EF6225FEB0D3A86F3C9B7C524E5862F9D9B2691D60B"
+    },
+    {
+      "path": "recipes/collect-failure-private-umd.ps1",
+      "bytes": 1856,
+      "sha256": "0E20EE73A9A4E199E1BD9C8FEB42C0F250A2E11BAA59CC9A03CA7A0241053D32"
+    },
+    {
+      "path": "recipes/common-private-umd.ps1",
+      "bytes": 2948,
+      "sha256": "E9E66BD3B3D3A51DA71EC5A16BAA2EA050865B7DF77609740630707BFD59846E"
+    },
+    {
+      "path": "recipes/finalize-private-umd.ps1",
+      "bytes": 4054,
+      "sha256": "6EC1E07905759505759F428A823BCBCC944D57501D0D168125FC1F170F561745"
+    },
+    {
+      "path": "recipes/powershell51-parser-preflight.ps1",
+      "bytes": 1852,
+      "sha256": "CCBEBA8DC74910C189A3FFC49E9B6A03007A51A47F4AA9E622D7D151B8D237E1"
+    },
+    {
+      "path": "recipes/prepare-private-umd.ps1",
+      "bytes": 11042,
+      "sha256": "D632337E717CBC586A705765D3CA766FBC73CAF502DBF1CB635EC751EB7656FF"
+    },
+    {
+      "path": "source443-sha256.json",
+      "bytes": 95933,
+      "sha256": "B7A52554B65F4A0AB5FF2A0A244432208BF4FEE850E5E9C5635E30C3851DCE17"
+    }
+  ],
+  "copiedHistoricalRecipeCountOfSix": 5,
+  "omittedHistoricalRecipe": {
+    "name": "win-build-transport.py",
+    "sha256": "FC38EB539DBA0649EAE8FD7CD457A728B0CD3B356005254835071A7E4D48BF64",
+    "reason": "Personal SSH transport endpoints/known-hosts path; not needed for direct Windows build."
+  },
+  "additionalHistoricalRecipeFilesIncluded": [
+    "common-private-umd.ps1",
+    "prepare-private-umd.ps1",
+    "powershell51-parser-preflight.ps1",
+    "assert-actual-prior-outputs.ps1"
+  ],
+  "privateSessionInputsIntentionallyNotIncluded": [
+    "protected-original-source-leases.json (whole private machine inventory)",
+    "actual prior37 output proof generated for owned session",
+    "protected-before/after snapshots and private source-approved/session receipts",
+    "SSH/PC controllers, VM configs, leases and signing material"
+  ],
+  "validation": "443 actual source hashes/sizes matched; copied recipes are byte-exact existing packet; publication command documentation not executed or PS5.1 parsed as a new script.",
+  "testedNeptuneSourceCommit": "27cbe9982e4255b727878f34d5e582a1f99ccab8"
+}

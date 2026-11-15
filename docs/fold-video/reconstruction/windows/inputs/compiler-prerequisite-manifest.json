@@ -1,0 +1,20 @@
+{
+  "status": "SOURCE_ONLY_COMPILER_PREREQUISITE_FIX_NOT_BUILT",
+  "baselineR3PatchSHA256": "447EEFE9C53B1E652A5EB55FD3620A0B5DF679E7152614FC1733D3E8BB9763A7",
+  "files": [
+    {
+      "path": "npt_runtime_stream.h",
+      "baselineSHA256": "B97A83697EBFC0A3D48DAC87499C37C843994E1B6FD14D2B041DF84B062ACA48",
+      "postSHA256": "38C9898C81CC3C4521CE983BAED9CF16C0BA773C45DAB68B9CCC9BA0399FB412",
+      "baselineBytes": 1118,
+      "postBytes": 1463
+    }
+  ],
+  "patchSHA256": "083E6DDDE382BC982F53E4E8499D0DC2C6B7518331BA611A62D604586A315BCE",
+  "changedBehavior": "none; official SDK include prerequisite and preexisting generated-POD interoperability guard only",
+  "actualFailureEvidence": "artifacts/c15-umd-build/session-20261114-0900-r1/compiler-errors-compact-stdout.txt",
+  "SDKGuardEvidence": "Microsoft win32metadata d3d9types.h D3DCOLORVALUE_DEFINED guard",
+  "mustStillDo": "Full native ARM64 and ARM64EC target builds; local snippet checks do not prove all SDK ABI or full include closure.",
+  "localSDKSnippetChecks": "sdk-prerequisite-checks.json",
+  "checksSHA256": "1527fa1fa54af57480e7b1b29b4e751400a141db9024b0c155035491abd84247"
+}

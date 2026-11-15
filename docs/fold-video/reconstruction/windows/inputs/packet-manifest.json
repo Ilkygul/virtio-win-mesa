@@ -1,0 +1,395 @@
+{
+  "status": "FROZEN_C46_SOURCE_PACKET_REQUIRES_ROOT_BUILD_GO",
+  "files": [
+    {
+      "path": "actual-function-check.c",
+      "bytes": 13457,
+      "sha256": "fcd2cab8a012708219d724da0982ff29294c415e75af26e473790b54a9110df3"
+    },
+    {
+      "path": "actual-function-checks.json",
+      "bytes": 692,
+      "sha256": "7f5bdeab7b6bb13c927fe0c4f3f7be305482a32d23b57c52016e1a5a76391cb1"
+    },
+    {
+      "path": "approved-source.patch",
+      "bytes": 185180,
+      "sha256": "8240eee61e0088bad6cd3beb5cf29b29f3b21a1823dbad865f96269a16c27b41"
+    },
+    {
+      "path": "arm64-cross.ini",
+      "bytes": 1367,
+      "sha256": "f290aa957a2957b5645e14c027ba8fc0ac07ad78772e50f22cbd8888507705a6"
+    },
+    {
+      "path": "arm64ec-cross.ini",
+      "bytes": 1843,
+      "sha256": "48cbcaabf6d3bdea83fbca3057211e713b13a6e15a35114696272e46eea3348b"
+    },
+    {
+      "path": "assert-actual-prior-outputs.ps1",
+      "bytes": 8791,
+      "sha256": "5adbfb4dff0bb65b8830cb5cd163eabde81f30013d211d8413c1c08392af4669"
+    },
+    {
+      "path": "build-private-umd.ps1",
+      "bytes": 6730,
+      "sha256": "69f68975f693adf095519ef6225feb0d3a86f3c9b7c524e5862f9d9b2691d60b"
+    },
+    {
+      "path": "c14-to-runtime-stream-r3.patch",
+      "bytes": 99698,
+      "sha256": "447eefe9c53b1e652a5eb55fd3620a0b5df679e7152614fc1733d3e8bb9763a7"
+    },
+    {
+      "path": "c18-to-c19-batch.patch",
+      "bytes": 4864,
+      "sha256": "618e9ade8b57849381db3fe0c5b1a89c5a4d21c5244bebec3c0b47230ee2ba1d"
+    },
+    {
+      "path": "c19-to-c20-resource-init.patch",
+      "bytes": 285,
+      "sha256": "c1c5e2192d0565f9a0b0da313de9e91b45d4304ae424b76cdded58fcbea56242"
+    },
+    {
+      "path": "c20-to-c42-qualified-present.patch",
+      "bytes": 3735,
+      "sha256": "847aebd09a6988f55002fd7457aa5becc654386037fe3430687fdd46624e4158"
+    },
+    {
+      "path": "c42-production-function-checks.json",
+      "bytes": 770,
+      "sha256": "57805bc9894f2179f7dec7606e70f9ad9bea00ef36e2a275ca32918ad169eef0"
+    },
+    {
+      "path": "c42-to-c43-qualified-publisher-flush.patch",
+      "bytes": 26402,
+      "sha256": "800d75f2eda52d0fa73225023dda3ecb9a8ae1298a7806f2a97bf7dfb2c0eeb3"
+    },
+    {
+      "path": "c43-production-function-checks.json",
+      "bytes": 711,
+      "sha256": "d83fd5a9a569ac68a0fdcffaf87ed8a95afc6b2ca4d987282a575feb481b26ec"
+    },
+    {
+      "path": "c43-to-c44-flush-scope-log.patch",
+      "bytes": 4938,
+      "sha256": "2715843474aaf50d0f917527b85a4ba7691f562d3f86785cb136416af7ebc7f5"
+    },
+    {
+      "path": "c44-production-function-checks.json",
+      "bytes": 754,
+      "sha256": "7fc2d96296dc45aeea4aa677c77218ba98d8d3eb2896a138b3853afe2d4644ae"
+    },
+    {
+      "path": "c44-to-c45-unless-no-commands-flush.patch",
+      "bytes": 1262,
+      "sha256": "1ee970696cfff1e34363e025e16be74f7e8f14034e04bc7cf354d8cd748bd9f4"
+    },
+    {
+      "path": "c45-production-function-checks.json",
+      "bytes": 1018,
+      "sha256": "a829f508a808a07173bbe09500642dcd016d67a8d099ba1cbd8fbe7b205b5f7a"
+    },
+    {
+      "path": "c45-to-c46-present-signal-flush-pair.patch",
+      "bytes": 12191,
+      "sha256": "f784a6f7bca7203fb73d3632c1323df82548f7a48d44af69a87e1dc2bcfd8f1a"
+    },
+    {
+      "path": "c46-production-function-checks.json",
+      "bytes": 1121,
+      "sha256": "1dd4b0605dc21b8f697c24b3d7a11c1fa519cf7c7172112413430e80fb0f77ae"
+    },
+    {
+      "path": "changes.json",
+      "bytes": 8828,
+      "sha256": "caa208ad325bc1798752322e9f575c28fb209c90a46595e0984f0d1a014b673b"
+    },
+    {
+      "path": "collect-failure-private-umd.ps1",
+      "bytes": 1856,
+      "sha256": "0e20ee73a9a4e199e1bd9c8feb42c0f250a2e11baa59cc9a03ca7a0241053d32"
+    },
+    {
+      "path": "common-private-umd.ps1",
+      "bytes": 2948,
+      "sha256": "e9e66bd3b3d3a51da71ec5a16baa2ea050865b7df77609740630707bfd59846e"
+    },
+    {
+      "path": "compiler-prerequisite-checks.json",
+      "bytes": 3546,
+      "sha256": "1527fa1fa54af57480e7b1b29b4e751400a141db9024b0c155035491abd84247"
+    },
+    {
+      "path": "compiler-prerequisite-manifest.json",
+      "bytes": 1153,
+      "sha256": "b6df641fd938a51aaa69948749385d52416ff4feae5a74e65740f0d498e4039a"
+    },
+    {
+      "path": "complete-postimage.json",
+      "bytes": 9333,
+      "sha256": "f20bdd9e1dd273b1dc729544b3682724f7ac9f72d006e669d60fa3ae5d5f61c6"
+    },
+    {
+      "path": "complete-private-neptune-postimage.json",
+      "bytes": 95933,
+      "sha256": "b7a52554b65f4a0ab5ff2a0a244432208bf4fee850e5e9c5635e30c3851dce17"
+    },
+    {
+      "path": "context1-batch-checks.json",
+      "bytes": 3073,
+      "sha256": "3e3c45dc146d1407543bd4888ba2e1ff0a73d765eebab024b6ffef9aae715ccb"
+    },
+    {
+      "path": "dwm-batch-checks.json",
+      "bytes": 637,
+      "sha256": "b3e8311c7402bb6e6b2672c6850404da5d3cf0df6ee4734a5f3596bbaaad6285"
+    },
+    {
+      "path": "finalize-private-umd.ps1",
+      "bytes": 4054,
+      "sha256": "6ec1e07905759505759f428a823bcbcc944d57501d0d168125fc1f170f561745"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/neptune-protocol/npt_protocol_transport.h",
+      "bytes": 26355,
+      "sha256": "101919a54dad9568d15ce61b7face1caae16066813b8d5d229352a32503c2f35"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_com.c",
+      "bytes": 37143,
+      "sha256": "c310637e4f9786a7e10b2e4e9587e2c963395c7d138c90013100865ca22c57ab"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_common.h",
+      "bytes": 9793,
+      "sha256": "2dfc7d0f3ab85fd794c717d84793e06725a635a54a6ca00b03022348d811b22c"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_device.c",
+      "bytes": 26393,
+      "sha256": "9d3b285e32f9655e332a5b18ca4c6dfd41d1d8870c3d7d42721adb405bcd9b6f"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_device.h",
+      "bytes": 9435,
+      "sha256": "854a31fa4e17836be0402c350b23d3c15a0b242941d1057e9704c49fd726c021"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_entry_d3d11.c",
+      "bytes": 16224,
+      "sha256": "82b0171d9abaf96ace7413b2a6d661fcd9b91d2dd4373d9555e82ddfd4c28a2c"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_event.c",
+      "bytes": 26883,
+      "sha256": "df17d8054507ad5f495f2a07fb71f34b298c2c32927394ff97e88bbe86e28ebc"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_event.h",
+      "bytes": 4457,
+      "sha256": "454efcda254e4e49a06e0b98acb0e3b84c0ad0fc28abddf3119328addee4a517"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_overrides.h",
+      "bytes": 3374,
+      "sha256": "989bfdaf129f2f1b920ef7089cd385da26a4869079b564e7299c1eba68ee641c"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_overrides_d3d11_context.c",
+      "bytes": 40960,
+      "sha256": "9bf17af41e43446fea94895867074c924b100ead015550b591a7c67a4de88a46"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_overrides_d3d11_device.c",
+      "bytes": 23146,
+      "sha256": "4f07c3e3c8cfaad2215f5a2047109050174705d69a0b8fad77ae0b1c3134e8db"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_publisher_batch.h",
+      "bytes": 8179,
+      "sha256": "2536fa25d12454b652f9a78c26d0fe7e45f183316666cca17f3bd1e6d10614ca"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_renderer.h",
+      "bytes": 21234,
+      "sha256": "2cd935c32f96a57de1e7cbb5511251fbf2c067f09e9105498cc786b9de8c38e7"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_renderer_virtgpu_win32.c",
+      "bytes": 74250,
+      "sha256": "fde2e18f195871ef01167452617d39b6cadef29640ab84edfa081b9daa2046c7"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_resource.c",
+      "bytes": 53979,
+      "sha256": "9c75e50f2ed3c2156bf35c1ba814e3d003a221da9489c2d9f0b67e6856cac3a6"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_ring.c",
+      "bytes": 65821,
+      "sha256": "cad17c5c63763ca2f43e4aa70bf018a09fb2ac97ac7863303c54ea3b7464b800"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_ring.h",
+      "bytes": 19398,
+      "sha256": "a06b8b1aec8e7696767a34fbf68af6c20d711044b0df090791bdce74e5e56ddf"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/npt_runtime_stream.h",
+      "bytes": 1515,
+      "sha256": "2e3b16fa2b3bf3064bcbfd29a3e01afe12ee4ee3d0a39dfe97ecdfa1544a9e7b"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/meson.build",
+      "bytes": 2795,
+      "sha256": "c604b80e7184252a9d9e0f702efb1fe4c885c59eec9142e23536adec62c04e8c"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/triton.h",
+      "bytes": 28955,
+      "sha256": "c226633801a714fe5c1bf8f9f090cfde8dcdbf69dd5463799dc7a7e21c9a70c2"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonDDI.c",
+      "bytes": 85425,
+      "sha256": "443c54378514cad5676e6765a37fba76c6b7bec11aa1c5915efd453c08bffab7"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonDxgi.c",
+      "bytes": 84166,
+      "sha256": "399cafd67947d639418859f2a7e04fd1283d5b773d27afef69ba818edf96a665"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonKm.c",
+      "bytes": 11840,
+      "sha256": "f06645629d219cc8549c5678b83e22ec2e311fd183f1b3e4e0bdec4a756b95b1"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonKm.h",
+      "bytes": 3785,
+      "sha256": "1376105c29221a6886bf514478ac25fe51fad1f987bdda8fa8ef04019e354230"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonQuery.c",
+      "bytes": 43737,
+      "sha256": "7581bba263e6f0578da08f7ff6b1d1a82e2fe7ed56d9e340cf6c0afd177a147d"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonResource.c",
+      "bytes": 83810,
+      "sha256": "1652fb30d04f26599af09fd236eb236d2157424b217a714be9436cfeaa0a27ad"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonRuntimeWrites.h",
+      "bytes": 8793,
+      "sha256": "7c87fab0cf6f3ed7c677ef2ccf894af18e57993ade1ce449befc567cb8a9118b"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonState.c",
+      "bytes": 32821,
+      "sha256": "c669edca2c33edcff4202e5bc9bb5fd8d49b9fb8f209a235c7b1679a4a23e627"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonVideo.c",
+      "bytes": 53516,
+      "sha256": "b71fcd1de8cf24cf25e6344140ea4f348a3c7efb900ea5dd77dd18f7538a6753"
+    },
+    {
+      "path": "guest-proposed/src/virtio/neptune/triton/tritonView.c",
+      "bytes": 47971,
+      "sha256": "b02e3b374c4cba554756c133751a9096a8f64e66f69864419881cd32b2806439"
+    },
+    {
+      "path": "historical-c42-source-freeze-manifest.json",
+      "bytes": 6173,
+      "sha256": "772527d47d8d6f15f0261b1457b85b8c095b80237bfe5463cf22bb724c78f288"
+    },
+    {
+      "path": "historical-c43-source-freeze-manifest.json",
+      "bytes": 6713,
+      "sha256": "43ba2f02e934f6ec11164ada12a7fea5ded08cc10f0f90a216cb97d4bb0ba23f"
+    },
+    {
+      "path": "historical-c44-source-freeze-manifest.json",
+      "bytes": 4944,
+      "sha256": "d9e66f082d3a886f15439c4dc70fa3ab35c071ce73fddc49dbceede96f39968a"
+    },
+    {
+      "path": "historical-c45-source-freeze-manifest.json",
+      "bytes": 5481,
+      "sha256": "c50805b0c7eab978203de11d8306f5e3d00f80f0650aa4b41d4e1da7d414e52f"
+    },
+    {
+      "path": "historical-r3-source-freeze-manifest.json",
+      "bytes": 8865,
+      "sha256": "5f08e7a465afad50ca340dc0f35dabb4cb38a11db1ccf1d9b369186cc3180879"
+    },
+    {
+      "path": "init-order-checks.json",
+      "bytes": 3750,
+      "sha256": "002c694e33b1ef34ae4428293199e6dc18ad15725efe3bd485df34279a55a822"
+    },
+    {
+      "path": "init-order-manifest.json",
+      "bytes": 1174,
+      "sha256": "3e9d248451259c7cb821808ce1a0cb9402f6c39c753cb81300042e270823c15f"
+    },
+    {
+      "path": "original-c8-source-leases.json",
+      "bytes": 5349,
+      "sha256": "fc9b496bb9bb061f6067d5c885d95d5da8c511df673bc8c90ad1346d4e56647e"
+    },
+    {
+      "path": "powershell51-parser-preflight.ps1",
+      "bytes": 1852,
+      "sha256": "ccbeba8dc74910c189a3ffc49e9b6a03007a51a47f4aa9e622d7d151b8d237e1"
+    },
+    {
+      "path": "prepare-private-umd.ps1",
+      "bytes": 11042,
+      "sha256": "d632337e717cbc586a705765d3ca766fbc73caf502dbf1cb635ec751eb7656ff"
+    },
+    {
+      "path": "protected-original-source-leases.json",
+      "bytes": 321257,
+      "sha256": "894e60d71a3de7f5bd8377ccaab2e945b6355dd2e3a3639145b3a71d1fb2e7c3"
+    },
+    {
+      "path": "r3-to-r4-sdk-prerequisite.patch",
+      "bytes": 617,
+      "sha256": "083e6ddde382bc982f53e4e8499d0dc2c6b7518331ba611a62d604586a315bce"
+    },
+    {
+      "path": "r4-to-r5-init-order.patch",
+      "bytes": 841,
+      "sha256": "2c83951fd63b5d3527af8f348707f5fd44d535201df73f15e40ef7c031c20420"
+    },
+    {
+      "path": "resource-opened-reset-checks.json",
+      "bytes": 1228,
+      "sha256": "bb02e1059b25d5e559bf2beb4610cdce6c1a1876679c2914850cb76d67d5ee00"
+    },
+    {
+      "path": "runtime-submit-diagnostics.proposed.patch",
+      "bytes": 14946,
+      "sha256": "e48349b0f2bd72a6d6775fd1b3899bd3639d049f22705aa78e29fd5a67b8d56b"
+    },
+    {
+      "path": "source-assembly-proof.json",
+      "bytes": 835,
+      "sha256": "ed2730cfc2440098dd9abb8d817e9edb7a6096f53a1b11b4c17f9b310f97ddf7"
+    },
+    {
+      "path": "source-freeze-manifest.json",
+      "bytes": 4890,
+      "sha256": "170fa0c59df95b92011115f14eff6a1da7d3f4b534ec9a760866976c11e39cc1"
+    },
+    {
+      "path": "win-build-transport.py",
+      "bytes": 463,
+      "sha256": "fc38eb539dba0649eae8fd7cd457a728b0cd3b356005254835071a7e4d48bf64"
+    }
+  ]
+}

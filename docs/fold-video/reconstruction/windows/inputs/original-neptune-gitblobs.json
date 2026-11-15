@@ -1,0 +1,2202 @@
+[
+  {
+    "relative": "d3d11.def",
+    "bytes": 108,
+    "gitBlobSha1Raw": "9a132e1c814b7e4201ec43d55d560342b67581ea"
+  },
+  {
+    "relative": "d3d12.def",
+    "bytes": 454,
+    "gitBlobSha1Raw": "ad72fd6aeadd598d9bf4b260f1d2bbce3051e38e"
+  },
+  {
+    "relative": "dxgi.def",
+    "bytes": 93,
+    "gitBlobSha1Raw": "ca39df80b9e1698d6d3fb651597d3d0a278127da"
+  },
+  {
+    "relative": "meson.build",
+    "bytes": 4750,
+    "gitBlobSha1Raw": "8502e805af927a950c4855f0e6ba9f94892df4a1"
+  },
+  {
+    "relative": "npt_blob.c",
+    "bytes": 2444,
+    "gitBlobSha1Raw": "5de896199de2137fcb9ac4da4c4b0bd738e29b17"
+  },
+  {
+    "relative": "npt_blob.h",
+    "bytes": 633,
+    "gitBlobSha1Raw": "72ab2ba8d74f44a2367ca038b40d3b855804bfba"
+  },
+  {
+    "relative": "npt_com.c",
+    "bytes": 37081,
+    "gitBlobSha1Raw": "053819119c61d5135ea50ebcb6c8995b3b3e5447"
+  },
+  {
+    "relative": "npt_com.h",
+    "bytes": 15665,
+    "gitBlobSha1Raw": "f64f510a294713e2a2b329bc085524fdb147240d"
+  },
+  {
+    "relative": "npt_common.h",
+    "bytes": 9666,
+    "gitBlobSha1Raw": "03439555e732e99b3fe77bafd335780353d9a2ed"
+  },
+  {
+    "relative": "npt_common_wine.c",
+    "bytes": 3118,
+    "gitBlobSha1Raw": "4a510902e017b643183052052787a830f790d9ea"
+  },
+  {
+    "relative": "npt_cs.c",
+    "bytes": 2616,
+    "gitBlobSha1Raw": "3c318e81251095e3c8b0ba591d5345b511acd7a7"
+  },
+  {
+    "relative": "npt_cs.h",
+    "bytes": 9025,
+    "gitBlobSha1Raw": "9a370b5a62a13ce2b81f8ba5e2b35788be5fd5e2"
+  },
+  {
+    "relative": "npt_d3d12_heap.c",
+    "bytes": 11710,
+    "gitBlobSha1Raw": "e92d59dde6ec4fd6aad910ae854aa007ed690e3c"
+  },
+  {
+    "relative": "npt_d3d12_heap.h",
+    "bytes": 4339,
+    "gitBlobSha1Raw": "3ca163093b654da3ca6fd5477d3fcf65b635f79d"
+  },
+  {
+    "relative": "npt_device.c",
+    "bytes": 22243,
+    "gitBlobSha1Raw": "5b561dd9399395e39155ed243a8f58a6824b4596"
+  },
+  {
+    "relative": "npt_device.h",
+    "bytes": 8898,
+    "gitBlobSha1Raw": "da420b8a5927e9dad02385557e50e052bacf713b"
+  },
+  {
+    "relative": "npt_dispatch.c",
+    "bytes": 26504,
+    "gitBlobSha1Raw": "abaf13524566de3f949f331d5c8933fe9de09e12"
+  },
+  {
+    "relative": "npt_dispatch.h",
+    "bytes": 12102,
+    "gitBlobSha1Raw": "822ded0946470e8ce0431fe64400ec76561f9f7b"
+  },
+  {
+    "relative": "npt_display.h",
+    "bytes": 1207,
+    "gitBlobSha1Raw": "8383e13d1073cb002e48083574a6428d4ad0847a"
+  },
+  {
+    "relative": "npt_entry_d3d11.c",
+    "bytes": 14408,
+    "gitBlobSha1Raw": "27baaa56717d9184bc4b320e3f412329f10cb07d"
+  },
+  {
+    "relative": "npt_entry_d3d12.c",
+    "bytes": 14292,
+    "gitBlobSha1Raw": "69aefb83306eaed42c9f8fe6c47b29247aa70cc6"
+  },
+  {
+    "relative": "npt_entry_dxgi.c",
+    "bytes": 3750,
+    "gitBlobSha1Raw": "8a496e54071300d6944884c1c1b57a13877f8060"
+  },
+  {
+    "relative": "npt_env.c",
+    "bytes": 2267,
+    "gitBlobSha1Raw": "c915bd46a2becd7bfce2bec45c07add25ec5e55a"
+  },
+  {
+    "relative": "npt_env.h",
+    "bytes": 3645,
+    "gitBlobSha1Raw": "92d5619ce1e247bb35a4a64b37cecd2879e1d156"
+  },
+  {
+    "relative": "npt_event.c",
+    "bytes": 23994,
+    "gitBlobSha1Raw": "5b766eb22c9d00831fee611af71a300fb8f8ef2c"
+  },
+  {
+    "relative": "npt_event.h",
+    "bytes": 4401,
+    "gitBlobSha1Raw": "a23ff8c39fed72095384a6eba2a8bbad9c2db05f"
+  },
+  {
+    "relative": "npt_host_address.c",
+    "bytes": 4195,
+    "gitBlobSha1Raw": "f2e4c114968c47296bfb297475a596567ee891b9"
+  },
+  {
+    "relative": "npt_log_win32.c",
+    "bytes": 2851,
+    "gitBlobSha1Raw": "7aa2956bca36b23885ae06fa23c8a0fe47f747a1"
+  },
+  {
+    "relative": "npt_object.h",
+    "bytes": 3916,
+    "gitBlobSha1Raw": "ef2146886d687fc2b6ac2dea3baf4a4c76c880c5"
+  },
+  {
+    "relative": "npt_overrides.h",
+    "bytes": 2771,
+    "gitBlobSha1Raw": "119640e720b3c3e2342a87491c7ff99525ccc70e"
+  },
+  {
+    "relative": "npt_overrides_d3d11_buffer.c",
+    "bytes": 1181,
+    "gitBlobSha1Raw": "74f1e5226a7c0201f4263844ebd072dca4b9f81c"
+  },
+  {
+    "relative": "npt_overrides_d3d11_context.c",
+    "bytes": 38203,
+    "gitBlobSha1Raw": "23ec30b5a91bc2ab8b3ca873d6e903ff13a55707"
+  },
+  {
+    "relative": "npt_overrides_d3d11_device.c",
+    "bytes": 22524,
+    "gitBlobSha1Raw": "0b3fbb70673eb3511d2e8b4fef58469f3d0049bb"
+  },
+  {
+    "relative": "npt_overrides_d3d11_feedback.h",
+    "bytes": 2195,
+    "gitBlobSha1Raw": "ceaba3a2e0299f4700a332fbcaf135a1ddf710bb"
+  },
+  {
+    "relative": "npt_overrides_d3d11_fence.c",
+    "bytes": 9103,
+    "gitBlobSha1Raw": "7b3df52dfdd6f835b63e2ce52fcc70d1242840f2"
+  },
+  {
+    "relative": "npt_overrides_d3d11_query.c",
+    "bytes": 12267,
+    "gitBlobSha1Raw": "83ba151286ec33896605ad1af6410ae80f511803"
+  },
+  {
+    "relative": "npt_overrides_d3d11_texture.c",
+    "bytes": 3657,
+    "gitBlobSha1Raw": "3b13659532f5561f8e3ee39c6b05b642954b3e5a"
+  },
+  {
+    "relative": "npt_overrides_d3d12_device.c",
+    "bytes": 50404,
+    "gitBlobSha1Raw": "86c587dd5084ea165ee964772585b74fa7dbaaff"
+  },
+  {
+    "relative": "npt_overrides_d3d12_fence.c",
+    "bytes": 12508,
+    "gitBlobSha1Raw": "8b9fa587ee8f6e76ccb2e17bb75cc113dd1d1b06"
+  },
+  {
+    "relative": "npt_overrides_d3d12_list.c",
+    "bytes": 23322,
+    "gitBlobSha1Raw": "fbe7aa815ea48496e6ba81314563b1c63414c8a6"
+  },
+  {
+    "relative": "npt_overrides_d3d12_queue.c",
+    "bytes": 3344,
+    "gitBlobSha1Raw": "c91240bb4df0303b107d57c93e024b6d26a9ebef"
+  },
+  {
+    "relative": "npt_overrides_d3d12_resource.c",
+    "bytes": 29984,
+    "gitBlobSha1Raw": "165905ce1a33561a95f7f3c7b3a823cb57a8b52d"
+  },
+  {
+    "relative": "npt_overrides_dxgi_adapter.c",
+    "bytes": 5097,
+    "gitBlobSha1Raw": "16d932088c7200518013f2024c6958fd82a69c37"
+  },
+  {
+    "relative": "npt_overrides_dxgi_factory.c",
+    "bytes": 11973,
+    "gitBlobSha1Raw": "17c8ec9b5a1b26adf9c824450d0fc98dc9729580"
+  },
+  {
+    "relative": "npt_overrides_dxgi_factorymedia.c",
+    "bytes": 1976,
+    "gitBlobSha1Raw": "d5cdc8b4db39e971f00a3f2a74c577140f6d680c"
+  },
+  {
+    "relative": "npt_overrides_dxgi_output.c",
+    "bytes": 31304,
+    "gitBlobSha1Raw": "5c81cf4b9d2879fb8e923eb34e56603ab07b0ca4"
+  },
+  {
+    "relative": "npt_overrides_event_handles.c",
+    "bytes": 9208,
+    "gitBlobSha1Raw": "5e709ede9ecf0a261e6af238a1ce0f8590851243"
+  },
+  {
+    "relative": "npt_present_convert_dxbc.h",
+    "bytes": 17587,
+    "gitBlobSha1Raw": "4a6ba35b951fd75b658bed9defa494485cf60d17"
+  },
+  {
+    "relative": "npt_profile.c",
+    "bytes": 19046,
+    "gitBlobSha1Raw": "b4cf656eba6bfe771fa3e57cf61e09a44ba25e5b"
+  },
+  {
+    "relative": "npt_profile.h",
+    "bytes": 9659,
+    "gitBlobSha1Raw": "0302e2bb771c75c98299cae4b0e55c0495ee6143"
+  },
+  {
+    "relative": "npt_renderer.h",
+    "bytes": 20203,
+    "gitBlobSha1Raw": "466eaa10996925ab5e976188d5ee7d7d5131d07b"
+  },
+  {
+    "relative": "npt_renderer_virtgpu_win32.c",
+    "bytes": 55301,
+    "gitBlobSha1Raw": "c7eaf3de7f29af72ad20eb8dd41015b472edcc92"
+  },
+  {
+    "relative": "npt_renderer_virtgpu_wine.c",
+    "bytes": 12177,
+    "gitBlobSha1Raw": "c15aaa331dd441f77f1353ffcca1cacb7e0b3008"
+  },
+  {
+    "relative": "npt_renderer_vtest_protocol.c",
+    "bytes": 6924,
+    "gitBlobSha1Raw": "1534666e22e0a1ca5c000a1a08525b9a3bc1f5a3"
+  },
+  {
+    "relative": "npt_renderer_vtest_protocol.h",
+    "bytes": 2609,
+    "gitBlobSha1Raw": "5d2e2bc4cb7fc9baf27595f1332d0c97399eb894"
+  },
+  {
+    "relative": "npt_renderer_vtest_wine.c",
+    "bytes": 10323,
+    "gitBlobSha1Raw": "93028dec19642cb88a24d97a0efeeb7b07fe85da"
+  },
+  {
+    "relative": "npt_renderer_wine_common.c",
+    "bytes": 4750,
+    "gitBlobSha1Raw": "b54f1693d7026b5180c01a7e21d41fa3c4ef7dcb"
+  },
+  {
+    "relative": "npt_renderer_wine_common.h",
+    "bytes": 727,
+    "gitBlobSha1Raw": "0ff1c4d10639847c202a5ee90e0fc8fed74de19c"
+  },
+  {
+    "relative": "npt_resource.c",
+    "bytes": 53406,
+    "gitBlobSha1Raw": "222f0cd0fff59079e2520c21bed8a6fa467bb563"
+  },
+  {
+    "relative": "npt_resource.h",
+    "bytes": 25021,
+    "gitBlobSha1Raw": "01d1ba6d4ad9c177cbcaa6c7b4bfcbf28bebae6f"
+  },
+  {
+    "relative": "npt_ring.c",
+    "bytes": 56072,
+    "gitBlobSha1Raw": "9a31a0921f0a5b13be31dcab6c23c644296c8ff9"
+  },
+  {
+    "relative": "npt_ring.h",
+    "bytes": 18746,
+    "gitBlobSha1Raw": "4c3ae5561a521e4370559abfec1a13ac648a5b3d"
+  },
+  {
+    "relative": "npt_shared_texture.c",
+    "bytes": 7888,
+    "gitBlobSha1Raw": "869d0d865a94399cedc943325520ea8354761569"
+  },
+  {
+    "relative": "npt_shared_texture.h",
+    "bytes": 3976,
+    "gitBlobSha1Raw": "81391420a0860cd95f2076c7ad539e2a8c3d244c"
+  },
+  {
+    "relative": "npt_shmem_pool.c",
+    "bytes": 1910,
+    "gitBlobSha1Raw": "466555bf7a6ee96cc7f8cbc7a7f72b9e6fb582e9"
+  },
+  {
+    "relative": "npt_shmem_pool.h",
+    "bytes": 1087,
+    "gitBlobSha1Raw": "96db72741b2337bbb56e61ff35d9a24a976794c3"
+  },
+  {
+    "relative": "npt_swapchain.c",
+    "bytes": 45293,
+    "gitBlobSha1Raw": "a5cc7f68c1206857f2f2cccc9116e8c70f9b974c"
+  },
+  {
+    "relative": "npt_swapchain.h",
+    "bytes": 1481,
+    "gitBlobSha1Raw": "24ec486c5014130bca4dc7c6f891601cfe3582d1"
+  },
+  {
+    "relative": "npt_swapchain12.c",
+    "bytes": 45498,
+    "gitBlobSha1Raw": "1b8ab221f8429e0983b866631e4bc5b1936bc43d"
+  },
+  {
+    "relative": "npt_swapchain12.h",
+    "bytes": 1579,
+    "gitBlobSha1Raw": "69c19988f0ccfcfdf88e6b373e12b6fca2ae62e0"
+  },
+  {
+    "relative": "npt_swapchain_common.c",
+    "bytes": 32422,
+    "gitBlobSha1Raw": "eaa0970912a2849b7310f92dfad8da6cfde9de26"
+  },
+  {
+    "relative": "npt_swapchain_common.h",
+    "bytes": 12043,
+    "gitBlobSha1Raw": "fc87e6406da90cbccac6954463984954ef5821ac"
+  },
+  {
+    "relative": "npt_tls.c",
+    "bytes": 8741,
+    "gitBlobSha1Raw": "c4748bfc8fb02a394c4308a17918bfe5f8411418"
+  },
+  {
+    "relative": "npt_tls.h",
+    "bytes": 2461,
+    "gitBlobSha1Raw": "cd4894a208caf8c0c419cc70345f3a9cc56484ae"
+  },
+  {
+    "relative": "npt_workaround.h",
+    "bytes": 2200,
+    "gitBlobSha1Raw": "f34830aed1bec65abaa8b25d74aff668f7a1903f"
+  },
+  {
+    "relative": "neptune-protocol/.gitattributes",
+    "bytes": 331,
+    "gitBlobSha1Raw": "f3a57d08c72e5e631e9cad0998b2ef42a6741d5c"
+  },
+  {
+    "relative": "neptune-protocol/npt_client_families.txt",
+    "bytes": 1985,
+    "gitBlobSha1Raw": "3445d29aa07d633bee1065c386303fcb8004069a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d10blob.c",
+    "bytes": 4082,
+    "gitBlobSha1Raw": "6fff09d6acb99b8d419d250e5e9af7b8063c51db"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d10blob.h",
+    "bytes": 4512,
+    "gitBlobSha1Raw": "87646bcfc321996c8829dbca47038f066828a22e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11asynchronous.c",
+    "bytes": 4241,
+    "gitBlobSha1Raw": "05b98eecf71c7517a87c686fa865336b8ada1d8f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11asynchronous.h",
+    "bytes": 5182,
+    "gitBlobSha1Raw": "326916977adc67e2b855ad7842f061d2c1a58083"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11authenticatedchannel.c",
+    "bytes": 5332,
+    "gitBlobSha1Raw": "f9c55319c922db44c41a2e596da0fc0a79ed6612"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11authenticatedchannel.h",
+    "bytes": 6039,
+    "gitBlobSha1Raw": "e09e0dd9d6e3f3dd31202794b988a1c3c44aaa6b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11blendstate.c",
+    "bytes": 5110,
+    "gitBlobSha1Raw": "22e1e4726e966361810cd8c4af72cee8957fe772"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11blendstate.h",
+    "bytes": 8158,
+    "gitBlobSha1Raw": "3090c3a4eafb81d6b14a82c283c39a22a4d52ec2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11buffer.c",
+    "bytes": 4249,
+    "gitBlobSha1Raw": "e1515d0598c08cb8412ad88a91983e133506f4f6"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11buffer.h",
+    "bytes": 5493,
+    "gitBlobSha1Raw": "2b8433095d6e9c6f5e8c69ae5516ed69ce5288c7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11classinstance.c",
+    "bytes": 6781,
+    "gitBlobSha1Raw": "fb0d94a1ac748dd282c414880f37869dfca76564"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11classinstance.h",
+    "bytes": 6133,
+    "gitBlobSha1Raw": "f6e71333c3eb269d24b7a46cea768fe2a4b1e2c9"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11classlinkage.c",
+    "bytes": 7316,
+    "gitBlobSha1Raw": "406a202859d4f1ef379b6cebdac04e6561502015"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11classlinkage.h",
+    "bytes": 5924,
+    "gitBlobSha1Raw": "94e0a91cef6fa7596df51c87864472b7b69dd69a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11commandlist.c",
+    "bytes": 4220,
+    "gitBlobSha1Raw": "4b03b7f8a30723e627294e5d608019e85683a1f7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11commandlist.h",
+    "bytes": 5171,
+    "gitBlobSha1Raw": "c8822985bdfc5887115623b2518e9a3ea58a2742"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11computeshader.c",
+    "bytes": 4000,
+    "gitBlobSha1Raw": "403f954eedc95960773cf7bf9ee97fe30f9321e4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11computeshader.h",
+    "bytes": 5004,
+    "gitBlobSha1Raw": "86e1825bd8856639b5f40c5869a37ea75e7414ec"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11counter.c",
+    "bytes": 4145,
+    "gitBlobSha1Raw": "243586d8269361f5600e4d47a68bae03985a1e8e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11counter.h",
+    "bytes": 5221,
+    "gitBlobSha1Raw": "9003372aa40bdfef5f535d708e12f636bedcca2a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11cryptosession.c",
+    "bytes": 5669,
+    "gitBlobSha1Raw": "85a966a5e72ae564dcc98d820d2fbf042a664cfd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11cryptosession.h",
+    "bytes": 6396,
+    "gitBlobSha1Raw": "2e3f42bfecef4a821fc11b03398f02adeb6a0db4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11depthstencilstate.c",
+    "bytes": 4421,
+    "gitBlobSha1Raw": "8c2529a9f532ea3395468dd851b414339623562b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11depthstencilstate.h",
+    "bytes": 5353,
+    "gitBlobSha1Raw": "5f36446aea175e5158c0d3367561af5c28835fcc"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11depthstencilview.c",
+    "bytes": 4473,
+    "gitBlobSha1Raw": "15f131a86e472197e49b3fa61cc3560e8d557122"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11depthstencilview.h",
+    "bytes": 5464,
+    "gitBlobSha1Raw": "1e404601965dfe8601d97a27fa8e671105da11a0"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11device.c",
+    "bytes": 92743,
+    "gitBlobSha1Raw": "3610d84acf243daa463e46aa2792d4b625a42b84"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11device.h",
+    "bytes": 95941,
+    "gitBlobSha1Raw": "8c89b6c2501aa73f48ceba7d99a4e1d534f5371b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11devicechild.c",
+    "bytes": 6952,
+    "gitBlobSha1Raw": "b3e0d02b074ec9c0cd699046b55e2e73ccf10995"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11devicechild.h",
+    "bytes": 5466,
+    "gitBlobSha1Raw": "2809fc53983048c3d3e19424ea54628aea9e4d89"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11devicecontext.c",
+    "bytes": 126147,
+    "gitBlobSha1Raw": "840fc50bee8d0e965886cf5fc6e2e2999a18f669"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11devicecontext.h",
+    "bytes": 173065,
+    "gitBlobSha1Raw": "60788c4c7958d138ef277b35a14aa3817d5e0c5e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11domainshader.c",
+    "bytes": 3966,
+    "gitBlobSha1Raw": "5429d43b420dd201eb0fab9912754034af29a1cd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11domainshader.h",
+    "bytes": 4983,
+    "gitBlobSha1Raw": "4f754be72846ac96da0da3b173463f4a3c444f97"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11fence.c",
+    "bytes": 4984,
+    "gitBlobSha1Raw": "7add0260e1a64d34d815cf6d72eb92c64d554adf"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11fence.h",
+    "bytes": 5725,
+    "gitBlobSha1Raw": "f0d86b48bbda8d55023a9a52322ec28677d6cbaa"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11geometryshader.c",
+    "bytes": 4034,
+    "gitBlobSha1Raw": "59918e4ecfa902f66f220dda682e83de8b58befd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11geometryshader.h",
+    "bytes": 5025,
+    "gitBlobSha1Raw": "09be1f5ba457d9016dc3e874f28da579be97994e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11hullshader.c",
+    "bytes": 3898,
+    "gitBlobSha1Raw": "200dca160a2df056ef4e6141a1d0de7fc092a982"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11hullshader.h",
+    "bytes": 4941,
+    "gitBlobSha1Raw": "b84e5624ae32999ca575441311e8d54bd87d9fc2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11inputlayout.c",
+    "bytes": 3932,
+    "gitBlobSha1Raw": "d8e6174bb245ac21e361b55ef3386f72a0c40776"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11inputlayout.h",
+    "bytes": 4962,
+    "gitBlobSha1Raw": "362d684a2c54339d02c29986caf732196600d901"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11multithread.c",
+    "bytes": 4712,
+    "gitBlobSha1Raw": "2699528e5bad864d78731ee482164f94ac6ff7f8"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11multithread.h",
+    "bytes": 5122,
+    "gitBlobSha1Raw": "51466e08790710b5715b3fa74e49302bf1590e5c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11on12device.c",
+    "bytes": 11395,
+    "gitBlobSha1Raw": "00aa345cf68b136fbf64a9430348d0915bf88911"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11on12device.h",
+    "bytes": 12039,
+    "gitBlobSha1Raw": "2a069411417ea9ec54a2715f42b19a3f6ca7c41f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11pixelshader.c",
+    "bytes": 3932,
+    "gitBlobSha1Raw": "a7092a0af53fc1d6f1a82f7dc85369fdb5cede2c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11pixelshader.h",
+    "bytes": 4962,
+    "gitBlobSha1Raw": "9548b6ea521e26276a2bca221c5a3c4d37be375b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11predicate.c",
+    "bytes": 4042,
+    "gitBlobSha1Raw": "85add1c3dcd55bcc4a82619e6675e12aaf19b6e4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11predicate.h",
+    "bytes": 5143,
+    "gitBlobSha1Raw": "dd4081c0df8d659aa558f210da4a217ccc429888"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11query.c",
+    "bytes": 4982,
+    "gitBlobSha1Raw": "04ed793eda09e8cb56a2535ef81335b24a686bb8"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11query.h",
+    "bytes": 8179,
+    "gitBlobSha1Raw": "3a5c1ffe6955765aff8c6da57305a17c4b133fa7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11rasterizerstate.c",
+    "bytes": 6345,
+    "gitBlobSha1Raw": "f1159e33620268a5c4796feb5f8222ae972c281f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11rasterizerstate.h",
+    "bytes": 11599,
+    "gitBlobSha1Raw": "455afcde9355a1ac9eaf0b60a9593a5d9d205080"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11rendertargetview.c",
+    "bytes": 5498,
+    "gitBlobSha1Raw": "783408cfc96ab0c4563a99762348c0908601be32"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11rendertargetview.h",
+    "bytes": 8720,
+    "gitBlobSha1Raw": "743e14786151f3254e6c13c04001376e8ab12428"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11resource.c",
+    "bytes": 4716,
+    "gitBlobSha1Raw": "b20c7422cd39f7cbf8eabd8c2fd746f428451a41"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11resource.h",
+    "bytes": 5648,
+    "gitBlobSha1Raw": "20ba528c00c1535d4ea7c79a8e1f09ee7d771402"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11samplerstate.c",
+    "bytes": 4230,
+    "gitBlobSha1Raw": "ec6a23deb3fe31a145464d4810277c3904d3ae4d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11samplerstate.h",
+    "bytes": 5226,
+    "gitBlobSha1Raw": "88ad698051f90dab8d5b92c649855be6c03bc71a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11shaderresourceview.c",
+    "bytes": 5594,
+    "gitBlobSha1Raw": "ae00ee1e25f09bf6fdfdc755e269dce519e3eeef"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11shaderresourceview.h",
+    "bytes": 8810,
+    "gitBlobSha1Raw": "73adb4b5028bec3554459b10b4df0ef09b68a29b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11texture1d.c",
+    "bytes": 4363,
+    "gitBlobSha1Raw": "8d647398a641e062fb3f53d585bb82f0352c7ccd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11texture1d.h",
+    "bytes": 5568,
+    "gitBlobSha1Raw": "fab21a4ae95798c6c186052c832f18d5fdddc6cb"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11texture2d.c",
+    "bytes": 5314,
+    "gitBlobSha1Raw": "5a694eb1e0843ce9003bc4552bd0ea287abf49cb"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11texture2d.h",
+    "bytes": 8956,
+    "gitBlobSha1Raw": "349a2290d38843d5eea3753b00d8566882baa45c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11texture3d.c",
+    "bytes": 5314,
+    "gitBlobSha1Raw": "ed80ba11e1e6d110b1e044c65ba175335c329dc7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11texture3d.h",
+    "bytes": 8956,
+    "gitBlobSha1Raw": "4c5ba33ebae22fd94cc2a3e8f86645c80f0868a3"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11unorderedaccessview.c",
+    "bytes": 5642,
+    "gitBlobSha1Raw": "11363c773fac9ae3c5670af6b00934527f49c6fe"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11unorderedaccessview.h",
+    "bytes": 8855,
+    "gitBlobSha1Raw": "39ef0a4d86563eb8c02e1ed24a0b4371dcb6e4db"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11vertexshader.c",
+    "bytes": 3966,
+    "gitBlobSha1Raw": "ae642b83c5074c1452797dbb60bcc0f470692207"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11vertexshader.h",
+    "bytes": 4983,
+    "gitBlobSha1Raw": "ce88ef12c985e96b4afb80a24aa89d8759bb2ebf"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videocontext.c",
+    "bytes": 46655,
+    "gitBlobSha1Raw": "9b29f12ebe33f4a57f835998fddd4b015c27fe0b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videocontext.h",
+    "bytes": 101839,
+    "gitBlobSha1Raw": "507ac47758e90646ecf1cfe7200d630f3536bd77"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videodecoder.c",
+    "bytes": 4718,
+    "gitBlobSha1Raw": "64a1021e0bd13c8c5af22e2e2d131dc688538ba1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videodecoder.h",
+    "bytes": 5637,
+    "gitBlobSha1Raw": "06ad927255ba740d7127ec821feb3891584dcdc9"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videodecoderoutputview.c",
+    "bytes": 4702,
+    "gitBlobSha1Raw": "4abd8455890ee0650615f9447461f98cd6258de6"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videodecoderoutputview.h",
+    "bytes": 5616,
+    "gitBlobSha1Raw": "c217c616a757e84329a2777486e8a529bbaaf9a0"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videodevice.c",
+    "bytes": 27095,
+    "gitBlobSha1Raw": "42d8b44fff2df4de1f74ba160d68a36a5beeff89"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videodevice.h",
+    "bytes": 28035,
+    "gitBlobSha1Raw": "517274a7531ef0092f3813226f553b78104b1a52"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessor.c",
+    "bytes": 4698,
+    "gitBlobSha1Raw": "cb5f6652f37757966cf15bfb842c7e05e1f3fedd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessor.h",
+    "bytes": 5662,
+    "gitBlobSha1Raw": "0203c465ef7fb08b4a24dede4cee0c082507b211"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessorenumerator.c",
+    "bytes": 8526,
+    "gitBlobSha1Raw": "7b7ab83349613da52cf799278b6278013a140e74"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessorenumerator.h",
+    "bytes": 12321,
+    "gitBlobSha1Raw": "09bc42c23d4d1b69fac3bc381cfe50f793627d8c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessorinputview.c",
+    "bytes": 4740,
+    "gitBlobSha1Raw": "5d23e8bda5506453d0371e977ef294c645847e53"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessorinputview.h",
+    "bytes": 5641,
+    "gitBlobSha1Raw": "acbfbdd2f2531227c1d6ed1a918f0da3c63cee44"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessoroutputview.c",
+    "bytes": 4778,
+    "gitBlobSha1Raw": "7e5263d198586b7db694ab0a656c44582c1576c0"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11videoprocessoroutputview.h",
+    "bytes": 5666,
+    "gitBlobSha1Raw": "50c7bac25c580887ad00c07d568871c7abbeb778"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11view.c",
+    "bytes": 5439,
+    "gitBlobSha1Raw": "1ae26e64d2bc33de8e0ee816b2c343c1e9d01c50"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d11view.h",
+    "bytes": 5058,
+    "gitBlobSha1Raw": "c8f3b6ebd56ac3629c8b66c188b8e1f5120c31ad"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandallocator.c",
+    "bytes": 4719,
+    "gitBlobSha1Raw": "cce7c3f030675b4fab2893a9df5024b3d1bf399d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandallocator.h",
+    "bytes": 5376,
+    "gitBlobSha1Raw": "3b6c786e8e9d3e9c4ab53e2055d9a61d460d2079"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandlist.c",
+    "bytes": 4291,
+    "gitBlobSha1Raw": "e527ac35aa085893f8081cf71f0c2f5c2d823183"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandlist.h",
+    "bytes": 5302,
+    "gitBlobSha1Raw": "4662bdec8e124fc23ac52cbb0f1218ffd47ca8bf"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandqueue.c",
+    "bytes": 9058,
+    "gitBlobSha1Raw": "1a9c74400bd725290719491f5c2cc516a59ce99c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandqueue.h",
+    "bytes": 9329,
+    "gitBlobSha1Raw": "66a3fc9c6ed4fde65be5e76ea1c99cdc0f64b141"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandsignature.c",
+    "bytes": 4196,
+    "gitBlobSha1Raw": "f28125852370e8d318dc608bd90e80d3a2530980"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12commandsignature.h",
+    "bytes": 5181,
+    "gitBlobSha1Raw": "26cd1e8ecd003bda7df4b539f87413704fa39dbb"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12descriptorheap.c",
+    "bytes": 5865,
+    "gitBlobSha1Raw": "04ef8e225526d36e4a066a905163b29c181b5a99"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12descriptorheap.h",
+    "bytes": 6255,
+    "gitBlobSha1Raw": "66adce0483b6d8403b1dca159702041735af8dcd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12device.c",
+    "bytes": 98516,
+    "gitBlobSha1Raw": "4f11d13520383960919d21a7ceb96860b28ee76e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12device.h",
+    "bytes": 278256,
+    "gitBlobSha1Raw": "aac25b77bc79b8d08085c716dc09faa968285843"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12devicechild.c",
+    "bytes": 5665,
+    "gitBlobSha1Raw": "5fa7320869b9a3787b4fcb20bf800ad1aadfe115"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12devicechild.h",
+    "bytes": 5201,
+    "gitBlobSha1Raw": "a11ae569d027987af066f0251e5a706aaf928cd4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12deviceconfiguration.c",
+    "bytes": 11275,
+    "gitBlobSha1Raw": "75ebe9c2a66ac520a7ac5212b256c40015b7316c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12deviceconfiguration.h",
+    "bytes": 9629,
+    "gitBlobSha1Raw": "6ddfb7b2ffd403442aa6a8b539f435d789936201"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12devicefactory.c",
+    "bytes": 9329,
+    "gitBlobSha1Raw": "2a4d3f28f12687e2e1d4adb6f45a3e79eed0661f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12devicefactory.h",
+    "bytes": 6478,
+    "gitBlobSha1Raw": "cbff53b8b061eef557e4c27a3f35093efc328d9c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddata.c",
+    "bytes": 8184,
+    "gitBlobSha1Raw": "aebac9e0a431741a74d9253d82b5eb92a7a13e25"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddata.h",
+    "bytes": 12210,
+    "gitBlobSha1Raw": "549ac7f5caadee5a36bce679a83e6465cc1bc994"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddatasettings.c",
+    "bytes": 8075,
+    "gitBlobSha1Raw": "e3fb2644e28704d4c0459a5ed8f9c13af8fcc362"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddatasettings.h",
+    "bytes": 12396,
+    "gitBlobSha1Raw": "74b6bd8633d3bef85861f5e22dd22b5ea49c39a9"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12fence.c",
+    "bytes": 6136,
+    "gitBlobSha1Raw": "706eca3c0513b8eae0c13846ca28cc4bca132e04"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12fence.h",
+    "bytes": 8907,
+    "gitBlobSha1Raw": "eaaf0f7ed8cccb475dd765303d2f7d77d877ad61"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12graphicscommandlist.c",
+    "bytes": 45078,
+    "gitBlobSha1Raw": "ed59d76230459fb80bed492880215a31950f7c86"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12graphicscommandlist.h",
+    "bytes": 212131,
+    "gitBlobSha1Raw": "9ffcba1cd5fc847a4a1a44887508379e6e768e2c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12heap.c",
+    "bytes": 6849,
+    "gitBlobSha1Raw": "50224fcf4ec09ffed71b72d054de9e836eeb749f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12heap.h",
+    "bytes": 8292,
+    "gitBlobSha1Raw": "26bbb48454cacd72aa4ecb0ced15c5bd629aa2d8"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12lifetimeowner.c",
+    "bytes": 3998,
+    "gitBlobSha1Raw": "db4a97eafec6f91f6aa347c6968882c9ef1d1cd5"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12lifetimeowner.h",
+    "bytes": 4596,
+    "gitBlobSha1Raw": "c6187699cc9c532b1e511f731f34d74c31cb4aca"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12lifetimetracker.c",
+    "bytes": 4742,
+    "gitBlobSha1Raw": "73dd1fcc55d8208ed89cdc90234d5966f5a26cfb"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12lifetimetracker.h",
+    "bytes": 5453,
+    "gitBlobSha1Raw": "88afc3cedd4dfda7dd3f35189b1d656f4af45e4e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12metacommand.c",
+    "bytes": 4470,
+    "gitBlobSha1Raw": "40bd5b57fdb33d71a4cac123f07a89b371e8b85f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12metacommand.h",
+    "bytes": 5466,
+    "gitBlobSha1Raw": "af9f30c97e354654374a3981ef993e3e2e986eeb"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12object.c",
+    "bytes": 5529,
+    "gitBlobSha1Raw": "8761749f83b45be419d2325b21322cc07c4bb332"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12object.h",
+    "bytes": 5309,
+    "gitBlobSha1Raw": "ea65a31e60b5e179200110fb9fbef943d1c0d2ee"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12pageable.c",
+    "bytes": 3895,
+    "gitBlobSha1Raw": "460daae4b49d9c5af88bb3ccfe1c9571910600a2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12pageable.h",
+    "bytes": 5016,
+    "gitBlobSha1Raw": "5cd2023ae3548013c5e21e2e39cff76caa4f4832"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12pipelinelibrary.c",
+    "bytes": 10496,
+    "gitBlobSha1Raw": "d1a77f72f7ff6094eed507653d9e5f1a42eabb7d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12pipelinelibrary.h",
+    "bytes": 11111,
+    "gitBlobSha1Raw": "57534e99d1134da7a798099e982f86d9ae44c31f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12pipelinestate.c",
+    "bytes": 5357,
+    "gitBlobSha1Raw": "ddb4f36f1b69825bc6139b4f0715393092fafbc3"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12pipelinestate.h",
+    "bytes": 5371,
+    "gitBlobSha1Raw": "ae6c5f7d991f1fc094847cdf456b1f41b84dada9"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12protectedresourcesession.c",
+    "bytes": 6556,
+    "gitBlobSha1Raw": "9ea4c783d963e17e82cacfabee90d90d7d2b6216"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12protectedresourcesession.h",
+    "bytes": 9864,
+    "gitBlobSha1Raw": "bbe441a2dc6f0adfb48529314d65a144f8065b26"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12protectedsession.c",
+    "bytes": 6323,
+    "gitBlobSha1Raw": "5e46c820bc99eea7e2636261e579695e6be3d788"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12protectedsession.h",
+    "bytes": 5750,
+    "gitBlobSha1Raw": "349f42116edd5c9d3f6420beabcc3d955860a6b7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12queryheap.c",
+    "bytes": 3958,
+    "gitBlobSha1Raw": "d92d9db4e55be5e7856dfa14bf297599d50d50b1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12queryheap.h",
+    "bytes": 5034,
+    "gitBlobSha1Raw": "d8a423a51769c632a5a1b4aee125688b1e0042d0"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12resource.c",
+    "bytes": 11388,
+    "gitBlobSha1Raw": "5541a893749398a5abed515056b4f76b6cdc928e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12resource.h",
+    "bytes": 16071,
+    "gitBlobSha1Raw": "6eb345dd1827a86b191486bed3e0c64c33d2a081"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12rootsignature.c",
+    "bytes": 4065,
+    "gitBlobSha1Raw": "8dc84f479cc0684b5f2f4a780bcd7d699318c106"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12rootsignature.h",
+    "bytes": 5121,
+    "gitBlobSha1Raw": "4169ea05a5ddcb8554d9cd54d1de014b0cff54f2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12rootsignaturedeserializer.c",
+    "bytes": 4664,
+    "gitBlobSha1Raw": "0fd71227fb02d9a46d3e7013ae22703a10ac76c5"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12rootsignaturedeserializer.h",
+    "bytes": 4868,
+    "gitBlobSha1Raw": "ea758086ea3207aab24b16aa820b6bfa80288fdd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12sdkconfiguration.c",
+    "bytes": 7004,
+    "gitBlobSha1Raw": "c5f839810edf38b7bc3480d334933bbef2236a45"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12sdkconfiguration.h",
+    "bytes": 7488,
+    "gitBlobSha1Raw": "755d7022ca8c624aa8cf471fe2369251f3187573"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12shadercachesession.c",
+    "bytes": 6098,
+    "gitBlobSha1Raw": "2d6321fba030fd4a2a837faa04f34bedf1a71b9b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12shadercachesession.h",
+    "bytes": 6502,
+    "gitBlobSha1Raw": "91dc1825822b6ae939a4ee8e4d0041940a7d37d4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12stateobject.c",
+    "bytes": 4026,
+    "gitBlobSha1Raw": "29b095233e3ce801aae75c347959147664b6e6bd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12stateobject.h",
+    "bytes": 5076,
+    "gitBlobSha1Raw": "06e7273591933cdfa44b22f3a75f2036447ed76d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12stateobjectproperties.c",
+    "bytes": 6987,
+    "gitBlobSha1Raw": "16b9dd0599192886721a936dd8cd426f33830659"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12stateobjectproperties.h",
+    "bytes": 8798,
+    "gitBlobSha1Raw": "9a134dfe443aa1cfe0f3a8fe5aed895045238d26"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12swapchainassistant.c",
+    "bytes": 8556,
+    "gitBlobSha1Raw": "4dfe34bae4402e05c7dad7aa96f63d1081119f26"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12swapchainassistant.h",
+    "bytes": 5643,
+    "gitBlobSha1Raw": "28376907ee37ea8a317af8953ca29e109b1d950a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12tools.c",
+    "bytes": 4034,
+    "gitBlobSha1Raw": "40e6e2a0ecb35e167a08ae3aefd82419e72d4fa7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12tools.h",
+    "bytes": 4635,
+    "gitBlobSha1Raw": "16a70dced01e8feeea7a118d218f40a8b36855ff"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12versionedrootsignaturedeserializer.c",
+    "bytes": 5612,
+    "gitBlobSha1Raw": "d6cff68f214c45651e18c1db296030bbf14836ac"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12versionedrootsignaturedeserializer.h",
+    "bytes": 5627,
+    "gitBlobSha1Raw": "702e5d37324d84152790688c7266d9c0344fe84a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12virtualizationguestdevice.c",
+    "bytes": 4883,
+    "gitBlobSha1Raw": "f78a7ed0b7e64c612d6d81da27559c0bb042d06e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12virtualizationguestdevice.h",
+    "bytes": 5240,
+    "gitBlobSha1Raw": "f091dbaba84d96077d666b1ce1b2789ce058927c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12workgraphproperties.c",
+    "bytes": 9067,
+    "gitBlobSha1Raw": "2592fd9c4a0507c698b2778eb30318f43506c9aa"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3d12workgraphproperties.h",
+    "bytes": 8285,
+    "gitBlobSha1Raw": "663ff53dbee76d1c4f76259ef2014d1338b32c98"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3ddestructionnotifier.c",
+    "bytes": 4918,
+    "gitBlobSha1Raw": "05a54215d5a32ab9e9b809500a19bf63dcd02456"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3ddestructionnotifier.h",
+    "bytes": 5098,
+    "gitBlobSha1Raw": "5756fcc03b0082e6e1f2c247f0c8175e87c76cb9"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3ddevicecontextstate.c",
+    "bytes": 4102,
+    "gitBlobSha1Raw": "7340353cbde8ef1a67c3879cc9b76863df1aada4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3ddevicecontextstate.h",
+    "bytes": 5067,
+    "gitBlobSha1Raw": "4899268b0061fdb21428581043951696744d9909"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3duserdefinedannotation.c",
+    "bytes": 5046,
+    "gitBlobSha1Raw": "44a8f197dd37ed137cc17dcf450aa6e1293e6da9"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_id3duserdefinedannotation.h",
+    "bytes": 5336,
+    "gitBlobSha1Raw": "ab1fe3841e304ee9a1b2809ef25b1d133fffc589"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiadapter.c",
+    "bytes": 12593,
+    "gitBlobSha1Raw": "c3f44291e217b9fb2f6d1ef091dc4268799488f6"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiadapter.h",
+    "bytes": 22610,
+    "gitBlobSha1Raw": "c02fd74941678e3bef24f29bea0fe5e641c6ba45"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidecodeswapchain.c",
+    "bytes": 7994,
+    "gitBlobSha1Raw": "0aaa4ccad03f041647ab7ac2bb60d65c3111ed32"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidecodeswapchain.h",
+    "bytes": 6758,
+    "gitBlobSha1Raw": "933fd7be229b1642a176ae307948f5d0f3ef5ec8"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidevice.c",
+    "bytes": 14674,
+    "gitBlobSha1Raw": "e99be88fc42ca72accb4c33ea0a5b2c5cf670411"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidevice.h",
+    "bytes": 24480,
+    "gitBlobSha1Raw": "469a0914f60fbffa96eb2d50230569e92a02ca7d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidevicesubobject.c",
+    "bytes": 5772,
+    "gitBlobSha1Raw": "56e5248b947d24ed8068965eefdb038cc69cf049"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidevicesubobject.h",
+    "bytes": 5286,
+    "gitBlobSha1Raw": "a84add1177b872758f5ab6079457a8cc6993f6aa"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidisplaycontrol.c",
+    "bytes": 4258,
+    "gitBlobSha1Raw": "d147f695ddde735ca8e05c6b73b126f35694e9e3"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgidisplaycontrol.h",
+    "bytes": 4763,
+    "gitBlobSha1Raw": "b03a2cc792c4d6d01ce056d82dc83e66728fe64b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgifactory.c",
+    "bytes": 30007,
+    "gitBlobSha1Raw": "02c925126ffc9a1bd27fdbfe015c1f7064699510"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgifactory.h",
+    "bytes": 51143,
+    "gitBlobSha1Raw": "59ace0f05a682e7f9fd1644e19e0403c0c25ec67"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgifactorymedia.c",
+    "bytes": 7498,
+    "gitBlobSha1Raw": "917bfe762563ed66f799a50acbcd202018bb6c8e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgifactorymedia.h",
+    "bytes": 5510,
+    "gitBlobSha1Raw": "26f5d8a0e100aa79dd5a8271cc5b0f59779415d4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgikeyedmutex.c",
+    "bytes": 5055,
+    "gitBlobSha1Raw": "966aa98bd95aed1047ebf36f8884187ceb02296f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgikeyedmutex.h",
+    "bytes": 5551,
+    "gitBlobSha1Raw": "ff4e2265efc4c74649ebf100029869ecec3d7240"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiobject.c",
+    "bytes": 6671,
+    "gitBlobSha1Raw": "444da8e9467b70bc814d615493117327138ad433"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiobject.h",
+    "bytes": 5324,
+    "gitBlobSha1Raw": "577b18dcc42d6b8b581abf7e84744ef27310e322"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgioutput.c",
+    "bytes": 19262,
+    "gitBlobSha1Raw": "33ef0011f08331b68658b76b86fa5f73a6a2875e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgioutput.h",
+    "bytes": 43618,
+    "gitBlobSha1Raw": "379d9f4a0f8f2d41cf6daeba027227c593c7f186"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgioutputduplication.c",
+    "bytes": 9176,
+    "gitBlobSha1Raw": "8e2dce49240958b277a70f15d66605d75d595294"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgioutputduplication.h",
+    "bytes": 7848,
+    "gitBlobSha1Raw": "c33eb23a023f30733a63c41e1e4a6e50457f3b9e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiresource.c",
+    "bytes": 8075,
+    "gitBlobSha1Raw": "9340ada2019ccd65168c97e02eca9497fd4a1ea7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiresource.h",
+    "bytes": 10039,
+    "gitBlobSha1Raw": "ac71b55ea2972e9507b2562bc36a3a9ddeb54f66"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgisurface.c",
+    "bytes": 8702,
+    "gitBlobSha1Raw": "418c11dcaf324a7a024bc3000a28f1715285cdc0"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgisurface.h",
+    "bytes": 12814,
+    "gitBlobSha1Raw": "93a97198fc4de19c26d32abca3ef4209cae5bec1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiswapchain.c",
+    "bytes": 25999,
+    "gitBlobSha1Raw": "a7fa05988e4a7c536eda3ede3d7ecf02d2b1cbac"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiswapchain.h",
+    "bytes": 39326,
+    "gitBlobSha1Raw": "759f381e327dccafdfd2f31a71b38a07efc57864"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiswapchainmedia.c",
+    "bytes": 5177,
+    "gitBlobSha1Raw": "7ab0640379d7280ba7bbf89a56b67a50fe9cfde1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_idxgiswapchainmedia.h",
+    "bytes": 5350,
+    "gitBlobSha1Raw": "66d0cb4cdf51bf02dd4af50f1d44e8e4ba65b265"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_table.c",
+    "bytes": 45549,
+    "gitBlobSha1Raw": "eaada77c3f25b4fc2d903ee57adc87c9e46d0b82"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_client_table.h",
+    "bytes": 1833,
+    "gitBlobSha1Raw": "ab15308b8bc3f21a92d38dc2e4cb20b9b892c02f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_codec_D3D12_PIPELINE_STATE_STREAM_DESC.h",
+    "bytes": 10524,
+    "gitBlobSha1Raw": "d738cf8e84cb5a6123da6e7e0dd0975c5afe4a7c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_common_cs.h",
+    "bytes": 1648,
+    "gitBlobSha1Raw": "99213b683d2fd56995a5600518c7259a4f5783e2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_common_cs_helpers.h",
+    "bytes": 18575,
+    "gitBlobSha1Raw": "10e17f7c4b038954e2eff59d3a54cb75f7a7acc0"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_common_types.h",
+    "bytes": 587464,
+    "gitBlobSha1Raw": "c20b35af98b9f2874d1164a114312072d2ca5cea"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_defs.h",
+    "bytes": 226245,
+    "gitBlobSha1Raw": "cffc4e6201f24949ce0c4055387bc21447c0a571"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_directx_types.h",
+    "bytes": 316197,
+    "gitBlobSha1Raw": "d6496cb2517e17958a6eb329af597b924c4b8491"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest.h",
+    "bytes": 5674,
+    "gitBlobSha1Raw": "1b91c31d4dde04e3a07fe6740534d7ad8490b19e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_cs.h",
+    "bytes": 2945,
+    "gitBlobSha1Raw": "cebb601c7a644711ead78c0e6c7581fc757f0c34"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d10blob.h",
+    "bytes": 5413,
+    "gitBlobSha1Raw": "b94618b0d05bffdb5801c5d0083c94062dc73713"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11asynchronous.h",
+    "bytes": 5556,
+    "gitBlobSha1Raw": "85c75565d71e77e9687cf6e12761849f991390b1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11authenticatedchannel.h",
+    "bytes": 19957,
+    "gitBlobSha1Raw": "d0fd645c623ae3a8dd0dbea1522f1981e701f102"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11blendstate.h",
+    "bytes": 11249,
+    "gitBlobSha1Raw": "73ccc766fbec345e6d0eb3a8886a81d1c691e3ac"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11buffer.h",
+    "bytes": 5779,
+    "gitBlobSha1Raw": "4c98276496ad16857a14f109890b8b0f4cef812f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11classinstance.h",
+    "bytes": 25991,
+    "gitBlobSha1Raw": "11522b89b9ab18bd553f92405db480b19d03af7d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11classlinkage.h",
+    "bytes": 19090,
+    "gitBlobSha1Raw": "fbab02e459eaf2bfb95c60854247002ef2e37ac8"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11commandlist.h",
+    "bytes": 5633,
+    "gitBlobSha1Raw": "6f24d6d02ae7236337b8bae483e84239ca6a68d6"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11computeshader.h",
+    "bytes": 688,
+    "gitBlobSha1Raw": "af1c5db49810756c06ce7823c35e41090945bec8"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11counter.h",
+    "bytes": 5830,
+    "gitBlobSha1Raw": "af915482bffa764f9bbdbd346fc9f32df803bc81"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11cryptosession.h",
+    "bytes": 30690,
+    "gitBlobSha1Raw": "773935811b79eaf1fdd04ae3b4d8d1e7a5e575d4"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11depthstencilstate.h",
+    "bytes": 6292,
+    "gitBlobSha1Raw": "58734f1f89920ff14cdc81a80c024442c97ecd28"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11depthstencilview.h",
+    "bytes": 6313,
+    "gitBlobSha1Raw": "fbe09f3049a929f16bb30db2d2f9a690ccd5b471"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11device.h",
+    "bytes": 502611,
+    "gitBlobSha1Raw": "bd8fa89048a91cdd1156e739d1dc29a03c6a5b02"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11devicechild.h",
+    "bytes": 27294,
+    "gitBlobSha1Raw": "8b9ca2c0e644e3059d2e656f2f45abf8a8c6998d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11devicecontext.h",
+    "bytes": 941092,
+    "gitBlobSha1Raw": "465383ca4132c2e2c2a7c828b52cd4fb4474883b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11domainshader.h",
+    "bytes": 684,
+    "gitBlobSha1Raw": "360deeaaf6e92a3f3b666895d9fe36bcdd67e15e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11fence.h",
+    "bytes": 19216,
+    "gitBlobSha1Raw": "d0e413ffa6fe9b3566201ed48c9e313e96f2284b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11geometryshader.h",
+    "bytes": 692,
+    "gitBlobSha1Raw": "c2089a92828ea19a78b3002f8f0805110d171f22"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11hullshader.h",
+    "bytes": 676,
+    "gitBlobSha1Raw": "9f24fdb402b7ba0410c4a679562ca8e698536980"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11inputlayout.h",
+    "bytes": 680,
+    "gitBlobSha1Raw": "3e3eb93dd0b797773939d931a65dffc63b543d06"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11multithread.h",
+    "bytes": 18026,
+    "gitBlobSha1Raw": "ec264a7756db8404d1fe5883a60c3d1e00b4754a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11on12device.h",
+    "bytes": 44315,
+    "gitBlobSha1Raw": "6604509ddff304f8b035596bb9888df9d5ab2efb"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11pixelshader.h",
+    "bytes": 680,
+    "gitBlobSha1Raw": "078e4047f55f0bb9274f902ee1a669ded773fa73"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11predicate.h",
+    "bytes": 672,
+    "gitBlobSha1Raw": "19617b8cb6df28b3e18b2ba4cea6edae0bab5044"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11query.h",
+    "bytes": 10898,
+    "gitBlobSha1Raw": "287691d06362bf6bb5e48f52287b6fc37c9cc9e8"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11rasterizerstate.h",
+    "bytes": 17300,
+    "gitBlobSha1Raw": "c5f853edbe77fe45cedacf6a19d820e5a5f341b2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11rendertargetview.h",
+    "bytes": 12024,
+    "gitBlobSha1Raw": "5145c4a648c717b4946087f539e6d14422e177ae"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11resource.h",
+    "bytes": 15227,
+    "gitBlobSha1Raw": "462dd90049f04f3d3932f56aa94921471e98b47a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11samplerstate.h",
+    "bytes": 6025,
+    "gitBlobSha1Raw": "758e972ecd9931f2def5572ac92c3da365e11a6f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11shaderresourceview.h",
+    "bytes": 12220,
+    "gitBlobSha1Raw": "4fde570efde6aa2181c86f19e1409a937c776657"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11texture1d.h",
+    "bytes": 5932,
+    "gitBlobSha1Raw": "43abbfdc030391f2d31e29ef7f829d8be046046e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11texture2d.h",
+    "bytes": 11271,
+    "gitBlobSha1Raw": "ac7f7e5c8e18f6d2c7626f9dbd960e98a681d81c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11texture3d.h",
+    "bytes": 11271,
+    "gitBlobSha1Raw": "b73a03118194219ab82fa8df72346ad13daec6f2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11unorderedaccessview.h",
+    "bytes": 12318,
+    "gitBlobSha1Raw": "bafc3fefd030a81d4dab7848da2bc02fab1afe53"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11vertexshader.h",
+    "bytes": 684,
+    "gitBlobSha1Raw": "2e969558de137a2706bc0d6b481cd622cb72e243"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videocontext.h",
+    "bytes": 585312,
+    "gitBlobSha1Raw": "c7600565fd5ca61d9f4db8f0cf2752244ccb7849"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videodecoder.h",
+    "bytes": 13905,
+    "gitBlobSha1Raw": "cb2f3d4019d9c2d8927ce903d76a1ee31dd39766"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videodecoderoutputview.h",
+    "bytes": 6631,
+    "gitBlobSha1Raw": "75676dc00471082321e90ac520d71c8d943b5b91"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videodevice.h",
+    "bytes": 191017,
+    "gitBlobSha1Raw": "62ea044febf051720970592b6b28ed2f0a63dd51"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videoprocessor.h",
+    "bytes": 12666,
+    "gitBlobSha1Raw": "cc0a6f9abba0e405f22ccfd32894aa84a40fd0c1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videoprocessorenumerator.h",
+    "bytes": 55769,
+    "gitBlobSha1Raw": "ef662334dad05cdcf463ed43eb4419e3d4887e87"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videoprocessorinputview.h",
+    "bytes": 6682,
+    "gitBlobSha1Raw": "c9bec4fec80983b527c62a234d070405d3b99a3d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11videoprocessoroutputview.h",
+    "bytes": 6733,
+    "gitBlobSha1Raw": "46a41acd89674988c7d055ec05104ac3be0d677a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d11view.h",
+    "bytes": 6520,
+    "gitBlobSha1Raw": "55e5e6686bb16f6d63b1dd75d382d2c4efde3c75"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12commandallocator.h",
+    "bytes": 5619,
+    "gitBlobSha1Raw": "122392341b65eaf4948a1c533d05b50ac10c8b6e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12commandlist.h",
+    "bytes": 5542,
+    "gitBlobSha1Raw": "67ab2cdb732144b265b2627bc794ec0ea43de299"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12commandqueue.h",
+    "bytes": 69708,
+    "gitBlobSha1Raw": "361d9c0641ba3a36a2ff2de664a478dba551302f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12commandsignature.h",
+    "bytes": 700,
+    "gitBlobSha1Raw": "bacd0db00aa431cdc3ddff7a7e65c82ee9d5a20d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12descriptorheap.h",
+    "bytes": 17409,
+    "gitBlobSha1Raw": "c8f6deee40825504dc31e11068c01f485c6ebfbf"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12device.h",
+    "bytes": 624313,
+    "gitBlobSha1Raw": "002f44e47cbc54104feb46ede558efd0360eb1ce"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12devicechild.h",
+    "bytes": 7423,
+    "gitBlobSha1Raw": "fecbeb5ca7efbd1d3347b0ad5d625133ea44686a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12deviceconfiguration.h",
+    "bytes": 44773,
+    "gitBlobSha1Raw": "12224f27fedb98f0f1b75a8d6db9124aebebed44"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12devicefactory.h",
+    "bytes": 46591,
+    "gitBlobSha1Raw": "72f6fedcb701094e127cbf48683bfaae6eeb5cbf"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12deviceremovedextendeddata.h",
+    "bytes": 41412,
+    "gitBlobSha1Raw": "7ece19cc87173f1a3c2a54a8c4c162a4f763d6cc"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12deviceremovedextendeddatasettings.h",
+    "bytes": 25642,
+    "gitBlobSha1Raw": "55c4c110e563c61aab04afa8e331db53f95c25f7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12fence.h",
+    "bytes": 21379,
+    "gitBlobSha1Raw": "f4cf29c4a69af0d0011fc8ad15f068b9c68b8d7a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12graphicscommandlist.h",
+    "bytes": 458109,
+    "gitBlobSha1Raw": "101f1260a8ebee7d8eeedf0b79d54d32acd97681"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12heap.h",
+    "bytes": 12708,
+    "gitBlobSha1Raw": "c2c4ebddb52d2f5d678e0ccff046bd18088f613c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12lifetimeowner.h",
+    "bytes": 4932,
+    "gitBlobSha1Raw": "4a41396d0c8c0d13a2a682f2dcb69a28945bae79"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12lifetimetracker.h",
+    "bytes": 6534,
+    "gitBlobSha1Raw": "d9812573b11e8731900d5e6c5f819e7c75a1ee75"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12metacommand.h",
+    "bytes": 7585,
+    "gitBlobSha1Raw": "a2b8aca6d6866179ec71a74cc8317c374a16b641"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12object.h",
+    "bytes": 26194,
+    "gitBlobSha1Raw": "8f0278a21d5c976732a1a56d613351bf753f9b1b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12pageable.h",
+    "bytes": 668,
+    "gitBlobSha1Raw": "800c61269033eea4303d85a54bb8f1f43d92c4da"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12pipelinelibrary.h",
+    "bytes": 46223,
+    "gitBlobSha1Raw": "2eff1050c2a687ef7c02f4e8890921125ed1a877"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12pipelinestate.h",
+    "bytes": 7112,
+    "gitBlobSha1Raw": "0b2207e31a372df7f28b246b6c4f5107614dc88d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12protectedresourcesession.h",
+    "bytes": 11721,
+    "gitBlobSha1Raw": "f53eb91c568b280058e78a5ddca97c9b4b9ce0da"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12protectedsession.h",
+    "bytes": 13084,
+    "gitBlobSha1Raw": "4f2f42d1925ffa0e18423946ad765b4a8d430bcb"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12queryheap.h",
+    "bytes": 672,
+    "gitBlobSha1Raw": "93133129f0aae72e0d2f66ba780ae3ee14fd70f7"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12resource.h",
+    "bytes": 56876,
+    "gitBlobSha1Raw": "ed9f1f25ac75a5a7d6b09d406de67e0bf2fedc58"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12rootsignature.h",
+    "bytes": 688,
+    "gitBlobSha1Raw": "74e8e6bf06f1068aba0e0ca08567ed606326da38"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12rootsignaturedeserializer.h",
+    "bytes": 736,
+    "gitBlobSha1Raw": "087c4a7186e6c621fc2e7de1fc171fea951482e1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12sdkconfiguration.h",
+    "bytes": 19590,
+    "gitBlobSha1Raw": "32dba7650b7b97b7ec292f69fa797eaabf22c22c"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12shadercachesession.h",
+    "bytes": 25445,
+    "gitBlobSha1Raw": "89bc1139b8842b4b132240eb9143d2c628c7b9bf"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12stateobject.h",
+    "bytes": 680,
+    "gitBlobSha1Raw": "d2af3892e9d6d41adb7914be1af81d7a9b27b125"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12stateobjectproperties.h",
+    "bytes": 24143,
+    "gitBlobSha1Raw": "51bd555906e7295cd717442ecbcd3f31b929bbd1"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12swapchainassistant.h",
+    "bytes": 28247,
+    "gitBlobSha1Raw": "959797fefd931b5f4ce0785813950581cf169605"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12tools.h",
+    "bytes": 9837,
+    "gitBlobSha1Raw": "b2e711b6d7861394ecfecb18e235e2dbff932c8b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12versionedrootsignaturedeserializer.h",
+    "bytes": 9065,
+    "gitBlobSha1Raw": "ccb8a72d15f534435961b7b2549a307e2d08b37b"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12virtualizationguestdevice.h",
+    "bytes": 14886,
+    "gitBlobSha1Raw": "fabbf9ee146d7c4bf9bbb221e1765a506c70cc66"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3d12workgraphproperties.h",
+    "bytes": 71055,
+    "gitBlobSha1Raw": "7f969694e5e332183c7fb365121278deb8cc1a82"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3ddestructionnotifier.h",
+    "bytes": 14709,
+    "gitBlobSha1Raw": "8421787379b0ae866cce9ab37f804841f11b8f6e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3ddevicecontextstate.h",
+    "bytes": 700,
+    "gitBlobSha1Raw": "c995f741c644816c489370b93216afdd9feb30bf"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_id3duserdefinedannotation.h",
+    "bytes": 21167,
+    "gitBlobSha1Raw": "a16f0f329db862de1ab9444eb35288529fb40317"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgiadapter.h",
+    "bytes": 74763,
+    "gitBlobSha1Raw": "827796a2a11546f6c9934026c45f9053ee12797e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgidecodeswapchain.h",
+    "bytes": 53575,
+    "gitBlobSha1Raw": "333ffde262cedefe5b605a17c3d3f25f04bcb44e"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgidevice.h",
+    "bytes": 83508,
+    "gitBlobSha1Raw": "a29b7319f24944d221d2d0d61cea172b50bab090"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgidevicesubobject.h",
+    "bytes": 7526,
+    "gitBlobSha1Raw": "e5ff392438ca332767f2de35bdab8229b46b8464"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgidisplaycontrol.h",
+    "bytes": 9683,
+    "gitBlobSha1Raw": "0590e6919bb37dbdd8a805e1df08f47e6f2f369a"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgifactory.h",
+    "bytes": 167437,
+    "gitBlobSha1Raw": "56245a977c9f9e969985727654ab35c215e46f53"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgifactorymedia.h",
+    "bytes": 22176,
+    "gitBlobSha1Raw": "72c14ae83dc3f5e68502f49e6b8ba20f0bff64b5"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgikeyedmutex.h",
+    "bytes": 11726,
+    "gitBlobSha1Raw": "caea5e1c775b755fbb01f988101d119bfaed0843"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgiobject.h",
+    "bytes": 27055,
+    "gitBlobSha1Raw": "ffe6fe7f4b28ae21110b8e7f044c31339e2cc1e0"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgioutput.h",
+    "bytes": 138596,
+    "gitBlobSha1Raw": "cf1e80856eda83a1d4868c2fb3972b338c5c0461"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgioutputduplication.h",
+    "bytes": 51744,
+    "gitBlobSha1Raw": "a9b1b7b07723935a219b7553366146eb487679cd"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgiresource.h",
+    "bytes": 38204,
+    "gitBlobSha1Raw": "c872c5a06af1a20b47fd33cf1e4c03290d55a2e6"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgisurface.h",
+    "bytes": 29220,
+    "gitBlobSha1Raw": "bf1647aff30f221d2bcc75629dc5d395d1679d7d"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgiswapchain.h",
+    "bytes": 203207,
+    "gitBlobSha1Raw": "1ac81ead06ac4ff750328d7e6321061d48f0d2ec"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_idxgiswapchainmedia.h",
+    "bytes": 21357,
+    "gitBlobSha1Raw": "a281b928d5e6da1e0e358e2df0ec1fea32b2e1ce"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_structs.h",
+    "bytes": 1001361,
+    "gitBlobSha1Raw": "bfe6cacfcd2ae618a62e303c54fa5d8ba001dd7f"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_guest_toplevel.h",
+    "bytes": 91784,
+    "gitBlobSha1Raw": "23c51776177385edc8dd047059303fe96e7c1fc2"
+  },
+  {
+    "relative": "neptune-protocol/npt_protocol_transport.h",
+    "bytes": 25658,
+    "gitBlobSha1Raw": "4a3200cafcf41d8f2881b3d8925af9cb4623411e"
+  },
+  {
+    "relative": "nptunix/meson.build",
+    "bytes": 6355,
+    "gitBlobSha1Raw": "8d5a8ae22af85e1be55c798177d34a01742fab93"
+  },
+  {
+    "relative": "nptunix/nptunix_pe.c",
+    "bytes": 500,
+    "gitBlobSha1Raw": "92224fbb7203a2422bf2898d4adfb935da3a71ae"
+  },
+  {
+    "relative": "nptunix/npt_display_drm.c",
+    "bytes": 9389,
+    "gitBlobSha1Raw": "1176aaa6ac554c50af176e37f2908717f07f969a"
+  },
+  {
+    "relative": "nptunix/npt_unix.c",
+    "bytes": 7499,
+    "gitBlobSha1Raw": "eb06f181b6f78aef73641f96f0be725e570c8ca1"
+  },
+  {
+    "relative": "nptunix/npt_unixlib.h",
+    "bytes": 6375,
+    "gitBlobSha1Raw": "25883e94420b998c921cbbd0cfa02fe0b993f117"
+  },
+  {
+    "relative": "nptunix/npt_unix_internal.h",
+    "bytes": 1240,
+    "gitBlobSha1Raw": "655718bd945701ed016b3cf6c80867207612ada3"
+  },
+  {
+    "relative": "nptunix/npt_unix_virtgpu.c",
+    "bytes": 4913,
+    "gitBlobSha1Raw": "b323d16eb8e4bf8c70d4a89f5df014d5e49aae2c"
+  },
+  {
+    "relative": "nptunix/npt_unix_wsi.c",
+    "bytes": 13493,
+    "gitBlobSha1Raw": "ecbd3126df24ab45de3dda6d8f0e91e155f26bcf"
+  },
+  {
+    "relative": "triton/meson.build",
+    "bytes": 2702,
+    "gitBlobSha1Raw": "af6431a401559677c1740dee7450afbb25440bc0"
+  },
+  {
+    "relative": "triton/neptune_umd.def",
+    "bytes": 70,
+    "gitBlobSha1Raw": "34982673c9f06e56de4ac65d33aa455af503a5d2"
+  },
+  {
+    "relative": "triton/neptune_umd.rc",
+    "bytes": 1218,
+    "gitBlobSha1Raw": "adc8c99ec7d63f96abfbdb62832dc57fb43cb474"
+  },
+  {
+    "relative": "triton/triton.c",
+    "bytes": 991,
+    "gitBlobSha1Raw": "2826778f02810b5bfe5cff59490e1d8fc192dba7"
+  },
+  {
+    "relative": "triton/triton.h",
+    "bytes": 27274,
+    "gitBlobSha1Raw": "31ae77041e83d65b3979a526641a5c5783416d77"
+  },
+  {
+    "relative": "triton/triton12.h",
+    "bytes": 25453,
+    "gitBlobSha1Raw": "9eb6257df84fbe251ed437a1cbccd24f177e679e"
+  },
+  {
+    "relative": "triton/triton12_stubs.h",
+    "bytes": 16964,
+    "gitBlobSha1Raw": "b9d3c5aeefcc923e2e30a306152e17d9cc3225b6"
+  },
+  {
+    "relative": "triton/triton12_tables.h",
+    "bytes": 33602,
+    "gitBlobSha1Raw": "fa554af3201f02225576393d9d2452a875bca490"
+  },
+  {
+    "relative": "triton/tritonBlit.hlsl",
+    "bytes": 754,
+    "gitBlobSha1Raw": "c87695a4e3a69e69d3d5a4a8c8e8ae0c1bfbe510"
+  },
+  {
+    "relative": "triton/tritonBlitShaders.h",
+    "bytes": 12442,
+    "gitBlobSha1Raw": "1009d7a7eff1f9095961e64063bd3cd0e0e04958"
+  },
+  {
+    "relative": "triton/tritonDDI.c",
+    "bytes": 78913,
+    "gitBlobSha1Raw": "b448a5a8188e8565bb1ed5124a9e66d6c0b5e7b2"
+  },
+  {
+    "relative": "triton/tritonDDI12.c",
+    "bytes": 69369,
+    "gitBlobSha1Raw": "6fd9a4c72ccd1afda31c833457474b306d48ab60"
+  },
+  {
+    "relative": "triton/tritonDescriptor12.c",
+    "bytes": 24589,
+    "gitBlobSha1Raw": "537df8ddab855f6028b18f62a0e20ac2abc28137"
+  },
+  {
+    "relative": "triton/tritonDxbc.c",
+    "bytes": 83454,
+    "gitBlobSha1Raw": "b3902c19e71b6a20f57ab30f6247aeef5c17b17d"
+  },
+  {
+    "relative": "triton/tritonDxbc.h",
+    "bytes": 3088,
+    "gitBlobSha1Raw": "7b80b2ec1541aa9e6c0fbbd8434c291b01480b6a"
+  },
+  {
+    "relative": "triton/tritonDxgi.c",
+    "bytes": 78939,
+    "gitBlobSha1Raw": "9c9acd146506a23ffbd56d850d9636e8dc9eca25"
+  },
+  {
+    "relative": "triton/tritonDxgi.h",
+    "bytes": 1268,
+    "gitBlobSha1Raw": "2c16e76c3b33e668b96c91b7f4611993392e423b"
+  },
+  {
+    "relative": "triton/tritonDxil.c",
+    "bytes": 24087,
+    "gitBlobSha1Raw": "f371e2b250c89172847631f366f890e05455a3d0"
+  },
+  {
+    "relative": "triton/tritonDxil.h",
+    "bytes": 1722,
+    "gitBlobSha1Raw": "0c45f0018e4b400e61c645d4a011f0072c53fdb8"
+  },
+  {
+    "relative": "triton/tritonHostCaps.c",
+    "bytes": 10617,
+    "gitBlobSha1Raw": "9c00971df56914406febdd9386818e2291d6a183"
+  },
+  {
+    "relative": "triton/tritonHostCaps.h",
+    "bytes": 9369,
+    "gitBlobSha1Raw": "d8014a261ff5a57dd1341be7e586e98be6b336b2"
+  },
+  {
+    "relative": "triton/tritonKm.c",
+    "bytes": 9595,
+    "gitBlobSha1Raw": "4a359d5884f71dcad4afd7b06bd5c7fd9c340f00"
+  },
+  {
+    "relative": "triton/tritonKm.h",
+    "bytes": 3587,
+    "gitBlobSha1Raw": "879f031a79fc152e270f0b43ccf6d4bfabb575cc"
+  },
+  {
+    "relative": "triton/tritonList12.c",
+    "bytes": 73671,
+    "gitBlobSha1Raw": "117e4b2fa29ebf7c8ff7919a1e04b371d36cfb7e"
+  },
+  {
+    "relative": "triton/tritonPipeline12.c",
+    "bytes": 46315,
+    "gitBlobSha1Raw": "92cd8fcff294e3bab4be78320e204e6e5bbf04ba"
+  },
+  {
+    "relative": "triton/tritonPresent.c",
+    "bytes": 2645,
+    "gitBlobSha1Raw": "cbd19f54bab1402ce7c314a83b8d626a41ffcaa3"
+  },
+  {
+    "relative": "triton/tritonPresent.h",
+    "bytes": 793,
+    "gitBlobSha1Raw": "089c396999bad4b21848e3de4c8fc1cb9852197b"
+  },
+  {
+    "relative": "triton/tritonPresent12.c",
+    "bytes": 33292,
+    "gitBlobSha1Raw": "033c07fc774c5e73f2a51a55aab71dde68a8ebc4"
+  },
+  {
+    "relative": "triton/tritonPresentTiming.h",
+    "bytes": 1478,
+    "gitBlobSha1Raw": "6d9af957a0d3acb27f24963bf190e61fc6cc921d"
+  },
+  {
+    "relative": "triton/tritonQuery.c",
+    "bytes": 42986,
+    "gitBlobSha1Raw": "2b90919ff249e948a57b45447883a208d333ade0"
+  },
+  {
+    "relative": "triton/tritonQueue12.c",
+    "bytes": 31873,
+    "gitBlobSha1Raw": "c658197cef0983600a3633b6a17b3291f57dfe13"
+  },
+  {
+    "relative": "triton/tritonResource.c",
+    "bytes": 72952,
+    "gitBlobSha1Raw": "3634d6c5039415784eb7b7562c786f81d0c1624d"
+  },
+  {
+    "relative": "triton/tritonResource12.c",
+    "bytes": 56981,
+    "gitBlobSha1Raw": "2a23e5b2337ad695aa086e236d58419c034562ef"
+  },
+  {
+    "relative": "triton/tritonShader.c",
+    "bytes": 37493,
+    "gitBlobSha1Raw": "2d2518e4d1c1cc6121464dadc6ee64d00f7b596a"
+  },
+  {
+    "relative": "triton/tritonSharedBridge.c",
+    "bytes": 5815,
+    "gitBlobSha1Raw": "03a9cfb2ab1606fe9cc7e71163caa77dd90b36dd"
+  },
+  {
+    "relative": "triton/tritonSharedBridge.h",
+    "bytes": 4292,
+    "gitBlobSha1Raw": "3332973f963001ac5de57fe3088f2ea86d6ff0e2"
+  },
+  {
+    "relative": "triton/tritonState.c",
+    "bytes": 32171,
+    "gitBlobSha1Raw": "ac60b46f9af4e5a4972a6654d07e1af2148fcc99"
+  },
+  {
+    "relative": "triton/tritonVideo.c",
+    "bytes": 52985,
+    "gitBlobSha1Raw": "d0b225e13682a25031ef114640b275aa46b0d163"
+  },
+  {
+    "relative": "triton/tritonVideo.h",
+    "bytes": 501,
+    "gitBlobSha1Raw": "e31564d8ab8f69718162f99b4ea321e1f31de38d"
+  },
+  {
+    "relative": "triton/tritonView.c",
+    "bytes": 45283,
+    "gitBlobSha1Raw": "270b4790be0901740284b8d8d2c2d172a0b5fb49"
+  },
+  {
+    "relative": "triton/triton_log.h",
+    "bytes": 3351,
+    "gitBlobSha1Raw": "e2aa3e75fe4d9ba9d8578a130896d4b9bd12d24a"
+  },
+  {
+    "relative": "triton/tests/tritonDxbcTest.c",
+    "bytes": 32834,
+    "gitBlobSha1Raw": "e44bd770fdc2e817aaa86e615e9c712296792902"
+  },
+  {
+    "relative": "triton/tests/tritonDxilTest.cpp",
+    "bytes": 20262,
+    "gitBlobSha1Raw": "5e644e87beb74c988fa4d5dfb69932dcb1f77e60"
+  },
+  {
+    "relative": "triton/tools/gen_triton12_stubs.py",
+    "bytes": 6715,
+    "gitBlobSha1Raw": "c828bdf194f392fbf51b3aec95e270fabb61a2aa"
+  },
+  {
+    "relative": "triton/tools/make-arm64x.bat",
+    "bytes": 11144,
+    "gitBlobSha1Raw": "f18306e921ca68df911d8fac4b4ba39299fba7f0"
+  }
+]

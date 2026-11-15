@@ -1,0 +1,12 @@
+﻿{
+    "exe":  "C:\\mesa\\tools\\ninja\\ninja.exe",
+    "arguments":  [
+                      "-C",
+                      "C:\\codex-woa-umd\\present-signal-flush-pair-c46-r1\\build-arm64",
+                      "-j",
+                      "6",
+                      "-v",
+                      "src/virtio/neptune/triton/neptune_umd.dll"
+                  ],
+    "started":  "2026-11-15T09:42:27.6634722+01:00"
+}

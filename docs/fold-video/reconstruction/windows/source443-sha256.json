@@ -1,0 +1,2221 @@
+{
+  "originalC8Files": 440,
+  "privateC46Files": 443,
+  "files": [
+    {
+      "path": "src/virtio/neptune/d3d11.def",
+      "proposedSha256": "290e311245cfbd4778ccaa10d0f92ff23b819ccee4bcff1ccf04654504b06ffd",
+      "proposedBytes": 108
+    },
+    {
+      "path": "src/virtio/neptune/d3d12.def",
+      "proposedSha256": "bfe37c24bf9a638dc89daa02e09198bd550a1302de388dd6cbfcb3d1dd51615a",
+      "proposedBytes": 454
+    },
+    {
+      "path": "src/virtio/neptune/dxgi.def",
+      "proposedSha256": "f4c2f6d3e59a2870a2c27110c0d9732f43d84161129b371db6fa4c4a041bf2df",
+      "proposedBytes": 93
+    },
+    {
+      "path": "src/virtio/neptune/meson.build",
+      "proposedSha256": "42a64c3e0e6ebeed2438760aa26f7c6776860051c8da003c7427d41112595457",
+      "proposedBytes": 4750
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/.gitattributes",
+      "proposedSha256": "924d2d4c1dbb0d8b8e628434ec727a5d14cf7a4d52fd2b0a26fcb45afa058b3c",
+      "proposedBytes": 331
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_client_families.txt",
+      "proposedSha256": "295e7747ec05dc93da653f30751b4b722a4f05eab86db9533e36b3560e6bbae0",
+      "proposedBytes": 1985
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d10blob.c",
+      "proposedSha256": "c4da03cde3bf3aab01248c3987c27da3e3dc4b04ee713bac3ad52c0b8705423a",
+      "proposedBytes": 4082
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d10blob.h",
+      "proposedSha256": "8ec9994883ec17b3abbb5723ccb80e03c7d4f0335c6fd2884410b20da3ee2011",
+      "proposedBytes": 4512
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11asynchronous.c",
+      "proposedSha256": "ee67a294b55b5902d12f7e16fac8d61a65b0790f0373a7d28c5498a2344e9430",
+      "proposedBytes": 4241
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11asynchronous.h",
+      "proposedSha256": "e2b9c394ba1387500d95d29449f092d5b970e4cdb69cf5455b9ec084d0ede1e3",
+      "proposedBytes": 5182
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11authenticatedchannel.c",
+      "proposedSha256": "6b02a002302a97f153859a4ccaad282bc6510dad541d5c2d42fcfe2b0ff9a4f7",
+      "proposedBytes": 5332
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11authenticatedchannel.h",
+      "proposedSha256": "677339c025ac727ee14062b937904040365dd8f3603e037a825c55fe1fff8848",
+      "proposedBytes": 6039
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11blendstate.c",
+      "proposedSha256": "f5df1a4b517a5dac63d4c2e88a2feb31cd8aaebd3c76471d2dcc102ff63666d9",
+      "proposedBytes": 5110
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11blendstate.h",
+      "proposedSha256": "c2a3d2b3f6b06842b855a235d0fbced28b5e8bb4dd679995b2025b3f952ec792",
+      "proposedBytes": 8158
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11buffer.c",
+      "proposedSha256": "268115c321041c5c810b681b43c469a60f0195aabcee62430a312b3e58949528",
+      "proposedBytes": 4249
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11buffer.h",
+      "proposedSha256": "db14c54d880adfe33dd75b73ac50ca24462589d57b71016be75b51b8cdd586a0",
+      "proposedBytes": 5493
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11classinstance.c",
+      "proposedSha256": "e8d5cf788b32d92409c1a6ee0e7f6d4742f1bbdc6e981cab41866758732c535a",
+      "proposedBytes": 6781
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11classinstance.h",
+      "proposedSha256": "91bf829ffc61e0425eee5f860a6edeb300f244b813cdecf747f2da6f53551947",
+      "proposedBytes": 6133
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11classlinkage.c",
+      "proposedSha256": "3a59e6bafdd792c59d719b5164bf0520a3d8662fe6068aec80c2fa006a476b78",
+      "proposedBytes": 7316
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11classlinkage.h",
+      "proposedSha256": "2d0f211999bace07bbcb62fceedd17629e0603c0951e5b6ad06d3759ba6e703f",
+      "proposedBytes": 5924
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11commandlist.c",
+      "proposedSha256": "9f1aaf83a2c9bdebc13b55cd222e3f7e180c6af7163d92d65629d84b3f5b9a96",
+      "proposedBytes": 4220
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11commandlist.h",
+      "proposedSha256": "ec24a1131dcfca661f4b6ec7bf031dbdcc878b755764235222eac6bd3af3ed46",
+      "proposedBytes": 5171
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11computeshader.c",
+      "proposedSha256": "902c4a8ecdf9e0ff31b53f3ae0c508044d654f7fec76355e07e882183bbd74ef",
+      "proposedBytes": 4000
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11computeshader.h",
+      "proposedSha256": "485438965d6ac7e26aa4667c605963110042ac3eb80d824ba71d7f597e46e88e",
+      "proposedBytes": 5004
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11counter.c",
+      "proposedSha256": "d59da0d732d8d71f9859291becd6ec2354a73fa85b25dd3dc5ba69aff8d6e4a7",
+      "proposedBytes": 4145
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11counter.h",
+      "proposedSha256": "12805456908b61db290bdfbbbe1037d666fe6f84e23c5681890026ace93dcd83",
+      "proposedBytes": 5221
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11cryptosession.c",
+      "proposedSha256": "2b5c2e814550a4dcfd93c0d27afd8ffb7dd95756b672bddc39ee8b7e3eb2037d",
+      "proposedBytes": 5669
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11cryptosession.h",
+      "proposedSha256": "a3d7c696b2d7ab8205436d04cd6f0812ed0e80aedb8ed60870e82142f7be6c83",
+      "proposedBytes": 6396
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11depthstencilstate.c",
+      "proposedSha256": "fd666ce4caa95b86914bdb37f428266ea51be1c387e8e4b918801e74ebae4305",
+      "proposedBytes": 4421
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11depthstencilstate.h",
+      "proposedSha256": "f3b91d6b4a7b23c0f33b37c007369e5d2bc37e7f18c3720f03951adfb0e13faf",
+      "proposedBytes": 5353
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11depthstencilview.c",
+      "proposedSha256": "c54dea8017ed0761ad418f654084700a318378b5eff3956b0d7050c8ba069f1f",
+      "proposedBytes": 4473
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11depthstencilview.h",
+      "proposedSha256": "66d7a3bb04d4a788e645942f4a6c817386e432644d3f2291a6628c7ce6b492d9",
+      "proposedBytes": 5464
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11device.c",
+      "proposedSha256": "f72d386d3361ecc7d134cb15be2130a7e284b14778e5876ed0873cb55e54c6fc",
+      "proposedBytes": 92743
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11device.h",
+      "proposedSha256": "3103190b12ad804e052106b77e79519b49df9a4cc4fcfc2cc6507d0f8169657e",
+      "proposedBytes": 95941
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11devicechild.c",
+      "proposedSha256": "7e3eb4dfc170b027b68b12b1eb637cc3136f6bcf4518cf1556002275a8a1f794",
+      "proposedBytes": 6952
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11devicechild.h",
+      "proposedSha256": "22b916f6f69fca1c2af51d45b09fa76d6c847c6436c23620cd60888c3277cc03",
+      "proposedBytes": 5466
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11devicecontext.c",
+      "proposedSha256": "3be1f53cafa4700dc4525dce30a38323ff69e7438eb4e2e30a0a584c09f361bc",
+      "proposedBytes": 126147
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11devicecontext.h",
+      "proposedSha256": "3cae65d64abe66718aff0ab6ddee28dc78c1cd7c8d84c1bf2385027b19f3d3b7",
+      "proposedBytes": 173065
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11domainshader.c",
+      "proposedSha256": "dcf38fca7ff5f6f07748a6e21280b112b54d87c04c4fba77b2ea40630a2afbea",
+      "proposedBytes": 3966
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11domainshader.h",
+      "proposedSha256": "ae843821eeddd8896ab3d1ad94ad957d1d767d063fc998853c024b1b63dff449",
+      "proposedBytes": 4983
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11fence.c",
+      "proposedSha256": "d59a210deb54833315ee2b2955af87ad61b46759b3f70c9d4a41d172fe018f8e",
+      "proposedBytes": 4984
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11fence.h",
+      "proposedSha256": "91ab7ec7ccbfffe126224a6bf39c914ff673c6e4c5e4ff9f9de40887320e23cc",
+      "proposedBytes": 5725
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11geometryshader.c",
+      "proposedSha256": "e936dc5458dc6202aad973f38b1f4026e864f5fcc8539c470ceb9b9d54253684",
+      "proposedBytes": 4034
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11geometryshader.h",
+      "proposedSha256": "260f3d21ad8a9845260427aaaacd4df187e57989aea79cf11b17769a940883dc",
+      "proposedBytes": 5025
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11hullshader.c",
+      "proposedSha256": "fa215ecd1f7c8a9547b22e9c028ab158792970eabcd2b3b901fb6c9874368aa0",
+      "proposedBytes": 3898
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11hullshader.h",
+      "proposedSha256": "ead855553df220772ab3abe31d03b566e6c07ebd6d832c16adbace03052c33c9",
+      "proposedBytes": 4941
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11inputlayout.c",
+      "proposedSha256": "8ef651038cf7be432be47c81fbd4ad4a7c7d6a4d4cdb005faa82b34ff46a70bf",
+      "proposedBytes": 3932
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11inputlayout.h",
+      "proposedSha256": "338d6084c27164fd5f3e30864dce07c1bbb638db9112f50768dbf2c31a12d35d",
+      "proposedBytes": 4962
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11multithread.c",
+      "proposedSha256": "213e14b07e09718aeb2d066399ece61a3016f0f4dfd1840aa148d9128d637790",
+      "proposedBytes": 4712
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11multithread.h",
+      "proposedSha256": "14e5da08d6cae77f44e27fd6772ad86cf5def8755e3b5d671d25d76ba7461cf8",
+      "proposedBytes": 5122
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11on12device.c",
+      "proposedSha256": "8a40bb45ccd229d7f1719a631b4761a66b694a7be369361ba173dcf767c2ae23",
+      "proposedBytes": 11395
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11on12device.h",
+      "proposedSha256": "8946609438992096520a7193e3677538b600e22b64b810a7bd6e33ab13392c7d",
+      "proposedBytes": 12039
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11pixelshader.c",
+      "proposedSha256": "b29b45e5eb5fb9534c17cb7c54df63368c24675d6ed1c679082a5031e1b46b7a",
+      "proposedBytes": 3932
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11pixelshader.h",
+      "proposedSha256": "9b9a61a65d905400818d6b7ba8486157e7bb2fcc9ae8b0256b84f1f72348095a",
+      "proposedBytes": 4962
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11predicate.c",
+      "proposedSha256": "7301985db8b1c9ab4a42008b7e6dfe588af73a40bb27105f5a6bd0f244931cab",
+      "proposedBytes": 4042
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11predicate.h",
+      "proposedSha256": "c9383c35357fce7077ce0b306d692501ce13530a2fbe7da2b7abb79d50448549",
+      "proposedBytes": 5143
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11query.c",
+      "proposedSha256": "3cc2175368510dc5556f08be326ea8280dc636c30fe381dda0585aa473f6da84",
+      "proposedBytes": 4982
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11query.h",
+      "proposedSha256": "e9c35b1c014a038446eb4a84cc0efe6df2cbf158334f9774e2f64a0d4857eb46",
+      "proposedBytes": 8179
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11rasterizerstate.c",
+      "proposedSha256": "e9d8c4f445984c2de88d18ae64af27c34383644e53370db1d6fd4e93a8c52e6f",
+      "proposedBytes": 6345
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11rasterizerstate.h",
+      "proposedSha256": "6368bc92b4a564d070f827d5ea29cba1ff7e2cbbd996ae76c787066172e1b94c",
+      "proposedBytes": 11599
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11rendertargetview.c",
+      "proposedSha256": "fb8edba86d8a144a38330ef328473358607e9b46b37f7095084e845e641e411b",
+      "proposedBytes": 5498
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11rendertargetview.h",
+      "proposedSha256": "5ef7a8860987ab60082e12574298ad82e851661e8d72833589f7c58b4327dea7",
+      "proposedBytes": 8720
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11resource.c",
+      "proposedSha256": "3867aa5c00d0ec54ee51abb5c5dc7f67bb8f2ea69c3eb3c7de3edc6370a9f8f4",
+      "proposedBytes": 4716
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11resource.h",
+      "proposedSha256": "aae8a4bd97a573c55dadee704412fa2b94cfe2390870c7e203cc2048650ad971",
+      "proposedBytes": 5648
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11samplerstate.c",
+      "proposedSha256": "ca236832ee45456491dadaed14bc669cb78f844e6ec41af503bfcd5d44d4b814",
+      "proposedBytes": 4230
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11samplerstate.h",
+      "proposedSha256": "6b6c6bf818676c6a35ad3e42acec61de26567cf8072bbc6ae23a843c54ec9e25",
+      "proposedBytes": 5226
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11shaderresourceview.c",
+      "proposedSha256": "99b7f54afbfa4117fd6f6ad70af74dcd8563daf75a44670533c23ec376965b9d",
+      "proposedBytes": 5594
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11shaderresourceview.h",
+      "proposedSha256": "c7e4280ea0057cc72afcf0a42522fc052f9a4fa73e49c0c19c43b8a18bae6984",
+      "proposedBytes": 8810
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11texture1d.c",
+      "proposedSha256": "399b0bba81d3630c144fcaaf97bb02b9425e2c727f51617215ab965d5932adbe",
+      "proposedBytes": 4363
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11texture1d.h",
+      "proposedSha256": "c502e36b2d586aa74cf25bd45715706df63881a05b665bf49e694c597945e340",
+      "proposedBytes": 5568
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11texture2d.c",
+      "proposedSha256": "9f80641d91af151abd2a905c19916909f87479f4095ba9fefdda0470316cf2a7",
+      "proposedBytes": 5314
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11texture2d.h",
+      "proposedSha256": "c098a24fd5d5ac792af76638ead727c0aab735c553f063f6544c0b514ddc9218",
+      "proposedBytes": 8956
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11texture3d.c",
+      "proposedSha256": "16c72433a16df2a0786f7f5bb3b56205cde719811ec112385e9012741e51ed54",
+      "proposedBytes": 5314
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11texture3d.h",
+      "proposedSha256": "9cf9b5a5b1164d7765fb81232fa02fcd33b77755e14b57a76d73f4890d9c2cbb",
+      "proposedBytes": 8956
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11unorderedaccessview.c",
+      "proposedSha256": "859a6769f72e122949e62359b70fed8b0b7d42ce54a6b3d72f1028ad68ebf804",
+      "proposedBytes": 5642
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11unorderedaccessview.h",
+      "proposedSha256": "59d7fe44b6810225ba29ec3b15a863a9596e9f9b9245aaa77ff845b9c5f373b7",
+      "proposedBytes": 8855
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11vertexshader.c",
+      "proposedSha256": "a1347867be3d0b9ebdc445e4475264c94c0c947a6986c75007b98b9159db9819",
+      "proposedBytes": 3966
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11vertexshader.h",
+      "proposedSha256": "3482a616d51c8a3619c35e58d6a87dc7eef9709f641141db49fa22dcd2c4e73f",
+      "proposedBytes": 4983
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videocontext.c",
+      "proposedSha256": "26c8fe9925b51c021cd87e23441645eeff06ec10e98edba7135b688cd59002f5",
+      "proposedBytes": 46655
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videocontext.h",
+      "proposedSha256": "f3ecbdc9ff0890c411bdd244d4c8b13ed4ef59d067ee13586a5bec89fc90aa09",
+      "proposedBytes": 101839
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videodecoder.c",
+      "proposedSha256": "3a4544f3b22d3ffb1525a96c499e786342d8cf1787597083d6c7a58957698770",
+      "proposedBytes": 4718
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videodecoder.h",
+      "proposedSha256": "0448d2ce6c8bc91c0dbf4293f87eb90a3551564925470f89e30c5d1cd415c25c",
+      "proposedBytes": 5637
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videodecoderoutputview.c",
+      "proposedSha256": "e180baa8358f0499c18c1f3b7473ef890ca4054889a953cc764c559f9bc489f4",
+      "proposedBytes": 4702
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videodecoderoutputview.h",
+      "proposedSha256": "f401e1df3b11c3159280fdb66625420d348bfc3510bded2f4e9326993529a34c",
+      "proposedBytes": 5616
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videodevice.c",
+      "proposedSha256": "96ad57978380fedd9809622f3066290dfb3165f2c418ebab44a4a87de30fca6a",
+      "proposedBytes": 27095
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videodevice.h",
+      "proposedSha256": "211351734f513308969b3d7e4329ffe6a964def87cfe0489d1ac48e5656c0e4e",
+      "proposedBytes": 28035
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessor.c",
+      "proposedSha256": "a29d746ef74c078f656872d58599f8bd0b36580160fd5650a50237830a168db8",
+      "proposedBytes": 4698
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessor.h",
+      "proposedSha256": "208bc81ff8a57fa844beeed2bfa6b8a524140caa5f418453c390be00448f42ac",
+      "proposedBytes": 5662
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessorenumerator.c",
+      "proposedSha256": "43eacbc881af3cf94c2f37539cda0369284fff282ca6a5f0a826ceac43a32f76",
+      "proposedBytes": 8526
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessorenumerator.h",
+      "proposedSha256": "246c36ade98db9bc8c75fd741119570171e0147d7f0bdc35391cea3881ab45f3",
+      "proposedBytes": 12321
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessorinputview.c",
+      "proposedSha256": "a996315fbb7392dfdd3ac38d884362bd26411a67542a34e9ddbfd787d4607b6a",
+      "proposedBytes": 4740
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessorinputview.h",
+      "proposedSha256": "bc72d3ab4f97ef8ebfaf8f0c2095b98a97ca415f9859aa22e0f8d03b0007cdb3",
+      "proposedBytes": 5641
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessoroutputview.c",
+      "proposedSha256": "cbe80cf2666cede619c70794c6caf9baa7da3881ba05c1a6670551fef081882a",
+      "proposedBytes": 4778
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11videoprocessoroutputview.h",
+      "proposedSha256": "69eaafd981eae0ffc35520c09f4fa36a8fc3a8ab4188334d6fe03de152cd37d0",
+      "proposedBytes": 5666
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11view.c",
+      "proposedSha256": "a45984d210c12427cc046662caf8fb7e1c63c5d84531b0709056fb32e70ec85b",
+      "proposedBytes": 5439
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d11view.h",
+      "proposedSha256": "56093298aa53f18596c75e2d38e21bb1a99a402780c6a660918ce5cc40417e7d",
+      "proposedBytes": 5058
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandallocator.c",
+      "proposedSha256": "e70d5dfed310f7b6a64f405fe589cc12a16619f4d11a0ef8c4a6ed0ae7b42a35",
+      "proposedBytes": 4719
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandallocator.h",
+      "proposedSha256": "e85faab5d2bbdf686d4146493a6c986676631dd5e484cc2d16b029584d63cd99",
+      "proposedBytes": 5376
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandlist.c",
+      "proposedSha256": "0c0e344e9737cb694a8904441001bdbdac862fa7d32a8aec5fa8e2bc8e33eb4a",
+      "proposedBytes": 4291
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandlist.h",
+      "proposedSha256": "a87917f388846e8833bbdc78dcaff5dd1bfb8f372cc858e7cabc6439c794f23b",
+      "proposedBytes": 5302
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandqueue.c",
+      "proposedSha256": "220664115c5160dc29e7a4feef70446b44bd5d2c1b89f0594fdfb31ccfc2cf59",
+      "proposedBytes": 9058
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandqueue.h",
+      "proposedSha256": "7924021233860b69045faa683e382ef6683a99c534a90c56c10506a4ebf01a4f",
+      "proposedBytes": 9329
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandsignature.c",
+      "proposedSha256": "95ba74bfe7d390512ab00474dd5cd34847772eef1a43a3c769bc3f63a8378f89",
+      "proposedBytes": 4196
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12commandsignature.h",
+      "proposedSha256": "eb5bbd4a56c4dde7bec51dae5d219ac45fd9f95bd01494bfcb92ef884a20f858",
+      "proposedBytes": 5181
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12descriptorheap.c",
+      "proposedSha256": "0f573b7628017c05ae5cdf506a2cb8b6c1a1702ddcbf0dcf2128469217b77ffb",
+      "proposedBytes": 5865
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12descriptorheap.h",
+      "proposedSha256": "bb723c15836f80bdb935adec6892390a9fe92199ccab730f65a890e101a91010",
+      "proposedBytes": 6255
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12device.c",
+      "proposedSha256": "2487ada1238c22b77d72f5b20e041f6351cee901f6fcfa81bbc0a9d229095582",
+      "proposedBytes": 98516
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12device.h",
+      "proposedSha256": "f6365e833e68bd9ad193061970618e4d53efc928e8fc100620d37b4f4ee80e6f",
+      "proposedBytes": 278256
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12devicechild.c",
+      "proposedSha256": "5fabc30f587080322a64c14a517b33a42acd22cee3d178941102571bfe26d088",
+      "proposedBytes": 5665
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12devicechild.h",
+      "proposedSha256": "1cd0a86cbdcc2c5c95545cf688d00a6f06a6218a95a8ddc0300448e93eb211b2",
+      "proposedBytes": 5201
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12deviceconfiguration.c",
+      "proposedSha256": "d5826d2d8af356751d1998b4672b1c3db66da9941a28b6ceace36286c51d742c",
+      "proposedBytes": 11275
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12deviceconfiguration.h",
+      "proposedSha256": "b259e67a9ce47019051561bcd93a2ac992b3dfbbe22fe71a774234a753f7eca2",
+      "proposedBytes": 9629
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12devicefactory.c",
+      "proposedSha256": "d713a3f94b132e18a9d44e7d4d74f5c73d74e7e2ade3a7b8d5949051e0e5b485",
+      "proposedBytes": 9329
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12devicefactory.h",
+      "proposedSha256": "4b8b09fc32ee300a6d7af8dcf27f1d82b1ef7bf37261f113c2923b4758f172fc",
+      "proposedBytes": 6478
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddata.c",
+      "proposedSha256": "931b3c3ad975a827e320e8ae3baf1e1f79882aa5ea5e72da5da4c7c4dcf318a0",
+      "proposedBytes": 8184
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddata.h",
+      "proposedSha256": "23c0cecc266b1ed3cff7c47af423ad949dd529b0bb0302b74aefc639f2feb996",
+      "proposedBytes": 12210
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddatasettings.c",
+      "proposedSha256": "fb7c43159cbb9998065ee5e591075a61ea6344d61659b128274f2a6a4f0fedd0",
+      "proposedBytes": 8075
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12deviceremovedextendeddatasettings.h",
+      "proposedSha256": "7601ff33ae260cb8b282bf629b9dac96c97cf25b2fd477d6170b07bb21826538",
+      "proposedBytes": 12396
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12fence.c",
+      "proposedSha256": "ce753202265156493320b24fe14d61a40b19238d08d89dddae9240239e20a938",
+      "proposedBytes": 6136
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12fence.h",
+      "proposedSha256": "3f35429035c7d11d7717a761f141733c37b8db233e56931048a2ca768909625f",
+      "proposedBytes": 8907
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12graphicscommandlist.c",
+      "proposedSha256": "f3a1c3be6d2de761282947b6b19bee7403e9e53436eeb46a6f68734311efcc69",
+      "proposedBytes": 45078
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12graphicscommandlist.h",
+      "proposedSha256": "a8becedf56ae9101d87e25d20d686d5afdf4341b1bc7d88df5c7283b2c5c3ff2",
+      "proposedBytes": 212131
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12heap.c",
+      "proposedSha256": "e573ef92e94cb7a4e27a8c09278d9f9f727f84660a636080d953158d134d2748",
+      "proposedBytes": 6849
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12heap.h",
+      "proposedSha256": "9c4ce4c380b330b19ba9d86d9dbd6c0fe2242205bcd67d97b617837ff36ac3f1",
+      "proposedBytes": 8292
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12lifetimeowner.c",
+      "proposedSha256": "1b67212570a8595052b2ee39f1c6e6d3e49b1392c659ae460f9f5ec8e81f8f7a",
+      "proposedBytes": 3998
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12lifetimeowner.h",
+      "proposedSha256": "a1bbf83972e32ff61585fb16cbea491911713b454a1b5e36bb849f11b155d3c1",
+      "proposedBytes": 4596
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12lifetimetracker.c",
+      "proposedSha256": "acf4e04f4c2bfd9e8c30d956f21f40ac905458830853c6eec963181369deef75",
+      "proposedBytes": 4742
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12lifetimetracker.h",
+      "proposedSha256": "1fec55fc3d1d60fa6793ec17f1301df5371ba9021474641a3be3e33466d611ec",
+      "proposedBytes": 5453
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12metacommand.c",
+      "proposedSha256": "c0ea4673ff5e4e8f62eefba00d2fe51e91a839cce60760a381324ab28719da3d",
+      "proposedBytes": 4470
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12metacommand.h",
+      "proposedSha256": "60234d64bb1ece9b4bb36d7c4bf657703eae84fef3ceb48a15633f779fb24f92",
+      "proposedBytes": 5466
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12object.c",
+      "proposedSha256": "e3d4b79b1d48fa1fad13c145cd5c9aaa3efbd309ff0596d1ed81b730dc1953b0",
+      "proposedBytes": 5529
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12object.h",
+      "proposedSha256": "149574bb55e414b3d876a3602d140082faa24d53151f93fda200233e87f433e3",
+      "proposedBytes": 5309
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12pageable.c",
+      "proposedSha256": "07e824a60765cde0545990672ba285229415f839e4709d692f2c9e8c33a0357f",
+      "proposedBytes": 3895
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12pageable.h",
+      "proposedSha256": "ad7d7ff98b7540e23eb0bc13f5c225b7c46f6e2ab0c26c334934634cbc7b08f7",
+      "proposedBytes": 5016
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12pipelinelibrary.c",
+      "proposedSha256": "7b885837dd84fe6fa1e478c17239faf13279850802c9a7fdcba0f79231ed34d6",
+      "proposedBytes": 10496
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12pipelinelibrary.h",
+      "proposedSha256": "299eea6886c0bcdadfaa3e60ef040b0357ea4c6e2354d21ed818ffbc5b501139",
+      "proposedBytes": 11111
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12pipelinestate.c",
+      "proposedSha256": "7adfa02089b97c72b54feac8a6e3b78bdcbf4e033e3e771be3e3b7782d11cc39",
+      "proposedBytes": 5357
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12pipelinestate.h",
+      "proposedSha256": "003854cbe6e2ccbb5a0d4e7caa320d352e22ed3edfe8c03ca47d20b87034c765",
+      "proposedBytes": 5371
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12protectedresourcesession.c",
+      "proposedSha256": "f9ce96681a89bc9192fbd132583a57e49b612f93feb873b53c6dbea221fa8de5",
+      "proposedBytes": 6556
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12protectedresourcesession.h",
+      "proposedSha256": "1a11be695a7925b1ac4bd2448f4b2fe6f5b163f4cc6bebc041a4f72cd1a81fb2",
+      "proposedBytes": 9864
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12protectedsession.c",
+      "proposedSha256": "58b297bcdf0e063628e67f32762425a2dcc08c938b70b79ede7bd2a527e50b4b",
+      "proposedBytes": 6323
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12protectedsession.h",
+      "proposedSha256": "b9a6cc023acc22e7a88b323afb1dee04bf74839c9604540b14fda9bb11ae824d",
+      "proposedBytes": 5750
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12queryheap.c",
+      "proposedSha256": "e0fdc9c87f29e7a0f0ef29af05d7918de51f7e6c2108b7d68f0e4c2c12895143",
+      "proposedBytes": 3958
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12queryheap.h",
+      "proposedSha256": "68cdd1a78a3b852e4bf32355bfe100702ec3f862f44d3407bbd7b3a718818e0a",
+      "proposedBytes": 5034
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12resource.c",
+      "proposedSha256": "cafdf57e98c1e4cbf8b573c36c16c4d47baf86c85c69a9ae0e52fcef81118b38",
+      "proposedBytes": 11388
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12resource.h",
+      "proposedSha256": "62e90656e9e32b732760b388e8919eb22aada684e6c6d5bf5ff39e8ff84647d1",
+      "proposedBytes": 16071
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12rootsignature.c",
+      "proposedSha256": "b95c84c0de6422ea4e2e9bbc3bbba4eb556bad2d324d00a33057be3c580cb19a",
+      "proposedBytes": 4065
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12rootsignature.h",
+      "proposedSha256": "d0607c826dcb1cab428ecb5f8fd90123afcb7f5aaca0c51aea9f5c7aee0a4935",
+      "proposedBytes": 5121
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12rootsignaturedeserializer.c",
+      "proposedSha256": "d21c98df08be2d0ce4356d328cd6da15d3f62d09f35d88985ab8a6122fad2ad8",
+      "proposedBytes": 4664
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12rootsignaturedeserializer.h",
+      "proposedSha256": "65b778f010438c77f8963281588bf29b71822a99d6d20197b16f42677e3c142e",
+      "proposedBytes": 4868
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12sdkconfiguration.c",
+      "proposedSha256": "f1c0b34328b6449325f4f99af61ab101d8f9ddbbac01c9497547819e1a34c32b",
+      "proposedBytes": 7004
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12sdkconfiguration.h",
+      "proposedSha256": "36341cd7948e58c0490979c45715f9b79081550a98d1511d9c777f7de041681b",
+      "proposedBytes": 7488
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12shadercachesession.c",
+      "proposedSha256": "bddd4cff54a1e0f33ce58af6f5b2f5a305ce99785df013740733a94d4a5c57a2",
+      "proposedBytes": 6098
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12shadercachesession.h",
+      "proposedSha256": "2134e491d280276730fab814737cad66a3cd3e5858025dcdba008d63d35b1d48",
+      "proposedBytes": 6502
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12stateobject.c",
+      "proposedSha256": "7f309209a84d5b587c348a88252241a009f0f0ecb3f21d978051710df9ceb18b",
+      "proposedBytes": 4026
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12stateobject.h",
+      "proposedSha256": "280908bf1912dd1da0c9e06ddcaa8147a6081370e0d1e4dcabda61318ad950c3",
+      "proposedBytes": 5076
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12stateobjectproperties.c",
+      "proposedSha256": "a5893297170364ff3e6a22ba07260a79dc1b56f23a0fd1cf8958da96753fd8ec",
+      "proposedBytes": 6987
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12stateobjectproperties.h",
+      "proposedSha256": "d56832f9d313873066b075d549896875d7ceb16dc967732b11256765c7dbdb1a",
+      "proposedBytes": 8798
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12swapchainassistant.c",
+      "proposedSha256": "84d597792411d9d78334a1a77457bc137919b795d891e697e9a0d449094a182e",
+      "proposedBytes": 8556
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12swapchainassistant.h",
+      "proposedSha256": "efc368f2b85c8a234c7ec480ce0e74ce91f92200061487abae10895c804ae0d5",
+      "proposedBytes": 5643
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12tools.c",
+      "proposedSha256": "4c81c966a444f4932bdf2f9e71dc9e550e1172b0dfe5e37d7090f9f30de237ec",
+      "proposedBytes": 4034
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12tools.h",
+      "proposedSha256": "83d06a48f361e1e4290e30fad207eeee54acea6fce070ff6885276a5bd5029c0",
+      "proposedBytes": 4635
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12versionedrootsignaturedeserializer.c",
+      "proposedSha256": "e9ae3716fcec0ba1b2602cf64110a1aa325e879a4fa2956fcfc8e128fb3dc94f",
+      "proposedBytes": 5612
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12versionedrootsignaturedeserializer.h",
+      "proposedSha256": "5edcde7e0515268ef847af171f62b8c8587ffb153e2ebaf5948e5cce23ea015a",
+      "proposedBytes": 5627
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12virtualizationguestdevice.c",
+      "proposedSha256": "429211f48fec18dfd7dcb37c8b5eea29835ec0e2985c510d2d50a02cfa718324",
+      "proposedBytes": 4883
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12virtualizationguestdevice.h",
+      "proposedSha256": "3e93fe4dacf4f23768561a0b7cc577bd0781480904d7beaf48ba546a68445667",
+      "proposedBytes": 5240
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12workgraphproperties.c",
+      "proposedSha256": "879ac7cfc3ecec7d62aa098dfec3b05a50ebb6c3943fec38fbd89efd5fe965cd",
+      "proposedBytes": 9067
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3d12workgraphproperties.h",
+      "proposedSha256": "7cb848fbc0e2a48bd0f1ce5034d232f8de4a3c10dc15e2bdb199e70a7c846dc7",
+      "proposedBytes": 8285
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3ddestructionnotifier.c",
+      "proposedSha256": "1d6d8d7331565e8f6dae05df22e680b9ae1d3260d71baaf70cb47a969769767c",
+      "proposedBytes": 4918
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3ddestructionnotifier.h",
+      "proposedSha256": "5e4c6e3845bd98d960e736bd0dab66aefd0add0b6a557f52f585292a0b77903c",
+      "proposedBytes": 5098
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3ddevicecontextstate.c",
+      "proposedSha256": "f193e050947a0fa0880241bf30a66746a89969d303f23e2a5ec367bcede14ef7",
+      "proposedBytes": 4102
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3ddevicecontextstate.h",
+      "proposedSha256": "ab080120d2157bc87d50e4b71aad1e5e5b56d99e1aab99f67126a5572e79b12f",
+      "proposedBytes": 5067
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3duserdefinedannotation.c",
+      "proposedSha256": "c60d8be4f0336e4c5294893e496cb9dc7b4f116b20ed002cbf2f940c1bffc3b3",
+      "proposedBytes": 5046
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_id3duserdefinedannotation.h",
+      "proposedSha256": "eeaaf60128929086f312dee7aeb0e9e5b6b1f12374b91c173e3e62ef3b64f815",
+      "proposedBytes": 5336
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiadapter.c",
+      "proposedSha256": "8ac63ee4334d0aca7e363bb30ea75d69ceecab6d7c5c8b41d8a8f3fcc1c1cb68",
+      "proposedBytes": 12593
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiadapter.h",
+      "proposedSha256": "53730447d394d238bc5420a23382e5406df5503bdc302e16b668994e6e9550a9",
+      "proposedBytes": 22610
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidecodeswapchain.c",
+      "proposedSha256": "50c9ded7bf7bcd22ed2b1d20b95f4a87a25d96f7b37f8a996578b5eda358ef27",
+      "proposedBytes": 7994
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidecodeswapchain.h",
+      "proposedSha256": "05daa1a5a3ff6ff865b044a4c7ceb413acf696242c859792447be482990f56bc",
+      "proposedBytes": 6758
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidevice.c",
+      "proposedSha256": "986eaf8428d7aabe1e7a9cf6385acdbfc090571afbe1975d7112689024ae1320",
+      "proposedBytes": 14674
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidevice.h",
+      "proposedSha256": "59ae878812cc203d66e67d8559dced94b01242ad94b1887117311ea0431c41e1",
+      "proposedBytes": 24480
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidevicesubobject.c",
+      "proposedSha256": "4fc46468a36971bcd29474990565542890474ec2c0b3cfcc3c256fe8693d60f8",
+      "proposedBytes": 5772
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidevicesubobject.h",
+      "proposedSha256": "1015f625870e5b6d5da17bd58d187fe3add57e3f2695f9f1ee16dfd58cafe0ff",
+      "proposedBytes": 5286
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidisplaycontrol.c",
+      "proposedSha256": "366c5ca44da85560782d3b672eab5329ffcb0696c2a41be014b9f6f2d0ca3eaf",
+      "proposedBytes": 4258
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgidisplaycontrol.h",
+      "proposedSha256": "c3ec19b762c97d3086acc20fd9fe64d8842b22af949b73344c779e868eb2fb58",
+      "proposedBytes": 4763
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgifactory.c",
+      "proposedSha256": "543d01d2279ca175f37af3791b59e62ecbb87c670a916a9f1da14d0748f409ca",
+      "proposedBytes": 30007
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgifactory.h",
+      "proposedSha256": "2b028cb33c64b228fa2fa9fd5620842144d0bdcab5bde6dffbcee70ec5f925db",
+      "proposedBytes": 51143
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgifactorymedia.c",
+      "proposedSha256": "31d3c504f5be64693bd7cffb1bad3b6b22b681341344b224ccbc4bdcb2842d72",
+      "proposedBytes": 7498
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgifactorymedia.h",
+      "proposedSha256": "70a5cf226298e42637d2c112750597619833dfe069dc7b90be28023fdbba6f18",
+      "proposedBytes": 5510
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgikeyedmutex.c",
+      "proposedSha256": "30c94310ceb87d1231601f2e32640b8e2229ab5c80066de727b22a6f531ce75a",
+      "proposedBytes": 5055
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgikeyedmutex.h",
+      "proposedSha256": "c0842e3d33eb43dae1d112b11fc3d1f2587618c3588e9458d49927aa81a2f0fe",
+      "proposedBytes": 5551
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiobject.c",
+      "proposedSha256": "928d701ad523cdd3490f928b4c54b447e9bac8f55305498429719a80a20b5acc",
+      "proposedBytes": 6671
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiobject.h",
+      "proposedSha256": "ef1bff0eaafdb009590c468e7bf69c410a269086e95020f64c025db0c3489efd",
+      "proposedBytes": 5324
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgioutput.c",
+      "proposedSha256": "371cecc7bdbef41fa19375b6203fe71f0ff0a0b4f0c21a0d738edae41a618eaf",
+      "proposedBytes": 19262
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgioutput.h",
+      "proposedSha256": "6f6e7f5a94c939f90e9951fe1ec954b8acd54be90e25ee0b8c02aecc8626779d",
+      "proposedBytes": 43618
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgioutputduplication.c",
+      "proposedSha256": "23ad79faa08a04b1aeacb9d7dafd5b3ee6457422d9da440b25e8cbb59ff27b8d",
+      "proposedBytes": 9176
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgioutputduplication.h",
+      "proposedSha256": "a6a59402c0d69b04e5f031855312f163b26e0e30312e53b8223464e059750eee",
+      "proposedBytes": 7848
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiresource.c",
+      "proposedSha256": "b633b091c55bf76d6b3549421855dd3c80f5d1490ae9261b0facc0f079e280ec",
+      "proposedBytes": 8075
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiresource.h",
+      "proposedSha256": "24f1fad116a7fafdb7b91001dce62b04bd93d8b56da70c4a65da7a9c517392e4",
+      "proposedBytes": 10039
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgisurface.c",
+      "proposedSha256": "ec1cc357f12ded20ba5e3a1cc2dced14f69e4aa7673a058d952ec8a654accc1e",
+      "proposedBytes": 8702
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgisurface.h",
+      "proposedSha256": "f7976315433672d6a97df681c7fa94538c460466bf7a41c4084794a8445649c2",
+      "proposedBytes": 12814
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiswapchain.c",
+      "proposedSha256": "2ce65927e036bbdb0bcad8f12cd4a888a5067feee7d4bef40d2cc57f79ec79bf",
+      "proposedBytes": 25999
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiswapchain.h",
+      "proposedSha256": "c9c4b46a3073b180e44525bb0faeda210ed46786dba6b1542ba595c48a106912",
+      "proposedBytes": 39326
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiswapchainmedia.c",
+      "proposedSha256": "7754626cda743179a142844e8ada65ec1ebac18a8ea1cc0ae02b193e602ba40e",
+      "proposedBytes": 5177
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_idxgiswapchainmedia.h",
+      "proposedSha256": "385135f6ef0358ed9557c055eaab4f3fc502dae3041e9e7e626021a46ce6bbd2",
+      "proposedBytes": 5350
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_table.c",
+      "proposedSha256": "e1416c3ff18e5ef84b6c9f2a94af5481bfbaac7f836da7755395944b58d708f9",
+      "proposedBytes": 45549
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_client_table.h",
+      "proposedSha256": "a2bc93ddec5b79cf32f6825e20853cce85696baea0229065a90e84427e890017",
+      "proposedBytes": 1833
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_codec_D3D12_PIPELINE_STATE_STREAM_DESC.h",
+      "proposedSha256": "76b33218ccfc647893533de7450d89e84de6aaa444528063115ceff66c1c6e20",
+      "proposedBytes": 10524
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_common_cs.h",
+      "proposedSha256": "6be1ede0e34a9440263282c357e2ab85dae17a16185e4fca2a9b200bb1ae64a1",
+      "proposedBytes": 1648
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_common_cs_helpers.h",
+      "proposedSha256": "5440016bd9af6f4251d78273cbb9e955228bd0f6c9489f3507f2be704bc1c8c2",
+      "proposedBytes": 18575
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_common_types.h",
+      "proposedSha256": "b8487ea761bca79ee4114f4829e70807b2f906eaaba90f567c49a197ed103c82",
+      "proposedBytes": 587464
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_defs.h",
+      "proposedSha256": "73294dda6367f51c88ba12be8e126b59605f5df565b892a19b0d5fad35d87a08",
+      "proposedBytes": 226245
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_directx_types.h",
+      "proposedSha256": "05bef6a91d27b7e3cddfee4a90a9cb603b94380630df0e59e8949af6da1414f5",
+      "proposedBytes": 316197
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest.h",
+      "proposedSha256": "55c46832348288a40e57e30f06911204d808644dbc0f31970fa67f2e148b1f0f",
+      "proposedBytes": 5674
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_cs.h",
+      "proposedSha256": "8d297276432262661cd2973c57c09635ee5360cb7f83dbaebeedc5421c8ea626",
+      "proposedBytes": 2945
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d10blob.h",
+      "proposedSha256": "d690dcaebd444d9a3baf420a8237e5fac66d172a4d31f4e83ca8b6547da39b58",
+      "proposedBytes": 5413
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11asynchronous.h",
+      "proposedSha256": "1c074c6a8c33342eb5ec871ebb9ba1eb161da0c34491c61b00fc9071ecfeb3de",
+      "proposedBytes": 5556
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11authenticatedchannel.h",
+      "proposedSha256": "2da6099638baed8691a3c5eb9f79f01770c7f7e630c7a146642a05532f4738ea",
+      "proposedBytes": 19957
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11blendstate.h",
+      "proposedSha256": "f6117bc0995f193e808818b38a6115632673dc3c1edf21cef1d84fbf34e352e6",
+      "proposedBytes": 11249
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11buffer.h",
+      "proposedSha256": "422fa093a0b39fea00e13a41195f2ecab05a6337b25626cfdc6b494f7cc4354b",
+      "proposedBytes": 5779
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11classinstance.h",
+      "proposedSha256": "4b749f8936e56bec46ee2e3a23f7f12372ca9775263af1fa61537053efdd1058",
+      "proposedBytes": 25991
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11classlinkage.h",
+      "proposedSha256": "b40c5ae41b172fb488e01f273d32009fde53cb0d5483ac3c7a231c9952b42483",
+      "proposedBytes": 19090
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11commandlist.h",
+      "proposedSha256": "1ab9535919ac5883042d2390c5e30ebd1871571fd309127f1936f7fa0c386e99",
+      "proposedBytes": 5633
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11computeshader.h",
+      "proposedSha256": "6c18d5946bdd508eb53bda96346c0dca5f010782860e64ab8a3089849e25d516",
+      "proposedBytes": 688
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11counter.h",
+      "proposedSha256": "fa5fe85e0e8bd3ad4cfe35322481cab59e345d8d05ab0c0afdedc34cee8e6310",
+      "proposedBytes": 5830
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11cryptosession.h",
+      "proposedSha256": "ac35fc7f1babca366684e101f49314f168daf94e55f2a111d44d122b8dd214f4",
+      "proposedBytes": 30690
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11depthstencilstate.h",
+      "proposedSha256": "115f8219c2b39bf397aa8a4d7dd00c24fade5b3edba8d1ab0062feb8c874c520",
+      "proposedBytes": 6292
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11depthstencilview.h",
+      "proposedSha256": "d6ef7008e7817140e384534a83a7bcbe0c87c42b8c23396dfb5fd5099d143f30",
+      "proposedBytes": 6313
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11device.h",
+      "proposedSha256": "c8b2401906eeceafceefba93de3e2e0dacc7bd8df59644cdcd92ef4d2a35b3e7",
+      "proposedBytes": 502611
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11devicechild.h",
+      "proposedSha256": "ea10ca90c027a52b72265cf2f3caa663b1d0a30bd502bd7297f544e4bca25235",
+      "proposedBytes": 27294
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11devicecontext.h",
+      "proposedSha256": "64b1bf06e2ca14a4b0f275c8072e9b83893ddc336f16a6ba201a0c0320080a0a",
+      "proposedBytes": 941092
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11domainshader.h",
+      "proposedSha256": "897597df470b7c3c7ec1c8cd203115550140c8e293c2f793febb7c808a6916cd",
+      "proposedBytes": 684
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11fence.h",
+      "proposedSha256": "04f63e6ead3819209c97b22e02c8441bcc1dec3c759e2626775336747089c753",
+      "proposedBytes": 19216
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11geometryshader.h",
+      "proposedSha256": "bd64497e44e8dcc5c8d8b20fe582c2c0b3ed1a3c42f9d6c775c9d1947191b09e",
+      "proposedBytes": 692
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11hullshader.h",
+      "proposedSha256": "4cda69414dfb850666d433a90967a0ffd62852662207617ec8fd784a135a9197",
+      "proposedBytes": 676
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11inputlayout.h",
+      "proposedSha256": "14b3330a0586c48809b60095dbba08fb9f1227003c8a0db54907b3439caa0ee4",
+      "proposedBytes": 680
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11multithread.h",
+      "proposedSha256": "bec08040bcaa9442c0ec080c47c29c35b21f68f28a7221a38c1a25482353d4ad",
+      "proposedBytes": 18026
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11on12device.h",
+      "proposedSha256": "80f1b582cc41ab7881de4d99b21f2399c6dcd3614e49713f9a4cc4c95ed5a61c",
+      "proposedBytes": 44315
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11pixelshader.h",
+      "proposedSha256": "aaf10f88d2857c7d289ee9433a094f6d298a9e5a4de0ceeb025ce47c6f210893",
+      "proposedBytes": 680
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11predicate.h",
+      "proposedSha256": "dd9eccc93aff06b189d1040ea763a409a2c1a6092c9a0ba0023b810302c02b50",
+      "proposedBytes": 672
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11query.h",
+      "proposedSha256": "30159cc3b933d51d60775a5b7749054282191f3d95524eef8fd1de5cd3933231",
+      "proposedBytes": 10898
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11rasterizerstate.h",
+      "proposedSha256": "29ce8fce4f093a845f979bac6764f027ae14f2dfd1a9df685a3ca10f828b7edd",
+      "proposedBytes": 17300
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11rendertargetview.h",
+      "proposedSha256": "dd7defdc210b201f88ac36ba11ff71290fffe22fc5bc7035424998b9628b1a07",
+      "proposedBytes": 12024
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11resource.h",
+      "proposedSha256": "954c3df14888a0e74933775a76811cff8934b198d07765f0899d42e4f8ab211d",
+      "proposedBytes": 15227
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11samplerstate.h",
+      "proposedSha256": "afe42155fdb52134ca7d4f3c7e8821a30bd7f0476843b5da7331b8687d3fcfce",
+      "proposedBytes": 6025
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11shaderresourceview.h",
+      "proposedSha256": "ad284277f79f5b797d579d931101c7b29cb7b3609e77b908cc997f447bd1a891",
+      "proposedBytes": 12220
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11texture1d.h",
+      "proposedSha256": "e6568733bd0485c71103c9326056603ee8760fb691829aff24f0c95bf9a9417a",
+      "proposedBytes": 5932
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11texture2d.h",
+      "proposedSha256": "e4f88e954a974637ff6459bd54ed5fae0d283f9143861f061ef1882f4efd5ef9",
+      "proposedBytes": 11271
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11texture3d.h",
+      "proposedSha256": "090fbeb8752e9ddbbb1788543751c8cacb8f958b3015ab1ae1d012df19ee01ca",
+      "proposedBytes": 11271
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11unorderedaccessview.h",
+      "proposedSha256": "1984ab53c8bc3b6bc675b37bf66c8a018fe0d3e8629617ddf3d2fc0e885bebc1",
+      "proposedBytes": 12318
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11vertexshader.h",
+      "proposedSha256": "c758565937c4b4524c5b8c563ed67a26b454d7f96f0ded96c8c82fbe5fabfe89",
+      "proposedBytes": 684
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videocontext.h",
+      "proposedSha256": "eced3324825dc9d3f69fc0f24332464bf0a607255ef6c8a9e12f17aa34fd6ef1",
+      "proposedBytes": 585312
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videodecoder.h",
+      "proposedSha256": "dd07adad27e6896714afdfc39896bb5609071475ce2a53333fcc1f166b165988",
+      "proposedBytes": 13905
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videodecoderoutputview.h",
+      "proposedSha256": "932d6badc62650cafc11fdc7ad7e5951e85b06c06ae3d71367391ed4fe89f5fc",
+      "proposedBytes": 6631
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videodevice.h",
+      "proposedSha256": "eeea5734117ea6a7de1c9cd04fd0d5fae9c10cdcb9a2d2f5d377fdb5dae3ece2",
+      "proposedBytes": 191017
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videoprocessor.h",
+      "proposedSha256": "e97ad6e4d971cdc01facb2b8ceaceb72fe68ab8ac9a8bb30cdc006b4d1bbc0fa",
+      "proposedBytes": 12666
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videoprocessorenumerator.h",
+      "proposedSha256": "6086f2e658a494be790134b90ef8706278ae649b9cf0e4446bcd2a5e7e974f00",
+      "proposedBytes": 55769
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videoprocessorinputview.h",
+      "proposedSha256": "f81d08a3d38c15f951259e2cb9ed12ba1d00b35925e0e8c4af88f4c801f1ebc0",
+      "proposedBytes": 6682
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11videoprocessoroutputview.h",
+      "proposedSha256": "e22c16b640bc4915891fafa43daca5c8c43fd57bfb935edbcf4ded07812afa4c",
+      "proposedBytes": 6733
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d11view.h",
+      "proposedSha256": "b5aa4b6894a60eaae9488d1e2c818d4b4b11b4591590ee172bd239fbd9393747",
+      "proposedBytes": 6520
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12commandallocator.h",
+      "proposedSha256": "04facba51765e3696f8074397844f266c1e6377df9c8a034d2b17cb7c65881a6",
+      "proposedBytes": 5619
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12commandlist.h",
+      "proposedSha256": "029c5826cb027144ba2d8bab73d5fdcd5bafde7e0badac51705d82322ee4f7da",
+      "proposedBytes": 5542
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12commandqueue.h",
+      "proposedSha256": "c6f1d2bcb223cf27d6dab9f28c9049ab739b34f60c7a36951b788c8bb75d456c",
+      "proposedBytes": 69708
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12commandsignature.h",
+      "proposedSha256": "626b09a90e13d11bc6696fc3014de27edce771e785bcc3b253ff6b00da41a4c1",
+      "proposedBytes": 700
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12descriptorheap.h",
+      "proposedSha256": "915f7585c3fe8596939e747403533947ef9235ec4ced415060dc0703f05a4e5a",
+      "proposedBytes": 17409
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12device.h",
+      "proposedSha256": "52a8c8f6ca0fa4676066e148f8690f21a5f8905c4258b38c86b31651942bec2d",
+      "proposedBytes": 624313
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12devicechild.h",
+      "proposedSha256": "9daf6aa976ce55abfc4f8cbc307f02e5d66cd79d29e9db8dbf1871cd89f9ba46",
+      "proposedBytes": 7423
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12deviceconfiguration.h",
+      "proposedSha256": "33bc467a0ec6fa0555b8375fd6e08859bb5db1debdfd8e46c871f4282eb15818",
+      "proposedBytes": 44773
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12devicefactory.h",
+      "proposedSha256": "26dd5a267b66fde78ad6c2dd453351602dc2637fb0def02c07a0670ff29a33ec",
+      "proposedBytes": 46591
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12deviceremovedextendeddata.h",
+      "proposedSha256": "59b09264426501d13d902c45524c2415b458503062a11452c23e607b299a1fcf",
+      "proposedBytes": 41412
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12deviceremovedextendeddatasettings.h",
+      "proposedSha256": "06a86e77b46468e6e2b6a0b63e25729c16c8f0d28cb1cc843a14d26ba41a1523",
+      "proposedBytes": 25642
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12fence.h",
+      "proposedSha256": "ae95e0496be642b1ab6b266157637c3f543b8a38e8df52d11c5d7cff18eadfd0",
+      "proposedBytes": 21379
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12graphicscommandlist.h",
+      "proposedSha256": "64042994484bd1223ebd8f241da54fc32e18fac11093eec649ee1e367dcd82d7",
+      "proposedBytes": 458109
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12heap.h",
+      "proposedSha256": "869832c2ea044137372aa2f120e96e5432c283ef450b7deed9601c08e7159c0b",
+      "proposedBytes": 12708
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12lifetimeowner.h",
+      "proposedSha256": "1e6f3dc39516d0af5493458b89c8bbadb48ee44f005e4e7c28c14fe0143f82d0",
+      "proposedBytes": 4932
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12lifetimetracker.h",
+      "proposedSha256": "643de451becc6e4b6895c669decdef9869273dcf85140e120c21874d0a715f47",
+      "proposedBytes": 6534
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12metacommand.h",
+      "proposedSha256": "6d609f676b68f3027cf36e8dce4ab650b0b7d666dfe063c5a4042882d0b770af",
+      "proposedBytes": 7585
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12object.h",
+      "proposedSha256": "830d31ab42ea8fae16ff4ee66295e26a3ad028610cec505d8de6a0f1011c3337",
+      "proposedBytes": 26194
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12pageable.h",
+      "proposedSha256": "d13a5d7eab01eca40949b66b60c83d8c32c17fb980100dee10a833aab0a21c10",
+      "proposedBytes": 668
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12pipelinelibrary.h",
+      "proposedSha256": "dcbb71e58ff8da5b496e268c5962f164662127827835b7f49144867e7e403156",
+      "proposedBytes": 46223
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12pipelinestate.h",
+      "proposedSha256": "9c9b2aa7fd807027a9995c34f94a6d1b5ff30304fa70484f7e2f707f6210576e",
+      "proposedBytes": 7112
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12protectedresourcesession.h",
+      "proposedSha256": "0fbb63894a23ecd6f4ec28df5dee011fc4db78d1bd19ff52286e2e3dfa6faee8",
+      "proposedBytes": 11721
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12protectedsession.h",
+      "proposedSha256": "e145cdd46162dee5afd641cfb2ab12e2175ed984aee307e1190fb9f88ef5fd13",
+      "proposedBytes": 13084
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12queryheap.h",
+      "proposedSha256": "f5f61e22e89432108c5c4aaeaa515838a3f0d8e0f9f61fe6e6abcbd488b4ebbc",
+      "proposedBytes": 672
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12resource.h",
+      "proposedSha256": "e922662cc5a22a1ec707dca2578f40220124c7c133a8cdae0a05ef1405d10a5c",
+      "proposedBytes": 56876
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12rootsignature.h",
+      "proposedSha256": "77ca25a4f2d7cae798e1607a07beb3322b72ca84a77315cec8b8f6a93c478833",
+      "proposedBytes": 688
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12rootsignaturedeserializer.h",
+      "proposedSha256": "59376ccc399b957cfc5318676641bcb15669f3645cb8542306a64bb86650a1ff",
+      "proposedBytes": 736
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12sdkconfiguration.h",
+      "proposedSha256": "14de6db9922f69618b97e7861a9a2267a02d739fa1941e25c7843a2eb8b560fb",
+      "proposedBytes": 19590
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12shadercachesession.h",
+      "proposedSha256": "2467f6f352c0a5668b6e54cc3b928089cd5b53ac6c93e9fdae9b9d15ee82112b",
+      "proposedBytes": 25445
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12stateobject.h",
+      "proposedSha256": "7554e46b2c0c94cfc6f1203d24e5d08b99519b9dd3142cdfafd185f0eedd4dc3",
+      "proposedBytes": 680
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12stateobjectproperties.h",
+      "proposedSha256": "4769352c0fe74ac3685208c6139eaf3315509717d670361f688754507fb82cc1",
+      "proposedBytes": 24143
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12swapchainassistant.h",
+      "proposedSha256": "f85a3196f6661ebac3f693717d941509294503e0e145dfcedc20dd63b8f7aaad",
+      "proposedBytes": 28247
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12tools.h",
+      "proposedSha256": "d107e5973cf825f1993b85b81d15f3bcc7310273e2be3cdf82c42f713966d1d9",
+      "proposedBytes": 9837
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12versionedrootsignaturedeserializer.h",
+      "proposedSha256": "212632cba7b07d59c2e9abeba7976a366d45fe9c813c22ca1d4526de35a8db7e",
+      "proposedBytes": 9065
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12virtualizationguestdevice.h",
+      "proposedSha256": "c122a29068886004843d79e2cbe59657e5c26c427309368dc6709f2b59d61f44",
+      "proposedBytes": 14886
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3d12workgraphproperties.h",
+      "proposedSha256": "a397dd3e65dc6a341672bc2da6167b67cfc7c953ce5f447055033063c839ec44",
+      "proposedBytes": 71055
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3ddestructionnotifier.h",
+      "proposedSha256": "9589d61a73c9ebf8fee315f1bb323c3b765184d1a56d3105bb6996090678681a",
+      "proposedBytes": 14709
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3ddevicecontextstate.h",
+      "proposedSha256": "577e2abee71e7efd575dbde977116da03ed75fdcfa5c1c4dae14e4413da6fe76",
+      "proposedBytes": 700
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_id3duserdefinedannotation.h",
+      "proposedSha256": "692a1596a398e9c01c9d44c7c3f220eb6bbf14b9c0459d8f18f072234f4eadc0",
+      "proposedBytes": 21167
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgiadapter.h",
+      "proposedSha256": "b74e1d4e1313e3b59f43466ad5c570ad41e4f9c19ca5281915ddce1c9c08b0bd",
+      "proposedBytes": 74763
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgidecodeswapchain.h",
+      "proposedSha256": "639ad9e65cce55ef49adcf47283611cc1b4216d1fb719e4282974fcab84fda5c",
+      "proposedBytes": 53575
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgidevice.h",
+      "proposedSha256": "7a620a4c914de0c198dc5486468bd2aaca262ee26cee7302661d115e16635c9b",
+      "proposedBytes": 83508
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgidevicesubobject.h",
+      "proposedSha256": "624da5acab85f636cf8fdab0cdc20116938dfcc7ad04b8d16cd30854108d46e2",
+      "proposedBytes": 7526
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgidisplaycontrol.h",
+      "proposedSha256": "1eb909d525c56760bff7d6201fed5fa6e95f5b5587334e43bd0b1fc933960fb2",
+      "proposedBytes": 9683
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgifactory.h",
+      "proposedSha256": "7c3ad36a7ff39640cf65752bb99549603356ebf1c1cb0e8ad10f5f0310751f9b",
+      "proposedBytes": 167437
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgifactorymedia.h",
+      "proposedSha256": "d93f22b589edc296146b26ad1c2d83859d2e41340ecc6b117941443463718523",
+      "proposedBytes": 22176
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgikeyedmutex.h",
+      "proposedSha256": "7260e796e54189c43dda3e8cf72bba70b2b71d3f5d1f6eb6a418e4472981d76a",
+      "proposedBytes": 11726
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgiobject.h",
+      "proposedSha256": "5aaf07a3753379500580314fc7d5d2fe73a34dc3f4ba883f2e09352a07b9adf0",
+      "proposedBytes": 27055
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgioutput.h",
+      "proposedSha256": "0d16bc6fba9d3f56fcf1c5719c1586e0322f89e6b5781699fe9bd661c205d37d",
+      "proposedBytes": 138596
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgioutputduplication.h",
+      "proposedSha256": "a5f64359ed56e48907a109de81f08efe21e3de1bb751badb82f750a38cb873e4",
+      "proposedBytes": 51744
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgiresource.h",
+      "proposedSha256": "c471ca4be17407086f66ab520932a28856daac9a5be7bcb4a1dce927b0953a91",
+      "proposedBytes": 38204
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgisurface.h",
+      "proposedSha256": "812414041e7891fb438a0300b239b6e6be992576d53cfe71647858bd549f8723",
+      "proposedBytes": 29220
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgiswapchain.h",
+      "proposedSha256": "5f65bfaa54bedfe66729e14012ae15d7bafda519059078418366fa6800328f57",
+      "proposedBytes": 203207
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_idxgiswapchainmedia.h",
+      "proposedSha256": "2bd9d100e552f84e21e206f1626ef72b70a82829f3009c209336f5eb4349abb5",
+      "proposedBytes": 21357
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_structs.h",
+      "proposedSha256": "0eefa5011444a57c803363100ab5f4cc02a2721b7578501e6c6e0a7593c79a37",
+      "proposedBytes": 1001361
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_guest_toplevel.h",
+      "proposedSha256": "e33388313b58c871988c9bd0c0fedf25fad0fddb24c2739e625f5f9c0de4a110",
+      "proposedBytes": 91784
+    },
+    {
+      "path": "src/virtio/neptune/neptune-protocol/npt_protocol_transport.h",
+      "proposedSha256": "101919a54dad9568d15ce61b7face1caae16066813b8d5d229352a32503c2f35",
+      "proposedBytes": 26355
+    },
+    {
+      "path": "src/virtio/neptune/npt_blob.c",
+      "proposedSha256": "33aa197dc33e90b6a48d10f6fbb3e848c02e0e06abeb0e2df702e163d949c2a1",
+      "proposedBytes": 2444
+    },
+    {
+      "path": "src/virtio/neptune/npt_blob.h",
+      "proposedSha256": "6fff9e21e12efc8acf99b366f04295b867bc69837b2ae204a737fe89ec363530",
+      "proposedBytes": 633
+    },
+    {
+      "path": "src/virtio/neptune/npt_com.c",
+      "proposedSha256": "c310637e4f9786a7e10b2e4e9587e2c963395c7d138c90013100865ca22c57ab",
+      "proposedBytes": 37143
+    },
+    {
+      "path": "src/virtio/neptune/npt_com.h",
+      "proposedSha256": "983517b0a3b6d19bcbaca93423d81b870098760ff9b9dcdf86cf47fce7c1ffcd",
+      "proposedBytes": 15665
+    },
+    {
+      "path": "src/virtio/neptune/npt_common.h",
+      "proposedSha256": "2dfc7d0f3ab85fd794c717d84793e06725a635a54a6ca00b03022348d811b22c",
+      "proposedBytes": 9793
+    },
+    {
+      "path": "src/virtio/neptune/npt_common_wine.c",
+      "proposedSha256": "4f74c094c9cf5784a370d6ba776eb6d85a3d2837214f924bbfb8ca0da5cf8d4a",
+      "proposedBytes": 3118
+    },
+    {
+      "path": "src/virtio/neptune/npt_cs.c",
+      "proposedSha256": "ea0e0dc5f3789fe71b067b5996c1e1424a1e57eea854a5c5dba77ac6438347e1",
+      "proposedBytes": 2616
+    },
+    {
+      "path": "src/virtio/neptune/npt_cs.h",
+      "proposedSha256": "f835e8c162bd9b83a39b52a2ec8e03c46486b7f5b942441fbbc3b706cc0a33de",
+      "proposedBytes": 9025
+    },
+    {
+      "path": "src/virtio/neptune/npt_d3d12_heap.c",
+      "proposedSha256": "9e75249e9f770550e1b179162b3f599b555829036374d15e74af4dfcee30a914",
+      "proposedBytes": 11710
+    },
+    {
+      "path": "src/virtio/neptune/npt_d3d12_heap.h",
+      "proposedSha256": "e349e502b81bd4ce1a1c7874618214b032dbcfcab76a408f8b92793da6b5180a",
+      "proposedBytes": 4339
+    },
+    {
+      "path": "src/virtio/neptune/npt_device.c",
+      "proposedSha256": "9d3b285e32f9655e332a5b18ca4c6dfd41d1d8870c3d7d42721adb405bcd9b6f",
+      "proposedBytes": 26393
+    },
+    {
+      "path": "src/virtio/neptune/npt_device.h",
+      "proposedSha256": "854a31fa4e17836be0402c350b23d3c15a0b242941d1057e9704c49fd726c021",
+      "proposedBytes": 9435
+    },
+    {
+      "path": "src/virtio/neptune/npt_dispatch.c",
+      "proposedSha256": "2f1fbce00156d7def58277bffb07a7b4039e7e992a26b98b9c7106c7b8d8825f",
+      "proposedBytes": 26504
+    },
+    {
+      "path": "src/virtio/neptune/npt_dispatch.h",
+      "proposedSha256": "31f58be3891af0fb4de9510aa933513334adb2f58c45bb1f5d06a17221b2fe96",
+      "proposedBytes": 12102
+    },
+    {
+      "path": "src/virtio/neptune/npt_display.h",
+      "proposedSha256": "aadf62e1a49d52d7973e296fddaebca4c720df8049641b11bedf7990269ea3fb",
+      "proposedBytes": 1207
+    },
+    {
+      "path": "src/virtio/neptune/npt_entry_d3d11.c",
+      "proposedSha256": "82b0171d9abaf96ace7413b2a6d661fcd9b91d2dd4373d9555e82ddfd4c28a2c",
+      "proposedBytes": 16224
+    },
+    {
+      "path": "src/virtio/neptune/npt_entry_d3d12.c",
+      "proposedSha256": "362bd8d11d2345a04294d0137e379dbb901d405eda1b2a92ed8f1c2a4beaba8a",
+      "proposedBytes": 14292
+    },
+    {
+      "path": "src/virtio/neptune/npt_entry_dxgi.c",
+      "proposedSha256": "794616a1abf2d090c53d07667d664daf03269a15d572db6f0a5b34fe777b3d16",
+      "proposedBytes": 3750
+    },
+    {
+      "path": "src/virtio/neptune/npt_env.c",
+      "proposedSha256": "963347fb8147ff3320485d95225e283839c3df23bd4c3ecb6847068d4a9d680a",
+      "proposedBytes": 2267
+    },
+    {
+      "path": "src/virtio/neptune/npt_env.h",
+      "proposedSha256": "255fdd1de0a7a01cb38c4768c5556c81d7653011f0c9ffc2a8e484a41bcb1a63",
+      "proposedBytes": 3645
+    },
+    {
+      "path": "src/virtio/neptune/npt_event.c",
+      "proposedSha256": "df17d8054507ad5f495f2a07fb71f34b298c2c32927394ff97e88bbe86e28ebc",
+      "proposedBytes": 26883
+    },
+    {
+      "path": "src/virtio/neptune/npt_event.h",
+      "proposedSha256": "454efcda254e4e49a06e0b98acb0e3b84c0ad0fc28abddf3119328addee4a517",
+      "proposedBytes": 4457
+    },
+    {
+      "path": "src/virtio/neptune/npt_host_address.c",
+      "proposedSha256": "0c2602fdc6826738390ffc14678f81d4c0c6c81eb6d35dd0ef456ce0a49ceaed",
+      "proposedBytes": 4195
+    },
+    {
+      "path": "src/virtio/neptune/npt_log_win32.c",
+      "proposedSha256": "7f7cc3325b9984b27a8c8046e092ec4f4ded91b3f5c6de0e831ab4453f89e2af",
+      "proposedBytes": 2851
+    },
+    {
+      "path": "src/virtio/neptune/npt_object.h",
+      "proposedSha256": "6263aea1c9d7c426dbc8dd2e364b45c67eebbe0805fe98fbe985ffb9b95dffd5",
+      "proposedBytes": 3916
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides.h",
+      "proposedSha256": "989bfdaf129f2f1b920ef7089cd385da26a4869079b564e7299c1eba68ee641c",
+      "proposedBytes": 3374
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d11_buffer.c",
+      "proposedSha256": "c87ceeb509729c5e1b91307d2969b8560c97ea0c3c9369c2212f048a3d8461ab",
+      "proposedBytes": 1181
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d11_context.c",
+      "proposedSha256": "9bf17af41e43446fea94895867074c924b100ead015550b591a7c67a4de88a46",
+      "proposedBytes": 40960
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d11_device.c",
+      "proposedSha256": "4f07c3e3c8cfaad2215f5a2047109050174705d69a0b8fad77ae0b1c3134e8db",
+      "proposedBytes": 23146
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d11_feedback.h",
+      "proposedSha256": "f29127416043e7599a6c9b3d83750b6684eb29a1b6e5083b6bea0e480897fa8e",
+      "proposedBytes": 2195
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d11_fence.c",
+      "proposedSha256": "ab4b29797b1d659e96ed1c65e7616e1791960edca75ce38715b6519863a7454f",
+      "proposedBytes": 9103
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d11_query.c",
+      "proposedSha256": "b2c6b798a4092f6f912db8f3694ee1b437f12d64518aa4f7b696edbd78d1bef5",
+      "proposedBytes": 12267
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d11_texture.c",
+      "proposedSha256": "c16c20be08097e5f5e940067e3ed47cb816ed96100479da440afda80e0c376b8",
+      "proposedBytes": 3657
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d12_device.c",
+      "proposedSha256": "9ea2054abd824c33e2555503fa05f410f9762597763bb49040e9de5d797bce82",
+      "proposedBytes": 50404
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d12_fence.c",
+      "proposedSha256": "3ae07569cf709b4f7ed51c7cdd568b83f0e9ed61fc05afeba3be2f8c0e164c7c",
+      "proposedBytes": 12508
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d12_list.c",
+      "proposedSha256": "f82d9678a0ab96e3f4ee25000606d3b98dfcf3408165ca51703ea75c0f777903",
+      "proposedBytes": 23322
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d12_queue.c",
+      "proposedSha256": "88b5d7f7fb62b80f05de9ee85d75cd79cb1ee7fcd3d7c9dd544093dc1a8e79c9",
+      "proposedBytes": 3344
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_d3d12_resource.c",
+      "proposedSha256": "d9a4452445c2a1008243fa003e03e1089bbefd068beece2db8ba844519e8c7d8",
+      "proposedBytes": 29984
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_dxgi_adapter.c",
+      "proposedSha256": "acf2732ae38dd2677baf6964bc73696adc86152dc3cbe3f20d33a8a382dd06fa",
+      "proposedBytes": 5097
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_dxgi_factory.c",
+      "proposedSha256": "a377dd4531f9d92904351c1d810cce55f607dfe9c1b111b56086cb2a900b90bd",
+      "proposedBytes": 11973
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_dxgi_factorymedia.c",
+      "proposedSha256": "6ff877ea8a651f68ffbf50913893fb451fbd7c9bb850182feb2ae5b0c8929d49",
+      "proposedBytes": 1976
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_dxgi_output.c",
+      "proposedSha256": "f8b81627e6bc55de3542e8efb3242908efd34352be8106f1a5f3aad80719e0a5",
+      "proposedBytes": 31304
+    },
+    {
+      "path": "src/virtio/neptune/npt_overrides_event_handles.c",
+      "proposedSha256": "6709d3bd58e31544b99ae0e57f88c1ad2c707e24936480857575c04a3dff5ef8",
+      "proposedBytes": 9208
+    },
+    {
+      "path": "src/virtio/neptune/npt_present_convert_dxbc.h",
+      "proposedSha256": "3383207d82777b48ace1b252cfd3eff5907e095114447ebef344fe5dd7cacb24",
+      "proposedBytes": 17587
+    },
+    {
+      "path": "src/virtio/neptune/npt_profile.c",
+      "proposedSha256": "80c8226b6c8d1464e8216d17ba3f8b34759e824119a60577e074b02c40fdf8e1",
+      "proposedBytes": 19046
+    },
+    {
+      "path": "src/virtio/neptune/npt_profile.h",
+      "proposedSha256": "ff95db7253bcd04295d9ce3aeb78b3cdb56f18a2c69a262507cbcde7fb2926ca",
+      "proposedBytes": 9659
+    },
+    {
+      "path": "src/virtio/neptune/npt_publisher_batch.h",
+      "proposedSha256": "2536fa25d12454b652f9a78c26d0fe7e45f183316666cca17f3bd1e6d10614ca",
+      "proposedBytes": 8179
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer.h",
+      "proposedSha256": "2cd935c32f96a57de1e7cbb5511251fbf2c067f09e9105498cc786b9de8c38e7",
+      "proposedBytes": 21234
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer_virtgpu_win32.c",
+      "proposedSha256": "fde2e18f195871ef01167452617d39b6cadef29640ab84edfa081b9daa2046c7",
+      "proposedBytes": 74250
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer_virtgpu_wine.c",
+      "proposedSha256": "2d8b292a68abe120766896a39846442ced3c4f72f16a967f9643f98fbcfab5c2",
+      "proposedBytes": 12177
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer_vtest_protocol.c",
+      "proposedSha256": "9888db2af3f4cc5bb67040f3a8387bc357215d4cd4d08447bea271d809e5b354",
+      "proposedBytes": 6924
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer_vtest_protocol.h",
+      "proposedSha256": "a3b59d6ccbabe90498f635e57153f28fcde331c77b0accd8b2c20959348e277a",
+      "proposedBytes": 2609
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer_vtest_wine.c",
+      "proposedSha256": "6a1c5f5673e14a76646f72edf6873df541b51ab9ee6cf26c4bb049160d136ddd",
+      "proposedBytes": 10323
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer_wine_common.c",
+      "proposedSha256": "01e70136c7763711defd58eeb02052302d8f475cb047805ba53a32b49274270a",
+      "proposedBytes": 4750
+    },
+    {
+      "path": "src/virtio/neptune/npt_renderer_wine_common.h",
+      "proposedSha256": "6685f7f866e3586112b3ba6c99d1029fd6d3e22b7c5c00bd44f30c5c47e3ccea",
+      "proposedBytes": 727
+    },
+    {
+      "path": "src/virtio/neptune/npt_resource.c",
+      "proposedSha256": "9c75e50f2ed3c2156bf35c1ba814e3d003a221da9489c2d9f0b67e6856cac3a6",
+      "proposedBytes": 53979
+    },
+    {
+      "path": "src/virtio/neptune/npt_resource.h",
+      "proposedSha256": "3edff34f50e92befee7b7a0d6b28dfcfae00fc68fe06261dd40781032bb66ed4",
+      "proposedBytes": 25021
+    },
+    {
+      "path": "src/virtio/neptune/npt_ring.c",
+      "proposedSha256": "cad17c5c63763ca2f43e4aa70bf018a09fb2ac97ac7863303c54ea3b7464b800",
+      "proposedBytes": 65821
+    },
+    {
+      "path": "src/virtio/neptune/npt_ring.h",
+      "proposedSha256": "a06b8b1aec8e7696767a34fbf68af6c20d711044b0df090791bdce74e5e56ddf",
+      "proposedBytes": 19398
+    },
+    {
+      "path": "src/virtio/neptune/npt_runtime_stream.h",
+      "proposedSha256": "2e3b16fa2b3bf3064bcbfd29a3e01afe12ee4ee3d0a39dfe97ecdfa1544a9e7b",
+      "proposedBytes": 1515
+    },
+    {
+      "path": "src/virtio/neptune/npt_shared_texture.c",
+      "proposedSha256": "600eba9eae30f2876d995afcd4b675c1bdf80b4460487857103b3966709fe759",
+      "proposedBytes": 7888
+    },
+    {
+      "path": "src/virtio/neptune/npt_shared_texture.h",
+      "proposedSha256": "e36b341f92630e17ecbc9f5dbe44f24049daacbd79841e0bfd4540f55cef9f55",
+      "proposedBytes": 3976
+    },
+    {
+      "path": "src/virtio/neptune/npt_shmem_pool.c",
+      "proposedSha256": "83098d097ebaa008f48ce13fa8d1a2918a88c78b32237ce471dbbac3bf18dd19",
+      "proposedBytes": 1910
+    },
+    {
+      "path": "src/virtio/neptune/npt_shmem_pool.h",
+      "proposedSha256": "ae39051bf109199c3729bc941ff99bd196df3a99c9d70cccdc43829869ea3cf8",
+      "proposedBytes": 1087
+    },
+    {
+      "path": "src/virtio/neptune/npt_swapchain.c",
+      "proposedSha256": "bf7e01aaa8287dcb4b76345672f35fa3413524f15a224b92c3e8e5a0fac0f140",
+      "proposedBytes": 45293
+    },
+    {
+      "path": "src/virtio/neptune/npt_swapchain.h",
+      "proposedSha256": "57264a1754ab09fbdaed56974450e5f94261868613fb0dbbd04a6fc60d4a1fab",
+      "proposedBytes": 1481
+    },
+    {
+      "path": "src/virtio/neptune/npt_swapchain12.c",
+      "proposedSha256": "ef21f3deefa6ec2ce1808bf72a0ca2515439aeb6999382022546ea1aa4799264",
+      "proposedBytes": 45498
+    },
+    {
+      "path": "src/virtio/neptune/npt_swapchain12.h",
+      "proposedSha256": "c5cdce964f0705bbe34eea20df15eb9858499ae292bd2c6c2d98ce5c6cfd9e21",
+      "proposedBytes": 1579
+    },
+    {
+      "path": "src/virtio/neptune/npt_swapchain_common.c",
+      "proposedSha256": "c11224eba0938267c36cf47a0e29ec7f69b454e55e23447400e660bb3f34d138",
+      "proposedBytes": 32422
+    },
+    {
+      "path": "src/virtio/neptune/npt_swapchain_common.h",
+      "proposedSha256": "3eac00cf49f562ae371533989d6a2aa96808734a548a43118f344f9dfdaf37c8",
+      "proposedBytes": 12043
+    },
+    {
+      "path": "src/virtio/neptune/npt_tls.c",
+      "proposedSha256": "e3c9d8023e5dbd60a4cbf09140c8a877f43a3586c13d17ddd19092fa8bab1a6d",
+      "proposedBytes": 8741
+    },
+    {
+      "path": "src/virtio/neptune/npt_tls.h",
+      "proposedSha256": "5749aa03a977bb08f29cfd2c78f55795e5d59aa62274e527a07741a39ea8f988",
+      "proposedBytes": 2461
+    },
+    {
+      "path": "src/virtio/neptune/npt_workaround.h",
+      "proposedSha256": "7e77d710fcdf8d1c48bc9d8a68cfed8a9d8c24f4b7f90737605f636350ee0fab",
+      "proposedBytes": 2200
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/meson.build",
+      "proposedSha256": "fd2f6da7c3bf9f4f87c912fed32d759344105dd147f1a9b6dc0b2eb4131793b9",
+      "proposedBytes": 6355
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/npt_display_drm.c",
+      "proposedSha256": "eaa5f618dbb1e766c13f68fe5830dd1380624672dafe54c5833e3e7f1c2523d5",
+      "proposedBytes": 9389
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/npt_unix.c",
+      "proposedSha256": "ed992f7da2f81ebe25b069b33bb218dcca7c0eab1b75492395800fd6b25d1c83",
+      "proposedBytes": 7499
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/npt_unix_internal.h",
+      "proposedSha256": "59ddd6df5dd34d69136b8981f25dd5cb967fcfcd78c27f62c59ae7279e9aab02",
+      "proposedBytes": 1240
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/npt_unix_virtgpu.c",
+      "proposedSha256": "437ca8a3728d9809fbb5b51c980981fa39e72858d2dc8a7b987a28292651d49d",
+      "proposedBytes": 4913
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/npt_unix_wsi.c",
+      "proposedSha256": "cb005f9bbca0ea9f58f7f50e67671fa6d6979daa39992f82551d24cbdb5450b3",
+      "proposedBytes": 13493
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/npt_unixlib.h",
+      "proposedSha256": "3e56280bdbcc834cbef0c77747536e86c64d9081207115cf1fbc3e6ea782ba10",
+      "proposedBytes": 6375
+    },
+    {
+      "path": "src/virtio/neptune/nptunix/nptunix_pe.c",
+      "proposedSha256": "5311e2b750149b60c2dffcf6e3d1197d6a39bf1a1a1d50b9bc349c10197de1b4",
+      "proposedBytes": 500
+    },
+    {
+      "path": "src/virtio/neptune/triton/meson.build",
+      "proposedSha256": "c604b80e7184252a9d9e0f702efb1fe4c885c59eec9142e23536adec62c04e8c",
+      "proposedBytes": 2795
+    },
+    {
+      "path": "src/virtio/neptune/triton/neptune_umd.def",
+      "proposedSha256": "55b9ec835bc3ddaab010c131c5f45e6b05b0bfacc29d75a8dc701f470009320c",
+      "proposedBytes": 70
+    },
+    {
+      "path": "src/virtio/neptune/triton/neptune_umd.rc",
+      "proposedSha256": "fba08487f5a7d93ca815fa11be278b765e9c0f841ef7a112b58e1b7255884049",
+      "proposedBytes": 1218
+    },
+    {
+      "path": "src/virtio/neptune/triton/tests/tritonDxbcTest.c",
+      "proposedSha256": "9e15aa0c0618a211881a45a77901e8cb1ee5c7094945bb5f6abbf84c99a0a2f2",
+      "proposedBytes": 32834
+    },
+    {
+      "path": "src/virtio/neptune/triton/tests/tritonDxilTest.cpp",
+      "proposedSha256": "7f120937f1b6bd3a582d7adbe5e0b1bbe31a8eca4034fbeb3167e4208873bb6c",
+      "proposedBytes": 20262
+    },
+    {
+      "path": "src/virtio/neptune/triton/tools/gen_triton12_stubs.py",
+      "proposedSha256": "ffaf35ef5c1776c3629bc8084676f6dc3f9b440ea0cf703e5dcd65b34f89aa1a",
+      "proposedBytes": 6715
+    },
+    {
+      "path": "src/virtio/neptune/triton/tools/make-arm64x.bat",
+      "proposedSha256": "866b124e95966113aae9e70c59fec793fe7f73e4c46c66b8d3da6edd4b9ae815",
+      "proposedBytes": 11144
+    },
+    {
+      "path": "src/virtio/neptune/triton/triton.c",
+      "proposedSha256": "24592d30d8b09932e0f5b77d992aa472b86c4e014d2efdad968d20ab77698861",
+      "proposedBytes": 991
+    },
+    {
+      "path": "src/virtio/neptune/triton/triton.h",
+      "proposedSha256": "c226633801a714fe5c1bf8f9f090cfde8dcdbf69dd5463799dc7a7e21c9a70c2",
+      "proposedBytes": 28955
+    },
+    {
+      "path": "src/virtio/neptune/triton/triton12.h",
+      "proposedSha256": "f801ae1d752b6954c885d603200dae41ed4aed6083d4e468e5c851f914d85a28",
+      "proposedBytes": 25453
+    },
+    {
+      "path": "src/virtio/neptune/triton/triton12_stubs.h",
+      "proposedSha256": "627bcec7bffde3ceac88cde6f73a317b264e2ab843e4981de68c4596a7b0a7ab",
+      "proposedBytes": 16964
+    },
+    {
+      "path": "src/virtio/neptune/triton/triton12_tables.h",
+      "proposedSha256": "c90979bb224398bff9d7af166c241b5c80baa4c173c4116a22a92c323f428b6f",
+      "proposedBytes": 33602
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonBlit.hlsl",
+      "proposedSha256": "a47a3460bb1897451d04e3b5ac1a1d0d332368cd45246803c381904aed058c7f",
+      "proposedBytes": 754
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonBlitShaders.h",
+      "proposedSha256": "f8e16221bfc842fd866c459b6c3c16ba229956c90391d56b5d38cdc25c7f92e9",
+      "proposedBytes": 12442
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDDI.c",
+      "proposedSha256": "443c54378514cad5676e6765a37fba76c6b7bec11aa1c5915efd453c08bffab7",
+      "proposedBytes": 85425
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDDI12.c",
+      "proposedSha256": "dee7069dd1d58c0332f3ad5ca785bd1b2576fcaa045ad181b3c10c5f2169ef21",
+      "proposedBytes": 69369
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDescriptor12.c",
+      "proposedSha256": "0ceabd15cd188dc12c7eb912f0669ae456c30571a22c521b78658f672170e223",
+      "proposedBytes": 24589
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDxbc.c",
+      "proposedSha256": "3328e4201c66990338ab91ae8edd0015c6e6cfc52118a69cd0b60c2b9734b326",
+      "proposedBytes": 83454
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDxbc.h",
+      "proposedSha256": "78d3d228af0c51b4f06e020cd7d4c9adf9b1b74185b22544d418ad062f5c0233",
+      "proposedBytes": 3088
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDxgi.c",
+      "proposedSha256": "399cafd67947d639418859f2a7e04fd1283d5b773d27afef69ba818edf96a665",
+      "proposedBytes": 84166
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDxgi.h",
+      "proposedSha256": "5c0c71e18e257f8f93ba7a060f5876beca15a3d38714ef217547b9d90ebd520e",
+      "proposedBytes": 1268
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDxil.c",
+      "proposedSha256": "6628fedf4a80c7207576b35d349ff07f742ac09df2ebb8c21d33cc09d7edadf6",
+      "proposedBytes": 24087
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonDxil.h",
+      "proposedSha256": "dd83e5a89a6b910590441f9a4f004c014632092128a30c1d599b3ae5475b4d73",
+      "proposedBytes": 1722
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonHostCaps.c",
+      "proposedSha256": "a8dfcf64ab5449c7f4b66cb7142081ed5b469e297b8901bd8b9c014db63fb10f",
+      "proposedBytes": 10617
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonHostCaps.h",
+      "proposedSha256": "8baca954c6414341dd103b43c10780b9b13950b7a414ab1578b1a3ea24de638b",
+      "proposedBytes": 9369
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonKm.c",
+      "proposedSha256": "f06645629d219cc8549c5678b83e22ec2e311fd183f1b3e4e0bdec4a756b95b1",
+      "proposedBytes": 11840
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonKm.h",
+      "proposedSha256": "1376105c29221a6886bf514478ac25fe51fad1f987bdda8fa8ef04019e354230",
+      "proposedBytes": 3785
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonList12.c",
+      "proposedSha256": "2c2fe150636fab3aaafca6de079c124120c99aaf4684eefd87f706e751d1a03c",
+      "proposedBytes": 73671
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonPipeline12.c",
+      "proposedSha256": "7bbf6d0e29eafde7751a19ac50cc687d9235d8c4d67b0082060cf9b24d6c9d12",
+      "proposedBytes": 46315
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonPresent.c",
+      "proposedSha256": "4107f4f44f18d0390f3a661458a9244c4a0e1a8ae33c89430418547deb257caa",
+      "proposedBytes": 2645
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonPresent.h",
+      "proposedSha256": "826a64735af6a6d5da2441821fe8c214828022c182b4c0194dbfeb5d65ef31ea",
+      "proposedBytes": 793
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonPresent12.c",
+      "proposedSha256": "d353a29f7e46a73af5269b30657c0acbe18580a352562c0aa70f9c88fd787d2c",
+      "proposedBytes": 33292
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonPresentTiming.h",
+      "proposedSha256": "cdabf2b233736105d8d485f8b30ad2abc727bb5d3874947d95d3cd03729142cb",
+      "proposedBytes": 1478
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonQuery.c",
+      "proposedSha256": "7581bba263e6f0578da08f7ff6b1d1a82e2fe7ed56d9e340cf6c0afd177a147d",
+      "proposedBytes": 43737
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonQueue12.c",
+      "proposedSha256": "5f62d485db6d8a94eaf89463a5edeb412afbacb17ac2d988a3c32cf0cff707af",
+      "proposedBytes": 31873
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonResource.c",
+      "proposedSha256": "1652fb30d04f26599af09fd236eb236d2157424b217a714be9436cfeaa0a27ad",
+      "proposedBytes": 83810
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonResource12.c",
+      "proposedSha256": "f0eeda6ed01be546ccf12b29b1f23b6d3ae2b5c18952e8cb75da381bc3c0b894",
+      "proposedBytes": 56981
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonRuntimeWrites.h",
+      "proposedSha256": "7c87fab0cf6f3ed7c677ef2ccf894af18e57993ade1ce449befc567cb8a9118b",
+      "proposedBytes": 8793
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonShader.c",
+      "proposedSha256": "1dce4f3eaaa6a7b31af259d339bb493b8fe763ab81d712d02f172d89a09dc5dd",
+      "proposedBytes": 37493
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonSharedBridge.c",
+      "proposedSha256": "6e483b7c3d65680ec17c42588447446f0948954a6be0b3f98a7708fe03579371",
+      "proposedBytes": 5815
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonSharedBridge.h",
+      "proposedSha256": "28192f2395b401a92587f4a8487b7e0a06f22e20a3bc1e004f3ccba66ff45a18",
+      "proposedBytes": 4292
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonState.c",
+      "proposedSha256": "c669edca2c33edcff4202e5bc9bb5fd8d49b9fb8f209a235c7b1679a4a23e627",
+      "proposedBytes": 32821
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonVideo.c",
+      "proposedSha256": "b71fcd1de8cf24cf25e6344140ea4f348a3c7efb900ea5dd77dd18f7538a6753",
+      "proposedBytes": 53516
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonVideo.h",
+      "proposedSha256": "487ad744ff383a516ea05ce43648ca3dc801db6dd5fe1284719c8e6080e397a5",
+      "proposedBytes": 501
+    },
+    {
+      "path": "src/virtio/neptune/triton/tritonView.c",
+      "proposedSha256": "b02e3b374c4cba554756c133751a9096a8f64e66f69864419881cd32b2806439",
+      "proposedBytes": 47971
+    },
+    {
+      "path": "src/virtio/neptune/triton/triton_log.h",
+      "proposedSha256": "2d4941de08bc9df27c7c0edb0d9cef25dd6e9f9a2cfcbd441bff5532ffce2d93",
+      "proposedBytes": 3351
+    }
+  ]
+}

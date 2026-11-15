@@ -1,0 +1,25 @@
+﻿{
+    "status":  "built_not_deployed",
+    "version":  "100.6.101.58200",
+    "freshBuilds":  true,
+    "files":  [
+                  {
+                      "name":  "neptune_umd.dll",
+                      "bytes":  1366528,
+                      "sha256":  "2A7DC660ABF7AC3A6B49991C55FC7B44859F670ADE1D9E8033BE7F62B07E744D",
+                      "version":  "100.6.101.58200"
+                  },
+                  {
+                      "name":  "neptune_umd_arm64.dll",
+                      "bytes":  1366528,
+                      "sha256":  "2A7DC660ABF7AC3A6B49991C55FC7B44859F670ADE1D9E8033BE7F62B07E744D",
+                      "version":  "100.6.101.58200"
+                  },
+                  {
+                      "name":  "neptune_umd_ec.dll",
+                      "bytes":  1276416,
+                      "sha256":  "0D472DA041603FDF0182FF3D903848E10A4035404E3576C1D0E544B5FE7BBC32",
+                      "version":  "100.6.101.58200"
+                  }
+              ]
+}

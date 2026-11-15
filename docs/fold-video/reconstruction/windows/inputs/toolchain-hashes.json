@@ -1,0 +1,26 @@
+﻿[
+    {
+        "path":  "C:\\mesa\\tools\\py\\tools\\Scripts\\meson.exe",
+        "sha256":  "399B52CB34F81C37F449D48D644E31AA33D512221F64863FD6B9F5D50ABB29F0"
+    },
+    {
+        "path":  "C:\\mesa\\tools\\ninja\\ninja.exe",
+        "sha256":  "68865C3276D449D746CEA5065FDEC2BAF755D7813E161AB04205B0907B2629B8"
+    },
+    {
+        "path":  "C:\\mesa\\tools\\py\\tools\\python.exe",
+        "sha256":  "1A078825122B059F04B6C1545909F1D3ED0838DD24AB80D1C7FA60CA68FF9AF5"
+    },
+    {
+        "path":  "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\ARM64\\cl.exe",
+        "sha256":  "EEE7EE2F898B81DC185E67053BDC10C5484B8A3E1CBC1A28DA0DB2D89B521502"
+    },
+    {
+        "path":  "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\ARM64\\link.exe",
+        "sha256":  "F80F93A30E425F6B3B82E6BBED1BE6F17343DC5047321E84E0587D25E4B7236C"
+    },
+    {
+        "path":  "C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\VC\\Tools\\MSVC\\14.44.35207\\bin\\HostX64\\ARM64\\lib.exe",
+        "sha256":  "6E14BF009614A0A56ACCB6C2F3D8D76D20101182B624BED2A054AE69E25A5EDC"
+    }
+]
