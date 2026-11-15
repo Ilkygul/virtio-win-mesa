@@ -534,6 +534,23 @@ Alle561rawbestanden inclusiefmanifest opgehaald; Windows440beschermde bron/1426o
 
 Root heeft de oorspronkelijke C42forcepresent-marker teruggeplaatst05:45:51Z, ACLbehouden/dwmforceAAN, daarna normaleWindowsafsluiting05:46:01Z. Werkelijkeoude main27572/start2425355 verdwenen en volledigeC13drain bevestigd; geheugenpooluit. Een koude read-only scan weigerde eerst een racyprocesmapping; verse scan slaagt. VerseC35/C33stat/head/tail/VARS/fullchainmetadata gelijk aan bevroren uitgangspunt; huidigeconfigA2FAbevestigd. Een nieuweC43sibling bovenC35met eigenVARS wordt nu gemaakt, C42blijft behouden en C38ongebruikt. Dit is bouw-/voorbereidingsbewijs, nog geen werkelijk geladen C43 of gebruikswinst. Productie uit; algemeen doel open.
 
+
+### C43 echt geladen; eerste videometing ongeldig, scopebeperking zichtbaar
+
+NieuweC43sibling/check0/3-entryketen en eigenVARS gemaakt; C35/C33ouders onveranderd en RO. Persist/live **2EE54D71…B9A87C** exactgelijk, alleen testdisk+VARS gewijzigd. Eersteinstallboot main10177/start2887100/Windows05:49:49.716Z toont oudeC20/F91baseline en striktemarkers. PS5.1parse/allestagebytes/scopePASS. Bestaande3DLLrename/ACL/backuptransaction geslaagd; werkelijk opgehaalde intent **142BA9B8…15BB022**, receipt **36F9AE33…09FD314**, allThreeVerifiedtrue. Normaleafsluiting05:53:00Z, volledigeC13drain/pooluit, verseboot.
+
+**Werkelijk geladenC43**: Windows05:54:19.648Z, main22777/start2914076/render22891, C43RW/C35RO/C33RO/privateVARSrw, config2EE54. VerseDWM1412/birth05:54:26.153Z, Explorer enEdgeGPU mappen native2294CF…50F923; EC1D89…2BB1B8 op schijf. GPUCode0, F91signedValid/NativeDWORD1/runtime, C37host/C33FP32/cache en whitelist6864behouden. DWMpublisherV1/writefeed1 positief. Pasdaarna05:55:59Z alleen forcepresent0B naar eigenherstelbestand verplaatst; dwmforce/runtime/nowarpAAN en broadbypassesafwezig. Fysiek fullscreen2448×1848/nativeunlockedconsole, geenRDP.
+
+Dezelfde hardwarevideotaak gestart. **Meetfout van Root:** de wrapper riep het gepinde CPUscript aan zonder de vereiste process-only ExecutionPolicyBypass. Wrapperexit1 bij meetstart05:57:04.178Z; daarna geenNodeproces, voortgang bleef measurement, geen volledigreport of CPUdata. Dus GEEN fps-/CPU-/vloeiendheidsclaim. Recorder75s exit0, film112684438B; logcattimeout124. QTIAV1hostworker26491/c2.qti.av1.decoder RUNNING en1920×1080hwvideocodec/swcodecno aangetoond; fysiekevideoscreenshot bewaard. Dit is hardwareactiviteit, geen geslaagde gebruiksmeting. Geen globalePowerShellpolicy gewijzigd; een toekomstige bestaande collector moet de process-only optie meekrijgen.
+
+Wel concreet nieuw driverbewijs: de16begrensde huidigeDWM QUALIFIED_FLUSH-regels hebben allemaal dirtyMask1/accepted1/pending0/active0, maar **allowQualified0/qualified0**. Dus deze gesamplede aanroepen worden door context/flags afgewezen, niet door hun positieve schrijfherkomst. RawContextType/FlushFlags ontbreken; geen aanname welke bit of context dit is en geen bewijs van alleFlushes. Bestaande rawargumentdiagnose triton-flushgputail is ongeschikt als passieve meting: die voegt GPUwachten toe. Bronanalyse evidence/c43-flush-scope-source-audit-r1/analysis.json SHA779A7D1F30DD61055BF3AE30779E417F38C7217700C7998BA9DF7DDE97BA89C1.
+
+Extra read-only bestaandeGPU-onlycollector eindigde0/errors0: ANGLEVirtIO/D3D11, GPUcompositing enVideoDecodeenabled, GPUprocesscrashcount0. Een hulp-GPUproces11364 met afwijkende flags is daarom géén bewijs van softwarefallback of crash; eerdere verdenking gecorrigeerd. Huidigebootlog apartvan9988historischeregels: geen publicatie-/collect-/nativejob-/devicelostfoutsignaturen. De21D3D12probes0x887a0004 zijn optionelecapabilityprobes, geen aangetoonde actieveD3D11fout. Audit243D0D31B419DAC43649E823AD280DD5A1A7AFD14535E357B3590E3823C04568.
+
+Eigenbrowser2032 is06:00:50Z normaal viaBrowser.close gesloten; geenkill. C43blijftalleen als onderzochte testkandidaat aan, beideoudersRO; C42behoudenuit. Rootreceipt evidence/c43-qualified-flush-r1/trial-and-current-state-receipt.json SHA48B9C5E0CB1757CFDD30B48682F487ED8D7FBE92BF13C950E5E6434054413EEC.
+
+**Beslissing:** geen C43snelheidsvrijgave/merge/productierelease; doelopen. Geen ongewijzigde videoretry om counters te verzamelen terwijl positieveFlushactivatie ontbreekt. Volgende kleinste stap: alleen rawcontext+flags aan dezelfde bestaande begrensdeactivatielog meegeven; echteGPUgates en huidigescopepredicaat behouden. Eerst de werkelijke uitsluitingsvoorwaarde kennen, daarna uitsluitend een onderbouwde functionelecorrectie. Deze uitkomst staat vast vóór die volgendevariant.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
