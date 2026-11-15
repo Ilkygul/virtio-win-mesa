@@ -1,0 +1,102 @@
+diff -ruN a/libs/android_display_backend/crosvm_android_display_client.cpp b/libs/android_display_backend/crosvm_android_display_client.cpp
+--- a/libs/android_display_backend/crosvm_android_display_client.cpp	2026-11-15 21:48:57
++++ b/libs/android_display_backend/crosvm_android_display_client.cpp	2026-11-15 21:48:57
+@@ -31,6 +31,7 @@
+ #include <dlfcn.h>
+ #include <poll.h>
+ #include <sys/stat.h>
++#include <time.h>
+ #include <unistd.h>
+ #include <vulkan/vulkan.h>
+ #include <vulkan/vulkan_android.h>
+@@ -2310,6 +2311,58 @@
+     return {};
+ }
+ 
++// Fold frame pacing. Guest frames reach us every ~16.7 ms but with a few ms of jitter (vCPU
++// timer latency), and the Fold panel latches at 120 Hz, so a frame landing near a latch boundary
++// shows for 8 or 25 ms instead of 16.7 (measured: 13-20 ms arrival spread, 85% of present
++// intervals within 17+-4 ms). Give every frame a desiredPresentTime on a steady cadence a few ms
++// after its arrival: all targets then share one phase against the panel's vsync grid and each
++// frame is shown for exactly two refreshes. The cadence restarts after an idle gap or a late
++// frame. Off with /data/adb/fold-vm/npt/pacing-uit (checked about once per second).
++class FramePacer {
++public:
++    int64_t next() {
++        if ((mFrames++ % 60) == 0) {
++            struct stat st;
++            mDisabled = stat("/data/adb/fold-vm/npt/pacing-uit", &st) == 0;
++        }
++        if (mDisabled) {
++            mLast = 0;
++            return NATIVE_WINDOW_TIMESTAMP_AUTO;
++        }
++        struct timespec ts;
++        clock_gettime(CLOCK_MONOTONIC, &ts);
++        const int64_t now = int64_t(ts.tv_sec) * 1000000000LL + ts.tv_nsec;
++        // Follow the guest's real frame period (DWM delivers ~59.2 fps here, not 60): with a
++        // fixed 16.667 ms cadence the targets drift through the latch threshold every few
++        // frames; with the measured period they cross it only as often as the rate mismatch
++        // itself requires.
++        const int64_t dt = now - mLastArrival;
++        mLastArrival = now;
++        if (dt > 14000000 && dt < 19500000) mPeriodNs += (dt - mPeriodNs) / 64;
++        int64_t target = mLast + mPeriodNs;
++        const int64_t lead = target - now;
++        if (mLast == 0 || lead < 0 || lead > kMarginNs + kPeriodNs) {
++            target = now + kMarginNs;  // first frame, slower content/idle gap, or a missed slot
++        } else if (lead < kMinLeadNs) {
++            target += 500000;   // running late: slide the cadence later, never jump
++        } else if (lead > kMarginNs + 6000000) {
++            target -= 250000;   // lead grew (e.g. after a slow frame): slide back slowly
++        }
++        mLast = target;
++        return target;
++    }
++
++private:
++    static constexpr int64_t kPeriodNs = 16666667;  // nominal guest scanout period (60 Hz)
++    static constexpr int64_t kMarginNs = 15000000;  // SurfaceFlinger needs the buffer ~1-1.5 refreshes before its present + arrival jitter
++    static constexpr int64_t kMinLeadNs = 10000000;
++    int64_t mLast = 0;
++    int64_t mLastArrival = 0;
++    int64_t mPeriodNs = kPeriodNs;
++    uint64_t mFrames = 0;
++    bool mDisabled = false;
++};
++
+ // Wrapper which contains the latest available Surface/ANativeWindow from the DisplayService, if
+ // available. A Surface/ANativeWindow may not always be available if, for example, the VmLauncherApp
+ // on the other end of the DisplayService is not in the foreground / is paused.
+@@ -2530,6 +2583,7 @@
+             result = -EIO;
+         } else {
+             ScopedTrace queueTrace("crosvm_display.queue_buffer");
++            native_window_set_buffers_timestamp(anw, mPacer.next());
+             result = ANativeWindow_queueBuffer(anw, buffer, targetCompletionFd);
+             queueCalled = true;
+         }
+@@ -2578,6 +2632,7 @@
+         // is also exactly what SurfaceFlinger receives. See frameHashEnabled().
+         if (frameHashEnabled()) logFrameHash(mName, mLastBuffer);
+ 
++        native_window_set_buffers_timestamp(anw, mPacer.next());
+         if (ANativeWindow_unlockAndPost(anw) != 0) {
+             return Error() << "Failed to unlock and post window";
+         }
+@@ -2640,6 +2695,7 @@
+             return Error() << "Failed to copy frame: " << ret.error();
+         }
+ 
++        native_window_set_buffers_timestamp(anw, mPacer.next());
+         if (ANativeWindow_unlockAndPost(anw) != 0) {
+             return Error() << "Failed to unlock and post window";
+         }
+@@ -2789,6 +2845,7 @@
+     static constexpr const int kFormat = HAL_PIXEL_FORMAT_RGBA_8888;
+ 
+     std::string mName;
++    FramePacer mPacer;
+ 
+     std::mutex mSurfaceMutex;
+     std::unique_ptr<Surface> mNativeSurface;

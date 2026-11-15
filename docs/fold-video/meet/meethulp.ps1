@@ -28,7 +28,8 @@ switch ($mode) {
     $t = (Invoke-RestMethod http://127.0.0.1:9333/json) | ?{ $_.type -eq 'page' -and $_.url -like '*youtube*' } | select -First 1
     $ws = New-Object System.Net.WebSockets.ClientWebSocket
     $ws.ConnectAsync([Uri]$t.webSocketDebuggerUrl, [Threading.CancellationToken]::None).Wait()
-    $js = if ($mode -eq 'play') { "(()=>{for(const b of document.querySelectorAll('button')){if(/reject all|alles afwijzen/i.test(b.innerText)){b.click()}};const p=document.getElementById('movie_player');if(p&&p.setPlaybackQualityRange){p.setPlaybackQualityRange('hd1080','hd1080')};const v=document.querySelector('video');if(v){v.muted=true;v.play()};return 'play '+(v?v.videoHeight:-1)})()" } else { "(()=>{const v=document.querySelector('video');const q=v.getVideoPlaybackQuality();return JSON.stringify({t:v.currentTime,paused:v.paused,total:q.totalVideoFrames,dropped:q.droppedVideoFrames,w:v.videoWidth,h:v.videoHeight})})()" }
+    $q = if (Test-Path "$d\quality.txt") { (Get-Content "$d\quality.txt" -Raw).Trim() } else { 'hd1080' }
+    $js = if ($mode -eq 'play') { "(()=>{for(const b of document.querySelectorAll('button')){if(/reject all|alles afwijzen/i.test(b.innerText)){b.click()}};const p=document.getElementById('movie_player');if(p&&p.setPlaybackQualityRange){p.setPlaybackQualityRange('QQQ','QQQ')};const v=document.querySelector('video');if(v){v.muted=true;v.play()};return 'play '+(v?v.videoHeight:-1)})()".Replace('QQQ', $q) } else { "(()=>{const v=document.querySelector('video');const q=v.getVideoPlaybackQuality();return JSON.stringify({t:v.currentTime,paused:v.paused,total:q.totalVideoFrames,dropped:q.droppedVideoFrames,w:v.videoWidth,h:v.videoHeight})})()" }
     $msg = '{"id":1,"method":"Runtime.evaluate","params":{"expression":' + (ConvertTo-Json $js) + ',"returnByValue":true}}'
     $b = [Text.Encoding]::UTF8.GetBytes($msg)
     $ws.SendAsync([ArraySegment[byte]]$b, 'Text', $true, [Threading.CancellationToken]::None).Wait()
