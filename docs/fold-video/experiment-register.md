@@ -841,6 +841,14 @@ Nieuwehostfilter bevat nu37NptHwDec-regels enloopt90s voorbijdeeerdergemistefout
 
 Bewijs evidence/c46-gpu-exit-diagnosis-r1/analysis.json SHAd0cedb66e0295f169d0d9442620211ee4057d27babf5792e41b537ec57752535. **Beslissing na twee uitvallen:** geen identieke videorun en geen volgende prestatievariant. Eerst bestaandeMap-oorsprongsdiagnostiek zichtbaar maken op basis van concrete logrechten/sourceaanwijzing, terwijl decoder-/KMDlog wordt onderzocht. Geen nieuw algemeen captureharnas. C46testVMactief/Code0, C45bestbekendeherstelversiebehouden; productie/mainmerge/releaseuit, doelOPEN.
 
+### C46 bestaande GPU-log zichtbaar — concrete nieuwe reden voor Map-oorsprongsproef
+
+Alleen het bestaande testVM-bestand C:\Users\Public\neptune.log kreeg tijdelijk MandatoryLowNW in plaats van MediumNW; DACL/eigenaar zijn byte-exactgelijk gebleven. Vorige eigen browserlog E5785891…1FF2 is vóór herstart onder eigen vorige run bewaard. Geen driver/markers/host/kernel/GPU-configwijziging. Deze toegang is uitsluitend diagnostiek en wordt na de proef naar Medium teruggezet.
+
+Korte browserstartup op about:blank, nog geen nieuwe videorun: eigenbrowser10644/birth1794735584204, origineleGPU1152/birth1794735584479. **47echteGPU1152Neptune-regels**, inclusief CTX361/RUNTIME_STREAM_BOUND/publisherV1/writefeed. Hiermee is de eerder blinde bestaande TR_LOG-channel positief hersteld. Bewijs evidence/c46-gpu-log-access-r1/visibility-proof.json SHA988f21e229d88b3ba9089b97d8491ad24e0dc12c24bd6a4bfc6c5a65b020363e.
+
+**Beslissing na twee Map-uitvallen:** nu één gerichte derde uitvoering op concrete nieuwe aanwijzing, dezelfde bestaande video/collector en postformaleGPUquery, om exact origineleMaphr/sub/type/flags en eerste driverfout te lezen. Geen nieuwe variant of framerateclaim; de laag gelabelde log verhoogt diagnosewerk. Bestaande oorspronkelijkeGPU1152/birth/CDP-owner vooraf bewijzen; alleen nieuwe outputrol, werkende geïsoleerde browser wordt hergebruikt. Hostfilter90s/NptHwDec en65sfysiekbeeld, geen nieuw WPR/harnas. Daarna eigen browser normaal sluiten, finale logs bewaren, loglabelMedium herstellen. Geen productie/mainmerge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
