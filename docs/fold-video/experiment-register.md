@@ -1005,6 +1005,19 @@ NieuweFoldboot58c1525c-ed34-4c8e-a4b1-7de4d8c4816b,DXManagerWek&ontgrendelgebrui
 
 Bewijs: `evidence/c46-ram6-r1/analysis.json`, SHA256 `f5692a7c442c45c65d8b285fecf45ff62802bb5031cd73a6c778c0c3edd4e41d`, plus `actual-start-host-fds.txt`, `guest-run/report.json`, `android-memory-during.txt`, `native-screen.mp4` en `frame50.png`. **Algemeen driverdoel blijft open.** Volgende driverstap richt zich weer op het gedeelde hardwarepad; geen softwareterugval als oplossing.
 
+
+### C47 driverproef voorbereid — interne Present-staart met tekenprefix publiceren
+
+**Hypothese:** C46 publiceert de pending tekenprefix nog apart vóór het vaste Signal40+Flush24-paar. Eén publicatie voor die aansluitende opdrachten kan een overbodig native checkpoint besparen. Dit is gebaseerd op de daadwerkelijk gebouwde C46-bron en de eerdere C45-checkpointmeting; het is geen nieuwe aanname dat een vaste Sleep16ms bestaat. Die timerhypothese is al bronmatig onderzocht en niet bewezen.
+
+**Wijziging:** drie bestaande bestanden: `npt_ring.c`, `npt_ring.h`, `npt_overrides_d3d11_context.c`. Een uitsluitend intern gebruikte helper schrijft het hele bestaande64B-paar achter pending batchbare opdrachten onder dezelfde recorder/ringlocks en publiceert verplicht bij vertrek. Een volle ring blijft de oude prefix eerst publiceren om voortgang mogelijk te maken. Algemene Signal/raw/Wait/reply/control/resource/lifetimegrenzen en alle echte GPU-, event-, token- en PresentInFlight-gates blijven gelijk. Geen softwareterugval.
+
+CPU-controles op de daadwerkelijke helper/encoder/ringfuncties: **222 assertions PASS**, ASan+UBSan. C46 telt twee credits, C47 één bij voldoende ruimte; terugzetten naar C46 faalt de één-creditcontrole terecht. Volle ring, wrap, gebrek aan ruimte en fatal/Notify-foutpaden getest. Dit is geen Windows/GPU-prestatiebewijs.
+
+Bronmanifest SHA `2945A6B7FDAB6FF46D1CA20222243CD9F3520CCE180C1AF102F3B80F98ADA7A3`; patch `F74497A9D1DCE678843B7B44F916920E15D9822A42B883717FDF3427F0C132F8`; CPU-resultaat `63283C2FBEA2125E7725010040C9C472680470B0E3041654877F2C0E616D9D88`. [Concrete bronpatch](patches/c47-present-single-publication.patch), commit7c2e2287.
+
+**Volgende kleine proef:** eerst dezelfde ongewijzigde8s/15-kubus hardwaretaak op huidigeC46/RAM6/DPI200 als verse vergelijkingsbasis. Daarna C47 native+EC bouwen met bestaande privatebouwprocedure, in een omkeerbare zelfstandige testkopie installeren en dezelfde taak vergelijken. Bij winst kort echteTaakbeheer/Start en bestaandehardwarevideo controleren. Niet automatisch alle oude proeven herhalen. Geen productie/mainmerge/release; doel blijft open en C47 is nog niet gebouwd of op het toestel getest.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
