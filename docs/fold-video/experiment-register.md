@@ -635,6 +635,19 @@ Readonlykernelcrashprobe: CrashDumpEnabled3/AutoReboot1, geenMinidumpofMEMORY.DM
 
 Nu uitsluitenddebeperktefunctioneleC45videoproefvoortzetten: gebondenactueleboot/DWM/native515Dactivatie, alleenforcepresentUIT/dwmforceAAN; eerst qualified1/accepted1/pending0/active0/flags1positiefzien. Daarnazelfdeclip10warm/30measure+CPU20metprocess-onlybypass en fysiekeopname. Geenverderebootlusofblindekernelpatch. Bewijs evidence/c45-unless-no-commands-flush-r1/recovery-boot-driver-proof.json, recovery-kernel-crash-evidence.json enrecovery-boot-actual-host-fd-proof.json.
 
+
+### C45 eerste echte videoproef — beperkte cadanswinst, geen vloeiende60fps
+
+HetactiveringsscriptbleekdoorblindC44→C45retaggenéénverkeerdeSHA256(empty)literaltebevatten. NaMoveItemstoptehetvóórreceipt. Originelemarker/ACL06:59:02Zhersteld; alleenliteralgecorrigeerd/hergestaged/PS5.1gecontroleerd. Definitieveactivatie07:00:41Zgeslaagd. Nieuwruntime-r2manifest1A996435…E18D87houdt40overigefilesbytegelijk; geen drivercodewijziging.32DWM1436recordstonenALL0/flags1/qualified1/strictCpuWait0/accepted1/pending0/active0,27nadefinaleactivatie. Budgeteindigtcirca07:01:36.796Z,dusvóórformelemeting: activatiebewezen, geensamplingbewijsvooriederformeelvideoframe.
+
+Dezelfdeclip10swarmup/30smeting **07:01:59.594–07:02:30.702Z**:31zichtbare/unpaused/ready4samples, errors[].1801totaal−873drops=928niet-gedropteframes/29.95s=**30.985browsercounter/s**, tegenoverC4228.616/s. Media29.989svooruit. rVFC~53.996/siseentegengesteldecounter, geenfysiekefps. D3D11VideoDecoder/platformtrue/AV11920×1080+QTIAV1worker21341/ctx213RUNNING/hwvideocodec/swcodecno.5underflowsvóórdeformelefase,0daarbinnenontvangen. CPU20.031svolledigbinnendefase: heleVM **11.21%**, Edge4.16%onderschatdooruitgestaptePID4008; geenCPUwinstclaim. Bestaandehelpernuwerkelijkmetprocess-onlybypassgedraaid. Wrapper0/reportcompleetmaarNodeexitNULLnietals0geclaimd.
+
+FysiekvergelijkbaarcamerastukC45PTS25–35tegenC42PTS30–40(ongeveeruitgelijnd): opgenomenintervalp95 **42.489vs50.922ms**, max **71.500vs113.411ms**, beide0>200ms. Bescheidenbeschrijvendecadanswinst, geengeïsoleerdecausaliteit. BrederongelijkvensterC4520–60heeft4opnamegaten>200ms/max385.389ms; statischeposes/titelsmeegerekend,geenindividueleGPUhitchattributie. Beeldsteekproeven coherent; geenhele-video-/60fpsvrijgave.
+
+Recorder0/logcattimeout124/film89605473B. Eigenbrowser9452normaalgesloten07:04:28Z. RuntimeauditF2E33983…29724F, fysiekeaudit29D600C8…0FC5FDB, bronpostmortemDC954181…E1F7C0D. Rootreceipt evidence/c45-unless-no-commands-flush-r1/trial-and-current-state-receipt.json SHA7B56A1273FF2467F026238C7DE7968E42CEB2DEBA94B2F95044946FDFF85070F.
+
+**Beslissing:** echtekleinedrivercorrectie+gedeeltelijkecadanswinstbewarenmetbeperkingen. GeenbewijsdatFlushhoofdoorzaakvanalleresterendevertragingis; geenverderescoperechtruimenofclass0gatesweghalen. Eerstkorte bestaande nativeTaakbeheer/Start-en directe15kubussen8sregressie omdeelresultaatbruikbaartehouden, geenbredecheckronde. Bootbug0x1A4477blijftonopgelost; geenproductie-update/mainmerge/release/algemenedoelvoltooiing.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
