@@ -748,6 +748,27 @@ Dezelfde app7164 draaide normaal:15,005s/431Presents, natuurlijk exit0 en geen A
 
 Na deze tweede gerichte controlestoring is de beslissing expliciet: **nog één poging op nieuw controlebewijs**. De reeds gebruikte V8Date.parse accepteert het echte zeven-cijferformaat; dat is vooraf lokaal bevestigd, evenals afwijzing van ongeldige invoer. De redundante incompatibele Python-parser vervalt. Verse2s-klokgrens, modulehash, VMM-geboorte en eigendom/inodecontroles blijven behouden. Geen tussenliggende modelbeurt tussen verse waarneming en markerplaatsing. Geen GPU-herhaling of driverprestatieclaim. Bewijs evidence/c45-direct-host15-r2/trial-receipt.json SHAD33F4CDF49563FFD9CF566EF1DE824F513275B05EB01AAB37EB6F062DDAA3B7C.
 
+
+### C45 hosthelft r3 geslaagd — concrete Signal/Flush-grens voor C46
+
+De correct getimede proef12060 draaide15,013s/428Presents, natuurlijk exit0, lege stderr, geen fouten of foregroundverlies. Native515D is werkelijk gemapt. De actuele observer zag de meetfase om08:21:36.982Z; controleouderdom0,824s. Eigen lege markerinode785921 werd om08:21:37 geplaatst en om08:21:39 verwijderd, tijdens de meting. Begrensde logcat eindigde op124.
+
+Guestcontext319 is positief gekoppeld aan hostPID10560/context319. **128 exacte DISPATCHED/COMPLETE-paren**, seriële continuïteit, nul invariantverschillen, alle completion_observed positief;74jobs met GPUmarker en54 zonder. Tien volledige cycli hebben steeds12prefixen. Alle15Draws en15constante-bufferupdates zitten al in één groep. Daarna volgen een afzonderlijke Signal108/0 en Flush76/104, plus bestaande cleanup-/lifetimegrenzen.
+
+De concrete nieuwe aanwijzing: tussen waargenomen native completion van de Signal-job en aankomst van de volgende Flush-Notify zit **15,603ms mediaan**, maximaal24,074ms. De Flush zelf kost0,326ms mediaan; Drawgroep-decode circa4,668ms. Overlappende tijden zijn niet opgeteld en er is geen GPU-idleclaim. Audit evidence/c45-direct-host15-r3-nativephase-audit-r1/analysis.json SHA23EAD4017A761B77739E4533EBD6D29CFA96D8D3F5E93FFAF8E08B4A7F11CBE1.
+
+### C46 broncorrectie bevroren — intern Signal/Flush-paar samen indienen
+
+**Hypothese:** het afzonderlijke WDDM/native-publicatiepunt tussen dit interne Signal/Flush-paar kan de gemeten wachtrijvertraging veroorzaken. Beide opdrachten in bestaande volgorde onder één definitieve publicatie indienen kan die grens vermijden. Native Signal houdt zijn eigen ExecuteFlush; winst is nog onbewezen.
+
+[Bronpatch](patches/c46-present-signal-flush-pair.patch), commit3aedc9bd3a0563df53665b9f84b4aa9052aaa995. Exact drie bestaande bestanden tegenover werkelijk gecompileerde C45;440bronbestanden en alle gegenereerde encoders blijven gelijk. Vaste Signal40B+Flush24B via de bestaande raw-submitroute; het eerdere onderhoud en de voorafgaande Draw-publicatie blijven behouden. Dit reduceert de interne pairgrens typisch van drie naar twee, niet naar één totale frameprefix. Geen algemene Signal-whitelist of nieuwe mutable batchmodus.
+
+Alleen de HRESULT-returnende Present/Present1-routes kiezen de pair. Niet-ondersteunde selectie gebruikt vóór enig pair-write het bestaande hardwarepad. Een geselecteerde fout geeft DEVICE_REMOVED terug vóór event-arm/PresentCb, met gebalanceerde locks/presentInFlight; geen retry na mogelijk gecommitteerde bytes. De echte GPU-fence, event-arm/rearm, token- en resource-lifetime blijven bestaan.64lokale CPU-checks met ASan/UBSan op de echte helper/gegenereerde encoderbodies/bestaande raw-frontier slaagden; Windows/COM/transportseams zijn gemockt, dus geen SDK-/GPU-vrijgave.
+
+Bronmanifest170FA0C59DF95B92011115F14EFF6A1DA7D3F4B534EC9A760866976C11E39CC1; deltapatchF784A6F7BCA7203FB73D3632C1323DF82548F7A48D44AF69A87E1DC2BCFD8F1A. Root heeft de drie volledige diffs en alle postbytes gecontroleerd. Beschermd native+EC-bouwpakket78leden: D053FDDAE97F1B08F148904C15B0B6E6E6A0E26D3D7DC319892F0FA0BF240D15; fullpatch8240EEE61E0088BAD6CD3BEB5CF29B29F3B21A1823DBAD865F96269A16C27B41.443bronbestanden fresh-apply exact; zes recepten ongewijzigd,37eerdere binaries plus alle eerdere source/output-roots beschermd.
+
+**Volgende concrete taak:** bestaande beschermde native+EC-build op de bouw-pc; daarna verse C46-sibling boven bevroren C35/C33, eigenVARS, huidige C45 als onafhankelijk herstelpunt. Eerste gebruiksproef blijft de ongewijzigde15kubussenapp8s, met fysieke opname en positieve pair-publicatie. Alleen bij winst de benodigde korte nativeUI/video-regressies. Nog geen C46-installatie, snelheidsclaim, productie, mainmerge of release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
