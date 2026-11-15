@@ -4,13 +4,19 @@ Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-pr
 
 ## Algemene doelstatus
 
-**Gedeeltelijk gerealiseerd — de native Windows-interface is hersteld. C45 toont complete directe 3D en een bescheiden cadansverbetering, maar 3D en video zijn nog niet vloeiend genoeg. Een opstartcrash is nog niet verklaard. Het algemene doel blijft OPEN.**
+**Gedeeltelijk gerealiseerd — C33 herstelt de native Windows-interface en de directe hardware-3D-route geeft complete beelden. Het algemene doel blijft OPEN: video en 3D stotteren nog en de bekende GPU-/mappinguitval is niet gerepareerd.**
 
-De huidige testkandidaat is C45: native UMD `515D6B…BC0416`, ARM64EC `F3BF14…81A711`, F91-kerneldriver, Native1/runtime, C37-host en de C33-FP32-shadercorrectie op dezelfde GPU. Er is geen nieuwe softwareterugval of appuitzondering toegevoegd. Ongewijzigd Taakbeheer blijft leesbaar tijdens alle zes opgenomen acties; ook Start gebruikt de nieuwe native driver en blijft correct weergegeven.
+| Onderdeel | Actuele stand |
+|---|---|
+| Beste geteste herstelversie | C46 UMD native/alias `2A7DC660…E744D`, EC `0D472DA0…BBC32`; F91 KMD; C37-hostrenderer en C33-FP32-DXVK. RAM4/DPI200 is de gekozen gebruiksstand; RAM6 gaf geen bewezen snelheidswinst en onvoldoende Androidmarge bij hernieuwde reservering. |
+| Actieve experimentele kandidaat | Geen. C47 is daadwerkelijk geïnstalleerd, na normale herstart geladen en getest: 27,157 versus C46 27,576 API-fps in dezelfde volledige960×640-taak. Geen merkbare winst; deze optimalisatiefamilie is geparkeerd. C48 bestaat uitsluitend als ongebouwde lokale voorbereiding en wordt niet gestart. |
+| Gewone Windows-taken | Ongewijzigd Taakbeheer en Start zijn met C33/latere native stack leesbaar bij de eerder vastgelegde hertekenacties; directe15-kubus3D geeft complete beelden met gewone titelbalk. Edge gebruikt AV1-hardwaredecode/QTI-VPU met lage totale Windows-CPU. Dit is beperkte bruikbaarheid, geen vloeiendheidsvrijgave. |
+| Resterende prestaties | Circa27–28fps in recente directe3D; hardwarevideo circa27–31 niet-gedropte browserframes/s met veel drops. Geen soepele60fps-claim. |
+| Resterende stabiliteit | Eerdere READ Map/RES_INFO-fout bij grote diagnostische readback leidde tot OOM/deviceRemoved/GPU-exit; eerste kerneloorzaak nog open. Een latere32MiB-map slaagde: geen reparatiebewijs of universele32MiB-limiet. |
+| Huidige apparaatstand | C47-test-VM na proef normaaluit, vier originele strictmarkers/ACL hersteld, fullDRAIN/poolontladen; Android circa9971MiB vrij. Herselectie van C46/RAM4 wordt afzonderlijk vastgelegd. Gewone Windows-schijf blijft beschermd. |
+| Eerstvolgende concrete beslissing | Beste C46/C37/C33-bronstaat inclusief F91 reproduceerbaar in de juiste GitHub-ontwikkelrepositories vastleggen en C46/RAM4 behouden. Geen automatische volgende performancevariant. Daarna één gerichte stabiliteitsreparatie rond de eerste RES_INFO-/mappingfout op basis van bestaand bewijs. |
 
-De directe 15-kubussenproef haalt **26,96 API-fps**. Alle 296 actieve opnamebeelden bevatten alle objecten, zonder private framekopie of aangepaste titelbalk. YouTube gebruikt AV1-hardwaredecode op de QTI-VPU, met **30,98 niet-gedropte browserframes/s** en circa **11,2% CPU voor de hele Windows-VM**. Dit zijn geen fysieke 60-fps-claims. Een vergelijkbaar camerastuk toont kleinere opname-intervallen dan C42, maar langere opnamegaten blijven elders bestaan.
-
-Eén C45-opstart eindigde met MEMORY_MANAGEMENT `0x1A/0x4477`. Na gecontroleerde VM-afsluiting en behoud van de mislukte schijfkopie startte dezelfde kandidaat wel. Er is geen bruikbare kerneldump gevonden; de oorzaak blijft open. C45 is daarom een behouden deelresultaat in de zelfstandige test-VM. Productie staat uit; er is geen main-merge of productie-release. C37/C35 en C33 blijven bevroren herstelbasissen.
+De oude release met uitsluitend een klassieke titelbalk voor de eigen demo blijft een **afzonderlijk beperkt historisch resultaat**. Zij vormt geen bewijs dat gewone Windows-apps correct zijn. Er is geen nieuwe algemene productie-release of main-merge.
 
 ## Werkafspraak: eerst merkbare gebruikswinst
 
@@ -97,7 +103,7 @@ De gebruiker heeft op 14 november 2026 gevraagd om sneller en minder perfectioni
 
 De lokale bewijsnamen verwijzen naar bestaande meetbestanden in de gedeelde werkmap, niet naar op GitHub aanwezige logs. De openbare CPU-samenvatting is direct gelinkt. Voeg bij nieuwe proeven kandidaat/build-identiteit, scenario en compact bewijs toe; publiceer geen wachtwoorden of apparaatidentificatie.
 
-## Eerstvolgende beslissing
+## Historische eerstvolgende beslissing — vervangen door actuele status bovenaan
 
 **Gedeeltelijk gerealiseerd — Windows-interface nog niet correct; algemeen doel OPEN.** Taakbeheer heeft nog witte navigatieglyphs, effen header-/zoekveldbalken en randartefacten. De echte C28-driverpatch werd gebouwd, geladen en op de juiste524288B-SRVbuffer geactiveerd; allezeshandelingen zijn opgenomen, maar de UI verbetert niet. C28 is teruggedraaid naar C25; productiehostbestanden en gewoneWindows-schijf bleven buiten deze proef. De klassiekeNCworkaround geldt uitsluitend voor de eigen demo; video/privateframecopy/Foldresultaten blijven beperkte eerdere winst. SoftwarefallbackvoorTaakbeheer is op explicietverzoek niettoegepast. Volgende gerichteedge: daadwerkelijkeA8atlas→consumerDraw/UV/sampling koppelen met bestaande beperkte mogelijkheden; geen herhaling van C26/C27/sync of blindeformatpatch. Geen succesvollealgemeneWindowsdriverfix claimen.
 
