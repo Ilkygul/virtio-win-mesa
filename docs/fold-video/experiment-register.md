@@ -730,6 +730,17 @@ De observer zag om08:01:33 een geldige meetfase, maar de root-bediening activeer
 
 Bewijs: evidence/c45-direct-gpu-host15-r1/trial-receipt.json SHA8B447D331DA9D0AD5D935BA2963B86E046E0BA63A321E7945F41FAB80D1393C8. **Beslissing:** eerst de geldige GPU-opname uitlezen. Geen herhaalde GPU-opname alleen wegens de mislukte hosttiming. Indien nog nodig: één losse hostproef met vooraf opgebouwde bediening die observer→actuele-tijdcontrole→marker binnen dezelfde uitvoer doet, zonder tussenliggende modelbeurt. Geen driverwijziging, herstart of productierelease.
 
+
+### C45 GPU-analyse: vertraging vooral vóór virtuele DMA-service
+
+De actuele8s-opname bevat1706906events zonder gerapporteerd verlies. Device→Context-eigendom en exacte queue/DMA-identiteiten zijn gecontroleerd.17952 gewone queuegroepen en17511 DMA-groepen zijn gekoppeld; speciale wait-/signal-pakketten en grensgevallen blijven apart.
+
+In het centrale6s-venster heeft de demo2042 renderpakketten: wachttijd vóór QueueInfo p50 **3,436ms**, p95 **35,048ms**, tegenover virtuele servicetijd p50 **0,550ms**, p95 **6,110ms**. DWM heeft10165 renderpakketten: queue p50 **12,228ms**, p95 **23,202ms**; service p50 **0,558ms**, p95 **1,455ms**. Completion177→176 is op p95 slechts13,6µs voor de app en7,1µs voor DWM. Dat ondersteunt queuepressure vóór service; het meet geen zuivere GPU-uitvoering.216 speciale app-WAIT-pakketten zijn niet als CPU-wachttijd geïnterpreteerd; er is geen bewijs dat die al voldaan waren.
+
+Analyse: evidence/c45-direct-gpu-kernel-analysis-r1/analysis.json SHAE1BBABDA6476C508994142AA54568B38A84AF6DD7196D64C4653CD2EEFE3902E. De huidige bron batcht Draw en volledige constante-bufferupdates al. Actuele profielcounters geven circa12Notify-grenzen per frame-equivalent, niet de historische28; geen shape-/padding-/unlockfout gevonden. Bronkaart864B8B3D…7F5556B6.
+
+**Volgende kleinste proef:** alleen de mislukte hosthelft één keer gericht herstellen, geen GPU-herhaling. Zelfde15s-app met bestaande Present-timings; na verse meetwaarneming binnen dezelfde tooluitvoer de actuele klok en native515D controleren en de bestaande C22-marker2s plaatsen/verwijderen. Doel: vaststellen welke van de huidige prefixgrenzen Draw-, Flush-, Signal- of lifetimewerk bevatten. Geen global Signal/Flush-whitelist, geen extra eventworkers en geen gateverwijdering. Een volgende drivercorrectie moet overbodige indieningen aantonen en echte publicatie, GPU-completion en ownership behouden.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
