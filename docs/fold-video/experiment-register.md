@@ -351,6 +351,19 @@ Root verifieerde alle vier lokale/telefoonbinaries en bond forward/rollbackhelpe
 
 Nu exactdezelfdebestaandeAV1YouTubeproef(10warm/10meet), met60s-fysiekeopname. Observer→C22marker wordt direct georkestreerd tijdenszichtbaremeasurement, niet viaeenlaterhandmatigtoolrondje. Eerst gebruikswinst/actualreuse versus EndFrameGPUtail beoordelen; alleenbijwinst noodzakelijkeUI/3Dregressies. NoggeenC39winstclaim/productie/merge; algemeen doelOPEN.
 
+
+### C39 werkelijke videoproef — correct hergebruik bewezen, geen bruikbare pacingwinst
+
+Exactdezelfdecollector/prep,10s warmup/10smeting02:33:20.566–31.614Z. Rapportvoltooid/errors[], wrapperexitNULLgeenexit0claim. AV1/Main1920×1080 D3D11VideoDecoder/platformtrue enQTIc2.qti.av1.decoderworker18732/ctx213actief; echtevoorgrondfilmzichtbaaropnativeFold. Quality600totaal/328drops/9.985s=27.2409berekendepresentaties/s, tegenoverC37=27.6138/C38=28.3880: geenbetekenisvollegebruikswinst. Media9.991svooruit,unpaused/ready4. rVFC441callbacks/tellerdelta508/9.9755s=50.925/sblijfttegenstrijdig; geenvanbeidetellersisfysiekeFPS.
+
+Fysiekeopname38,192,021B. Bewegendwolken/bomen/grasvensterPTS25–36:379intervallen,p5026.656ms,éénhold>200ms/max275.8msmetboundarycontrole. Breder20–36max425.222msligtbijbijnastatischetitel, nietalszekerehitchopgevoerd. Andervenster/lengtedanC37/C38/geenexactUTC↔PTSjoin: lagereselectiemaxbewijstgeen causale ofduurzamewinst. Filmbeeldenblijvenherkenbaar/coherentindebekekencontacts;geenalgemenepixelvrijgave. Audit evidence/c39-video-runtime-audit-r1/analysis.json SHA6360127A603BD9459A402E1C534070D69ECB53A23AFAD926EE6D50BD73B577C7.
+
+**Runtimevertakkingwélbewezen:** observer20.726Z→marker21–25Z,128/128exactgepaardeC22jobs02:33:21.716–21.886Zbinnenformelemeetfase. DecoderBeginFrame85/2×9 enprivateInline85/5×10 elknew_markers0/reused1,Signal/Flush0. EchteEndFrame85/3×10houdtnieuwGPUmarker1/reused0. Inlinejobmediaan0.041ms; BeginFramemediaan6.136msisvoornamelijkFIFOachtervorigeGPUjob. EndFrameechtGPU/prefixwachtenblijftdominant:totalejobmediaan6.236ms,poll-lagmediaan5.673ms,opgeteld69.61ms/10jobswaarvan64.81mspoll-lag. VijfVPBlts85/46blijvenechteGPUcalls(opgeteld8.30ms),GEENCPUsetter.
+
+VijfechteCPUsetters6/8/21/23/24zijnbronmatiglockedstatecopies. Setter21wachtvooralverplichtFIFO(30.64van32.21ms);overigevierhebbensamen4.44ms/5conversiesinoverlapgevoelig170mssample. DaaromgeenblindevolgendeCPUtail-perfvariant: C38/C39leverengeenbruikbarevideowinst;richtingnuparkeren. CorrecteC39bronoptimalisatieblijftalsgecontroleerdexperimenteelresultaatbewaard, nietalsreleasekandidaat. Timing/sourceaudit evidence/c39-video-cpu-control-timing-audit-r1/analysis.json SHA04230901996BFBA9D9AC11BE977D236EE9331E3B837B743FF385BD5A8ABB800E.
+
+Root slootalleenexacteigenYTtargetB22A97226C22FC692BFF96D3F4475355op02:34:50.554Z. Huidigedriverloadslot2geenunsupportedpower/invalidreplyhitsingecontroleerdepersistedlog;geenuniverseelveiligheidsbewijs. C39normaleafsluiting02:37:34.254ZaangevraagdvoorvolledigeC37terugrol. Geengates/FIFOverwijderenomFPStewinnen. VolgendebronanalysemoetwerkelijkeEndFrame-CPUreply/GPUcompletion/CS/MediaCodec/copyketenonderscheiden;huidige6msisgeenafzonderlijkbewijsvoorcodecvsGPUvsCS. ProductieUIT, geenmerge/release,algemeendoelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
