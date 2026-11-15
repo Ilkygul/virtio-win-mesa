@@ -320,6 +320,17 @@ LateC22-worker23417/ctx99:128exactgepaardejobs/35video, elkvideoCount1. Geen zes
 
 C38 normaal afgesloten02:01:35Z; volledigeVMM/native/maps/disk/VARS-drainPASS, pooluit. Volledige persistC6278C…B434 én liveC37-configexacthersteld/alle4daemonresponsesgeslaagd. Alleen oudeC37/C35-child opnieuwgestart, Windowsboot02:03:48.335Z/main26740/start1531028; echteFDsC35RW/C33RO/eigenC35VARS RW, C37hostmaps. NieuwegastcontrolebevestigtF91signedValid/C20native57899…+EC9CC9…/Native1/runtime0bytes/strictemarkers/whitelistongewijzigd/GPUCode0. NativeWindowszichtbaar. **C38-child is na deze parent-writeboot definitief onbruikbaar en mag nooit opnieuw booten.** Geen data teruggeschreven naar ouders, geen productiegebruik. Volgende bronanalyse richt zich op de exacte decoder-/GPU-completionafhankelijkheden; C38 is geen releasekandidaat. Algemeen doel OPEN.
 
+
+## C39 bronrichting — CPU-decodercontrole krijgt geen nieuw GPU-tailwerk
+
+Vorige doelbeurt: PROGRESS. C38 werkelijk gebouwd/getest/afgewezen wegens ontbrekende bruikbare videowinst, C37 volledig normaal hersteld. Nieuwe beurt bevestigt main26740/start1531028, exacte C37-childRW/C33parentRO/eigenVARS en persistconfigC6278C…B434; C22-marker afwezig.
+
+Concrete nieuwe bronaanwijzing: actuele pairedDXVK DecoderBeginFrame(85/2) bewaart een sterke targetreferentie en wijzigt alleen eigen CPU-vectors; private inlineDecoderExtension(85/5) valideert en kopieert bytes naar eigen CPU-opslag. Beide produceren geen GPU/CS-werk. DecoderEndFrame(85/3) doet dit wel en houdt zijn echte GPU-completionfence. GetDecoderBuffer=85/0 is niet het gemeten pad. Bronanker evidence/c38-video-control-classification-source-r1/analysis.json SHAF4676694827FAD7A4F71FF8C06FCE2FD27E28D7A48E0317BF574F5FFE7193461.
+
+Kleinste onderzochte drivercorrectie: voor uitsluitend die twee bewezen CPU-controls geen nieuw native Signal/Flush-GPUtail genereren; alle handler-/pending-/HRESULT-/FIFO-/health-/finitefencevoorwaarden blijven. Waar mogelijk vorige uitgegeven nativefencewaarde blijven controleren in plaats van iedere CPUcall nieuwGPUwerk toe te voegen. Gemengde GPUcommands houden nieuwGPUtail. Dit vereist een expliciete, optionele brongebonden backendgarantie: bestaande VIDEO_TERMINALv1 dekt deze CPU-only-semantiek niet en mag niet stil worden verruimd. Onbekende backends houden bestaand strictGPUgedrag. Geen globale TinySyncOFF, softwarefallback of appaanpassing.
+
+Status: bronvoorstel wordt uitgewerkt, nog geen C39build/deployment/winstclaim. Eerst kleinste concrete patch lezen; daarna één korte hardwarevideoproef met bestaand collector/opname, werkelijke trace tijdens zichtbare meetfase en terugrol naarC37. Niet de ongeldige lateC38trace als bewijs van batching gebruiken. Gebruikswinst blijft leidend; algemene doelstatus OPEN, uitsluitend test-VM.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
