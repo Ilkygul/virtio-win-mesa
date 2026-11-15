@@ -364,6 +364,17 @@ VijfechteCPUsetters6/8/21/23/24zijnbronmatiglockedstatecopies. Setter21wachtvoor
 
 Root slootalleenexacteigenYTtargetB22A97226C22FC692BFF96D3F4475355op02:34:50.554Z. Huidigedriverloadslot2geenunsupportedpower/invalidreplyhitsingecontroleerdepersistedlog;geenuniverseelveiligheidsbewijs. C39normaleafsluiting02:37:34.254ZaangevraagdvoorvolledigeC37terugrol. Geengates/FIFOverwijderenomFPStewinnen. VolgendebronanalysemoetwerkelijkeEndFrame-CPUreply/GPUcompletion/CS/MediaCodec/copyketenonderscheiden;huidige6msisgeenafzonderlijkbewijsvoorcodecvsGPUvsCS. ProductieUIT, geenmerge/release,algemeendoelOPEN.
 
+
+### C39 vervolgdiagnose: bestaande decodertrace, dezelfde build
+
+De CPU-tailrichting wordt geparkeerd: C38 en C39 leveren geen bruikbare videowinst. In C39 ligt de mediaan van tien echte EndFrame-jobs op 6,236 ms; Signal en Flush samen kosten over alle tien slechts 0,033 ms. Het interval tot de positieve fencequery bevat zowel de voorafgaande CS/MediaCodec-verwerking als GPU/timeline/polling. Het is dus nog geen afzonderlijke meting van decoder- of GPU-duur. De DWM-steekproef in hetzelfde geldige venster is kleiner: 128 jobs, mediaan 0,155 ms, p95 1,644 ms, max 3,951 ms; dit is geen volledige bottleneckuitsluiting.
+
+De actuele backend bevat al een beperkte diagnose: bestand `/data/adb/fold-vm/npt/hwdec-trace` activeert bestaande End/Done-regels. De schakelaar wordt iedere twee seconden gelezen. Done meet de CS-afhandeling met output/AImage, copyregistratie en submit; het bewijst geen GPU-voltooiing. Bronanker: evidence/c39-endframe-pipeline-source-r1/analysis.json, SHA9409A6075C55281A3276D6BC213C7F90001FDC1B3C3100DAD6FD945F65094ACB. De vorige opname bevat geen End/Done-regels, zodat deze vraag nog niet beantwoord is.
+
+**Eén gerichte herhaling als diagnose, geen nieuwe drivervariant:** dezelfde C39-binaries/configuratie, verse normale boot voor een nieuw bestaand C22-budget, dezelfde korte openbare YouTube-clip. Na werkelijk geobserveerde meetfase eerst hwdec-trace aan; drie seconden later C22 gedurende vier seconden. Beide markers daarna verwijderen; de maximaal twee seconden vertraagde trace-uitschakeling apart controleren. Gebruik bestaande collector/opname, geen nieuwe build, geen nieuw captureharnas en geen tellers resetten. Correlatie alleen met exact Edge-proces, decoder/volgnummer en geldig fasevenster; profilering is geen nieuwe FPS-vrijgave.
+
+C39 is normaal afgesloten en volledige C13-drain is bevestigd. De C39-configuratie blijft voor deze diagnose geselecteerd; C37 is **nog niet** teruggezet. Na deze diagnose volledige C37-terugrol tenzij nieuw bewijs een concrete vervolgstap draagt. Geen FIFO-/ownership-/GPU-completioncontrole verwijderen om een getal te verbeteren. Productie blijft uit; het algemene doel blijft open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
