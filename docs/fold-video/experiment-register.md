@@ -562,6 +562,15 @@ Eigenbrowser2032 is06:00:50Z normaal viaBrowser.close gesloten; geenkill. C43bli
 
 Nog niet gebouwd of opFoldgeplaatst. Nu het lokale bouwpakket samenstellen en exactbeoordelen; geen productie-update/merge/release. Algemeendoelopen.
 
+
+### C44 werkelijk gebouwd; afzonderlijke korte observatie wordt voorbereid
+
+NativeARM64 enARM64EC elk289/289 exit0; alle443werkelijke compilerbronnen gecontroleerd: exact3metadatawijzigingen/440ongewijzigdC43, header2536FA…614CA. Native+alias **E4A74517AFEFCA69DB18E3F9BBD83AC8090B1CB55915A56F4D076D7B0E9DD25E**,1365504B; EC **4B06CA690221FCF6C54A43823CFDF899DB43603556215D6ABD6C0CD8421A6FBF**,1276416B. AA64/8664CHPEv2/OpenAdapter10_2/version58200 werkelijkgecontroleerd; dezelfde28waarschuwingen/geenPDB, zesreceptenbytegelijk. Geenbronwijziging/retry.
+
+564rawinclmanifest opgehaald; Windows440C8bron/1874outputs/12353footprint enLinux9779paden behouden. Bouw-VMnormaaluit/eigenleasevrij/PCpoweroff0/SSH25506:12:26.981070Z. Eindbewijs artifacts/c44-umd-build/session-20261115-flush-scope-r1/final-local-verification.json SHAC9B3B309B6B5286D3E067631624FE374FAF9ABF22586E9E8A5B145E24DE322C9. Root3DLLhashesafzonderlijkgelijk.
+
+C43oorspronkelijkeforcepresent-marker06:11:50Zteruggeplaatst/ACLbehouden/dwmforceAAN, normaalafgesloten06:11:51Z. Oude main22777/start2914076verdwenen enfullC13drain/pooluitbevestigd. VerseC35/C33koudeketen enmetadata gecontroleerd; nieuweC44sibling/eigenVARSwordtgemaakt. C43/C42blijvenbehoudenuit, C35bevroren. Alleen korte raw-scopeobservatie voorzien; geenfps-/CPU-/vloeiendheidsclaim engeenproductie/merge/release. Doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
