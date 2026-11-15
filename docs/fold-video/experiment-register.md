@@ -688,6 +688,17 @@ Ongewijzigdeapp7612 begon07:42:08Z maarweigerde07:42:16Z vóór warmup/tekenen: 
 
 **Beslissing:** éénstartretryr2methersteldevensterfocus; bijdezelfdeweigeringgeenblindelaunchlus maarbestaandefocusbedieninggerichtgebruiken. CPU-vraagblijftonbeantwoord;geenbottleneck-/snelheidsclaim.
 
+
+### C45 CPU-proef r2 geslaagd — dominante wacht ligt bij Present, niet bewezen bij Acquire
+
+Na zichtbaargeslotenStartmenu slaagde dezelfdeongewijzigde15kubussenapp/defaultDWMcaption/privatecopy0 op nativeconsole: PID11776, werkelijkforegroundgedurendedehelemeting, natuurlijkexit0/legestderr/errors[]/deviceRemoved0. Fysiekcontrolebeeldtoontalle15kubussen.15.021s/363Presents/24.166API/s is een **geïnstrumenteerdediagnose**, geenvergelijkbareframerateregressie. CPU-onlyWPR07:43:35.334–43.582Z, stop0/opgeslagen07:44:12.631Z,35.65MBETL; WPRnadiennietactief, Windowszelfde06:55boot/GPUCode0/2448×1848/forcepresentOFF+dwmforceON.
+
+MicrosoftTraceEventreaderwerkelijkexit0/inputongewijzigd:178334events/64716CSwitch/1277eigenoffCPUparen,0gerapporteerdverlies/0stackownershipmismatch/0missingstackparen,4ongepaarderesumes/4openoutsaanuiteinden. RenderTID7492 heeft202paren/7150.648ms/gem35.399ms in **neptuneRVA E91A0→D3D11/DXGIPresent**. Tweedehoofdstapel586paren/813.221ms/gem1.388ms opRVA9C44. ParallelworkerTID11572 heeft202paren/7147.807ms op6C28 en203/1055.212ms op6B90. Parallelletijdennietoptellen; offCPUomvatreadydelayzondereigenReadyThreadjoin.
+
+WerkelijkeC45rawPE515D/imports/bronankersbevestigen: E91A0=tritonPresentFlushAndGate WaitForSingleObject(hEvt,deadline-now);9C44=bestaandehighrestimerbackoffinnpt_ring_relax;6C28=event_waiter_threadwaitoptransportcompletionevent;6B90=legependingqueuecondvar-idle. **GeenredenAcquiregateverwijderen.** WerkelijkeleidraadisPresentGPUfence/eventdelivery; noggeenbewijsdatGPUwerkzelfofeenbepaaldesignaalstapdefoutis. Audit207210A603B75735A4E61369F3C6D1298E6046857EBEED35C8E3CAB1BB03282A. Rootanalyse evidence/c45-direct-cpu15-r2/analysis.json SHAB20BC3BDA9DB68A7F1F5E75138D0AD9B21CF87DFD6203C3860027CD5B57D156B.
+
+**Volgendebeslissing:** éénzelfde15sdiagnosezonderWPR, alleen reedsingebouwde NPT_DEBUG=profile,present_timing en NPT_PRESENT_GATE_TRACE=1/NPT_EVENT_WAITER_TRACE=1 in het nieuweeigenkindproces. BestaandeDEFA/exeongewijzigd. Vraag: is degatewachtvoornamelijkechtecompletion, staleevent/valueherarmingofpoolwachttijd? Bestaandetimingsmetensig/arm/wait/callback enqueued_us/wait_us; scheidenhostGPUuitvoeringnietzelfstandigvanWDDMscheduling. RuntimekanDirectOksignalenondersteunen, dus35msworkerwaitisnietautomatischeenextra kritiekehop. Geenalgemeenharnas/driverwijziging/productie/merge/release; doelblijftopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
