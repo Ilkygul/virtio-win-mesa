@@ -769,6 +769,17 @@ Bronmanifest170FA0C59DF95B92011115F14EFF6A1DA7D3F4B534EC9A760866976C11E39CC1; de
 
 **Volgende concrete taak:** bestaande beschermde native+EC-build op de bouw-pc; daarna verse C46-sibling boven bevroren C35/C33, eigenVARS, huidige C45 als onafhankelijk herstelpunt. Eerste gebruiksproef blijft de ongewijzigde15kubussenapp8s, met fysieke opname en positieve pair-publicatie. Alleen bij winst de benodigde korte nativeUI/video-regressies. Nog geen C46-installatie, snelheidsclaim, productie, mainmerge of release.
 
+
+### C46 gebouwd en bouw-pc afgesloten; zelfstandige runtimeproef volgt
+
+NativeARM64 enARM64EC zijn elk289/289 met exit0 gebouwd via de zes ongewijzigde recepten. Werkelijke PS5.1-controle van het78-ledenpakket en alle37 eerdere binaries slaagden vóór prepare. De443 compilerbronnen zijn exact: drie C46-delta's,440 gelijk aan C45; batchheader2536 is ongewijzigd.
+
+Native en alias: **2A7DC660ABF7AC3A6B49991C55FC7B44859F670ADE1D9E8033BE7F62B07E744D**,1366528bytes. EC: **0D472DA041603FDF0182FF3D903848E10A4035404E3576C1D0E544B5FE7BBC32**,1276416bytes. Root heeft de drie DLLs en alle443 bronhashes onafhankelijk herberekend. AA64/EC8664,CHPEv2 en OpenAdapter10_2/12 zijn gecontroleerd;28 waarschuwingen zijn gelijk aan C45, geen PDB uitgegeven.
+
+572 opgehaalde bestanden inclusief manifest zijn geverifieerd. Windows2770 outputhashes,12353 source-footprintpaden en440 originele Neptune-bestanden bleven gelijk; Linux9779 paden eveneens. Eigen bouw-VM normaal uit onder lease, lease vrij en bouw-pc uitgezet; echte SSH-timeout08:45:43.993Z. Eindbewijs artifacts/c46-umd-build/session-20261115-present-pair-r1/final-local-verification.json SHAF3871C1FDB869EBB983B709CBA97DDB9278E7605AED900B5EE4012159108F647.
+
+Dit is buildbewijs, geen snelheid of runtimevrijgave. Nu de bestaande veilige installatieprocedure: huidige C45 origineel strikte marker teruggeven, normaal afsluiten/fullDRAIN/pooluit, verse C46-sibling boven bevroren C35/C33 en eigenVARS. C45-disk/VARS blijven een onafhankelijk herstelpunt. Eerst nieuwe DLL-maps/Code0 bewijzen, daarna de bestaande korte hardware-3D-proef. Geen productie/mainmerge/release of doelvoltooiing.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
