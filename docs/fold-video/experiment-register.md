@@ -947,6 +947,15 @@ Na expliciet door gebruiker gevraagde DPI200% en af/aanmelden: nativeconsoleSess
 
 Noodzakelijke correctie uitsluitendlokaal: exactzelfdepatronen alswildcardszonderliteralspaties; volgendeproef pasna parse-/argumentcontrole. Geen nieuwe driver/config/softwarefallback. Bronanalyse vindtgeenbewezenversAlloc-handlelifetimebug; afzonderlijkefail-open-cookiefallbackisnoggeenoorzaakofprestatiereparatie. Eigenbrowser11:36:05Z normaalgesloten/exitbevestigd3eigentabs; begrensdehost/beeldopnameterminal. Bewijs evidence/c46-dbgview-kernel-r1/analysis.json en capture-guest/capture.stderr. DoelOPEN, hardwaredriverfoutblijftopdracht; geenproductiemerge/release.
 
+
+### C46 kernelcapture geldig; grootte van readback onderscheidt huidige niet-reproductie
+
+Correctie CLIpatronenzonderspaties werkt. Capture4724/kernel+Win32/HighestSession2 start11:38:38.057Z, duur60s/natuurlijkexit0 om11:39:38.741Z, 2010CSVrowsmetechteviogpu3d-kernelspiegel. TijdelijkestandaardDbgv.sys werdgeladen; postquery11:40:21 toontgeenresterendedebugdriver. GPU11888/birth1794742673945/native2A7D; eigenbrowser8408/birth1794742673586. GeenMap/RES_INFO-reset inretainedoutput; video27,63counter/s met976/1805drops, geen vloeiendheidsclaim.
+
+**Concrete nieuwe aanwijzing:** oudeplaybackscreenshot2440×1716; foutREAD17132544bytes is exact1716×9984pitchbytes. Dat isboven16MiB envergt32MiBpoolgroei. NauserDPI200/relog is screenshot2432×1584; zelfsmetoude9984pitchonder16MiB. Huidigekernellog toont16MiBmaps, geen32MiB-fout. Ditverklaartmogelijkwaaromdezelfdecollectorhetprobleemnunietraakt; geenbewijsdatDPIofrelogdriverfoutrepareert.
+
+Bewijs evidence/c46-dbgview-kernel-r2/analysis.json SHA4e2fae43b41698fbce031d8e88a95db4989150c98178c1ad92b974ebd95e5241. **Volgende kleinste onderscheidendeproef:** éénCDPcaptureScreenshotophetzelfdeownedtesttarget metexplicietgrotereclip, omReadMap>16MiB aftevragen, gelijktijdigbegrensdestandaardkernel+Win32capture enbestaanderegistrysnapshot. Geenandereapp/DPI/driver/backendwijziging ofnieuwealgemenecapturetool. Daarnaeigenbrowsernormaaluit. Als32MiBslagt, geenoorspraak/identiekeherhaling; danactuelepool/geheugentoestandonderscheiden metnieuwebewijzen. C46 blijftgedeeltelijk,testVMonly/doelOPEN, geenproductiemerge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
