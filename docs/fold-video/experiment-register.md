@@ -829,6 +829,18 @@ Nieuwe reden voor dezelfde videotaak: de eerste opname bewijst een postformale G
 
 Eén bestaande30scollector/prep/20sCPUtaak op dezelfde C46boot/config. Nieuw eigen tasklabel kopieert de bestaande geïsoleerdeEdge-actie met alleen Chromium --enable-logging --v=1; oorspronkelijke task blijft gelijk, chrome_debug.log moet eerst ontbreken. Tijdens echte meetfase de ownedbrowser/GPU-PID/birth/parent/modulehashes vastleggen. Zelfde65s fysiekeopname; hostfilter90s omvat nu NptHwDec en loopt voorbij de eerder gemiste fouttijd. Diagnosebelasting maakt dit geen snelheidsvergelijking. Na afloop uitsluitend eigenBrowser.close, log behouden vóór een volgende browserstart. Geen nieuw algemeen captureharnas/WPR ofdriverwijziging. C45herstelpunt blijftbestbekendealgemeneversie, doelOPEN.
 
+### C46 GPU-exitdiagnose r1: oorspronkelijke Map-fout vóór contextverlies bewezen
+
+Bestaande collector ongewijzigd behalve eigen task/output en Chromiumlogging. FormeleGPU1492/birth09:32:56.7838118Z/parentbrowser9612 positief vastgelegd; geen nieuwe driver/config. Formeel09:33:20.437–09:33:51.654Z, diagnostischecounter31,634/s is geen prestatievergelijking.
+
+**Nieuwe beslissende browserlog:**09:34:00.433Z ANGLE Renderer11::mapResource4284: Map faalt met0x887A0005/removalreason5;00.451EXT_robustnesscontextlost;00.507unrecoverablerestart;00.697GPUprocesexit34. Dit is contextverlies na Map, geen aangetoonde watchdogexit. Hardwaredriverfoutketen is nu concreet gelokaliseerd.
+
+Broncontrole: tritonResourceMap1137–1150 vertaalt iedere innerMapfout behalveWASSTILLDRAWING naarDEVICE_REMOVED. Daardoor bewijstANGLE5 nog niet de oorspronkelijke nativeHRESULT of eerste transport/device-latch. Het bestaande TR_LOG met sub/type/flags/originelehr ontbreekt: nulregels van echteGPU1492 inNeptune-log; latereInfoGPU1548wel. Logfile heeft daadwerkelijk MandatoryMediumNW; dit is een concrete aanwijzing voor ontbrekendeLow-sandboxlogtoegang. NativePowerShell-modulelijst toont bovendien slechts54modules en mist zelfsmsedge.dll: niet gebruiken alsbewijsvoorsoftwareterugval.
+
+Nieuwehostfilter bevat nu37NptHwDec-regels enloopt90s voorbijdeeerdergemistefout; wordtbronmatiguitgelezen. BestaandeKMDregistrysnapshot bewaart actueleDbgLog2naast duidelijkouderebootslots. Eigenbrowser09:36:37Z normaalgesloten/exitbevestigd; beideopnames enbrowserlogbewaardvoorvolgendestart.
+
+Bewijs evidence/c46-gpu-exit-diagnosis-r1/analysis.json SHAd0cedb66e0295f169d0d9442620211ee4057d27babf5792e41b537ec57752535. **Beslissing na twee uitvallen:** geen identieke videorun en geen volgende prestatievariant. Eerst bestaandeMap-oorsprongsdiagnostiek zichtbaar maken op basis van concrete logrechten/sourceaanwijzing, terwijl decoder-/KMDlog wordt onderzocht. Geen nieuw algemeen captureharnas. C46testVMactief/Code0, C45bestbekendeherstelversiebehouden; productie/mainmerge/releaseuit, doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
