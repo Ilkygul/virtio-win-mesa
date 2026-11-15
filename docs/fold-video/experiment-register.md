@@ -921,6 +921,14 @@ Eigenlegebrowser normaaluit10:30:52Z. **10:31:14Z alle tijdelijke logrechten vol
 
 OfficiëleDebugView5.02ARM64CLI484664B, SHA **33B4F93A65B1460B9C839FDF1DAE35334A3170CDB637F6B9A2E0DABFFC7D7A9E**, daadwerkelijkeWindowsAuthenticodeValid/MicrosoftCorporationAB172913…79B72 en --help gecontroleerd. AlleenWin32capture onderinteractiveLimitedSession1, **kernel/globalOFF**,120s/50000regels, PID-filter op éénverseownedGPUkandidaat. BestaandeobservermoetexactPID/birthbevestigen. Eénzelfdebestaandevideotaak vraagtorigineleMaphr op; diagnosegeenFPSvergelijking. CLIeindigtnatuurlijk, geenextraGPU-/kernel-/signingpolicywijziging. C46testVM/Code0/C45herstelpunt/bouw-pcuit blijven; doelOPEN/geenproductie/mainmerge/release.
 
+### C46 standaardWin32capture werkt tijdens video; reset niet gereproduceerd
+
+StandaardDebugViewCLI draaide werkelijkLimited/session1, Win32/pid4420, kernel/globalOFF. CapturePID7864/birth10:46:03.632Z eindigdezelf10:48:03.919Z metexit0 enDurationlimit120s. ExactPID/birthmatch metdeonafhankelijkeobserver; tijdensdeechtemeting isnative **2A7DC660…E744D** positiefgemapt inGPU4420.
+
+**2351echteregels,133video-regels**, ondermeertwee succesvolle CreateVideoDecoder1920×1080/NV12fmt103 enlatereSRV/flush/resourceaanroepen. De ontbrekende bestandstoegang blokkeert dezekanaalniet. Dit is nupositieve runtime-logdekking. In dezemeting10:46:25.546–10:46:57.591Z geenMap/contextreset/Media-error; geenMap-foutrecord. **Geen reparatieclaim:** vroegecaptureOutputDebugStringkanopstart/timingbeïnvloeden. Allelogrechten blevenorigineelMedium. Browser2260normaaluit10:54:42Z.
+
+Bewijs evidence/c46-dbgview-map-r1/analysis.json SHA050d2c8abb24ce5c2f3ef73365b160fb917b3011670db2d29f843d89fabc8878. **Volgende kleinste onderscheidendeproef:** dezelfdeversebrowser/collector/driver; standaardCLI pasopformelemeetstart+20s actief,60s/50000regels. DaardoorwordtGPU-initialisatie nietgecapteerd, maarlaatzichdeMap-fout rondpostformelequerywellezen. RunnerbindtGPUearlyenhercontroleertbirthbijactivering; observermoetzelfdePID/UMDhashbevestigen. Geen nieuweCaptureharnas/driver-/backend-/policy-/ACLwijziging ofFPSvergelijking. Alsnietreproduceert,geenfixclaimofblindeherhaling; vervolgensexplicietnieuwebeslissing. TestVMalleen,C45herstelpuntbehouden,doelOPEN/geenproductie.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
