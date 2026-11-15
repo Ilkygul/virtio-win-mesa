@@ -342,6 +342,15 @@ CPU-only controls blijven als normale finite markers in de job: checkpoint herge
 
 C37 normaalafgesloten02:15:04.716Z, aanvankelijknogVMMactief dusveiliggeweigerd; later mainGONE/fullC13drainPASS/pooluit. Verseclosedschijf/VARSmetadata bewaard; bestaandeC37schijf+VARS blijven, geen nieuwguestoverlayofUMD/KMD-mutatie. VolledigeC39configvoorstelC5338B…EFD0D wijzigt uitsluitendprivateserver/DXVKpaar/LD-prefixes; exacteC37terugrolgereed. RootGOvoor2hosttargets+freshDXVKpaar opbeschermdebouw-pcgegeven, noggeenC39runtime-/winstclaim. ProductieUIT, algemeen doelOPEN.
 
+
+### C39 actualbuild en eerste boot — klaar voor één videoproef
+
+Host165/165/final69raw,707bronleden exact2deltas/705gelijkC37; DXVK264/264/fresh237objects/final68raw,1268bronleden exact2deltas/1266gelijkC33. Beideheaders42B0identiek, FP32/cache behouden;287DXVKwaarschuwingen gelijkC33, geen compilerfout. Actualprivatelib3D53C1F5A61DBBA651B08398CDBE28B42764ACF14EB49C0708D89AE41B9B6C65/4691160B; server239AB00067C61B24BFB623D6A52523CEB2EBD9580AF4385E8FF3EBF5C41106AF/3002400B; D3D114B98F8160A6A73395EADAF7186309D9BE1B33FA8FDEE81C4A98C6C52CB4CF853/5906520B; freshDXGI5E6E08A4592A6BAE52B87FCE4442369E11B631D0BBAB5CB7905CADD2E5224740/3871041B(byte-identiekC33). Oude bronnen/outputs beschermd, WindowsbouwVMuit, eigencontainer/mountweg/leasevrij, PCpoweroff0/SSH25502:28:23Z. Eindbewijs artifacts/c39-native-video-paired-build/session-20261115-cpu-control-r1/final-local-verification.json SHAD7FD6B092994AE6D9F7E9CE9229D3A97215672A0C29365A2ACA39772CB2461A4.
+
+Root verifieerde alle vier lokale/telefoonbinaries en bond forward/rollbackhelpers; volledige persist+liveC5338B…EFD0D exact/4responsesgeslaagd. Coldschijf/VARSmetadata/head/tail vóór/na privatestaging gelijk. Alleenprivatemappen/config gewijzigd. Verseboot02:29:39.284Z/main13742/start1686154/renderroot14276: echteC35childRW/C33baseRO/eigenC35VARS RW, daadwerkelijkeC39lib/serverexe enC39D3D11/DXGIworker-maps. F91signedValid/C20UMDs/Native1/runtime/strict/nowarp/whitelistongewijzigd; GPUCode0 en huidigeDbgLog2geenunsupportedpower/invalidreplyhits. Een eerste losse rendererselectie op substring vond een crosvm-filesystemkind; dat diagnostiekbestand is expliciet ongeldig bewaard en vervangen door daadwerkelijkeexe/PPID-verificatie vóór de proef.
+
+Nu exactdezelfdebestaandeAV1YouTubeproef(10warm/10meet), met60s-fysiekeopname. Observer→C22marker wordt direct georkestreerd tijdenszichtbaremeasurement, niet viaeenlaterhandmatigtoolrondje. Eerst gebruikswinst/actualreuse versus EndFrameGPUtail beoordelen; alleenbijwinst noodzakelijkeUI/3Dregressies. NoggeenC39winstclaim/productie/merge; algemeen doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
