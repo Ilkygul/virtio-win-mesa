@@ -486,6 +486,17 @@ Root hercontroleerde de echte drieDLLhashes. Fold draait nogC37main6970/start183
 
 Nu normaleC37afsluiting/fullC13drain/pooluit, verse koudeC35parent/C33grandparent/VARSmetadata en NIEUWE C42child+eigenVARS. C38child blijft onbruikbaar. Daarna uitsluitend testchildinstall via bestaande transaction/ACL/backup-recipe. Eerst nieuweC42DLLs op verseboot bewijzen metforcepresentAAN; pas dan alleenforcepresentUIT, dwmforceAAN. Geen batchactivatie op oudeC20 en geen productie. Deze build bewijst nog geen GPU-/pixel-/snelheidswinst; algemeen doel open.
 
+
+### C42 geïnstalleerd en echt geladen; één videoproef gereed
+
+C37normaalafgesloten04:15:41Z; mainweg/fullC13drain04:16:34Z, pooluit. VerseC35/C33metadata enVARS gecontroleerd. NIEUWE C42child+privateVARS gemaakt, qemuchecks0, ouders vóór/na identiek. Persist/liveconfig **A2FA1D63…DCCA0** verschilt alleen in childdisk+VARS. Eersteinstallboot main18419/start2357549: C42RW/C35RO/C33RO/privateVARSrw enC37host/C33FP32 echt gemapt. C38child is niet gebruikt.
+
+De PS5.1-preflight stopte eerst vóórinstallatie op hoofdlettergebruik van een externSHAargument versus case-sensitive vergelijking. Alle7gestagebestanden bleken exactgelijk; alleen de externe argumentnotatie naar uppercase gecorrigeerd, geen guard-/drivercodeverzwakking. Tweedeparse/scope/stagedhashpreflightPASS. Bestaande3-DLLrename/ACL/backuptransaction geslaagd04:28:52.824Z; intent0ACCBCBC…5C8176, receipt2ACB9E27…BDFFE4, allThreeVerifiedtrue; F91/service/whitelist/mode behouden.
+
+Normaleafsluiting04:29:52Z, volledigeC13drain/pooluit, nieuwepool5120MiB. **EchteC42boot04:32:52.709Z**, main27572/start2425355/renderroot27656, dezelfde3-entryketen met beideoudersRO/privateVARS. NieuweC42native5E3DED…62A958 werkelijk in verseDWM1372/geboorte04:32:59.123Z, Explorer enEdgeGPU; EC A5AF…1EBCA op schijf geverifieerd. GPUCode0, F91signedValid/Native1, bestaandeC37host/C33FP32/cache behouden. DWM-init van laatsteattach toont runtime/publisherV1/writefeed1. GeladenWARP-standbymodule inDWM is geen bewijs van actieve fallback; geen nieuweWARPregel toegevoegd.
+
+Pas daarna04:36:35.342Z uitsluitend triton-presentwritesync0B verplaatst naar eigen bewaard herstelbestand; dwmforce/nowarp/runtime blijven0BAAN. Broadbypasses afwezig. SwitchTTL5s uitbestaandebron; daarna1144→1848fullscreen maakt nieuwepresenttargets. Nativefysiekbureaublad2448×1848 zichtbaar, geenRDP enconsoleunlocked, PS5.1-videowrapperPASS. BestaandeNodecollector/prep enhardwarebrowserflags identiek; bestaande20sCPUhelper43368F…DFF98 binnen30smeting voorzien. GeenWPR/nieuweprofiler/nieuwebuildvariant. EénzelfdeAV1YouTubeclip:10sopwarming/30smeting plusfysiekeopname enbegrensdelogcat. Dit is de eerste gebruiksproef van deze kandidaat; nog geen snelheids-/pixelvrijgave. Productie uit, algemeen doel open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
