@@ -663,6 +663,15 @@ Ook Start6028 toont leesbare iconen en tekst, met native515D en runtimecontext51
 
 **Beslissing:** C45 als best geteste gecombineerde deelresultaat bewaren; nog geen vloeiende 3D/video of verklaarde opstartcrash, dus geen productie/merge/release. Geen extra blinde Flush-varianten. De actuele directe-app-log bevat grove AcquireResourceToken-wachten, maar de bestaande profiler meet die expliciete wacht en OS-callback niet afzonderlijk. Dat rechtvaardigt géén gateverwijdering of herhaling van de ongeschikte profiler. Eerst een passende bestaande meetmogelijkheid bepalen voor de resterende wachttijd. Bronnotitie: evidence/c45-acquire-profile-source-audit-r1/analysis.json, SHA76074FB1DE942F93BC9A66818571EA15046CD9F1B9FD9B1D1C7AB2F25C14ADA5.
 
+
+### C45 vervolganalyse — bestaande schedulertrace vóór een nieuwe driverproef
+
+**Vraag:** de actuele directe3Dlog bevat AcquireResourceToken-wachten met grove0/16msmetingen. De bestaande NPT-profiler meet de expliciete headwait en runtimeAcquireCb niet afzonderlijk. Eerst vaststellen of bestaande Windows schedulingstacks die twee paden kunnen onderscheiden; geen gate verwijderen zonder attributie.
+
+**Kandidaat/scenario:** C45 blijft ongewijzigd actief in de zelfstandige test-VM, productie uit. Alleen de reeds bestaande C41 GPU-ETL wordt gelezen, met een verse afgeleide ETLX. Dit is analysevoorbereiding, geen nieuwe snelheidsproef en geen bewijs van huidig C45-wachtgedrag. De actuele geïnstalleerde CPU.Verbose.Memory-profieldefinitie bevat CSwitch/ReadyThread/SampledProfile plus stacks; WPR is niet actief. C41 bevat die data al: 11014 gecontroleerde versie5-CSwitchrecords van28bytes en echte targetTID7308-kernel/userstackfragmenten. Microsofts decoder ondersteunt versie>2 met minimaal24bytes en de threadvelden op offsets0/4; geen gegokte versie2-layout.
+
+**Volgende beslissing:** met officiële Microsoft TraceEvent3.1.21 één daadwerkelijke switch-out/resume met samengevoegde stack uit de oude ETL bewijzen. Eenmalige kleine bestandsanalyse, geen nieuw algemeen captureharnas. De bestaande guest heeft .NETFrameworkcompiler maar geen WPA/TraceEventreader; een lokale reader wordt voorbereid met vastgelegde pakketidentiteit. Pas bij werkende interpretatie beslissen over een korte gerichte CPU-trace van de ongewijzigde3Dapp. Bewijsvoorbereiding: evidence/c45-c41-cswitch-decoder-readiness-r1/analysis.json SHA3FF8306EDD78CAB084CC83A32CFB638EE09F7EC36880C8D0016824C440B090BA en evidence/c46-acquire-wait-preparation-r1/. Geen nieuwe driver/installatie/boot/productie/merge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
