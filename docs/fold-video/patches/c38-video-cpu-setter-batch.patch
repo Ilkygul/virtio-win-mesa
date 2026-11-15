@@ -1,0 +1,84 @@
+--- a/src/virtio/neptune/npt_publisher_batch.h
++++ b/src/virtio/neptune/npt_publisher_batch.h
+@@ -49,6 +49,72 @@
+    }
+    return offset == size;
+ }
++/* C38: exact base VideoContext CPU-only state setters. These generated
++ * encoders copy their pointee fields into the ordered ring; no native pointer
++ * survives submission. Decode/Blt/getters/unknown commands remain barriers.
++ * Simple pointers use a uint64 presence count (0/1), not pointer-sized bytes.
++ */
++static inline bool
++npt_publisher_batch_video_setter(const void *data, size_t size, uint32_t method)
++{
++   const size_t hsize = sizeof(struct npt_command_header);
++   if (size < hsize + sizeof(uint64_t) + sizeof(uint32_t))
++      return false;
++   const uint8_t *bytes = data;
++   uint64_t processor;
++   memcpy(&processor, bytes + hsize, sizeof(processor));
++   if (!processor)
++      return false;
++   size_t pointer_offset, pointee_size;
++   switch (method) {
++   case NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamFrameFormat: {
++      if (size != hsize + 16u) return false;
++      uint32_t format;
++      memcpy(&format, bytes + hsize + 12u, sizeof(format));
++      return format <= 2u; /* progressive/top-field/bottom-field */
++   }
++   case NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamAutoProcessingMode:
++      return size == hsize + 16u; /* processor, stream, BOOL */
++   case NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamColorSpace:
++      pointer_offset = hsize + 12u;
++      /* Six bitfields are serialized as six uint32 values, NOT sizeof(native). */
++      pointee_size = 24u;
++      break;
++   case NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamOutputRate:
++      pointer_offset = hsize + 20u; /* processor, stream, rate, repeat */
++      pointee_size = 8u; /* DXGI_RATIONAL */
++      break;
++   case NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamSourceRect:
++   case NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamDestRect:
++      pointer_offset = hsize + 16u; /* processor, stream, enable */
++      pointee_size = 16u; /* RECT */
++      break;
++   default:
++      return false;
++   }
++   if (size < pointer_offset + sizeof(uint64_t))
++      return false;
++   uint64_t present;
++   memcpy(&present, bytes + pointer_offset, sizeof(present));
++   if (present > 1u ||
++       size != pointer_offset + sizeof(present) + (size_t)present * pointee_size)
++      return false;
++   if (method == NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamColorSpace)
++      return present == 1u; /* Required input, copied six-field value. */
++   uint32_t value;
++   memcpy(&value, bytes + hsize + 12u, sizeof(value));
++   if (method == NPT_METHOD_ID3D11VideoContext_VideoProcessorSetStreamOutputRate) {
++      if (value > 2u || (value == 2u && !present)) return false;
++      if (value == 2u) {
++         uint32_t denominator;
++         memcpy(&denominator, bytes + pointer_offset + sizeof(present) + 4u,
++                sizeof(denominator));
++         if (!denominator) return false;
++      }
++      return true;
++   }
++   return !value || present; /* Enabled source/destination rectangles need RECT. */
++}
+ static inline bool
+ npt_publisher_batch_method(const void *data, size_t size, size_t reply_size,
+                            uint32_t direct_size)
+@@ -61,6 +127,8 @@
+        (h.cmd_type >> 24) != 255)
+       return false;
+    const uint32_t iface = (h.cmd_type >> 8) & 0xffffu;
++   if (iface == NPT_IFACE_ID_ID3D11VideoContext)
++      return npt_publisher_batch_video_setter(data, size, h.cmd_type & 0xffu);
+    if (iface == NPT_IFACE_ID_ID3D11DeviceContext1) {
+       switch (h.cmd_type & 0xffu) {
+       case NPT_METHOD_ID3D11DeviceContext1_VSSetConstantBuffers1:
