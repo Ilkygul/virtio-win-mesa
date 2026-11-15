@@ -449,6 +449,19 @@ De standaard-export bevat daadwerkelijke Edge-DXGI Present42/43, DxgKrnl QueuePa
 
 Volgende stap is analyse van deze bestaande opname, geen nieuwe proefvariant: exacte context/sequence koppelen, CPU-Presentduur onderscheiden van native completion en compositorwachttijd. Geen FIFO-, ownership- of completiongate verwijderen zonder aangetoonde fout. Relatieve tijd en header-FILETIME gebruiken: tracerpt rendert een inconsistent +00:59-offsetlabel. Bronmapping evidence/f91-etw-completion-mapping-r1/analysis.json SHA261CC6FBADF8CEE16B925478EC2476AF77C1914B99C9C5A57E7D3100B79FF2F0. Productie blijft uit; algemeen doel open.
 
+
+### C41 analyse — queuepressure bewezen; nog geen afzonderlijke completionbug
+
+Exacte context/device/sequence-joins, centrale1000..8000ms en aparte randcontrole: EdgeGPU3540 heeft5296render-DMAs, DWM1448 heeft5093. Edge vóór-DMA-queue p502.079ms/p9528.821ms/max65.487ms; virtuele service p500.546ms/p957.146ms/max14.664ms. De lange queue is geen lege stilstand: tijdens het maximum worden19oudere Edge-packets en21DWM-packets verwerkt. CompletionInfo→Stop p95Edge15.1us. Event245 is na schemacontrole **SIGNAL** (PacketType5), niet WAIT; geen PacketType4. De72B is een notifywrapper en zegt niets over de hoeveelheid GPUwerk. Bron/joins: evidence/c41-kernel-completion-analysis-r1/analysis.json SHAFCE9560AD0C8508417B9FA4B0A3158FE947EFFC3AB020ED4CD589DA08DD2CD02.
+
+236succesvolle EdgePresentparen opGPU3540/TID7308/éénswapchain: CPUwallmediaan3.441ms, startafstand33.472ms; ongeveer89%vaninterstartwall valt buitenPresent. 6230DxgkSubmitCommandcalls opdieTID samen65.827ms/mediaan~8us/max0.371ms: geen bewezen lang CPUsubmitblok. De16.84ms-VBlankwaits horen bij andereTID5092. Na initiële oude-statistiekcatchup melden refresh/QPC envirtueleVSync ongeveer59–60Hz; geen bewezen verkeerde refreshtiming. Eénexact gedeeld syncobject:235gelijkeFenceValues waren al gesignaleerd vóór de EdgeGPU-waitopdracht. Geen foutpatch voor die wait. Analyse evidence/c41-edge-present-analysis-r1/analysis.json SHADCDECE7D4D74A7FB5A194A422701E857E131D64F6DC8A1AFAF60592ACB2586B8.
+
+DWM/flip enEdgebron liggen beide circa29/s terwijl virtueleVSync circa59/s loopt; fysieke59fpsnietbewezen. DWM-gerenderde-framecyclus mediaan21.944ms; overlappendephasesnietoptellen. Analyse evidence/c41-dwm-present-analysis-r1/analysis.json SHAC24AB58709620227D11A6E24781AF4FD6B8C46FEEBCD5ACF1654F0EAA6E5D94E. De meting rechtvaardigt geen timer-, FIFO-, completion- of refreshgateverwijdering.
+
+**Volgende bronvraag, nog geen livewijziging:** de bestaande C20-qualified-present-bundeling staat onder een conservatieve force-per-write-testschakelaar. Een bestaande C40-logregel toont DWM1448DrawIndexed per-writewait15ms binnen de videofase; dit is apart bewijs van die wachtroute, niet de C41-ETWjoin. Controleer of uitsluitend positief getypeerde, lokaal beheerde displayable-present-buffers veilig per volledig frame kunnen publiceren, met alle Present/Flush/hergebruik- en echteGPUcompletiongates behouden. dwmwritesync blijft aan: uitzetten zou ook ineligibleatlas/import/UAV-writes overslaan. Alleen de force-present-schakelaar onderzoeken is smaller.
+
+Het bestaande BatchPresentWrites-predicaat omvat ook PRESENT/misc0, terwijl WrittenPrimaries alleen explicietDISPLAYABLE/class1 dekt. Daarom geen algemene “redundante gate”-claim. Een kleine drivercorrectie die de bundelingsbevoegdheid tot positief bewezenclass1 beperkt wordt eerst bronmatig beoordeeld. De huidige C37 blijft ongewijzigd, productie uit; algemeen doel open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
