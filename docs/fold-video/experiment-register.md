@@ -835,7 +835,7 @@ Bestaande collector ongewijzigd behalve eigen task/output en Chromiumlogging. Fo
 
 **Nieuwe beslissende browserlog:**09:34:00.433Z ANGLE Renderer11::mapResource4284: Map faalt met0x887A0005/removalreason5;00.451EXT_robustnesscontextlost;00.507unrecoverablerestart;00.697GPUprocesexit34. Dit is contextverlies na Map, geen aangetoonde watchdogexit. Hardwaredriverfoutketen is nu concreet gelokaliseerd.
 
-Broncontrole: tritonResourceMap1137–1150 vertaalt iedere innerMapfout behalveWASSTILLDRAWING naarDEVICE_REMOVED. Daardoor bewijstANGLE5 nog niet de oorspronkelijke nativeHRESULT of eerste transport/device-latch. Het bestaande TR_LOG met sub/type/flags/originelehr ontbreekt: nulregels van echteGPU1492 inNeptune-log; latereInfoGPU1548wel. Logfile heeft daadwerkelijk MandatoryMediumNW; dit is een concrete aanwijzing voor ontbrekendeLow-sandboxlogtoegang. NativePowerShell-modulelijst toont bovendien slechts54modules en mist zelfsmsedge.dll: niet gebruiken alsbewijsvoorsoftwareterugval.
+Broncontrole: tritonResourceMap1137–1150 vertaalt iedere innerMapfout behalveWASSTILLDRAWING naarDEVICE_REMOVED. Daardoor bewijstANGLE5 nog niet de oorspronkelijke nativeHRESULT of eerste transport/device-latch. Het bestaande TR_LOG met sub/type/flags/originelehr ontbreekt: nulregels van echteGPU1492 inNeptune-log; latereInfoGPU1548wel. Logfile heeft daadwerkelijk MandatoryMediumNW; dit is een concrete aanwijzing voor ontbrekendeLow-sandboxlogtoegang. CORRECTIE later: de gebruikte vereenvoudigde PowerShell-modulefilter was syntactisch fout. De ongefilterde inventaris bevat msedge.dll en neptune_umd.dll; dit was geen bewijs van gedeeltelijke enumeratie of softwareterugval.
 
 Nieuwehostfilter bevat nu37NptHwDec-regels enloopt90s voorbijdeeerdergemistefout; wordtbronmatiguitgelezen. BestaandeKMDregistrysnapshot bewaart actueleDbgLog2naast duidelijkouderebootslots. Eigenbrowser09:36:37Z normaalgesloten/exitbevestigd; beideopnames enbrowserlogbewaardvoorvolgendestart.
 
@@ -908,6 +908,18 @@ Versebrowser5896/birth1794737815178, echteGPU5480/birth1794737815981 tijdens met
 Belangrijke scopecorrectie: de eerderepositievevolledigeAccessCheck was voor **vervangendeGPU1552**, niet dezeoorspronkelijkeGPU5480. Verschillende initiële/latere sandbox- ofintegriteitsrechten zijn nog niet gemeten; die positievequery bewijst dus niet dat de primaireGPUruntimelogtoegang heeft. Geen verderevideorun onderdieaanname.
 
 Eigenbrowser5896 normaalgesloten10:21:26Z. Bewijs evidence/c46-runtime-map-origin-r1/analysis.json SHAac974fdc3afa148b32bae83b7c906119d227991fd75703f3c3cd3b1ad4abb8dd. **Volgende anderevraag:** één bestaandeversebrowserstart opabout:blank, zonderYouTube/benchmark/opname, en rechtstreekshet oorspronkelijkeGPU-token na initialisatie lezen met hetzelfdegebondenread-onlyscript. Zo oorspronkelijke vsreplacementIL/restrictedsIDs/fileAccessonderscheiden. Tijdelijkelogonappend/Low blijven uitsluitendvoordiemeting; concreteherstelhelper naarorigineleDACL/Mediumligt klaar. C46blijfttestalleen, doelOPEN/geenproductie.
+
+### C46 oorspronkelijkeGPU/driver bewezen; alle logrechten hersteld; standaarddebugcapture volgt
+
+De lege browser12096/GPU3740 is rechtstreeks na initialisatie onderzocht, zonder video. EchteoorspronkelijkeGPU heeft **Low4096, geenAppContainer, volledige owner/group/DACL+LowlabelAccessCheckappendtrue4**. De hypothese dat het primaireproces een anderprocessintegriteitsniveau heeft dan de vervanger is daarmee nietondersteund. Effectiefthreadtoken/bootstrap enfeitelijkeCreateFile/GetFileSizeEx blijven apart.
+
+Een concrete eerdere meetfout is gecorrigeerd: `Where-Object ModuleName-like'neptune*'` was een foutieve vereenvoudigdefilter. De correcte scriptblockfilter toont in GPU3740 daadwerkelijk **neptune_umd.dllSHA2A7DC660…E744D**. Ook de ongefilterdeoude1492inventaris bevat msedge.dll/neptune; eerdereafwezigheids-/gedeeltelijkeenumeratieclaims zijn ingetrokken, nietalsdriverfeitgebruiken.
+
+Eigenlegebrowser normaaluit10:30:52Z. **10:31:14Z alle tijdelijke logrechten volledig hersteld:** exacteorigineleDACL/eigenaar, geenappendACE, nativeDACLcode0/labelUnprotectcode0, `S:AI(ML;;NW;;;ME)`. Bewijs evidence/c46-original-gpu-token-r1/analysis.json SHAc49a7d0f8ab2c0845aa2385148ea75a23268bf7c6837e662fe3aff2cf55d0b1a.
+
+[Broncontract](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfilesizeex): bestaandeUMDlogger opentalleenFILE_APPEND_DATA enschrijftpasnaGetFileSizeEx; appendmodelalleenbewijstnietdevereistemetadatatoegang/directoryfallback. Allefilefoutenwordenstilweggelaten. OutputDebugStringA staat daarvóór. Daarom parkerenweACLvarianten engebruikende [standaardMicrosoftDebugViewCLI](https://learn.microsoft.com/en-us/sysinternals/downloads/debugview), geen nieuwcaptureharnasofdiagnostischeUMD-build.
+
+OfficiëleDebugView5.02ARM64CLI484664B, SHA **33B4F93A65B1460B9C839FDF1DAE35334A3170CDB637F6B9A2E0DABFFC7D7A9E**, daadwerkelijkeWindowsAuthenticodeValid/MicrosoftCorporationAB172913…79B72 en --help gecontroleerd. AlleenWin32capture onderinteractiveLimitedSession1, **kernel/globalOFF**,120s/50000regels, PID-filter op éénverseownedGPUkandidaat. BestaandeobservermoetexactPID/birthbevestigen. Eénzelfdebestaandevideotaak vraagtorigineleMaphr op; diagnosegeenFPSvergelijking. CLIeindigtnatuurlijk, geenextraGPU-/kernel-/signingpolicywijziging. C46testVM/Code0/C45herstelpunt/bouw-pcuit blijven; doelOPEN/geenproductie/mainmerge/release.
 
 ## Exacte kandidaat-identiteiten
 
