@@ -416,6 +416,17 @@ Lokale launcher `artifacts/proposals/c40-edge-guest-profile-launch-r1/launch-own
 
 Een afzonderlijke F91-broncontrole vond geen vaste normale timerpoll of extra VBlank-wacht: eventgestuurde completion/ledger en dezelfde high-resolution16.67ms-VBlankcode als legacy. Geen bewijs voor een every-other-VBlank-fout, dus geen KMD-patch op basis van die hypothese. Bronanker `evidence/f91-completion-vblank-source-audit-r1/analysis.json`, SHA2C90053D7DF45A59AA8BDA8F4E870E4A4A3EB2B735BC4FCE4DA5C17502A2AA63.
 
+
+### C40 start gereconcilieerd; meettoegang tot één debugbestand
+
+De launcher heeft de volle log van33554494B intact bewaard, SHA79BC0EFBB3E1D40B36EC67332B25D118CAE0BB8F2995C2217B90FC5F86EA4673. Browserstartstub7932 heeft zichzelf vervangen door browser1996 (geboorte03:11:53.866Z, parent7932), hetzelfde eigen profiel/poort9334 en door Edge toegevoegde `--do-not-de-elevate`; GPU944/geboorte03:11:54.032Z laadt echte C20-UMD57899…. Native netstat bindt9334 aan1996; bestaande Node-CDP reageert. De oorspronkelijke strikte PID-readinessguard was hiervoor te eng. Een statusquery liep in een timeout; Windows/Edge bleven bereikbaar en werden niet opnieuw gestart. De oude eigen query bleek later werkelijk verdwenen.
+
+Nog geen profilerwinst of activatie aangenomen: ook de onvoorwaardelijke DLL_ATTACH-logregels van GPU944 ontbreken. Omgevingsverlies alleen verklaart dat niet. Nieuwe en oude log-DACL/owner zijn identiek, maar read-only tokencontrole toont GPU944=low(RID4096), browser1996=medium(8192), geenAppContainer, beide niet elevated. Beide logbestanden hebben geen expliciet verplicht label en worden daarom als medium behandeld. Microsoft documenteert dat low-processen zulke bestanden niet kunnen beschrijven, ook als de DACL schrijven toestaat: [Mandatory Integrity Control](https://learn.microsoft.com/en-us/windows/win32/secauthz/mandatory-integrity-control).
+
+Root heeft tijdelijk uitsluitend `C:\Users\Public\neptune.log` naar low gelabeld; geen map, proces, sandbox, browserflag, driver of gewone rechtenlijst is aangepast. De32MiB-cap blijft actief. De oorspronkelijke descriptor/policy is opgeslagen; na de proef volgt herstel naar dezelfde effectieve medium-policy, met ongewijzigde DACL/owner. Concrete intent/receipt: `evidence/c40-edge-submit-profile-r1/temporary-low-log-label.json`; read-only tokens/labels: `token-and-file-label.json`. Oude log is niet gewijzigd.
+
+Nu één begrensde bestaande30s-videoproef op **dezelfde** gereconcilieerde browser, zonder relaunch. Alleen echte per-PID profilerregels met twee toenemende cumulatieve snapshots kunnen activatie en bruikbare data bewijzen. Geen regels betekent ontbrekend meetbewijs, niet gratis publicaties of nul kosten. Bronreconcile `independent-source-reconcile.json` SHA85A0D956D0C5D3B74C2017654EED1A1B9288FABCB2BCBC4B06CD2468E2DD8D68. De gewijzigde collectorwrapper is werkelijk met PS5.1 geparseerd; de bestaande Node-collector/prep blijven gepind en ongewijzigd.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
