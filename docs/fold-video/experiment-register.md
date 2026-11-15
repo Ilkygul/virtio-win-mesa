@@ -1164,3 +1164,10 @@ Eén meetscript: [meet/meet.sh](meet/meet.sh) + gasthulp [meet/meethulp.ps1](mee
 | D4 + Present-sync uit | extra winst zonder Present-wacht? | gelijk (slepen 57 fps maar gat 54 ms), video 1,3% | geen winst → Present-sync weer AAN |
 
 Stap 3 (privé-kopie bij Present) en 4 (hardware-cursor) zijn niet gebouwd: Present-sync kost meetbaar niets en de cursor haalt al 59 fps onder last. Flyout: de SF-burst duurt ~390 ms, maar dat is het nafaden van de acrylachtergrond; de inhoud is na het eerste frame compleet (D5). Bij de eerste koude start na een telefoonherstart trad eenmalig MEMORY_MANAGEMENT 0x1A (0x4477) op; tweede start schoon. Meetfout onderweg: een aanraak-/muissleeptest verplaatste een bureaubladsnelkoppeling (teruggezet); slepen gaat nu alleen nog via de titelbalk van eigen testvensters.
+
+### P1 pvpanic-driver in de gast (15 november 2026)
+
+- **Hypothese:** met pvpanic meldt Windows een bugcheck direct aan crosvm, zodat een crash als de 0x1A/0x4477 van 19:13 meteen in de host-log staat.
+- **Wijziging:** pvpanic ARM64 gebouwd in de Windows-bouw-VM (testcertificaat "viogpu pVM Test"); INF aangevuld met crosvm-ID `PCI\VEN_1B36&DEV_0011&SUBSYS_00FF00FF&REV_01` (upstream matchte alleen SUBSYS_11001AF4). Geïnstalleerd met `pnputil /add-driver ... /install`, zonder VM-herstart. Bron/asset: Ilkygul/gunyah-guest-drivers-windows branch `pvpanic-arm64` (cf463fb), release `pvpanic-arm64-20261115`.
+- **Resultaat:** "QEMU PVPanic Device" status OK, service pvpanic RUNNING. Niet expres gecrasht. Verwachte stderr-regel: `INFO  crosvm::crosvm::sys::linux] Guest reported panic [Code: Guest panicked and crash kernel loaded]` (CrashDumpEnabled=3 → code 2, VM loopt door tot reset), of `[Code: Guest panicked]` als de dump niet start (code 1 → bij de reset `exiting with guest panic`, exitcode 34).
+- **Besluit:** blijft geïnstalleerd; GPU-route/markers ongewijzigd.
