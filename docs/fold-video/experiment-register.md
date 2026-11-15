@@ -427,6 +427,17 @@ Root heeft tijdelijk uitsluitend `C:\Users\Public\neptune.log` naar low gelabeld
 
 Nu één begrensde bestaande30s-videoproef op **dezelfde** gereconcilieerde browser, zonder relaunch. Alleen echte per-PID profilerregels met twee toenemende cumulatieve snapshots kunnen activatie en bruikbare data bewijzen. Geen regels betekent ontbrekend meetbewijs, niet gratis publicaties of nul kosten. Bronreconcile `independent-source-reconcile.json` SHA85A0D956D0C5D3B74C2017654EED1A1B9288FABCB2BCBC4B06CD2468E2DD8D68. De gewijzigde collectorwrapper is werkelijk met PS5.1 geparseerd; de bestaande Node-collector/prep blijven gepind en ongewijzigd.
 
+
+### C40 afgerond — profiler onbruikbaar voor de actieve GPU; geen driverwinst
+
+De enige 30s-proef liep 03:30:21.840–03:30:53.213Z op dezelfde C37/F91/C20-stack. Rapport errors[], 1803 totaal/1022 drops in29.997s: circa26.04 berekende niet-gedropte frames/s. Dit is geen verbetering. Fysieke opname lokaal: evidence/c40-edge-submit-profile-r1/phone.mp4 (84983871B).
+
+GPU944 produceerde geen profilerregels en ook geen gewone DLL_ATTACH-regels. Nieuwe Edge-logregels kwamen van een tijdelijke capabilityhelper5448, niet van de actieve GPU944. Daardoor ontbreken de twee vereiste snapshots; publicatiekosten zijn onbekend, geen nulmeting. Het tijdelijke low-label was onvoldoende; verdere ACL-/sandboxvarianten geparkeerd. Een overwogen tweede launcherproef is geannuleerd en niet uitgevoerd.
+
+03:38:45Z is uitsluitend de nieuwe log teruggezet naar effectieve medium-policy (nu expliciet), DACL/owner ongewijzigd en de oude volle log intact. De eigen browser1996 is 03:38:46Z via Browser.close gesloten; de gewone Edge2808 bleef aanwezig. Bewijs: log-label-restoration.json, owned-browser-cleanup.json en independent-source-reconcile.json onder evidence/c40-edge-submit-profile-r1/. De handmatig startbare C40-taak heeft geen triggers. C37-VM blijft actief, productie uit.
+
+**Volgende diagnose C41:** ingebouwde Windows GPU-/compositietrace gebruiken om submit/completion/presentatie te onderscheiden, zonder softwarefallback, browser-sandboxwijziging of nieuwe driverbuild. Read-only inventaris bevestigt WPR, tracerpt en logman aanwezig, profielen GPU/Video/DesktopComposition beschikbaar en WPR niet actief. Eerst de beschikbare profieldefinities controleren; dan één korte gerichte trace bij de bestaande videotaak. Alleen concrete wachttijd-/foutgegevens rechtvaardigen een volgende functionele driverpatch. Algemeen doel open; geen productie-release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
