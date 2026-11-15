@@ -1071,6 +1071,13 @@ Beslissing: alleen de C47-testchild naar4096MiB; liveRPCenpersistedconfig exact 
 
 Windowsboot13:08:58Z/GPUCode0/old2A/F91, werkelijke4GiB en vijf juiste schijf/VARS-FDs bevestigd. Korte8s-app eindigt normaal maar backbuffer **960×553**, niet960×640; Androidopname toont DroidVM-toolbars en nativeverbinding2448×1144. De40,98API/s is daarom **geen geldige vergelijkingsbasis of snelheidswinst**. Originele forcepresentmarker/ACL hersteld. Concrete herstelreden: nativevolledigscherm, stabiele2448×1848, daarna alleen dezelfde8sbasis onder versrunnummer; geen codewijziging. Bewijs `evidence/c47-present-single-publication-r1/c46-ram4-baseline-final`, `c46-ram4-baseline-phone.mp4`, `ram4-after-baseline-gpu.json`. C47nogNIETgeïnstalleerd.
 
+
+### C46/RAM4 volledige basis geslaagd — C47-installatie volgt
+
+ZelfdeC47child/Windowsboot13:08:58Z/DPI200/native2448×1848, maaroudeC46DLL2A daadwerkelijkingeladen. Nafullscreenherstel:221Presents/8,014185s=**27,5761API/s**, echte960×640/privatecopy0/vsync1/15Draw, natuurlijkeexit0/Code0/geenerrors/deviceremoved/focusverlies. Volledigeopnamebewaard; contactblad toontcomplete15kubusscène enleesbaretitel. Geen60Hz-/algemeneglitchevrijclaim. Origineleforcepresentmarker+ACLweergelijkhersteld enverse4strictmarker/F91/old3DLLbaselineverzameld.
+
+Bewijs `evidence/c47-present-single-publication-r1/c46-ram4-baseline-r2-guest-run`, `c46-ram4-baseline-r2-phone.mp4`, `ram4-baseline-r2-running-modules.json`, `first-install-baseline-after-baseline8.json`. NugebondenC47drieDLLtransactie; pasnaversenormaleWindowsbootnieuwe38DCgeladenbewijzen enexactdezelfde8staak. RAM6basisblijftapart. Geenproductiewijziging/doelopen.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
