@@ -883,6 +883,14 @@ BestaandeNeptune-log blijft exact47startupregels vanGPU1760, geenorigineleMaphr.
 
 Bewijs evidence/c46-fresh-map-origin-r2/analysis.json SHA02619a5bcdb937fb4df597971924420f141291928043080a6bc04d7213881971. Eigenbrowser1268/vervangendeGPU1552 is uitsluitend nogevenactief voor één read-onlytoken/DACL-AccessCheck op neptune.log. TijdelijkLowNW is nogactief/DACLgelijk; daarnaeigenBrowser.close/logbehoud/Mediumherstel. Geenalgemeenharnas, driverwijziging, productie/mainmerge/release; doelOPEN.
 
+### C46 runtime-logrecht exact vastgesteld: beperkt token mist append-toegang
+
+PS5.1parse/externeSHA B71C35C5…7B148A van één specifiek read-onlytoken-script PASS. Werkelijke, noglevendevervangendeGPU1552/birth1794736439145 en ouder1268 zijngecontroleerd. TokenLowIL4096, **geenAppContainer**, restrictedSIDs omvatten Users/Everyone/**S-1-5-12 RestrictedCode**/logonSID. neptune.log isLowNW; DACL bevat welInteractive maargeenpassenderestrictedSID. **AccessCheck(FILE_APPEND_DATA4) voltooitfoutloos en weigert: granted0/allowedfalse.** Dit is concreteDACL-dekking, geenfysiekeCreateFile-/brokerproef; metadata verandertgeen token/file/privileges.
+
+Bewijs evidence/c46-gpu-runtime-log-access-r1/actual-token-and-access.json; scopedsource103regels artifacts/proposals/c46-gpu-log-token-access-r1/read-gpu-log-token-access.ps1. Zo verklaren47pre-sandboxstartupregels niet de runtimefoutdekking.
+
+**Volgende kleinste diagnostiek:** tijdelijk uitsluitendAppendData+Synchronize voorRestrictedCode opditenelogbestand, origineleDACL/ownerbewaard enLowNWalleenvoordiagnose. Hetzelfde read-onlyAccessCheckmoetdaarnaAppendAllowedtruegeven vóórnieuwevideostart. Eigenbrowserdannormaalclose/finalelogbehoud; éénversebestaandeMap-repro met nuverifieerbare runtime-logtoegang, daarnaDACL+Mediumexactherstellen. GeenAppContainerbredegrant/driver-/GPU-/softwarefallbackwijziging engeenalgemeenharnas. AlgemeendoelOPEN, geenproductie/mainmerge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
