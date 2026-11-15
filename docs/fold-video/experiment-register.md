@@ -13,7 +13,7 @@ Bijgewerkt: 15 november 2026. Dit is het centrale beslisregister voor de Fold-pr
 | Gewone Windows-taken | Ongewijzigd Taakbeheer en Start zijn met C33/latere native stack leesbaar bij de eerder vastgelegde hertekenacties; directe15-kubus3D geeft complete beelden met gewone titelbalk. Edge gebruikt AV1-hardwaredecode/QTI-VPU met lage totale Windows-CPU. Dit is beperkte bruikbaarheid, geen vloeiendheidsvrijgave. |
 | Resterende prestaties | Circa27–28fps in recente directe3D; hardwarevideo circa27–31 niet-gedropte browserframes/s met veel drops. Geen soepele60fps-claim. |
 | Resterende stabiliteit | Eerdere READ Map/RES_INFO-fout bij grote diagnostische readback leidde tot OOM/deviceRemoved/GPU-exit; eerste kerneloorzaak nog open. Een latere32MiB-map slaagde: geen reparatiebewijs of universele32MiB-limiet. |
-| Huidige apparaatstand | C47-test-VM na proef normaaluit, vier originele strictmarkers/ACL hersteld, fullDRAIN/poolontladen; Android circa9971MiB vrij. Herselectie van C46/RAM4 wordt afzonderlijk vastgelegd. Gewone Windows-schijf blijft beschermd. |
+| Huidige apparaatstand | C46/RAM4 werkelijk hersteld: config9FDA, Windowsboot13:29:32Z, DWM1340 laadt2A7D, GPUCode0. WerkelijkeFDs C46RW/C35+C33RO/privateC46VARS; geen gewone schijf. Oorspronkelijke rotatie3/DPI200 behouden, gekwalificeerdeforcepresentOFF hersteld. C47-child is definitief buiten gebruik omdat zijn parent weerRW draait. |
 | Eerstvolgende concrete beslissing | Beste C46/C37/C33-bronstaat inclusief F91 reproduceerbaar in de juiste GitHub-ontwikkelrepositories vastleggen en C46/RAM4 behouden. Geen automatische volgende performancevariant. Daarna één gerichte stabiliteitsreparatie rond de eerste RES_INFO-/mappingfout op basis van bestaand bewijs. |
 
 De oude release met uitsluitend een klassieke titelbalk voor de eigen demo blijft een **afzonderlijk beperkt historisch resultaat**. Zij vormt geen bewijs dat gewone Windows-apps correct zijn. Er is geen nieuwe algemene productie-release of main-merge.
@@ -1094,6 +1094,13 @@ Zelfde4GiB/DPI200/native2448×1848/immutable8s/960×640/vsync1/privatecopy0/defa
 NieuwebronaanwijzinginactualcompiledC47: Presentroeptvoorhetpaar `npt_runtime_owner_maintenance` aan; `npt_device.c796–806` publiceertdeDrawprefixalonvoorwaardelijkvóórEventdrain/COM_RELEASE/MapSlotcleanup. DeC47helpertestbewijstbundelingindienbytesnogpendingzijn, maarhetvolledigePresentpadwerdnietmeegenomen. Ditkandegehooptebundelingvoorkomen; geenbewezen30mscausaliteit. **Nietongewijzigdherhalen.** Onderzoekééngerichteconditioneringvanonderhoudmetbehoudvanallepublicatie-/GPU-/lifetimegrenzen; geenblindeskipofsoftwarefallback. Eerstbronvoorwaarden, danéénconcretecorrectie.
 
 Bewijs `evidence/c47-present-single-publication-r1/matched-ram4-3d-decision.json` SHA `5bf652ca5951eb1529a85cda48ba13c00ef0196e6b9b4038e8fd2c03d7da95d9`, beideguest-runs/phoneclips/contactbladen. GeenC47videowinstofproductiemerge/release; doelopen. C47ligtalleenintestchild, C46frozenherstelpuntblijftbehouden.
+
+
+### C47 afgesloten en beste C46/RAM4 hersteld; bronpublicatie loopt
+
+Gebruiker heeft expliciet besloten bij onvoldoendewinstdezeoptimalisatiefamilieteparkeren. C47uitkomst27,157vs27,576blijftgesloten; C48wordtNIETgebouwd/gestart. C47Windowsnormaaluit/marker+ACLhersteld/fullDRAIN/poolontladen. ExacteC46RAM4fullconfig9FDAhersteldinliveRPCénpersistedbytes; versepool5120/Android5393. C46Windowsboot13:29:32.6973570Z/DWM1340actual2A/GPUCode0; actualFDs C46RW,C35+C33RO,eigenC46VARSRW. Geenproductieschijf. C47descendantnietmeerherbruikbaarnaC46parentRW; bewaardeproefresultatenblijvengeldig.
+
+Nieuwebronpublicatieisgeenherhaaldehardwareproef: [exactgeteste443Windowsbronnen](https://github.com/Ilkygul/virtio-win-mesa/commit/27cbe9982e4255b727878f34d5e582a1f99ccab8) en [bestaandebouwrecepten/provenance](https://github.com/Ilkygul/virtio-win-mesa/commit/03d9542512919a0a729b6a485754dcbaab89b3c0) zijnnuGitHubcode. OriginalMesaHEADfc5rechtstreeksopbouwVMgelezen;440originelebestandenmatchenbuildbaseline. GedeeldeWDDMheader35dacisreedsbyte-exactinbranch. DehostbasiscommitsblekennogNIETopGitHubbeschikbaar; daaromwordenbestaandeGit-objectenbewaardvoorpublicatieineigenVirgl/DXVK/Crosvmforks. Geenrebuild/nieuweperformancevariant/stabielevrijgave. Bouw-pcvoorprovenanceeerstenormaaluit; uitsluitendnoodzakelijkeGitbasebewaringLinux-onlyloopt,WindowsbouwVMblijftuit.
 
 ## Exacte kandidaat-identiteiten
 
