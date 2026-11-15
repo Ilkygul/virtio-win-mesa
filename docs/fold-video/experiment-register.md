@@ -401,6 +401,21 @@ Aanvullende gastbron: ook VideoProcessorBlt en de vijf setters zijn al asynchroo
 
 Volgende veilige stap is bestaande publicatie-/presentatieprofilering aan de echte Edge-route koppelen, zonder nieuwe build of algemeen captureharnas. Eerst vaststellen waar gebruiksdoorvoer verloren gaat; geen ongefundeerde CPUtail-, CS- of pollvariant. **Algemeen doel blijft open; geen productie-release of merge.**
 
+
+## C40 — bestaande gastprofiler voor de echte Edge-publicatieroute
+
+Vorige doelbeurt: PROGRESS. C39 is werkelijk gebouwd/getest, de CPU-controlvertakking is bewezen en de bestaande CS-trace is uitgevoerd; geen overtuigende videowinst. C37 is volledig hersteld. Nieuwe beurt bevestigt de werkelijk actieve main6970/start1838014, eigen C35-schijf, configC6278C…B434 en afwezige C22/hwdec-markers. Het algemene doel blijft open.
+
+**Vraag:** nemen de zes afzonderlijke asynchrone publicaties (vijf videostatussetters en Blt) in de echte Windows-gast merkbare tijd in beslag? Bestaande 3D-profielen beantwoorden dat niet. Gebruik daarom de reeds geïnstalleerde `NPT_DEBUG=profile`-meting, uitsluitend in een nieuw gestart eigen Edge-proces met dezelfde bestaande hardwareprofielmap, poort9334 en ongewijzigde browserflags. Geen nieuwe driverbuild, softwarefallback, systeemomgeving of registerwijziging.
+
+De bestaande profiler meet gecombineerde submitduur per methode, niet geïsoleerd SubmitCommandCb. Hij dumpt cumulatieve top20-methodes na4096submits;1000ms is geen gegarandeerde1Hz-cadans. Vraag daarom twee geldige toenemende snapshots van dezelfde actuele GPU-PID tijdens één zichtbare openbare YouTube-clip, met10s opwarming en30s meting. Afwezige methodes zijn geen nul en startupkosten zijn geen playbackkosten. Als de informatie ontbreekt, geldt de proef als beperkt bewijs en volgt geen automatische ongewijzigde herhaling.
+
+Read-only startinventaris: zes Edge-processen van de gewone startupboom, geen eigen testprofiel en geen9334-listener. Die gewone sessie blijft intact. De globale diagnostieklog `C:\Users\Public\neptune.log` is33554494B en heeft zijn32MiB-cap bereikt. De concrete launcher bewaart uitsluitend dit exacte volle logbestand via same-volume move naar een verse eigen proefmap, met hash/lengte vóór en na; geen truncate/delete. Daarna kan de bestaande per-regel logger een nieuwe begrensde logperiode maken.
+
+Lokale launcher `artifacts/proposals/c40-edge-guest-profile-launch-r1/launch-owned-edge-profile-r1.ps1`, SHAF326A3EF53283D671A32DFCE614A6740413839922F4E441897251BC907B6A0FF; Root heeft alle81regels gelezen. Eén verse interactieve USER-taak is alleen een launcher; de bestaande Node-collector blijft ongewijzigd. Werkelijke PS5.1-parse, actieve fysieke console, nieuwe browser/GPU-PID/geboorte en expliciete profiler-enabled-regel blijven vereist. De eerste preflight werd door proces-executionpolicy tegengehouden bij de reeds gepinde consolehelper; geen live actie uitgevoerd. Herhaling gebruikt uitsluitend proceslokale executionpolicy voor die beoordeelde helper.
+
+Een afzonderlijke F91-broncontrole vond geen vaste normale timerpoll of extra VBlank-wacht: eventgestuurde completion/ledger en dezelfde high-resolution16.67ms-VBlankcode als legacy. Geen bewijs voor een every-other-VBlank-fout, dus geen KMD-patch op basis van die hypothese. Bronanker `evidence/f91-completion-vblank-source-audit-r1/analysis.json`, SHA2C90053D7DF45A59AA8BDA8F4E870E4A4A3EB2B735BC4FCE4DA5C17502A2AA63.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
