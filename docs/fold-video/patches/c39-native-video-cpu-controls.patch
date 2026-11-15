@@ -1,0 +1,283 @@
+--- a/dxvk/src/d3d11/d3d11_device.cpp
++++ b/dxvk/src/d3d11/d3d11_device.cpp
+@@ -1887,6 +1887,17 @@
+           void*         pFeatureSupportData,
+           UINT          FeatureSupportDataSize) {
+ #if defined(__ANDROID__)
++    if (uint32_t(Feature) == NPT_D3D11_FEATURE_VIDEO_CPU_CONTROL_V1) {
++      if (!pFeatureSupportData || FeatureSupportDataSize != sizeof(npt_d3d11_video_terminal_v1))
++        return E_INVALIDARG;
++      const npt_d3d11_video_terminal_v1 response = {
++        NPT_D3D11_VIDEO_CPU_CONTROL_MAGIC, 1,
++        uint32_t(sizeof(npt_d3d11_video_terminal_v1)), NPT_D3D11_VIDEO_CPU_CONTROL_SUPPORTED,
++        { 0, 0, 0, 0 }
++      };
++      memcpy(pFeatureSupportData, &response, sizeof(response));
++      return S_OK;
++    }
+     if (uint32_t(Feature) == NPT_D3D11_FEATURE_VIDEO_TERMINAL_V1) {
+       if (!pFeatureSupportData || FeatureSupportDataSize != sizeof(npt_d3d11_video_terminal_v1))
+         return E_INVALIDARG;
+--- a/dxvk/src/d3d11/d3d11_video_terminal.h
++++ b/dxvk/src/d3d11/d3d11_video_terminal.h
+@@ -25,4 +25,17 @@
+  * This is not decoder pixel validation, a new VPU fence, or a DMA ownership
+  * grant. Unknown failures must not be retired as successful/empty GPU jobs.
+  */
++
++/* Optional CPU-control semantic contract, separate from TERMINAL v1.
++ * Successful BeginFrame only holds an output-view COM ref / CPU state;
++ * private inline Submit copies all input bytes before returning. Neither
++ * enqueues CS/GPU work. Other extensions/methods are not covered. */
++#define NPT_D3D11_FEATURE_VIDEO_CPU_CONTROL_V1 UINT32_C(0x4e505643)
++#define NPT_D3D11_VIDEO_CPU_CONTROL_MAGIC UINT32_C(0x31434356)
++#define NPT_D3D11_VIDEO_CPU_BEGIN_FRAME UINT32_C(1)
++#define NPT_D3D11_VIDEO_CPU_INLINE_SUBMIT UINT32_C(2)
++#define NPT_D3D11_VIDEO_CPU_CONTROL_SUPPORTED UINT32_C(3)
++#define NPT_D3D11_VIDEO_CPU_INLINE_FUNCTION UINT32_C(0x4e505644)
++/* Reuses the exact zero-initialized 32-byte POD layout above. Version is 1,
++ * supported is exactly 3, reserved stays zero; old TERMINAL query unchanged. */
+ #endif
+--- a/virgl/src/neptune/d3d11_video_terminal.h
++++ b/virgl/src/neptune/d3d11_video_terminal.h
+@@ -25,4 +25,17 @@
+  * This is not decoder pixel validation, a new VPU fence, or a DMA ownership
+  * grant. Unknown failures must not be retired as successful/empty GPU jobs.
+  */
++
++/* Optional CPU-control semantic contract, separate from TERMINAL v1.
++ * Successful BeginFrame only holds an output-view COM ref / CPU state;
++ * private inline Submit copies all input bytes before returning. Neither
++ * enqueues CS/GPU work. Other extensions/methods are not covered. */
++#define NPT_D3D11_FEATURE_VIDEO_CPU_CONTROL_V1 UINT32_C(0x4e505643)
++#define NPT_D3D11_VIDEO_CPU_CONTROL_MAGIC UINT32_C(0x31434356)
++#define NPT_D3D11_VIDEO_CPU_BEGIN_FRAME UINT32_C(1)
++#define NPT_D3D11_VIDEO_CPU_INLINE_SUBMIT UINT32_C(2)
++#define NPT_D3D11_VIDEO_CPU_CONTROL_SUPPORTED UINT32_C(3)
++#define NPT_D3D11_VIDEO_CPU_INLINE_FUNCTION UINT32_C(0x4e505644)
++/* Reuses the exact zero-initialized 32-byte POD layout above. Version is 1,
++ * supported is exactly 3, reserved stays zero; old TERMINAL query unchanged. */
+ #endif
+--- a/virgl/src/neptune/npt_job.c
++++ b/virgl/src/neptune/npt_job.c
+@@ -30,7 +30,7 @@
+ static atomic_uint job_trace_next;
+ struct job_trace_record {
+    unsigned sample, video_calls, native_calls, resource_calls;
+-   uint32_t ctx, tail, last_iface, last_method, markers, polls;
++   uint32_t ctx, tail, last_iface, last_method, markers, polls, new_markers, reused_markers;
+    uint64_t prepared, fence, publisher, generation, serial;
+    uint64_t notify_ns, checkpoint_ns, signal_ns, flush_ns, marker_end_ns;
+    uint64_t first_poll_ns, positive_ns;
+@@ -64,28 +64,29 @@
+    if (!t->sample) return;
+    npt_log("C22 CHECKPOINT_%s pid=%ld sample=%u ctx=%u prepared=%" PRIu64
+       " fence=%" PRIu64 " publisher=%" PRIu64 " generation=%" PRIu64
+-      " serial=%" PRIu64 " tail=%u markers=%u video=%u native=%u resource=%u"
++      " serial=%" PRIu64 " tail=%u markers=%u new_markers=%u reused_markers=%u video=%u native=%u resource=%u"
+       " last_iface=%u last_method=%u notify_ns=%" PRIu64 " checkpoint_ns=%" PRIu64
+       " marker_end_ns=%" PRIu64 " first_poll_ns=%" PRIu64 " positive_ns=%" PRIu64
+       " decode_ns=%" PRIu64 " signal_cpu_ns=%" PRIu64 " flush_cpu_ns=%" PRIu64
+       " fifo_ns=%" PRIu64 " poll_lag_ns=%" PRIu64 " total_ns=%" PRIu64
+       " polls=%u completion_observed=%u gpu_markers_observed=%u",
+       phase, (long)getpid(), t->sample, t->ctx, t->prepared, t->fence,
+-      t->publisher, t->generation, t->serial, t->tail, t->markers,
++      t->publisher, t->generation, t->serial, t->tail, t->markers, t->new_markers, t->reused_markers,
+       t->video_calls, t->native_calls, t->resource_calls, t->last_iface, t->last_method,
+       t->notify_ns, t->checkpoint_ns, t->marker_end_ns, t->first_poll_ns, t->positive_ns,
+       job_trace_delta(t->checkpoint_ns, t->notify_ns), t->signal_ns, t->flush_ns,
+       job_trace_delta(t->first_poll_ns, t->marker_end_ns),
+       job_trace_delta(t->positive_ns, t->first_poll_ns),
+       job_trace_delta(t->positive_ns, t->notify_ns), t->polls, t->positive_ns != 0,
+-      t->positive_ns != 0 && t->markers != 0);
++      t->positive_ns != 0 && t->new_markers != 0);
+ }
+ 
+ struct job_native {
+    struct list_head head;
+    void *identity, *context4, *device5, *fence;
+    mtx_t mutex;
+-   bool video_terminal_checked;
++   bool video_terminal_checked, cpu_control_queried;
++   uint32_t cpu_control_caps, cpu_control_logged;
+    uint64_t value, owner_ring, owner_generation;
+ };
+ struct job_marker { struct job_native *native; uint64_t value, observed; };
+@@ -112,6 +113,7 @@
+    struct npt_job_credit credit;
+    unsigned touched_count;
+    struct job_native *touched[JOB_MAX_NATIVE];
++   bool touched_needs_signal[JOB_MAX_NATIVE];
+    bool trace_collect;
+    unsigned trace_video_calls, trace_native_calls, trace_resource_calls;
+    uint32_t trace_last_iface, trace_last_method;
+@@ -216,6 +218,71 @@
+    return valid;
+ }
+ 
++/* Optional optimization only: absent/malformed capability retains strict
++ * Signal+Flush. TERMINAL v1 alone never implies this CPU-only contract. */
++static uint32_t job_native_cpu_controls(struct job_native *n)
++{
++   mtx_lock(&n->mutex);
++   if (!n->cpu_control_queried) {
++      struct npt_d3d11_video_terminal_v1 cap = {0};
++      PFN_ID3D11Device_CheckFeatureSupport query = NPT_COM_VTBL_FUNC(
++         PFN_ID3D11Device_CheckFeatureSupport, npt_com_vtable(n->device5), NPT_VTBL_ID3D11Device_CheckFeatureSupport);
++      const HRESULT hr = query(n->device5, (D3D11_FEATURE)NPT_D3D11_FEATURE_VIDEO_CPU_CONTROL_V1,
++                               &cap, sizeof(cap));
++      bool valid = hr == 0 && cap.magic == NPT_D3D11_VIDEO_CPU_CONTROL_MAGIC &&
++         cap.version == 1 && cap.size == sizeof(cap) &&
++         cap.supported == NPT_D3D11_VIDEO_CPU_CONTROL_SUPPORTED;
++      for (unsigned i = 0; i < 4; ++i) valid = valid && cap.reserved[i] == 0;
++      n->cpu_control_caps = valid ? cap.supported : 0;
++      n->cpu_control_queried = true;
++   }
++   const uint32_t caps = n->cpu_control_caps;
++   mtx_unlock(&n->mutex);
++   return caps;
++}
++
++/* Peek only the immutable wire prefix. The existing dispatcher remains
++ * responsible for full argument validation and unchanged HRESULT replies. */
++static uint32_t job_cpu_control_command(const struct npt_command_header *h,
++                                        const struct npt_cs_decoder *dec)
++{
++   if ((h->cmd_type >> 24) != 255 || ((h->cmd_type >> 8) & 0xffffu) != NPT_IFACE_ID_ID3D11VideoContext ||
++       (h->cmd_flags & ~NPT_CMD_FLAG_REPLY) || h->reserved || !h->object_id)
++      return 0;
++   const uint32_t method = h->cmd_type & 0xffu;
++   const size_t prefix = sizeof(*h) + 2 * sizeof(uint64_t) + sizeof(uint32_t);
++   if (method != NPT_METHOD_ID3D11VideoContext_DecoderBeginFrame &&
++       method != NPT_METHOD_ID3D11VideoContext_DecoderExtension) return 0;
++   if (h->cmd_size < prefix || h->cmd_size > (size_t)(dec->end - dec->cur)) return 0;
++   uint8_t bytes[sizeof(struct npt_command_header) + 2 * sizeof(uint64_t) + sizeof(uint32_t)];
++   npt_cs_decoder_peek(dec, sizeof(bytes), bytes, sizeof(bytes));
++   uint64_t decoder, second;
++   memcpy(&decoder, bytes + sizeof(*h), sizeof(decoder));
++   memcpy(&second, bytes + sizeof(*h) + sizeof(decoder), sizeof(second));
++   if (!decoder || !second) return 0;
++   if (method == NPT_METHOD_ID3D11VideoContext_DecoderBeginFrame)
++      return NPT_D3D11_VIDEO_CPU_BEGIN_FRAME;
++   uint32_t function;
++   memcpy(&function, bytes + sizeof(*h) + 2 * sizeof(uint64_t), sizeof(function));
++   return second == 1 && function == NPT_D3D11_VIDEO_CPU_INLINE_FUNCTION
++      ? NPT_D3D11_VIDEO_CPU_INLINE_SUBMIT : 0;
++}
++
++static void job_touch_native(struct npt_gpu_jobs *s, struct npt_job_ring *r,
++                              struct job_native *n, bool needs_signal)
++{
++   for (unsigned i = 0; i < r->touched_count; ++i) {
++      if (r->touched[i] == n) {
++         r->touched_needs_signal[i] |= needs_signal; /* Mixed GPU work wins. */
++         return;
++      }
++   }
++   if (r->touched_count >= JOB_MAX_NATIVE) { job_fail(s, "touched context bound exceeded"); return; }
++   const unsigned i = r->touched_count++;
++   r->touched[i] = n;
++   r->touched_needs_signal[i] = needs_signal;
++}
++
+ static void *job_qi(void *p, const GUID *iid)
+ {
+    void *out = NULL;
+@@ -295,26 +362,33 @@
+       struct job_native *n = r->touched[i];
+       if (j->marker_count >= JOB_MAX_NATIVE) { job_fail(s, "job marker bound exceeded"); break; }
+       mtx_lock(&n->mutex);
+-      if (n->value >= UINT64_MAX - 1) {
+-         mtx_unlock(&n->mutex); job_fail(s, "native fence counter exhausted"); break;
+-      }
+-      const uint64_t value = ++n->value;
+-      PFN_ID3D11DeviceContext4_Signal signal = NPT_COM_VTBL_FUNC(
+-         PFN_ID3D11DeviceContext4_Signal, npt_com_vtable(n->context4), NPT_VTBL_ID3D11DeviceContext4_Signal);
+-      PFN_ID3D11DeviceContext_Flush flush = NPT_COM_VTBL_FUNC(
+-         PFN_ID3D11DeviceContext_Flush, npt_com_vtable(n->context4), NPT_VTBL_ID3D11DeviceContext_Flush);
+-      const uint64_t trace_begin = j->trace.sample ? npt_profile_now_ns() : 0;
+-      const HRESULT hr = signal(n->context4, n->fence, value);
+-      const uint64_t trace_signaled = j->trace.sample ? npt_profile_now_ns() : 0;
+-      if (hr == 0) flush(n->context4);
++      uint64_t value = n->value;
++      if (r->touched_needs_signal[i]) {
++         if (n->value >= UINT64_MAX - 1) {
++            mtx_unlock(&n->mutex); job_fail(s, "native fence counter exhausted"); break;
++         }
++         value = ++n->value;
++         PFN_ID3D11DeviceContext4_Signal signal = NPT_COM_VTBL_FUNC(
++            PFN_ID3D11DeviceContext4_Signal, npt_com_vtable(n->context4), NPT_VTBL_ID3D11DeviceContext4_Signal);
++         PFN_ID3D11DeviceContext_Flush flush = NPT_COM_VTBL_FUNC(
++            PFN_ID3D11DeviceContext_Flush, npt_com_vtable(n->context4), NPT_VTBL_ID3D11DeviceContext_Flush);
++         const uint64_t trace_begin = j->trace.sample ? npt_profile_now_ns() : 0;
++         const HRESULT hr = signal(n->context4, n->fence, value);
++         const uint64_t trace_signaled = j->trace.sample ? npt_profile_now_ns() : 0;
++         if (hr == 0) flush(n->context4);
++         if (j->trace.sample) {
++            const uint64_t trace_flushed = npt_profile_now_ns();
++            j->trace.signal_ns += job_trace_delta(trace_signaled, trace_begin);
++            j->trace.flush_ns += job_trace_delta(trace_flushed, trace_signaled);
++         }
++         if (hr != 0) { mtx_unlock(&n->mutex); job_fail(s, "actual native Signal failed"); break; }
++      }
++      mtx_unlock(&n->mutex);
++      j->markers[j->marker_count++] = (struct job_marker){ .native = n, .value = value };
+       if (j->trace.sample) {
+-         const uint64_t trace_flushed = npt_profile_now_ns();
+-         j->trace.signal_ns += job_trace_delta(trace_signaled, trace_begin);
+-         j->trace.flush_ns += job_trace_delta(trace_flushed, trace_signaled);
+-      }
+-      mtx_unlock(&n->mutex);
+-      if (hr != 0) { job_fail(s, "actual native Signal failed"); break; }
+-      j->markers[j->marker_count++] = (struct job_marker){ .native = n, .value = value };
++         if (r->touched_needs_signal[i]) ++j->trace.new_markers;
++         else ++j->trace.reused_markers;
++      }
+    }
+    r->touched_count = 0;
+    r->trace_collect = false;
+@@ -667,10 +741,13 @@
+             struct job_native *n = job_native_get(s, ring, dc);
+             if (n && is_video && !job_native_video_capable(s, n)) n = NULL;
+             if (n) {
+-               bool seen = false; for (unsigned i = 0; i < r->touched_count; ++i) seen |= r->touched[i] == n;
+-               if (!seen) {
+-                  if (r->touched_count >= JOB_MAX_NATIVE) job_fail(s, "touched context bound exceeded");
+-                  else r->touched[r->touched_count++] = n;
++               const uint32_t control = is_video ? job_cpu_control_command(h, dec) : 0;
++               const bool cpu_only = control && (job_native_cpu_controls(n) & control) == control;
++               job_touch_native(s, r, n, !cpu_only);
++               if (cpu_only && !(n->cpu_control_logged & control)) {
++                  n->cpu_control_logged |= control;
++                  npt_log("C39 CPU_CONTROL_CLASSIFIED ctx=%u method=%u control=%u reuse_last_fence=1 handler_completion_still_required=1",
++                          ctx->ctx_id, h->cmd_type & 0xffu, control);
+                }
+             }
+          } else job_fail(s, "typed native device/context identity missing");
+@@ -716,11 +793,7 @@
+          else {
+             struct job_native *n = job_native_get(s, ring, dc);
+             if (n) {
+-               bool seen = false; for (unsigned i = 0; i < r->touched_count; ++i) seen |= r->touched[i] == n;
+-               if (!seen) {
+-                  if (r->touched_count >= JOB_MAX_NATIVE) job_fail(s, "transport touched-context bound");
+-                  else r->touched[r->touched_count++] = n;
+-               }
++               job_touch_native(s, r, n, true);
+             }
+          }
+          if (owned_dc) npt_com_release(owned_dc);
+@@ -753,12 +826,7 @@
+       struct job_native *n = job_native_get(s, ring, immediate);
+       struct npt_job_ring *r = ring->gpu_jobs;
+       if (n) {
+-         bool seen = false;
+-         for (unsigned i = 0; i < r->touched_count; ++i) seen |= r->touched[i] == n;
+-         if (!seen) {
+-            if (r->touched_count >= JOB_MAX_NATIVE) job_fail(s, "constructor touched-context bound");
+-            else r->touched[r->touched_count++] = n;
+-         }
++         job_touch_native(s, r, n, true);
+       }
+    }
+    if (owned_dc) npt_com_release(owned_dc);
