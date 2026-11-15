@@ -1059,6 +1059,13 @@ Coldcreate nu werkelijkexit0. Nieuwe C47leaf enprivateVARS bestaan; volledige ke
 
 Blijvende configuratieénliveRPC zijn nu exactopC47child/privateVARS/RAM6144 gezet; andereveldenblijvengelijk. NieuwefullconfigSHA `8C22BE5077DBE6040B69C615A90900FF893B00C5CAF559CABC460A6BF5CA09F2`. C46blijftfrozenherstelpunt. De6656MiBreservering voor deinstallbootloopt metbestaandeAndroidfloor3072. C47DLLsnogNIETgeïnstalleerd; eerstinstallboot/werkelijke5FDrollen/oudeC46DLLbaseline, dangebonden3DLLtransactieenfreshnewboot. Geenproductiewijziging.
 
+
+### C47 installboot naar 4 GiB — volledige veilige RAM6-reservering niet haalbaar
+
+Twee gerichte pogingen met doel6656MiB/floor3072: eerste6292MiB/Android3106/exit1; na één gewone RUNNING_LOW-cachetrim tijdelijk6656maarAndroid2937, daarna6492/Android2938. Ook de tweede exit0 is géén volledige veilige reservering. Geen Windowsboot of DLLinstallatie uitgevoerd. FullDRAIN/poolontladen bevestigd; Android9484MiB beschikbaar. Geen verdere identieke RAM6-poging.
+
+Beslissing: alleen de C47-testchild naar4096MiB; liveRPCenpersistedconfig exact gecontroleerd, SHA `732011185A95D7348D06F3A781C8330D1D8546DD2878B7B207D8824C712550DD`. C46frozenherstelconfigAC53 blijft6144. Eerst oudeC46DLLs in dezezelfdechild/RAM4/DPI200/landscape meten; daarna C47 installeren en dezelfdetaak vergelijken. De eerdereRAM6-basis is geen directeRAM4-vergelijking. Geen softwareterugval of productiewijziging. Bewijs `evidence/c47-present-single-publication-r1/install-pool-reserve*.txt`, `short-reserve-pooloff.txt`, `ram4-persist.txt`. Driverdoel blijft open.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
