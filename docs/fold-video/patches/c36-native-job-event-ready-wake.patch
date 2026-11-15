@@ -1,0 +1,92 @@
+--- a/src/neptune/npt_job.c
++++ b/src/neptune/npt_job.c
+@@ -12,6 +12,10 @@
+ #include "neptune-protocol/npt_protocol_host_dispatch_types.h"
+ #include <poll.h>
+ #include <unistd.h>
++#if defined(__linux__)
++#include <pthread.h>
++#include <time.h>
++#endif
+ #include <sys/stat.h>
+ 
+ #define JOB_MAX_NATIVE 32u
+@@ -128,6 +132,45 @@
+  * unknown exists, all later enable/prepare attempts fail until VM exit. */
+ static atomic_bool job_worker_poison;
+ 
++/* Only Linux/Android changes the jobs condition's clock. cnd_t is the
++ * existing pthread_cond_t alias here; cnd_destroy keeps the same lifecycle.
++ * A failed monotonic setup rejects activation, never a realtime fallback. */
++static int job_cond_init(cnd_t *cond)
++{
++#if defined(__linux__)
++   pthread_condattr_t attr;
++   if (pthread_condattr_init(&attr)) return thrd_error;
++   int rc = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
++   if (!rc) rc = pthread_cond_init(cond, &attr);
++   pthread_condattr_destroy(&attr);
++   return rc ? thrd_error : thrd_success;
++#else
++   return cnd_init(cond);
++#endif
++}
++
++/* Caller holds s->mutex. The same 2 ms retry still bounds unknown GPU
++ * completion/deadline checks; CPU checkpoint readiness can now wake it early.
++ * Other platforms and clock/wait errors retain the old relative poll. */
++static void job_wait_ready(struct npt_gpu_jobs *s)
++{
++#if defined(__linux__)
++   struct timespec until;
++   if (!clock_gettime(CLOCK_MONOTONIC, &until)) {
++      until.tv_nsec += 2000000L;
++      if (until.tv_nsec >= 1000000000L) {
++         ++until.tv_sec;
++         until.tv_nsec -= 1000000000L;
++      }
++      int rc = cnd_timedwait(&s->cond, &s->mutex, &until);
++      if (rc == thrd_success || rc == thrd_busy) return;
++   }
++#endif
++   mtx_unlock(&s->mutex);
++   (void)poll(NULL, 0, 2);
++   mtx_lock(&s->mutex);
++}
++
+ static void job_fail(struct npt_gpu_jobs *s, const char *why)
+ {
+    if (!atomic_exchange_explicit(&s->poison, true, memory_order_acq_rel))
+@@ -285,6 +328,11 @@
+    const struct job_trace_record trace = j->trace;
+    assert(j->pending); --j->pending;
+    mtx_unlock(&j->mutex);
++   /* Never invert the worker's s->mutex -> j->mutex order. s stays owned
++    * by this live ring decoder; no job pointer is used after this unlock. */
++   mtx_lock(&s->mutex);
++   cnd_signal(&s->cond);
++   mtx_unlock(&s->mutex);
+    job_trace_emit("DISPATCHED", &trace);
+    return !atomic_load_explicit(&s->poison, memory_order_acquire);
+ }
+@@ -322,9 +370,8 @@
+       }
+       mtx_unlock(&j->mutex);
+       if (!done || !healthy) {
+-         mtx_unlock(&s->mutex);
+-         (void)poll(NULL, 0, 2); /* no FD callback; no spin; no control-worker GPU wait */
+-         mtx_lock(&s->mutex); continue;
++         job_wait_ready(s);
++         continue;
+       }
+       list_del(&j->head); --s->count;
+       const uint64_t fence = j->fence_id;
+@@ -362,7 +409,7 @@
+    const char *video = getenv("NPT_NATIVE_JOB_VIDEO_RETIRE");
+    s->video_retire = video && strcmp(video, "1") == 0;
+    if (mtx_init(&s->mutex, mtx_plain) != thrd_success) { free(s); return false; }
+-   if (cnd_init(&s->cond) != thrd_success) { mtx_destroy(&s->mutex); free(s); return false; }
++   if (job_cond_init(&s->cond) != thrd_success) { mtx_destroy(&s->mutex); free(s); return false; }
+    if (thrd_create(&s->thread, job_thread, s) != thrd_success) {
+       cnd_destroy(&s->cond); mtx_destroy(&s->mutex); free(s); return false;
+    }
