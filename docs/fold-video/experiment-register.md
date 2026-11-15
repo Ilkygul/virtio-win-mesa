@@ -940,6 +940,13 @@ Bewijs evidence/c46-dbgview-map-late-r1/analysis.json SHA0c3e2b32cadb8334efaf893
 
 **Beslissing:** geenidentiekevideorunvoorFPS engeensoftwarefallback. EerstéénbegrensdestandaardDebugViewkernel+Win32capture zonderPID-filter plusdirectbestaanderegistrysnapshotopcallbackfout, omcookie/lifetime,hostpoolantwoordofUserVA-fout teonderscheiden. MicrosoftdiagnosedriveralleenintestVM; geenbootdebug/securitypolicywijziging. DaarnaastbrononderzoeknaarRES_INFO-handlelifetime; geenspeculatievepoolvergroting. AnderechatpastopverzoeknativeDPI200%toemetaf/aanmelden; geenapparaatproeftotconsolebevestigd. C46gedeeltelijkehardwareUI/3Dwinstbehouden; videoonstabiel, doelOPEN/testVMonly, geenproductie/mainmerge/release.
 
+
+### C46 eerste kernelcapture ongeldig door CLI-argument — geen driverresultaat
+
+Na expliciet door gebruiker gevraagde DPI200% en af/aanmelden: nativeconsoleSession2/Unlocked/geenRDP/Code0/2448×1848 positief. Bestaandevideo/collector, ongewijzigdeC46; origineleGPU3692/birth1794742431849/native2A7D enbrowser5796/birth1794742430975 bewezen. Capture10960 start11:34:36.914Z maar eindigt binnen1s: stderr **Cannot open file 'failed*'**. PowerShellStartProcess splitste het nieuwe wildcardargument metspaties. Ondanks exit0 bevatCSV alleenbanner: **géén geldigeWin32/kernelcapture, géénkernelreden of reparatiebewijs**. Registrysnapshot was daarmeeooknietaanfaultgebonden.
+
+Noodzakelijke correctie uitsluitendlokaal: exactzelfdepatronen alswildcardszonderliteralspaties; volgendeproef pasna parse-/argumentcontrole. Geen nieuwe driver/config/softwarefallback. Bronanalyse vindtgeenbewezenversAlloc-handlelifetimebug; afzonderlijkefail-open-cookiefallbackisnoggeenoorzaakofprestatiereparatie. Eigenbrowser11:36:05Z normaalgesloten/exitbevestigd3eigentabs; begrensdehost/beeldopnameterminal. Bewijs evidence/c46-dbgview-kernel-r1/analysis.json en capture-guest/capture.stderr. DoelOPEN, hardwaredriverfoutblijftopdracht; geenproductiemerge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
