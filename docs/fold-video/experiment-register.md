@@ -929,6 +929,17 @@ StandaardDebugViewCLI draaide werkelijkLimited/session1, Win32/pid4420, kernel/g
 
 Bewijs evidence/c46-dbgview-map-r1/analysis.json SHA050d2c8abb24ce5c2f3ef73365b160fb917b3011670db2d29f843d89fabc8878. **Volgende kleinste onderscheidendeproef:** dezelfdeversebrowser/collector/driver; standaardCLI pasopformelemeetstart+20s actief,60s/50000regels. DaardoorwordtGPU-initialisatie nietgecapteerd, maarlaatzichdeMap-fout rondpostformelequerywellezen. RunnerbindtGPUearlyenhercontroleertbirthbijactivering; observermoetzelfdePID/UMDhashbevestigen. Geen nieuweCaptureharnas/driver-/backend-/policy-/ACLwijziging ofFPSvergelijking. Alsnietreproduceert,geenfixclaimofblindeherhaling; vervolgensexplicietnieuwebeslissing. TestVMalleen,C45herstelpuntbehouden,doelOPEN/geenproductie.
 
+
+### C46 late standaardcapture reproduceert oorspronkelijke Map-fout — echt driverpad
+
+Hypothese: vroege debugcapture verandert timing; dezelfde verse video met capture pas formeel+20s kan oorspronkelijke Map-fout tonen. C46/native2A7DC660…E744D, ongewijzigde host/F91/markers/logrechten. Formeel11:02:27.445–11:02:58.510Z; echte GPU6132/birth1794740522907, browser11400/birth1794740521974. Standaard CLI capture11376 start11:02:47.643Z, natuurlijk einde11:03:47.948Z/exit0.
+
+**Reproductie en eerste UMD-keten bewezen:**11:03:07.107Z pfnEscapeCb(RES_INFO) faalt E_FAIL; UMD vertaalt dit naarC0000001 en latcht rendererLost.32MiB shmemcreate faalt;17.132.544-byte READ-map slot0 krijgt geenpoolallocatie; Map sub0/type1/flags0 geeft8007000e. Daarna ANGLE887A0005/contextlost/GPUexit34. OOM is hier vertaald resultaat, **geen bewijs van fysiek RAM-tekort**. Zelfdehostcontext647 had11:02:58.702Z nogeen32MiB pool-backed resource619; dus ookgeenuniversele32MiB-limiet bewezen.
+
+Bewijs evidence/c46-dbgview-map-late-r1/analysis.json SHA0c3e2b32cadb8334efaf893c22d3fc537cd4031478669d856942ca84b39e7991; capture-guest/driver.csv, browserlog, hostlog en daadwerkelijkgemapte2A-driver. LateKMDsnapshot heeftoorzaak aluit96KiBringverloren. F91bronverifieert dat ERROR/WARNING zowelregistry alskernelDbgPrintEx krijgt;1msregistrythrottlekanlaatstedetailuitstellen. Eerdereclaimdatcookie/not-openfoutenalleenkernellogzijn is gecorrigeerd.
+
+**Beslissing:** geenidentiekevideorunvoorFPS engeensoftwarefallback. EerstéénbegrensdestandaardDebugViewkernel+Win32capture zonderPID-filter plusdirectbestaanderegistrysnapshotopcallbackfout, omcookie/lifetime,hostpoolantwoordofUserVA-fout teonderscheiden. MicrosoftdiagnosedriveralleenintestVM; geenbootdebug/securitypolicywijziging. DaarnaastbrononderzoeknaarRES_INFO-handlelifetime; geenspeculatievepoolvergroting. AnderechatpastopverzoeknativeDPI200%toemetaf/aanmelden; geenapparaatproeftotconsolebevestigd. C46gedeeltelijkehardwareUI/3Dwinstbehouden; videoonstabiel, doelOPEN/testVMonly, geenproductie/mainmerge/release.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
