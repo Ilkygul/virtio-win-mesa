@@ -1201,4 +1201,11 @@ Stap 3 (privé-kopie bij Present) en 4 (hardware-cursor) zijn niet gebouwd: Pres
 | K3 pacing | 59,3 fps gast + 13–20 ms aankomstspreiding → 8/25 ms op 120 Hz; crosvm zet desiredPresentTime op gemeten ritme (+15 ms) | video 17±4 ms: 85% → 98/96/97/97% (4 runs); slepen 91–94% (uit: 68–77%); paneel op 60 Hz: 79% | productie (crosvm `114BC73F`), uit via `npt/pacing-uit` |
 | K4 zero-copy | CPU-kopie in beeldpad? | "CPU copy" alleen voor UEFI-bootbuffer res=2 (2D zonder blob → export_blob ongeldig); crosvm GPU/display-threads 7,0% bij 1080p60, 0,7% bij slepen; scanout-read-lease: 16137 van 16384 flushes via GPU-read met bron-fd | scanout is al zonder CPU-kopie; geen bouw, dus geen voor/na |
 | K6 schone run | volledige meet.sh na K1–K5, zelfde omstandigheden | Start 225–232 ms, flyout 339–358 ms, slepen 56 fps, scrollen 59, cursor 59, video 1,2% drops, ritme 89–98% | geen achteruitgang t.o.v. D3 |
-| K5 4K | 2160p60 VP9 hw-decode | Present-sync aan: 23,7% drops; uit: 2,0%, 58 fps SF; desktop visueel schoon | Present-sync uit (`legacy-route.ps1`) |
+| K5 4K | 2160p60 VP9 hw-decode | eerste run 23,7% drops, daarna steeds 1,5–2,4% (4 runs); `triton-presentwritesync` wordt op de legacy-route niet gelezen (alleen onder RuntimeStreamActive) | 4K werkt; de 23,7% was meetruis, de marker is zonder effect |
+
+## Stabiliteit en Present-kopie (15 november 2026, nacht)
+
+| Proef | Hypothese / wijziging | Cijfers | Besluit |
+|---|---|---|---|
+| S1 geheugendumps | kerneldump + vast dumpbestand, test-bugcheck (NtRaiseHardError) | geen dump: crashdump-pad van viostor gebruikt pVM-beschermd (lent) geheugen, crosvm "host access to lent memory region", VM hangt op 600% CPU | blokkade; stopcode/parameters wel via SAC-console (sbsa-log); minidump-instelling terug |
+| U48 Present-kopie | op legacy wacht Triton na élke draw in een gedeelde back buffer op de host; back buffers (BIND_PRESENT, niet-primary) krijgen nu eigen opslag + gedeelde companion, één kopie bij Present, geen per-draw-wacht. [patch](patches/u48-present-copy.patch), uit met `triton-nopresentcopy` | drawbench (flip-swapchain): 50 draws 47,7 vs 11,2 fps, 400 draws 4,5–7,1 vs 1,5 fps; frame compleet (50/50 driehoeken); desktop: slepen 56–57, scrollen 59, cursor 58–59, video 1,2% drops, Start 202–229 ms; 4K gelijk | productie (UMD `E22AB0E5`, EC `6DECBFD2`; C46 bewaard als `.c46`) |

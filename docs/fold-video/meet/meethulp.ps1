@@ -58,6 +58,11 @@ switch ($mode) {
     $w = WaitWin WindowsTerminal '*'; if ($w) { [W]::SetWindowPos($w, [IntPtr]::Zero, 940, 560, 800, 480, 0x40) | Out-Null }
     'ok' }
   'appsclose' { Get-Process Taskmgr, WindowsTerminal | Stop-Process -Force; (New-Object -ComObject Shell.Application).Windows() | %{ $_.Quit() }; 'ok' }
+  'bench'    { # drawbench.exe <draws> <seconds>: N draws per frame straight into a flip swapchain
+    $a = (Get-Content "$d\bench.txt" -Raw).Trim() -split ' '
+    Remove-Item "$d\drawbench.txt" -EA 0
+    Start-Process "$d\drawbench.exe" -ArgumentList $a[0], $a[1], "$d\drawbench.txt" -Wait
+    Get-Content "$d\drawbench.txt" }
   'close'    { Get-Process msedge | ?{ $_.Path -and (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine -like "*$d\edge*" } | Stop-Process -Force
                (New-Object -ComObject Shell.Application).Windows() | ?{ $_.LocationURL -like '*System32*' } | %{ $_.Quit() }; 'ok' }
 }

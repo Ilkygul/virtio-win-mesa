@@ -1,0 +1,128 @@
+diff -ruN a/src/virtio/neptune/triton/triton.h b/src/virtio/neptune/triton/triton.h
+--- a/src/virtio/neptune/triton/triton.h	2026-11-15 23:25:18
++++ b/src/virtio/neptune/triton/triton.h	2026-11-15 23:25:18
+@@ -549,6 +549,7 @@
+ 
+ /* Fill r's present companion, if any (tritonResource.c). */
+ void tritonResourceSyncPresentCompanion(PTRITON_DEVICE pD, PTRITON_RESOURCE r);
++BOOL tritonWritesVisible(PTRITON_DEVICE pD, const void *pRes);
+ 
+ #ifdef __cplusplus
+ } /* extern "C" */
+diff -ruN a/src/virtio/neptune/triton/tritonDxgi.c b/src/virtio/neptune/triton/tritonDxgi.c
+--- a/src/virtio/neptune/triton/tritonDxgi.c	2026-11-15 23:25:18
++++ b/src/virtio/neptune/triton/tritonDxgi.c	2026-11-15 23:25:18
+@@ -1540,6 +1540,16 @@
+ {
+    HRESULT hr = tritonDxgiBltCommon0(hDevice, hDst, DstSubresource, DstLeft, DstTop, DstRight, DstBottom,
+                                      hSrc, SrcSubresource, SrcLeft, SrcTop, SrcRight, SrcBottom, Flags);
++   /* U48: a blit into a back buffer with a private copy must reach the companion DWM reads. */
++   {
++      PTRITON_DEVICE bd = (PTRITON_DEVICE)(uintptr_t)hDevice;
++      PTRITON_RESOURCE bdst = (PTRITON_RESOURCE)(uintptr_t)hDst;
++      if (SUCCEEDED(hr) && bd && bdst && bdst->pPresentCompanion && !bd->RuntimeStreamActive) {
++         tritonPresentLock(bd);
++         tritonResourceSyncPresentCompanion(bd, bdst);
++         tritonPresentUnlock(bd);
++      }
++   }
+    tritonSharedWriteDone((PTRITON_DEVICE)(uintptr_t)hDevice, (const void *)(uintptr_t)hDst, "DxgiBlt");
+    return hr;
+ }
+diff -ruN a/src/virtio/neptune/triton/tritonResource.c b/src/virtio/neptune/triton/tritonResource.c
+--- a/src/virtio/neptune/triton/tritonResource.c	2026-11-15 23:25:18
++++ b/src/virtio/neptune/triton/tritonResource.c	2026-11-15 23:25:18
+@@ -29,10 +29,29 @@
+ extern struct npt_ring *npt_com_object_ring_seqno(void *self, UINT32 *out_seqno);
+ extern UINT32 npt_ring_wait_seqno(struct npt_ring *ring, UINT32 seqno);
+ 
++/* U48: on the legacy route a back buffer with a present companion draws into private storage that nobody else
++ * reads; DWM only sees the companion, filled with one copy per Present (tritonResourceSyncPresentCompanion) and
++ * gated by tritonPresentFlushAndGate. Writes to that private storage need no per-write host round trip. The runtime
++ * (Native1) route keeps its own rules. */
++BOOL tritonWritesVisible(PTRITON_DEVICE pD, const void *pRes)
++{
++    const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
++    if (!r) return FALSE;
++    if (r->IsShared || r->IsPresentable) return TRUE;
++    return r->pPresentCompanion && pD && pD->RuntimeStreamActive;
++}
++
++/* U48: every non-primary, single-sample back buffer presents through a private copy unless
++ * C:\Users\Public\triton-nopresentcopy exists (or the runtime route is active). */
++static BOOL tritonPresentCopyWanted(PTRITON_DEVICE pD)
++{
++    return pD && !pD->RuntimeStreamActive && !tritonSwitch("triton-nopresentcopy");
++}
++
+ void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pRes)
+ {
+     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+-    if (pD && r && (r->IsShared || r->IsPresentable || r->pPresentCompanion))
++    if (pD && r && tritonWritesVisible(pD, r))
+         InterlockedOr(&pD->SharedDirty, tritonCanBatchPresentWrites(pD,r) ?
+             TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
+ }
+@@ -199,7 +218,7 @@
+ {
+     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+     if (!pD) return;
+-    if (pRes && !(r->IsShared || r->IsPresentable || r->pPresentCompanion)) return;
++    if (pRes && !tritonWritesVisible(pD, r)) return;
+     /* Also covers legacy callsites such as GenerateMips/DxgiBlt that did not
+      * call tritonMarkSharedWrite before this post-operation helper. */
+     InterlockedOr(&pD->SharedDirty, r && tritonCanBatchPresentWrites(pD,r) ?
+@@ -533,10 +552,17 @@
+     const BOOL exportableShape = pArgs->MipLevels <= 1 &&
+                                  pArgs->ArraySize <= 1 &&
+                                  pArgs->SampleDesc.Count <= 1;
+-    BOOL isShared = is2D &&
++    /* U48: a swapchain back buffer (BIND_PRESENT, flip or blt model, with or without the runtime's DDI_SHARED)
++     * keeps private storage; the shared blob DWM opens is a companion filled at Present. Application-requested
++     * sharing without BIND_PRESENT stays direct. */
++    const BOOL presentCopy = is2D && exportableShape &&
++        (pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) != 0 &&
++        (pArgs->BindFlags & D3D11_DDI_BIND_UNORDERED_ACCESS) == 0 &&
++        tritonPresentCopyWanted(pD);
++    BOOL isShared = is2D && !presentCopy &&
+                     ((pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED) != 0 ||
+                      (presentOnly && exportableShape));
+-    const BOOL needCompanion = presentOnly && !exportableShape;
++    const BOOL needCompanion = (presentOnly && !exportableShape) || presentCopy;
+     /* Only directly exportable, non-MSAA buffers are covered. Companions must
+      * be copied/resolved at every publication, so they stay on the strict path.
+      * Whitelist original RTV/SRV/PRESENT binds: UAV and unknown binds are strict.
+@@ -573,10 +599,10 @@
+     if ((pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) ||
+         (pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED))
+         TR_LOG("BATCH create res=%p %ux%u ddiBind=0x%x ddiMisc=0x%x "
+-               "ddiShared=%u displayablePresent=%u primary=%u eligible=%u companion=%u",
++               "ddiShared=%u displayablePresent=%u primary=%u eligible=%u companion=%u (U48 private copy=%u)",
+                (void *)r, r->Width, r->Height, pArgs->BindFlags, pArgs->MiscFlags,
+                !!(pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED),
+-               displayablePresent, !!pArgs->pPrimaryDesc, r->BatchPresentWrites, needCompanion);
++               displayablePresent, !!pArgs->pPrimaryDesc, r->BatchPresentWrites, needCompanion, presentCopy);
+ 
+     /* A host create is asynchronous and reports nothing back, so a texture
+      * whose format the host cannot make must be refused here: forwarded, the
+diff -ruN a/src/virtio/neptune/triton/tritonView.c b/src/virtio/neptune/triton/tritonView.c
+--- a/src/virtio/neptune/triton/tritonView.c	2026-11-15 23:25:18
++++ b/src/virtio/neptune/triton/tritonView.c	2026-11-15 23:25:18
+@@ -420,7 +420,7 @@
+     pD->OmSharedNeedsWriteSync = FALSE;
+     for (UINT i = 0; i < NumRTVs; ++i) {
+         PTRITON_RTVIEW v = phRTVs ? (PTRITON_RTVIEW)(phRTVs[i].pDrvPrivate) : NULL;
+-        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion)) {
++        if (v && v->pResource && tritonWritesVisible(pD, v->pResource)) {
+             pD->OmShared = TRUE;
+             if (!tritonCanBatchPresentWrites(pD, v->pResource))
+                 pD->OmSharedNeedsWriteSync = TRUE;
+@@ -428,7 +428,7 @@
+     }
+     for (UINT i = 0; i < NumUAVs; ++i) {
+         PTRITON_UAVIEW v = phUAVs ? (PTRITON_UAVIEW)(phUAVs[i].pDrvPrivate) : NULL;
+-        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion)) {
++        if (v && v->pResource && tritonWritesVisible(pD, v->pResource)) {
+             pD->OmShared = TRUE;
+             pD->OmSharedNeedsWriteSync = TRUE; /* UAV batching is outside scope. */
+         }
