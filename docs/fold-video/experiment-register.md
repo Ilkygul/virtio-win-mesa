@@ -198,6 +198,16 @@ De werkelijkgebouwde bronpatch is nu ook reviewbaar op deze branch: [C33 DXVK mi
 - **Behoud/herstel:** huidigeC33-LKGstandaloneparent enorigineleC23VARSwordenbevroren; alleenversechild+VARSwordenvoorC35geopendschrijfbaar. ZelfdeC23UUID, persist én liveconfig, actueleFDsmoetenchildRW/parentRO/nieuweVARSbewijzenvoorguestwijzigingen. ProductieblijftUIT/onaangeroerd. Na parentwrite ooit geenchildhergebruiken.
 - **Kandidaat:** bestaandeC20native/alias57899…/EC9CC91… enF91SYSF91D9… lokaalongewijzigdgeverifieerd. OudeinstallatiehelperszijnalleenreferentiewegensC16pinnen; C35helperswordenconcreetgegenereerdmet3EEF/7A40-baseline ennieuwechildattestatie. WerkelijkesignedValid/C92checkblijftvereist. Nognietsgeïnstalleerd/geenproefresultaat.
 
+
+## C35 eerste Native1-praktijkproef — echte runtime-route, prestatie onvoldoende; opname/timing niet gedekt
+
+- **Werkelijk geïnstalleerd:** eigen nieuw qcow2-child + gekopieerde VARS; bevroren C33-parent uitsluitend RO via werkelijke FD27, childRW FD26 en nieuweVARS FD4. SignedValid/C92 F91KMD, C20 native/alias57899… enEC9CC91…, NativeGpuJobV1 DWORD1 plus lege triton-runtimestream. Native1boot00:16:34.292Z, main18780/start887579, explorer4176 metC20nativeUMD/geenWARP, GPUCode0. Huidige driverloadslot2 bevat geldige C12GPU_REPLY; geen unsupportedpower/invalidreply in gerichte controle.
+- **Host:** bestaande C22boundedtiming op exactactueleC25bron gebouwd, éénbronbestand gewijzigd; eigen lib07C75BD6…/server512B0DB1… werkelijk gemapt, C33DXVKpaar B964/5E6E behouden. Geen nieuwe synchronisatiesemantiek of softwarefallback. GlobaleC25/F19 en productie onaangeroerd.
+- **Scenario/resultaat:** onveranderde EXE6BEF, privatecopy0/defaultcaption,1s warmup/8s meten; run regression-c35-direct-native8-r1.73Presents/8.02338s=9.0984 API/s, intervalp95=174.72ms/max182.15ms; childexit0, geenAPI/devicefouten/foregroundverlies,0copies. Dit is zichtbaar te traag, geen bruikbare algemene3D-fix. De losse actieve screenshot toont15kubussen en leesbare nativecaption.
+- **Meetbeperking:** recorder verloor zijn uitvoercontext: definitieve MP4 bevat slechts1frame/duur0, dus GEENvolledigeactievepixelacceptatie. Late C22marker pas00:25:00Z, na echteappfinish00:24:54Z; logs zijn daarnaachtergrondapps, NIET deze benchmark. Marker weer verwijderd. Geen false timingclaim.
+- **Bewijs:** evidence/c35-native-admission-r1/{native1-host-identity.txt,native1-native-shell.json,native1-diagnostics.json,native1-current-driver-load.log,direct-guest-run/benchmark.json,direct-guest-run/supervisor.json,direct-active-screen.png,direct-phone.mp4,direct-host.log}. Installreceipts eneerderC33bevrorenbewijs in dezelfde map.
+- **Volgende beslissing / expliciete herhaalreden:** éénzelfdeconfiguratie-diagnostische herhaling met recorder als levende foregroundtoolsessie en vooraf automatischgeplande lateC22marker binnen8s, om gemistepixel-/timingdekking teherstellen. Geen nieuwe drivervariant, geen nieuw harnas; bestaande supervisors/recorder/timing. Daarna bronbeslissing opwerkelijkgedektequeuekosten; C33LKGbehouden enalgemeendoelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
