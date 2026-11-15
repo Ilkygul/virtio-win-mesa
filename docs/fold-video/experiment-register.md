@@ -512,6 +512,19 @@ De actuele DWM-log na de laatste attach/familie1F698 toont tijdens de meting een
 
 Volgende bronvraag op grond van nieuwe positieve aanwijzing: waarom wacht Flush_WDDM2 op de CPUhead, en kan uitsluitend een compleet positief gekwalificeerde Native1/runtime/class1-schrijfset correct asynchroon worden gepubliceerd, met echte GPUcompletion en alle Present-/Acquire-/Release-/lifetimegrenzen behouden? Geen algemene asyncflush-/softwarefallbackschakelaar en geen nieuwe variant zonder bronbewijs. C42-resultaat is hiermee vóór een eventuele volgende variant vastgelegd.
 
+
+### C43 — gerichte Flush-drivercorrectie, bron bevroren; nog geen gebruikswinst bewezen
+
+**Hypothese:** de in C42 werkelijk waargenomen Flush_WDDM2-CPUheadwait kan de compositor onnodig ophouden nadat alle opdrachten al veilig zijn gepubliceerd. C43 laat alleen die CPUheadwait vervallen wanneer de volledige verzamelde schrijfset positief bestaat uit lokale C42-gekwalificeerde class1-presentbuffers, onder Native1/runtime/publisherV1. Geen softwarefallback, appuitzondering of algemene asyncflush-bypass.
+
+De driver bewaart schrijfherkomst als OR-bitmask: strict, gemengd en onbekend blijven strikt. Elke schrijfoperatie bevestigt die herkomst opnieuw onder dezelfde RuntimeWriteLock vóór encoding; Flush consumeert herkomst en sequence onder diezelfde lock. De gecontroleerde publicatie vereist een volledig verzonden en afgeronde actuele serial/tail-frontier, geen pending/active writes en geen runtimefout. Bij publicatiefout blijft de herkomst behouden en volgt device-error, geen schijnsucces. Alleen flags0 en context ALL/3D mogen kwalificeren; compute/copy/video/trim/andere flags houden de oude route. Echte GPUcompletion, Present/Acquire/Release, query, hergebruik en vernietiging blijven behouden. Backingrotatie maakt positieve cachekwalificaties conservatief strict; NONE blijft NONE en een echte rebind kan kwalificatie herstellen.
+
+[Bronpatch](patches/c43-qualified-publisher-flush.patch), commit4397abffed4862daa01591a6582f128ad3f88876, SHA800D75F2EDA52D0FA73225023DDA3ECB9A8AE1298A7806F2A97BF7DFB2C0EEB3. Manifest43BA2F02E934F6EC11164ADA12A7FEA5DED08CC10F0F90A216CB97D4BB0BA23F. Exact10bestaande bestanden tegenover de werkelijk gecompileerde C42basis443;433ongewijzigd, geen nieuwe TU/wire/KMD/host-ABI. Raw patchapply/BOM/CRLF gecontroleerd. Hergebruikte actual-functionfixture7189ASan/UBSanchecksPASS; baseline-tegenvoorbeeld faalt verwacht met42. Dit zijn gemockte bronchecks, geen SDK-/concurrency-/GPU-/snelheidsbewijs.
+
+Begrensde QUALIFIED_FLUSH-log buiten de WriteLock reserveert positieve activatieregels; force-ONstart verbruikt geen budget. Werkelijke kandidaat moet qualified=1/accepted=1/pending0/active0 bewijzen; alleen afwezigheid van waits is geen activatiebewijs. Semantiekonderzoek lokaal evidence/c43-flush-ddi-semantics-r1/analysis.json SHA19C271841B6EFFA1DC230721BE6F572B14B1DBCE3A070E4FAF3FAF14D8785C55: succesvolle Flush-submission is niet hetzelfde als GPUvoltooiing.
+
+**Beslissing:** bestaande beschermde nativeARM64+ARM64EC-bouwroute hergebruiken, C37host/C33FP32/F91 behouden. Daarna een NIEUWE sibling-testoverlay boven de nog bevroren C35parent, eigenVARS, echte nieuweDLLmaps eerst met forcepresentAAN bewijzen. Pas daarna forcepresentUIT en dwmforceAAN; éénzelfde zichtbare AV1-videotaak10sopwarming/30smeting plus20sCPU en fysieke opname. Bij winst alleen benodigde korte nativeUI/directe3Dregressies. Bouw en runtime nog niet uitgevoerd; geen productie-update, merge/release of doelvoltooiing.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
