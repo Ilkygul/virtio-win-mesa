@@ -331,6 +331,17 @@ Kleinste onderzochte drivercorrectie: voor uitsluitend die twee bewezen CPU-cont
 
 Status: bronvoorstel wordt uitgewerkt, nog geen C39build/deployment/winstclaim. Eerst kleinste concrete patch lezen; daarna één korte hardwarevideoproef met bestaand collector/opname, werkelijke trace tijdens zichtbare meetfase en terugrol naarC37. Niet de ongeldige lateC38trace als bewijs van batching gebruiken. Gebruikswinst blijft leidend; algemene doelstatus OPEN, uitsluitend test-VM.
 
+
+### C39 concrete broncorrectie vrijgegeven voor privébuild
+
+Root las de volledige vier-filepatch en de werkelijke generateddecoder/peekbron. [Bronpatch](patches/c39-native-video-cpu-controls.patch), commitcdaaedac71fc4a43b18f41576c477e534e2aae7e, SHAEE22E163EC54586CE280A5E5FDC7E79908EDEDFDE44F83E3CFF6D3BF5AC34415. C37job2855…E6D1→52755C550B0E1BAFF44B9291599F44E834DBA81FED41C02D839428407E190840; beide terminalheaders4C4B…1669→42B0586353741669B3F164C20AE3F95477A3746F774AC333206A90B65711EB6E; DXVKdeviceE663…0A34→20FFFC48F571AE9BE6D2877B5AF48A9680F4AA5A6F0296B842F5FAE4424F049D.
+
+CPU-only controls blijven als normale finite markers in de job: checkpoint hergebruikt vorige nativefencewaarde(inclusiefinit0), bestaande GetCompletedValue/UINT64MAX-/GetDeviceRemovedReason-/pending-/FIFO-/deadline-/poisonchecks blijven. Percontext needs_signal wordt geORd: elk gemengdGPUcommando enEndFrame wint en houdt nieuwSignal+Flush. Alleenbase85/2 enNPVD-privatewire85/5 metnonzerohandles enoptievecap krijgenreuse. Nieuwe aparte32Bfeaturequery0x4e505643/magic0x31434356/version1/supportedexact3/reserved0; oudVIDEO_TERMINALv1 ongewijzigd. Ontbrekende/malformedeCPUcap houdt oudGPUgedrag. BestaandeC22logbudget128blijft, metnew_markers/reused_markers vooreerlijkruntimebewijs; geen nieuw captureharnas.
+
+388gerichtechecks inclusiefbehoudenC22/C36/C37 ennieuwecapfallback/wire/reuse/mixed/EndFrame/finite-health, ASanUBSanPASS. Mocks zijngeen echteGPUproof; daadwerkelijkeAndroidcompilatieenFoldproef blijvenvereist. Shadercompiler/cachecode ongewijzigd, bestaandeC33FP32cache behouden. Rootbronreview evidence/c39-video-cpu-control-r1/root-source-review.json.
+
+C37 normaalafgesloten02:15:04.716Z, aanvankelijknogVMMactief dusveiliggeweigerd; later mainGONE/fullC13drainPASS/pooluit. Verseclosedschijf/VARSmetadata bewaard; bestaandeC37schijf+VARS blijven, geen nieuwguestoverlayofUMD/KMD-mutatie. VolledigeC39configvoorstelC5338B…EFD0D wijzigt uitsluitendprivateserver/DXVKpaar/LD-prefixes; exacteC37terugrolgereed. RootGOvoor2hosttargets+freshDXVKpaar opbeschermdebouw-pcgegeven, noggeenC39runtime-/winstclaim. ProductieUIT, algemeen doelOPEN.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
