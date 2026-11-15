@@ -1032,6 +1032,15 @@ Gecorrigeerde basis: native2448×1848/DPI200/RAM6144, ongewijzigde15-kubus8s-taa
 
 C47 privatebouw: eigenPC-lease `codex-c47-present-single-publication-umd-r1`; echtePS5.1parserPASS,40eerderebinariesgeverifieerd; 9779Linuxbeschermpadenvoorafexact. NativeénECbeide289/289/exit0. Finalizerexit0 levert574bestanden/4.483.380B-archive SHA`071CC20E71B92A6E0D493C0C2FF6958E573376300456BB6B046D3054787357A6`. Retrieval/onafhankelijkebron- enbinarycontroleloopt; C47nogNIETopFoldgeïnstalleerd. HuidigeC46blijft6GiB; Fold-lock `codex-c47-driver` genomenvooromkeerbaretestinstallatie. Geenproductie-/mainmerge-/releaseactie.
 
+
+### C47-binaries onafhankelijk gecontroleerd; C46 cold-frozen voor omkeerbare installatie
+
+Retrievalcontrole bevestigt574bestanden enalle443compilerbronnen. Native+alias `38DC73089460F8A2CAB6BCF5CED99A01BE187F989755837E58463FA9ACD55BEA` (1.366.528B/AA64); EC `1DBA1736B1CA4D2509A2249B1118B9452CB09F273BEE81545B5F433B7FF3EFC0` (1.276.416B/EC8664). De eerdere40Windowsbinaries en9779Linuxpaden zijn na afloop exact. Bouw-VM normaaluit, eigenleasevrijgegeven, bouw-pcuit/SSHtimeout waargenomen. Geenbouwtaakblijftlopen.
+
+C46Windows12:28:33Znormaalafgesloten naexactmarker-/ACLherstel; fullDRAINPASS enpoolontladen. Huidigecoldchain isexactC46→C35→C33(ieder60GiBvirtual), configuratieAC53/RAM6144. C46wordtbehoudenalsfrozenparentvoorC47leaf+eigenVARS. BijC33veranderdesindsherstartuitsluitendctime; inode,size,mtime,uid/gid/modeenhead/tailblevengelijk. Oorzaakvanctimenietbewezen; verseqemucheck0errors. Alleenversectimestatpinbijgebonden, geenvolledige-bitidentiteitsclaim.
+
+Bewijs `artifacts/c47-umd-build/session-20261115-single-publication-r1/umd-success/local-verification.json`, `session-closure.json`; `evidence/c47-present-single-publication-r1/cold-binding-manifest.json` en `c33-cold-check.json`. NuC47leafcoldmaken/volledige4-entrychaincontroleren; dezelfdeRAM6144/DPI200 blijft. Daarna3DLL-transactieininstallboot, normaalafsluiten, pasvolgendenieuweboot38DCgeladenbewijzenenhardwaretaakvergelijken. Geenproductiewijziging/merge/release; C47noggeenprestatiebewijs.
+
 ## Exacte kandidaat-identiteiten
 
 C19 native/alias SHA256: `21EA6DC5C01F627DE665F0D01F5EF89476647F84B56BDC1DE747BDD2D258C6B8`; EC: `6333DF83DDD99B8D61432CE15B72C081E43B3A1A847EFFA5085B082CB79ABC02`.
