@@ -66,6 +66,8 @@ switch ($mode) {
                $h = WaitWin explorer '*System32*'; if (-not $h) { 'geen venster'; break }
                [W]::ShowWindow($h, 6) | Out-Null; Start-Sleep -Milliseconds 1500; [W]::ShowWindow($h, 9) | Out-Null; [W]::SetForegroundWindow($h) | Out-Null; 'ok' }
   'gastanim' { & "$d\gastanim.ps1" }
+  'startopen' { Add-Type 'using System; using System.Runtime.InteropServices; public static class K2 { [DllImport("user32.dll")] public static extern void keybd_event(byte vk, byte sc, uint f, IntPtr e); }'
+               [K2]::keybd_event(0x5B, 0, 0, [IntPtr]::Zero); [K2]::keybd_event(0x5B, 0, 2, [IntPtr]::Zero); 'ok' }
   'close'    { Get-Process msedge | ?{ $_.Path -and (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine -like "*$d\edge*" } | Stop-Process -Force
                (New-Object -ComObject Shell.Application).Windows() | ?{ $_.LocationURL -like '*System32*' } | %{ $_.Quit() }; 'ok' }
 }
