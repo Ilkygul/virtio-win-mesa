@@ -5,13 +5,13 @@
 #   GPU floor 902: scrolling 51 -> 59 fps, video drops 27 -> 1 %, flyout 47 -> 57 fps;
 #   + CPU floors (policy0 1.8 GHz, policy6 2.5 GHz): Start animation 33-42 -> 45-50 fps.
 # Loop every 50 ms while crosvm runs and a panel is lit: when crosvm's CPU time grows faster than IDLE_TICKS per 50 ms
-# (input, animation, video) the boost (GPU min BOOST_GPU MHz, CPU min floors) holds until 10 s after the last
+# (input, animation, video) the boost (GPU min BOOST_GPU MHz, CPU min floors) holds until 30 s after the last
 # activity; otherwise GPU min = BASE_GPU and CPU mins are restored. Something on the phone resets the GPU floor at
 # times; the loop re-applies it. Samsung's thermal limit still caps the MAXIMUM clocks.
 # Off: gpu-vloer.sh stop (restores boot floors). windows-vm.sh calls start/stop. Log: gpu-vloer.log
 HERE=/data/adb/fold-vm; K=/sys/class/kgsl/kgsl-3d0; C=/sys/devices/system/cpu/cpufreq
 BASE_GPU=${BASE_GPU:-422}; BOOST_GPU=${BOOST_GPU:-902}; CPU0_BOOST=${CPU0_BOOST:-1804800}; CPU6_BOOST=${CPU6_BOOST:-2496000}
-IDLE_TICKS=${IDLE_TICKS:-2}; HOLD_MS=${HOLD_MS:-10000}
+IDLE_TICKS=${IDLE_TICKS:-0}; HOLD_S=${HOLD_S:-30}
 PIDF=$HERE/gpu-vloer.pid; LOG=$HERE/gpu-vloer.log; AAN=$HERE/gpu-vloer.aan; ORIG=$HERE/gpu-vloer.orig
 log() { echo "$(date '+%F %T') $*" >> $LOG; }
 lit() { for b in /sys/class/backlight/panel*-backlight/brightness; do [ "$(cat $b 2>/dev/null)" -gt 0 ] 2>/dev/null && return 0; done; return 1; }
@@ -24,15 +24,15 @@ case $1 in
     if [ -f $PIDF ] && kill -0 $(cat $PIDF) 2>/dev/null; then echo "draait al (pid $(cat $PIDF))"; exit 0; fi
     { [ -f $ORIG ] && [ $(wc -l < $ORIG) -ge 3 ]; } || printf '422\n%s\n%s\n' $(cat $C/policy0/scaling_min_freq) $(cat $C/policy6/scaling_min_freq) > $ORIG
     setsid sh $0 lus </dev/null >/dev/null 2>&1 &
-    echo $! > $PIDF; log "gestart (pid $!, basis $BASE_GPU, boost $BOOST_GPU + cpu $CPU0_BOOST/$CPU6_BOOST)"; echo "gestart (pid $!)";;
+    sleep 1; log "gestart (pid $(cat $PIDF 2>/dev/null), basis $BASE_GPU, boost $BOOST_GPU + cpu $CPU0_BOOST/$CPU6_BOOST)"; echo "gestart (pid $(cat $PIDF 2>/dev/null))";;
   lus)
-    state=uit; last=$(ticks); hold=0; n=0
+    echo $$ > $PIDF
+    state=uit; last=$(ticks); act=0; n=0
     while [ -f $AAN ]; do
       if pidof crosvm >/dev/null && lit; then
         now=$(ticks); d=$((now - last)); last=$now
-        [ $d -gt $IDLE_TICKS ] && hold=$((HOLD_MS / 50))
-        if [ $hold -gt 0 ]; then
-          hold=$((hold - 1))
+        sec=$(date +%s); [ $d -gt $IDLE_TICKS ] && act=$sec
+        if [ $((sec - act)) -lt $HOLD_S ]; then
           [ $state = boost ] || { state=boost; n=$((n + 1)); }
           put $K/min_clock_mhz $BOOST_GPU; put $C/policy0/scaling_min_freq $CPU0_BOOST; put $C/policy6/scaling_min_freq $CPU6_BOOST
         else

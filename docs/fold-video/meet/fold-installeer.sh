@@ -20,7 +20,7 @@ log() { echo "$(date +%H:%M:%S) $*"; }
 ps1() { $G "powershell -NoProfile -ExecutionPolicy Bypass -File $GD\\fold-install.ps1 $*"; }
 
 herstart() {   # $1 = 1 when crosvm changed (VM process restart, memory pool stays), else a Windows restart
-  if [ "$1" = 1 ]; then
+  if [ "$1" = 1 ] || [ "${VEILIG:-1}" = 1 ]; then   # guest reset can crash droidvmd (16-11): always shutdown + vm_stop + start
     $G 'shutdown /s /t 0' >/dev/null 2>&1; for i in $(seq 1 60); do $G 'exit 0' 2>/dev/null || break; sleep 3; done; sleep 12
     A "sh /data/local/tmp/vmreq.sh vm_stop '\\\"vm_id\\\":\\\"$VMID\\\"'" >/dev/null
     A "for i in \\\$(seq 1 30); do pidof crosvm >/dev/null || break; sleep 2; done; sh /data/adb/fold-vm/windows-vm.sh start; sleep 3; sh /data/adb/fold-vm/windows-vm.sh openen 0" | tail -2

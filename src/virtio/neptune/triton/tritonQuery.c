@@ -196,13 +196,83 @@ static LONG64 tritonCacheLoad(volatile LONG64 *slot)
     return InterlockedCompareExchange64(slot, 0, 0);
 }
 
+/* U51: the format and MSAA answers are the same for every process on this adapter, yet each process asked the host
+ * again at its first device creation (CheckFormatSupport + FORMAT_SUPPORT2 + MSAA per family member: ~4000 sync
+ * round trips, 0.5-1.5 s per app start).  The KMD keeps one table (VIOGPU_FMT_TABLE): the first process to learn an
+ * answer puts it, every later process pulls the table once before its first host query.  Slots: 0-255 format
+ * support, 256 + fmt*3 + {0,1,2} MSAA quality for 2/4/8 samples.  Off with C:\Users\Public\triton-fmtperproces. */
+static volatile LONG s_sharedState; /* 0 = not pulled, 1 = pulled, 2 = KMD without the table */
+static int tritonSharedMsaaSlot(UINT fmt, UINT samples)
+{
+    if (fmt >= 256u) return -1;
+    return samples == 2 ? 256 + (int)fmt * 3 : samples == 4 ? 257 + (int)fmt * 3 : samples == 8 ? 258 + (int)fmt * 3 : -1;
+}
+static void tritonSharedPull(PTRITON_DEVICE pD)
+{
+    if (InterlockedCompareExchange(&s_sharedState, 0, 0) != 0 || !pD) return;
+    if (tritonSwitch("triton-fmtperproces")) { InterlockedExchange(&s_sharedState, 2); return; }
+    LONG got = 0;
+    for (ULONG start = 0; start < VIOGPU_FMT_TABLE_SLOTS; start += 12) {
+        VIOGPU_ESCAPE esc;
+        memset(&esc, 0, sizeof(esc));
+        esc.Type = VIOGPU_FMT_TABLE;
+        esc.DataLength = sizeof(esc.FmtTable);
+        esc.FmtTable.Op = 1;
+        esc.FmtTable.Index = start;
+        if (FAILED(tritonKmEscape(&pD->Km, &esc))) {
+            /* No runtime callbacks yet (caps snapshot) -> try again later; an old KMD -> stop asking. */
+            if (start == 0 && pD->Km.pCallbacks && pD->Km.pCallbacks->pfnEscapeCb)
+                InterlockedExchange(&s_sharedState, 2);
+            return;
+        }
+        for (ULONG i = 0; i < 12 && start + i < VIOGPU_FMT_TABLE_SLOTS; i++) {
+            const LONG64 v = (LONG64)esc.FmtTable.Entry[i];
+            if (!(v & TRITON_CACHE_VALID)) continue;
+            const ULONG s = start + i;
+            volatile LONG64 *slot = s < 256 ? &s_fmtCache[s]
+                : &s_msaaCache[(s - 256) / 3][(s - 256) % 3 == 0 ? 2 : (s - 256) % 3 == 1 ? 4 : 8];
+            InterlockedCompareExchange64(slot, v, 0);
+            got++;
+        }
+    }
+    InterlockedExchange(&s_sharedState, 1);
+    TR_LOG("U51 shared format table: %ld answers from the KMD", (long)got);
+}
+static void tritonSharedPut(PTRITON_DEVICE pD, int slot, LONG64 v)
+{
+    if (!pD || slot < 0 || InterlockedCompareExchange(&s_sharedState, 0, 0) == 2) return;
+    VIOGPU_ESCAPE esc;
+    memset(&esc, 0, sizeof(esc));
+    esc.Type = VIOGPU_FMT_TABLE;
+    esc.DataLength = sizeof(esc.FmtTable);
+    esc.FmtTable.Op = 2;
+    esc.FmtTable.Index = (ULONG)slot;
+    esc.FmtTable.Entry[0] = (ULONGLONG)v;
+    (void)tritonKmEscape(&pD->Km, &esc);
+}
+
 /* Whether a host query's result is the host's answer.  E_FAIL and
  * E_INVALIDARG are how the API reports an unsupported format; anything else
  * (device removed, transport failure) is no answer, and a zero cached from
  * it would outlive the failure. */
+/* U49: every host reply is an answer except a lost transport/device: those must not be cached.  Before
+ * U49 only S_OK/E_FAIL/E_INVALIDARG counted, so any other "no" (E_NOTIMPL, DXGI_ERROR_UNSUPPORTED, ...)
+ * left the format/MSAA caches empty and every runtime query became a synchronous host round trip
+ * (drawbench: ~1500 CheckFormatSupport + ~700 CheckMultisampleQualityLevels per second, ~90 us each).
+ * C:\Users\Public\triton-noformatcache restores the old rule. */
 static BOOL tritonHostAnswered(HRESULT hr)
 {
-    return SUCCEEDED(hr) || hr == E_FAIL || hr == E_INVALIDARG;
+    if (SUCCEEDED(hr) || hr == E_FAIL || hr == E_INVALIDARG)
+        return TRUE;
+    if (tritonSwitch("triton-noformatcache"))
+        return FALSE;
+    const BOOL lost = hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_HUNG ||
+                      hr == DXGI_ERROR_DEVICE_RESET || hr == DXGI_ERROR_DRIVER_INTERNAL_ERROR ||
+                      hr == E_OUTOFMEMORY || hr == (HRESULT)0x887a0007L /* DXGI_ERROR_DEVICE_RESET alias */;
+    static volatile LONG n;
+    if (InterlockedIncrement(&n) <= 20)
+        TR_LOG("U49 format query hr=0x%08lx counted as %s", (unsigned long)hr, lost ? "NOT answered (transport)" : "answered");
+    return !lost;
 }
 
 /* Every DXGI typeless format family: the typeless parent together with all
@@ -317,6 +387,23 @@ static BOOL tritonMsaaForbidden(DXGI_FORMAT Format)
     }
 }
 
+/* U51b: the host's raw CheckFormatSupport answer per format, asked once per process (the MSAA helpers below asked
+ * it again for every family member and every sample count: ~2500 sync round trips at each device creation). */
+static volatile LONG64 s_hostCfs[256];
+static HRESULT tritonHostCfs(PTRITON_DEVICE pD, DXGI_FORMAT Format, UINT *pSupport)
+{
+    if ((UINT)Format < 256u && !tritonSwitch("triton-fmtperproces")) {
+        const LONG64 e = InterlockedCompareExchange64(&s_hostCfs[Format], 0, 0);
+        if (e & (1ll << 32)) { *pSupport = (UINT)e; return (e & (1ll << 33)) ? E_FAIL : S_OK; }
+    }
+    UINT support = 0;
+    HRESULT hr = ID3D11Device1_CheckFormatSupport(pD->pDev1, Format, &support);
+    if ((UINT)Format < 256u && (SUCCEEDED(hr) || hr == E_FAIL || hr == E_INVALIDARG))
+        InterlockedExchange64(&s_hostCfs[Format], (1ll << 32) | (FAILED(hr) ? (1ll << 33) : 0) | (LONG64)support);
+    *pSupport = support;
+    return hr;
+}
+
 /* Native per-format MSAA quality, gated on the host's OWN render-target
  * capability for THIS exact format.  DXMT answers CheckMultisampleQualityLevels
  * from a device-level sample-count check without consulting renderability, so
@@ -328,7 +415,10 @@ static UINT tritonNativeMsaaQuality(PTRITON_DEVICE pD, DXGI_FORMAT Format,
 {
     UINT support = 0;
     UINT quality = 0;
-    HRESULT hr = ID3D11Device1_CheckFormatSupport(pD->pDev1, Format, &support);
+    /* U51b: Vulkan (DXVK) has power-of-two sample counts only; any other count has no quality level. */
+    if (SampleCount & (SampleCount - 1))
+        return 0;
+    HRESULT hr = tritonHostCfs(pD, Format, &support);
     if (!tritonHostAnswered(hr))
         *pAnswered = FALSE;
     if (FAILED(hr) || !(support & D3D11_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET))
@@ -350,7 +440,7 @@ static BOOL tritonHostRenderTargetable(PTRITON_DEVICE pD, DXGI_FORMAT Format,
                                        BOOL *pAnswered)
 {
     UINT support = 0;
-    HRESULT hr = ID3D11Device1_CheckFormatSupport(pD->pDev1, Format, &support);
+    HRESULT hr = tritonHostCfs(pD, Format, &support);
     if (!tritonHostAnswered(hr))
         *pAnswered = FALSE;
     if (FAILED(hr))
@@ -362,6 +452,7 @@ static BOOL tritonHostRenderTargetable(PTRITON_DEVICE pD, DXGI_FORMAT Format,
 static UINT tritonMsaaQuality(PTRITON_DEVICE pD, DXGI_FORMAT Format,
                               UINT SampleCount, BOOL *pAnswered)
 {
+    tritonSharedPull(pD);
     if ((UINT)Format < 256u && SampleCount <= 32u) {
         const LONG64 e = tritonCacheLoad(&s_msaaCache[Format][SampleCount]);
         if (e & TRITON_CACHE_VALID)
@@ -409,8 +500,12 @@ static UINT tritonMsaaQuality(PTRITON_DEVICE pD, DXGI_FORMAT Format,
         if (*pAnswered)
             for (unsigned j = 0; j < 7 && group[j] != DXGI_FORMAT_UNKNOWN; j++)
                 if ((UINT)group[j] < 256u)
+                {
                     InterlockedExchange64(&s_msaaCache[group[j]][SampleCount],
                                           TRITON_CACHE_VALID | (LONG64)vals[j]);
+                    tritonSharedPut(pD, tritonSharedMsaaSlot((UINT)group[j], SampleCount),
+                                    TRITON_CACHE_VALID | (LONG64)vals[j]);
+                }
         /* Re-derive rather than read back: this format's own entry is what the
          * loop just published, and deriving keeps the >= 256 case correct. */
         if (tritonMsaaReadOnlyDepthView(Format))    return 0;
@@ -423,8 +518,11 @@ static UINT tritonMsaaQuality(PTRITON_DEVICE pD, DXGI_FORMAT Format,
      * no parent/child constraint to satisfy. */
     UINT n = tritonNativeMsaaQuality(pD, Format, SampleCount, pAnswered);
     if (*pAnswered && (UINT)Format < 256u && SampleCount <= 32u)
+    {
         InterlockedExchange64(&s_msaaCache[Format][SampleCount],
                               TRITON_CACHE_VALID | (LONG64)n);
+        tritonSharedPut(pD, tritonSharedMsaaSlot((UINT)Format, SampleCount), TRITON_CACHE_VALID | (LONG64)n);
+    }
     return n;
 }
 
@@ -518,13 +616,18 @@ tritonCheckFormatSupport(D3D10DDI_HDEVICE hDevice, DXGI_FORMAT Format, UINT *pOu
     PTRITON_DEVICE pD = (PTRITON_DEVICE)(hDevice.pDrvPrivate);
     if (!pD || !pOut) { if (pOut) *pOut = 0; return; }
     *pOut = 0;
+    tritonSharedPull(pD);
     if ((UINT)Format < 256u) {
         const LONG64 e = tritonCacheLoad(&s_fmtCache[Format]);
         if (e & TRITON_CACHE_VALID) { *pOut = (UINT)e; return; }
     }
     UINT s1 = 0;
-    HRESULT cfsHr = ID3D11Device1_CheckFormatSupport(pD->pDev1, Format, &s1);
+    HRESULT cfsHr = tritonHostCfs(pD, Format, &s1);
     if (FAILED(cfsHr)) {
+        /* U49: an unsupported format is an answer too; remember the zero mask. */
+        if (tritonHostAnswered(cfsHr) && (UINT)Format < 256u && !tritonSwitch("triton-noformatcache"))
+            { InterlockedExchange64(&s_fmtCache[Format], TRITON_CACHE_VALID | 0);
+              tritonSharedPut(pD, (int)Format, TRITON_CACHE_VALID | 0); }
         /* E_FAIL for an unsupported format is normal; anything else during
          * device finalization is a transport/host failure worth seeing. */
         TR_LOG_HOT("CheckFormatSupport fmt=%u: host CFS failed 0x%08lx",
@@ -620,9 +723,11 @@ tritonCheckFormatSupport(D3D10DDI_HDEVICE hDevice, DXGI_FORMAT Format, UINT *pOu
         *pOut &= ~(UINT)(D3D10_DDI_FORMAT_SUPPORT_RENDERTARGET | D3D10_DDI_FORMAT_SUPPORT_BLENDABLE |
                          D3D10_DDI_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET);
     }
-    if (answered && (UINT)Format < 256u)
+    if (answered && (UINT)Format < 256u) {
         InterlockedExchange64(&s_fmtCache[Format],
                               TRITON_CACHE_VALID | (LONG64)*pOut);
+        tritonSharedPut(pD, (int)Format, TRITON_CACHE_VALID | (LONG64)*pOut);
+    }
 }
 
 void APIENTRY

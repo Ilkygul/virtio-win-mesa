@@ -70,6 +70,15 @@ anim() { # animation smoothness: Start (Win key), network flyout (tap), window m
   gast close >/dev/null; }
 fx() { $G "Set-Content C:\\Users\\Public\\meet\\fx.txt '$1'" && gast fx | tail -1; }
 
+kop() { # conditions line for comparable measurements
+  local h=$(A "su -c 'K=/sys/class/kgsl/kgsl-3d0; C=/sys/devices/system/cpu/cpufreq; echo laden=\$(dumpsys battery | grep -m1 \"AC powered\" | grep -c true) thermal=\$(cat \$K/thermal_pwrlevel) gpu=\$((\$(cat \$K/gpuclk)/1000000))MHz gpumin=\$(cat \$K/min_clock_mhz) cpu0=\$((\$(cat \$C/policy0/scaling_cur_freq)/1000)) cpu6=\$((\$(cat \$C/policy6/scaling_cur_freq)/1000)) accu=\$((\$(dumpsys battery | grep -m1 temperature | tr -dc 0-9)/10))C android-vrij=\$((\$(grep MemAvailable /proc/meminfo | tr -dc 0-9)/1024))MiB'" | tr -d '\r')
+  echo "  kop: $h windows-vrij=$($G '[int]((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1024)' | tr -d '\r')MiB"; }
+bench() { # drawbench 400 and 50 draws, 3 runs each, median (clocks held by gpu-vloer.sh while crosvm is active)
+  kop
+  for n in 400 50; do local r=""
+    for i in 1 2 3; do r="$r $($G "Set-Content C:\\Users\\Public\\meet\\bench.txt '$n 3'; Set-Content C:\\Users\\Public\\meet\\mode.txt bench; Start-ScheduledTask meethulp; Start-Sleep 2; while((Get-ScheduledTask meethulp).State -eq 'Running'){Start-Sleep -m 500}; Get-Content C:\\Users\\Public\\meet\\out.txt" | tr -d '\r' | sed -n 's/.*fps=\([0-9]*\).*/\1/p' | tail -1)"; done
+    echo "  drawbench $n draws: runs$r -> mediaan $(echo $r | tr ' ' '\n' | sort -n | sed -n 2p) fps"; done; }
+
 for i in 1 2 3 4 5 6 7 8; do L=$(laag); [ -n "$L" ] && break; sleep 2; done; [ -n "$L" ] || { echo "geen DroidVM-laag (Windows-scherm niet open?)"; exit 1; }
 # Screen geometry of the visible DroidVM layer (also when the Fold is turned): x offset, y offset, guest size.
 set -- $(A 'dumpsys SurfaceFlinger' | grep -E "VMNative.*BLAST" | grep -oE "\| +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ \|" | head -1 | tr -d '|')
@@ -88,8 +97,9 @@ case $MODE in
     $G 'Get-WinEvent -FilterHashtable @{LogName="System";StartTime=(Get-Date).AddMinutes(-2)} | ?{ $_.Id -in 4101,4097,4098,141,117 -or $_.ProviderName -like "*Display*" -or $_.ProviderName -like "*VioGpu*" } | % { "  ev " + $_.TimeCreated.ToString("HH:mm:ss.fff") + " " + $_.ProviderName + " " + $_.Id }'
     gast close >/dev/null;;
   hist) verzamel $HISTDUR "$HISTACT"; awk -v t0=$T0 '{b=int(($1-t0)/2.5e8)*250; c[b]++} END{for(k in c) print k"ms:"c[k]}' $T | sort -n | tr '\n' ' '; echo; rm -f $T;;
-  anim) anim;;
+  anim) kop; anim;;
+  bench) bench;;
   fx) fx ${LABEL:-1}; exit 0;;
   start) punt1;; sleep|scroll) punt2;; cursor) punt3;; video) punt4;;
-  alles) echo "1 Start/flyout:"; punt1; echo "2 slepen/scrollen:"; punt2; echo "3 cursor:"; punt3; echo "4 video:"; punt4;;
+  alles) kop; echo "1 Start/flyout:"; punt1; echo "2 slepen/scrollen:"; punt2; echo "3 cursor:"; punt3; echo "4 video:"; punt4;;
 esac

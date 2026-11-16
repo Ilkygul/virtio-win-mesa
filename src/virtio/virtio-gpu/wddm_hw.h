@@ -326,6 +326,11 @@ typedef struct _VIOGPU_GATE_ARM_REQ
 #pragma pack()
 
 #pragma pack(1)
+#define VIOGPU_FMT_TABLE             0x0F1
+#pragma pack(1)
+typedef struct _VIOGPU_FMT_TABLE_REQ { ULONG Op; ULONG Index; ULONGLONG Entry[12]; } VIOGPU_FMT_TABLE_REQ;
+#pragma pack()
+#define VIOGPU_FMT_TABLE_SLOTS 1024
 typedef struct _VIOGPU_ESCAPE
 {
     USHORT Type;
@@ -349,6 +354,8 @@ typedef struct _VIOGPU_ESCAPE
         VIOGPU_PRESENT_FENCE_REQ PresentFence;
 
         VIOGPU_GATE_ARM_REQ GateArm;
+
+        VIOGPU_FMT_TABLE_REQ FmtTable;
     } DUMMYUNIONNAME;
 } VIOGPU_ESCAPE, *PVIOGPU_ESCAPE;
 #pragma pack()
