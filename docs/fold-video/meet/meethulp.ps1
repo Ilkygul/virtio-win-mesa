@@ -60,6 +60,12 @@ switch ($mode) {
     Remove-Item "$d\drawbench.txt" -EA 0
     Start-Process "$d\drawbench.exe" -ArgumentList (@($a[0], $a[1], "$d\drawbench.txt") + @($a | Select -Skip 2)) -Wait
     Get-Content "$d\drawbench.txt" }
+  'fx'       { # visual effects on/off (animations, transparency, ...) in this interactive session: fx.txt = 1 | 0
+               & 'C:\Users\Public\win-opt\effects.ps1' -on:([bool][int]((Get-Content "$d\fx.txt" -Raw).Trim())); 'fx ' + (Get-Content "$d\fx.txt" -Raw).Trim() }
+  'minmax'   { # minimise and restore the System32 Explorer test window (window animation), once
+               $h = WaitWin explorer '*System32*'; if (-not $h) { 'geen venster'; break }
+               [W]::ShowWindow($h, 6) | Out-Null; Start-Sleep -Milliseconds 1500; [W]::ShowWindow($h, 9) | Out-Null; [W]::SetForegroundWindow($h) | Out-Null; 'ok' }
+  'gastanim' { & "$d\gastanim.ps1" }
   'close'    { Get-Process msedge | ?{ $_.Path -and (Get-CimInstance Win32_Process -Filter "ProcessId=$($_.Id)").CommandLine -like "*$d\edge*" } | Stop-Process -Force
                (New-Object -ComObject Shell.Application).Windows() | ?{ $_.LocationURL -like '*System32*' } | %{ $_.Quit() }; 'ok' }
 }

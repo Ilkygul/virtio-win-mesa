@@ -54,7 +54,23 @@ punt4() { # YouTube 1080p60 in Edge (eigen profiel): SF-fps + Chromium dropped f
   python3 -c "import json,sys;a=json.loads(sys.argv[1]);b=json.loads(sys.argv[2]);t=b['total']-a['total'];d=b['dropped']-a['dropped'];print('  Chromium: %dx%d, %d frames in %.1fs = %.1f fps, dropped %d (%.1f%%), paused=%s'%(b['w'],b['h'],t,b['t']-a['t'],t/max(b['t']-a['t'],.1),d,100*d/max(t,1),b['paused']))" "$q0" "$q1" 2>&1
   gast close >/dev/null; }
 
-L=$(laag); [ -n "$L" ] || { echo "geen DroidVM-laag (Windows-scherm niet open?)"; exit 1; }
+anim() { # animation smoothness: Start (Win key), network flyout (tap), window minimise+restore. Per run: frames in the
+  # burst (input -> first gap >150 ms), fps over the burst, largest gap, gaps > 1.5 refresh periods (RT ms, default 16.7)
+  local ov=$(A 'su -c "t=\$(awk \"/now at/{print \\\$3; exit}\" /proc/timer_list); input keyevent 0; awk -v t=\$t \"/now at/{print int((\\\$3-t)/1e6); exit}\" /proc/timer_list"' | tr -d '\r')
+  local nx=$((GW-132)) ny=$((GH-25)); gast explorer >/dev/null; sleep 2
+  for doel in start flyout minmax; do
+    for r in 1 2 3; do sleep 2
+      case $doel in start) verzamel 3 "A 'input keyevent KEYCODE_META_LEFT'";; flyout) verzamel 3 "tap $nx $ny";; minmax) verzamel 4 "gast minmax >/dev/null"; ov=0;; esac
+      awk -v t0=$T0 -v ov=$ov -v rt=${RT:-16.7} -v d=$doel -v r=$r '$1>t0+ov*1e6 && $1<t0+(ov+3500)*1e6 {t[++c]=$1} END{ if(c<3){printf "  %s r%d: te weinig frames (%d)\n",d,r,c; exit}
+        e=1; for(i=2;i<=c;i++){ if(t[i]-t[i-1]>150e6) break; e=i }
+        m=0; g=0; for(i=2;i<=e;i++){ x=(t[i]-t[i-1])/1e6; if(x>m)m=x; if(x>1.5*rt)g++ }
+        du=(t[e]-t[1])/1e9; printf "  %s r%d: %d frames in %.0f ms = %.1f fps, max gat %.0f ms, gaten>%.0fms %d",d,r,e,du*1000,(e>1&&du>0)?(e-1)/du:0,m,1.5*rt,g
+        if(ENVIRON["GATEN"]){printf "  [eerste %.0f ms;",(t[1]-t0)/1e6-ov; for(i=2;i<=e;i++) printf " %.0f",(t[i]-t[i-1])/1e6; printf "]"} print "" }' $T
+      [ $doel != minmax ] && { sleep 1; A 'input keyevent KEYCODE_ESCAPE'; }; rm -f $T; done; done
+  gast close >/dev/null; }
+fx() { $G "Set-Content C:\\Users\\Public\\meet\\fx.txt '$1'" && gast fx | tail -1; }
+
+for i in 1 2 3 4 5 6 7 8; do L=$(laag); [ -n "$L" ] && break; sleep 2; done; [ -n "$L" ] || { echo "geen DroidVM-laag (Windows-scherm niet open?)"; exit 1; }
 # Screen geometry of the visible DroidVM layer (also when the Fold is turned): x offset, y offset, guest size.
 set -- $(A 'dumpsys SurfaceFlinger' | grep -E "VMNative.*BLAST" | grep -oE "\| +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ \|" | head -1 | tr -d '|')
 OX=${1:-0}; OY=${2:-396}; GW=$(( ${3:-2448} - OX )); GH=$(( ${4:-1540} - OY ))
@@ -72,6 +88,8 @@ case $MODE in
     $G 'Get-WinEvent -FilterHashtable @{LogName="System";StartTime=(Get-Date).AddMinutes(-2)} | ?{ $_.Id -in 4101,4097,4098,141,117 -or $_.ProviderName -like "*Display*" -or $_.ProviderName -like "*VioGpu*" } | % { "  ev " + $_.TimeCreated.ToString("HH:mm:ss.fff") + " " + $_.ProviderName + " " + $_.Id }'
     gast close >/dev/null;;
   hist) verzamel $HISTDUR "$HISTACT"; awk -v t0=$T0 '{b=int(($1-t0)/2.5e8)*250; c[b]++} END{for(k in c) print k"ms:"c[k]}' $T | sort -n | tr '\n' ' '; echo; rm -f $T;;
+  anim) anim;;
+  fx) fx ${LABEL:-1}; exit 0;;
   start) punt1;; sleep|scroll) punt2;; cursor) punt3;; video) punt4;;
   alles) echo "1 Start/flyout:"; punt1; echo "2 slepen/scrollen:"; punt2; echo "3 cursor:"; punt3; echo "4 video:"; punt4;;
 esac

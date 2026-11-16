@@ -1,0 +1,155 @@
+--- a/src/virtio/neptune/npt_overrides_d3d11_context.c	2026-11-15 09:41:26
++++ b/src/virtio/neptune/npt_overrides_d3d11_context.c	2026-11-16 19:13:43
+@@ -125,6 +125,9 @@
+    return NPT_PRESENT_PAIR_FAILED;
+ }
+ 
++/* triton/tritonQuery.c: C:\\Users\\Public\\<name> exists (re-checked every 5 s). */
++int tritonSwitch(const char *name);
++
+ static uint32_t
+ npt_d3d11_map_to_access_flags(D3D11_MAP map_type)
+ {
+@@ -357,8 +360,13 @@
+    const void *key = self;
+    const uint32_t per_slot    = npt_d3d11_texture_get_slot_size(t);
+    const uint32_t shmem_total = npt_d3d11_texture_get_shmem_size(t);
+-   const uint32_t cached_rp   = npt_d3d11_texture_get_cached_row_pitch(t);
+-   const uint32_t cached_dp   = npt_d3d11_texture_get_cached_depth_pitch(t);
++   uint32_t cached_rp   = npt_d3d11_texture_get_cached_row_pitch(t);
++   uint32_t cached_dp   = npt_d3d11_texture_get_cached_depth_pitch(t);
++   /* U50: first Map of a new texture: the host pitch learned for its format (see npt_resource.c). */
++   if (!cached_rp && MapType != D3D11_MAP_READ && MapType != D3D11_MAP_READ_WRITE &&
++       !tritonSwitch("triton-syncmapwrite") &&
++       npt_d3d11_texture_predict_pitch(t, Subresource, &cached_rp, &cached_dp))
++      npt_d3d11_texture_set_cached_pitches(t, cached_rp, cached_dp);
+    const bool can_async = (cached_rp != 0) &&
+       (MapType == D3D11_MAP_WRITE_DISCARD ||
+        MapType == D3D11_MAP_WRITE_NO_OVERWRITE);
+@@ -384,6 +392,36 @@
+        * (defensive: shouldn't happen for 2D); fall through to sync. */
+    }
+ 
++   /* U50: a write-only Map (D3D11_MAP_WRITE) of a single-subresource texture renames onto the next
++    * slot and carries the current slot's bytes over, instead of a MAP_RESOURCE host round trip
++    * (1.5-3 ms each; Direct2D/XAML upload glyphs and masks this way, ~20 per frame).  Same contents as
++    * the sync path: for a write-only Map the host never reads the resource back into the slot (it
++    * fills the slot only for READ), so the current slot already is the authoritative CPU copy.  The
++    * Unmap takes the host's rename path (Map WRITE + memcpy of the slot + Unmap).
++    * Off with C:\Users\Public\triton-syncmapwrite. */
++   if (MapType == D3D11_MAP_WRITE && cached_rp != 0 &&
++       npt_d3d11_texture_single_subresource(t) && !tritonSwitch("triton-syncmapwrite")) {
++      const uint32_t byte_size =
++         npt_d3d11_texture_get_subresource_byte_size(t, Subresource,
++                                                     cached_rp, cached_dp);
++      if (byte_size && byte_size <= per_slot) {
++         const uint32_t prev = npt_d3d11_texture_current_slot(t);
++         if (!npt_d3d11_texture_map_open(t, key, Subresource,
++                                         NPT_D3D_MAP_SLOT_NEXT,
++                                         npt_d3d11_map_to_access_flags(MapType),
++                                         byte_size, &slot))
++            return NPT_E_OUTOFMEMORY;
++         uint8_t *dst = npt_d3d11_texture_slot_ptr(t, slot);
++         const uint8_t *src = npt_d3d11_texture_slot_ptr(t, prev);
++         if (dst && src && dst != src)
++            memcpy(dst, src, byte_size);
++         pMappedResource->pData = dst;
++         pMappedResource->RowPitch = cached_rp;
++         pMappedResource->DepthPitch = cached_dp;
++         return NPT_S_OK;
++      }
++   }
++
+    /* Sync MAP_RESOURCE, on slot 0 unless another subresource's open Map
+     * holds it.  Cache the returned pitches for the next fast-path.  The
+     * Unmap's byte_size is filled in once the host's pitches are known;
+@@ -437,6 +475,7 @@
+    /* RowPitch is stable per (resource, subresource); pitch drift
+     * would trip the byte_size > per_slot guard above. */
+    npt_d3d11_texture_set_cached_pitches(t, row_pitch, depth_pitch);
++   npt_d3d11_texture_note_host_pitch(t, Subresource, row_pitch, depth_pitch);
+ 
+    pMappedResource->pData = npt_d3d11_texture_slot_ptr(t, slot);
+    pMappedResource->RowPitch = row_pitch;
+--- a/src/virtio/neptune/npt_resource.c	2026-11-15 09:41:26
++++ b/src/virtio/neptune/npt_resource.c	2026-11-16 19:13:43
+@@ -1533,7 +1533,66 @@
+    const struct npt_d3d11_texture_aux *aux = tex_aux(t);
+    return aux ? npt_d3d_map_ring_slot_ptr(&aux->map_ring, slot) : NULL;
+ }
++
++/* U50: the host's map pitches, learned per DXGI format.  A sync MAP_RESOURCE returns the host's RowPitch and
++ * DepthPitch; for STAGING and DYNAMIC textures DXVK hands out tightly packed rows (row bytes of the mip width,
++ * rows * RowPitch per slice).  Once two sync maps of a format matched that rule and none differed, the first Map
++ * of a NEW texture of that format can skip the round trip (Direct2D/XAML create a fresh small staging texture
++ * for nearly every glyph/mask upload).  One mismatch disables the prediction for that format for good. */
++static int npt_pitch_rule[256];   /* >0: packed matches seen; <0: a mismatch was seen */
+ 
++static bool
++npt_tex_packed_pitches(const struct npt_d3d11_texture_aux *aux, uint32_t subresource,
++                       uint32_t *rp, uint32_t *dp)
++{
++   if (aux->usage != D3D11_USAGE_STAGING && aux->usage != D3D11_USAGE_DYNAMIC)
++      return false;
++   const uint32_t mip = texture_subresource_mip(aux, subresource);
++   const uint32_t row = npt_dxgi_format_row_bytes(aux->format, mip_dim(aux->width, mip));
++   const uint32_t rows = npt_dxgi_format_subresource_rows(aux->format, mip_dim(aux->height, mip));
++   if (!row || !rows)
++      return false;
++   *rp = row;
++   *dp = row * rows;
++   return true;
++}
++
++void
++npt_d3d11_texture_note_host_pitch(const struct npt_d3d11_texture *t, uint32_t subresource,
++                                  uint32_t row_pitch, uint32_t depth_pitch)
++{
++   const struct npt_d3d11_texture_aux *aux = tex_aux(t);
++   uint32_t rp, dp;
++   if (!aux || (uint32_t)aux->format >= 256u || !npt_tex_packed_pitches(aux, subresource, &rp, &dp))
++      return;
++   int *rule = &npt_pitch_rule[aux->format];
++   const bool same = row_pitch == rp && (depth_pitch == dp || depth_pitch == 0);
++   if (!same) {
++      if (p_atomic_xchg(rule, -1) >= 0)
++         npt_log("U50 pitch rule off for format %u: host pitches %u/%u, packed %u/%u",
++                 (unsigned)aux->format, row_pitch, depth_pitch, rp, dp);
++   } else if (p_atomic_read(rule) >= 0) {
++      p_atomic_inc(rule);
++   }
++}
++
++bool
++npt_d3d11_texture_predict_pitch(const struct npt_d3d11_texture *t, uint32_t subresource,
++                                uint32_t *row_pitch, uint32_t *depth_pitch)
++{
++   const struct npt_d3d11_texture_aux *aux = tex_aux(t);
++   if (!aux || (uint32_t)aux->format >= 256u || p_atomic_read(&npt_pitch_rule[aux->format]) < 2)
++      return false;
++   return npt_tex_packed_pitches(aux, subresource, row_pitch, depth_pitch);
++}
++
++/* U50: the ring's current slot (the last mapped CPU copy) and whether the texture has one subresource. */
++uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t)
++{ const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux ? aux->map_ring.current_slot : 0; }
++
++bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t)
++{ const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux && aux->mip_levels <= 1 && aux->array_size <= 1; }
++
+ bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
+                                 const void *context, uint32_t subresource,
+                                 enum npt_d3d_map_slot_choice choice,
+--- a/src/virtio/neptune/npt_resource.h	2026-11-11 22:57:28
++++ b/src/virtio/neptune/npt_resource.h	2026-11-16 19:13:43
+@@ -381,6 +381,10 @@
+ /* A context's open Map of one subresource
+  * (npt_d3d_map_ring_open/find/close).  Sync Maps land on slot 0; the
+  * cached-pitch fast path rotates. */
++void npt_d3d11_texture_note_host_pitch(const struct npt_d3d11_texture *t, uint32_t subresource, uint32_t row_pitch, uint32_t depth_pitch);
++bool npt_d3d11_texture_predict_pitch(const struct npt_d3d11_texture *t, uint32_t subresource, uint32_t *row_pitch, uint32_t *depth_pitch);
++uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t);
++bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t);
+ bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
+                                 const void *context, uint32_t subresource,
+                                 enum npt_d3d_map_slot_choice choice,

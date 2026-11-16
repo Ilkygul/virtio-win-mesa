@@ -1,0 +1,146 @@
+--- a/viogpu/viogpu3d/viogpu_adapter.cpp	2026-11-16 17:32:19
++++ b/viogpu/viogpu3d/viogpu_adapter.cpp	2026-11-16 19:57:27
+@@ -835,7 +835,7 @@
+         return STATUS_UNSUCCESSFUL;
+     }
+ 
+-    Status = SetRegisterInfo(GetInstanceId(), 0);
++    Status = SetRegisterInfo(GetInstanceId(), DedicatedBytes() > 0xFFFFFFFFull ? 0xFFFFFFFFul : (DWORD)DedicatedBytes());
+     if (!NT_SUCCESS(Status))
+     {
+         VIOGPU_LOG_ASSERTION1("RegisterHWInfo failed with status 0x%X\n", Status);
+@@ -1208,6 +1208,30 @@
+     pDesc->Flags.DirectFlip = TRUE;
+ }
+ 
++// F98: the VENUS_HOST pool (host GPU objects mapped into the protected VM) as a memory segment, so Windows
++// counts it as dedicated GPU memory.  CPU-invisible and never named by an allocation's segment set: it only
++// reports capacity.  GPU VA 0x900000000 stays clear of the aperture (0xC0000000), the VidMm pool segment
++// (0x500000000) and the KMD window (0x700000000).
++template <typename DESC> void VioGpuAdapter::FillVenusSegment(DESC *pDesc)
++{
++    pDesc->BaseAddress.QuadPart = 0x900000000ll;
++    pDesc->Size = (SIZE_T)m_VenusPoolSize;
++    pDesc->CommitLimit = (SIZE_T)m_VenusPoolSize;
++    pDesc->Flags.Aperture = FALSE;
++    pDesc->Flags.CacheCoherent = TRUE;
++    pDesc->Flags.CpuVisible = FALSE;
++}
++
++// F98: bytes of the non-aperture (dedicated) segments, as Windows sums them.
++ULONGLONG VioGpuAdapter::DedicatedBytes() const
++{
++    if (!m_MemReport)
++        return 0;
++    if (m_PoolMode)
++        return m_GuestPoolSize + (HasVenusSegment() ? m_VenusPoolSize : 0);
++    return m_VioDev.shmem.available ? m_VioDev.shmem.length : 0;
++}
++
+ NTSTATUS VioGpuAdapter::QueryAdapterInfo(_In_ CONST DXGKARG_QUERYADAPTERINFO *pQueryAdapterInfo)
+ {
+     PAGED_CODE();
+@@ -1377,7 +1401,7 @@
+                 }
+ 
+                 DXGK_QUERYSEGMENTOUT3 *pSegmentInfo = (DXGK_QUERYSEGMENTOUT3 *)pQueryAdapterInfo->pOutputData;
+-                const UINT nbSegments = m_PoolMode ? (m_PoolKeepAperture ? 3 : 2) : (m_VioDev.shmem.available ? 2 : 1);
++                const UINT nbSegments = SegmentCount();
+                 pSegmentInfo->NbSegment = nbSegments;
+                 if (pSegmentInfo->pSegmentDescriptor)
+                 {
+@@ -1395,10 +1419,14 @@
+                     {
+                         FillShmemSegment(&pSegmentInfo->pSegmentDescriptor[1]);
+                     }
+-                    if (nbSegments == 3)
++                    if (BaseSegmentCount() == 3)
+                     {
+                         FillPoolVidmmSegment(&pSegmentInfo->pSegmentDescriptor[2]);
+                     }
++                    if (HasVenusSegment())
++                    {
++                        FillVenusSegment(&pSegmentInfo->pSegmentDescriptor[BaseSegmentCount()]);
++                    }
+                 }
+                 DbgPrint(TRACE_LEVEL_VERBOSE, ("<--- %s Requested segments\n", __FUNCTION__));
+                 return STATUS_SUCCESS;
+@@ -1421,7 +1449,7 @@
+                 }
+ 
+                 DXGK_QUERYSEGMENTOUT4 *pSegmentInfo = (DXGK_QUERYSEGMENTOUT4 *)pQueryAdapterInfo->pOutputData;
+-                const UINT nbSegments = m_PoolMode ? (m_PoolKeepAperture ? 3 : 2) : (m_VioDev.shmem.available ? 2 : 1);
++                const UINT nbSegments = SegmentCount();
+ 
+                 // Two-call contract: the first call has NbSegment == 0 (and no
+                 // descriptor array); report only the segment count and touch
+@@ -1462,9 +1490,13 @@
+                 {
+                     FillShmemSegment((DXGK_SEGMENTDESCRIPTOR4 *)(pSegmentInfo->pSegmentDescriptor + stride));
+                 }
+-                if (nbSegments == 3)
++                if (BaseSegmentCount() == 3)
+                 {
+                     FillPoolVidmmSegment((DXGK_SEGMENTDESCRIPTOR4 *)(pSegmentInfo->pSegmentDescriptor + 2 * stride));
++                }
++                if (HasVenusSegment())
++                {
++                    FillVenusSegment((DXGK_SEGMENTDESCRIPTOR4 *)(pSegmentInfo->pSegmentDescriptor + BaseSegmentCount() * stride));
+                 }
+ 
+                 DbgPrint(TRACE_LEVEL_VERBOSE, ("<--- %s Requested segments (v4)\n", __FUNCTION__));
+@@ -3251,6 +3283,14 @@
+ 
+         DWORD MemorySize = MemSize;
+         Status = WriteRegistryDWORD(DevInstRegKeyHandle, L"HardwareInformation.MemorySize", &MemorySize);
++        if (NT_SUCCESS(Status))
++        {
++            /* F98: dxdiag and the display control panel read the 64-bit value first. */
++            ULONGLONG q = DedicatedBytes();
++            UNICODE_STRING qn;
++            RtlInitUnicodeString(&qn, L"HardwareInformation.qwMemorySize");
++            ZwSetValueKey(DevInstRegKeyHandle, &qn, 0, REG_QWORD, &q, sizeof(q));
++        }
+         if (!NT_SUCCESS(Status))
+         {
+             DbgPrint(TRACE_LEVEL_ERROR, ("WriteRegistryDWORD failed for MemorySize with Status: 0x%X", Status));
+@@ -4494,6 +4534,7 @@
+         return;
+     }
+     m_PoolsTried = TRUE;
++    m_MemReport = ReadQwordParameter(L"MemReport", 1) != 0;
+     if (!VioGpuRdmaActive())
+     {
+         VioGpuRegLog("pool: no rdmapool, not a protected VM: stock memory model\n");
+@@ -4517,6 +4558,7 @@
+     }
+     ULONGLONG vidmm = ReadQwordParameter(L"GpuGuestVidmmBytes", VIOGPU_DEFAULT_VIDMM_BYTES);
+     m_PoolKeepAperture = ReadQwordParameter(L"PoolKeepAperture", 1) != 0;
++    m_MemReport = ReadQwordParameter(L"MemReport", 1) != 0;
+ 
+     m_GuestPoolBase = (m_GuestPoolBase + PAGE_SIZE - 1) & ~(ULONGLONG)(PAGE_SIZE - 1);
+     m_GuestPoolSize &= ~(ULONGLONG)(PAGE_SIZE - 1);
+--- a/viogpu/viogpu3d/viogpu_adapter.h	2026-11-16 17:32:19
++++ b/viogpu/viogpu3d/viogpu_adapter.h	2026-11-16 19:57:16
+@@ -144,6 +144,13 @@
+     // VidMm's pool segment: id 1 (replaces the aperture) or, with the PoolKeepAperture QWORD
+     // parameter = 1, id 3 behind the unchanged (unused) aperture segment 1 and window segment 2.
+     UINT PoolVidmmSegId() const { return m_PoolKeepAperture ? 3 : 1; }
++    /* F98 (MemReport, default on): the VENUS_HOST pool is GPU memory too; report it as one more
++     * non-aperture segment (after the others, so their ids do not move; no allocation names it). */
++    BOOLEAN HasVenusSegment() const { return m_MemReport && m_PoolMode && m_VenusPoolSize != 0; }
++    UINT BaseSegmentCount() const { return m_PoolMode ? (m_PoolKeepAperture ? 3 : 2) : (m_VioDev.shmem.available ? 2 : 1); }
++    UINT SegmentCount() const { return BaseSegmentCount() + (HasVenusSegment() ? 1 : 0); }
++    ULONGLONG DedicatedBytes() const;
++    template <typename DESC> void FillVenusSegment(DESC *pDesc);
+     ULONGLONG PoolVidmmSegBase() const { return m_PoolKeepAperture ? 0x500000000ull : 0xC0000000ull; }
+ 
+     static const ULONGLONG SHMEM_GPU_BASE_VA = 0x700000000;
+@@ -354,6 +361,7 @@
+     BOOLEAN m_PoolMode = FALSE;
+     BOOLEAN m_PoolsTried = FALSE;
+     BOOLEAN m_PoolKeepAperture = FALSE;
++    BOOLEAN m_MemReport = TRUE;
+     ULONGLONG m_GuestPoolBase = 0;
+     ULONGLONG m_GuestPoolSize = 0;
+     ULONGLONG m_VenusPoolBase = 0;
