@@ -1,0 +1,282 @@
+commit 6af62ede498ddc3df7dfe550ecba16ca8c0d6f63
+Author: Ilkay Gül <igul@Mac.localdomain>
+Date:   Mon Nov 16 03:17:52 2026 +0100
+
+    droidvm: clipsync tray menu "Resolutie" (Automatisch, 1920x1080, 2560x1440, Schermeigen, 60/120 Hz) [skip ci]
+    
+    The choice is remembered (HKCU\Software\DroidVM Resolutie/Verversing) and
+    re-applied at logon; a fixed size leaves C:\Users\Public\viogpu-vast so
+    viogpuap stops following the window; the refresh rate is kept after every
+    mode change. "clipsync.exe res <keuze> [hz]" does the same from a script.
+    windows-vm.sh openen sends the screen's own size ("R w h") to clipsync's
+    port 6202 (firewall: phone only). DPI stays automatic.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+diff --git a/fold8-desktop/droidvm/windows-scherm/clipsync.cs b/fold8-desktop/droidvm/windows-scherm/clipsync.cs
+index a3551b9..8c628cd 100644
+--- a/fold8-desktop/droidvm/windows-scherm/clipsync.cs
++++ b/fold8-desktop/droidvm/windows-scherm/clipsync.cs
+@@ -11,6 +11,11 @@
+ // Images: "I " + base64(PNG) + "\n" both ways (max 16 MB decoded, larger is skipped; the base64 line can be
+ // ~22 MB). Windows -> phone when the clipboard holds an image and no text; phone -> Windows sets the image.
+ // A SHA-256 of the last image sent/received (plus a 2 s quiet period after setting one) stops echo loops.
++// Tray menu "Resolutie": Automatisch (follow the DroidVM window: viogpuap), 1920x1080, 2560x1440, the screen's own
++// size, and 60/120 Hz. A fixed size leaves C:\Users\Public\viogpu-vast so viogpuap stops following the window; the
++// refresh rate is kept across every mode change (also the automatic ones). Remembered in HKCU\Software\DroidVM
++// (Resolutie, Verversing). The phone sends the screen's own size as "R <w> <h>" on port 6202 (windows-vm.sh openen;
++// 6201 is held by the app's connection). DPI stays automatic.
+ // Build in the guest: csc /target:winexe /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:clipsync.exe clipsync.cs
+ using System;
+ using System.IO;
+@@ -73,6 +78,8 @@ class ClipSync : Form
+     {
+         if (args.Length == 2 && args[0] == "open") { OpenViaRunning(args[1]); return; }
+         if (args.Length == 2 && args[0] == "clip") { SendToRunning(2, args[1]); return; }
++        // "clipsync.exe res auto|1920x1080|2560x1440|eigen [60|120]": same as the tray menu "Resolutie".
++        if (args.Length >= 2 && args[0] == "res") { SendToRunning(3, args[1] + " " + (args.Length > 2 ? args[2] : "")); return; }
+         bool created;
+         using (new Mutex(true, "Global\\DroidVM-clipsync", out created))
+         {
+@@ -94,6 +101,10 @@ class ClipSync : Form
+         clipItem = new ToolStripMenuItem("Klembord delen met telefoon") { CheckOnClick = true, Checked = clipEnabled };
+         clipItem.CheckedChanged += (s, e) => SetClipEnabled(clipItem.Checked);
+         menu.Items.Add(clipItem);
++        resMenu = new ToolStripMenuItem("Resolutie");
++        resMenu.DropDownItems.Add("-");   // filled when opened
++        resMenu.DropDownOpening += (s, e) => FillResolutionMenu();
++        menu.Items.Add(resMenu);
+         tray.ContextMenuStrip = menu;
+         tray.Text = "Fold: nog geen verbinding";
+         SetTrayIcon("?", Color.Gray);
+@@ -102,6 +113,177 @@ class ClipSync : Form
+         FormClosed += (s, e) => tray.Visible = false;
+         var t = new Thread(Serve) { IsBackground = true };
+         t.Start();
++        new Thread(ServeControl) { IsBackground = true }.Start();
++        // Re-apply the remembered choice once viogpuap has settled after logon.
++        var startTimer = new System.Windows.Forms.Timer { Interval = 6000 };
++        startTimer.Tick += (s, e) => { startTimer.Stop(); ApplyResolution(resChoice, hzChoice, false); };
++        startTimer.Start();
++        hzTimer.Interval = 800;
++        hzTimer.Tick += (s, e) => { hzTimer.Stop(); KeepRefreshRate(); };
++    }
++
++    // ---- Resolution / refresh rate ----
++    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
++    struct DEVMODE
++    {
++        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
++        public short dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra; public int dmFields;
++        public int dmPositionX, dmPositionY, dmDisplayOrientation, dmDisplayFixedOutput;
++        public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
++        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
++        public short dmLogPixels; public int dmBitsPerPel, dmPelsWidth, dmPelsHeight, dmDisplayFlags, dmDisplayFrequency;
++        public int dmICMMethod, dmICMIntent, dmMediaType, dmDitherType, dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
++    }
++    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern bool EnumDisplaySettings(string dev, int mode, ref DEVMODE dm);
++    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int ChangeDisplaySettingsEx(string dev, ref DEVMODE dm, IntPtr hwnd, int flags, IntPtr l);
++    const int WM_DISPLAYCHANGE = 0x007E;
++    const string FixedMarker = @"C:\Users\Public\viogpu-vast";
++    string resChoice = ReadSetting("Resolutie", "auto");
++    int hzChoice = ReadSettingInt("Verversing", 60);
++    ToolStripMenuItem resMenu;
++    readonly System.Windows.Forms.Timer hzTimer = new System.Windows.Forms.Timer();
++    bool applying;
++
++    static string ReadSetting(string name, string def)
++    {
++        try { using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\DroidVM")) { var v = k == null ? null : k.GetValue(name) as string; return v ?? def; } }
++        catch { return def; }
++    }
++    static int ReadSettingInt(string name, int def)
++    {
++        try { using (var k = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\DroidVM")) { object v = k == null ? null : k.GetValue(name); return v is int ? (int)v : def; } }
++        catch { return def; }
++    }
++    static void WriteSetting(string name, object value)
++    {
++        try { using (var k = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"Software\DroidVM")) k.SetValue(name, value); }
++        catch (Exception e) { Log("setting " + name + ": " + e.Message); }
++    }
++
++    static DEVMODE Current()
++    {
++        var dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
++        EnumDisplaySettings(null, -1, ref dm);
++        return dm;
++    }
++    static bool ModeExists(int w, int h, int hz)
++    {
++        var dm = new DEVMODE(); dm.dmSize = (short)Marshal.SizeOf(typeof(DEVMODE));
++        for (int i = 0; EnumDisplaySettings(null, i, ref dm); i++)
++            if (dm.dmBitsPerPel == 32 && dm.dmPelsWidth == w && dm.dmPelsHeight == h && (hz == 0 || dm.dmDisplayFrequency == hz)) return true;
++        return false;
++    }
++    static bool Has120() { var c = Current(); return ModeExists(c.dmPelsWidth, c.dmPelsHeight, 120); }
++
++    // The screen's own size in the current orientation (from the phone; 0x0 while unknown).
++    static void NativeSize(out int w, out int h)
++    {
++        int a = ReadSettingInt("SchermeigenB", 0), b = ReadSettingInt("SchermeigenH", 0);
++        var c = Current();
++        bool portrait = c.dmPelsHeight > c.dmPelsWidth;
++        w = portrait ? Math.Min(a, b) : Math.Max(a, b); h = portrait ? Math.Max(a, b) : Math.Min(a, b);
++    }
++
++    void FillResolutionMenu()
++    {
++        resMenu.DropDownItems.Clear();
++        int nw, nh; NativeSize(out nw, out nh);
++        Action<string, string, bool> add = (label, key, enabled) =>
++        {
++            var it = new ToolStripMenuItem(label) { Checked = resChoice == key, Enabled = enabled };
++            it.Click += (s, e) => ApplyResolution(key, hzChoice, true);
++            resMenu.DropDownItems.Add(it);
++        };
++        add("Automatisch (venster volgen)", "auto", true);
++        add("1920 \u00d7 1080", "1920x1080", true);
++        add("2560 \u00d7 1440", "2560x1440", true);
++        add(nw > 0 ? "Schermeigen (" + nw + " \u00d7 " + nh + ")" : "Schermeigen (nog onbekend)", "eigen", nw > 0);
++        resMenu.DropDownItems.Add(new ToolStripSeparator());
++        bool has120 = Has120();
++        foreach (int hz in new[] { 60, 120 })
++        {
++            int f = hz;
++            var it = new ToolStripMenuItem(hz + " Hz") { Checked = hzChoice == hz, Enabled = hz == 60 || has120 };
++            it.Click += (s, e) => ApplyResolution(resChoice, f, true);
++            resMenu.DropDownItems.Add(it);
++        }
++    }
++
++    void ApplyResolution(string choice, int hz, bool tell)
++    {
++        int w = 0, h = 0;
++        if (choice == "1920x1080") { w = 1920; h = 1080; }
++        else if (choice == "2560x1440") { w = 2560; h = 1440; }
++        else if (choice == "eigen") NativeSize(out w, out h);
++        else choice = "auto";
++        if (choice != "auto" && w <= 0) { if (tell) tray.ShowBalloonTip(3000, "Resolutie", "De schermmaat is nog niet bekend.", ToolTipIcon.Info); return; }
++        resChoice = choice; hzChoice = hz;
++        WriteSetting("Resolutie", choice); WriteSetting("Verversing", hz);
++        try { if (choice == "auto") File.Delete(FixedMarker); else File.WriteAllText(FixedMarker, w + "x" + h); }
++        catch (Exception e) { Log("marker: " + e.Message); }
++        if (choice == "auto")
++        {
++            // viogpuap notices the marker is gone within 2 s and applies the window size; the refresh rate follows on WM_DISPLAYCHANGE.
++            KeepRefreshRate();
++            Log("resolution auto, " + hz + " Hz");
++            if (tell) tray.ShowBalloonTip(2000, "Resolutie", "Automatisch: Windows volgt het venster (" + hz + " Hz)", ToolTipIcon.Info);
++            return;
++        }
++        int r = SetMode(w, h, ModeExists(w, h, hz) ? hz : 0);
++        Log("resolution " + w + "x" + h + " " + hz + " Hz -> " + r);
++        if (tell) tray.ShowBalloonTip(2000, "Resolutie", r == 0 ? w + " \u00d7 " + h + ", " + hz + " Hz" : "Niet gelukt (" + r + ")", r == 0 ? ToolTipIcon.Info : ToolTipIcon.Warning);
++    }
++
++    int SetMode(int w, int h, int hz)
++    {
++        var dm = Current();
++        dm.dmFields = 0;
++        if (w > 0) { dm.dmPelsWidth = w; dm.dmPelsHeight = h; dm.dmFields |= 0x80000 | 0x100000; }
++        if (hz > 0) { dm.dmDisplayFrequency = hz; dm.dmFields |= 0x400000; }
++        applying = true;
++        try { return ChangeDisplaySettingsEx(null, ref dm, IntPtr.Zero, 0x1 /* CDS_UPDATEREGISTRY */, IntPtr.Zero); }
++        finally { applying = false; }
++    }
++
++    // After any mode change (also viogpuap following the window) put the chosen refresh rate back.
++    void KeepRefreshRate()
++    {
++        var c = Current();
++        if (c.dmDisplayFrequency == hzChoice || !ModeExists(c.dmPelsWidth, c.dmPelsHeight, hzChoice)) return;
++        int r = SetMode(0, 0, hzChoice);
++        Log("refresh " + c.dmPelsWidth + "x" + c.dmPelsHeight + " " + c.dmDisplayFrequency + " -> " + hzChoice + " Hz: " + r);
++    }
++
++    // Port 6202: "R <w> <h>" from the phone (10.77.0.1 only, firewall) = the size of the screen the VM is shown on.
++    void ServeControl()
++    {
++        for (;;)
++        {
++            try
++            {
++                var ip = NatAddress();
++                if (ip == null) { Thread.Sleep(5000); continue; }
++                var listener = new TcpListener(ip, Port + 1);
++                listener.Start();
++                for (;;)
++                {
++                    using (var c = listener.AcceptTcpClient())
++                    {
++                        c.ReceiveTimeout = 3000;
++                        var reader = new StreamReader(c.GetStream(), new UTF8Encoding(false));
++                        string line = reader.ReadLine() ?? "";
++                        var f = line.Split(' ');
++                        int w, h;
++                        if (f.Length == 3 && f[0] == "R" && int.TryParse(f[1], out w) && int.TryParse(f[2], out h) && w >= 640 && h >= 480 && w <= 8192 && h <= 8192)
++                        {
++                            WriteSetting("SchermeigenB", w); WriteSetting("SchermeigenH", h);
++                            Log("screen size from phone " + w + "x" + h);
++                        }
++                    }
++                }
++            }
++            catch (Exception e) { Log("control: " + e.Message); Thread.Sleep(5000); }
++        }
+     }
+ 
+     static IPAddress NatAddress()
+@@ -335,6 +517,7 @@ class ClipSync : Form
+ 
+     protected override void WndProc(ref Message m)
+     {
++        if (m.Msg == WM_DISPLAYCHANGE && !applying) { hzTimer.Stop(); hzTimer.Start(); }
+         if (m.Msg == WM_COPYDATA)
+         {
+             var cds = (COPYDATASTRUCT)Marshal.PtrToStructure(m.LParam, typeof(COPYDATASTRUCT));
+@@ -345,6 +528,13 @@ class ClipSync : Form
+                 string arg = Marshal.PtrToStringUni(cds.lpData).TrimEnd('\0').ToLowerInvariant();
+                 SetClipEnabled(arg == "on" ? true : arg == "off" ? false : !clipEnabled);
+             }
++            else if (cds.dwData == (IntPtr)3 && cds.cbData > 0 && cds.cbData < 128)
++            {
++                var a = Marshal.PtrToStringUni(cds.lpData).TrimEnd('\0').Trim().Split(' ');
++                int hz; if (a.Length < 2 || !int.TryParse(a[1], out hz) || (hz != 60 && hz != 120)) hz = hzChoice;
++                string key = a[0].ToLowerInvariant();
++                BeginInvoke((Action)(() => ApplyResolution(key, hz, true)));
++            }
+             m.Result = (IntPtr)1;
+             return;
+         }
+diff --git a/fold8-desktop/droidvm/windows-scherm/install-clipsync.ps1 b/fold8-desktop/droidvm/windows-scherm/install-clipsync.ps1
+index f713534..0ef972d 100644
+--- a/fold8-desktop/droidvm/windows-scherm/install-clipsync.ps1
++++ b/fold8-desktop/droidvm/windows-scherm/install-clipsync.ps1
+@@ -11,6 +11,10 @@ if ($LASTEXITCODE -ne 0) { throw 'csc failed' }
+ Remove-NetFirewallRule -DisplayName 'DroidVM clipsync' -ErrorAction SilentlyContinue
+ New-NetFirewallRule -DisplayName 'DroidVM clipsync' -Direction Inbound -Protocol TCP -LocalPort 6201 `
+     -RemoteAddress 10.77.0.1 -Action Allow -Profile Any | Out-Null
++# Port 6202: the phone's "R <w> <h>" (screen size for the "Resolutie" menu), same restriction.
++Remove-NetFirewallRule -DisplayName 'DroidVM clipsync scherm' -ErrorAction SilentlyContinue
++New-NetFirewallRule -DisplayName 'DroidVM clipsync scherm' -Direction Inbound -Protocol TCP -LocalPort 6202 `
++    -RemoteAddress 10.77.0.1 -Action Allow -Profile Any | Out-Null
+ $a = New-ScheduledTaskAction -Execute "$dir\clipsync.exe"
+ $t = New-ScheduledTaskTrigger -AtLogOn -User $User
+ $p = New-ScheduledTaskPrincipal -UserId $User -LogonType Interactive
+diff --git a/fold8-desktop/droidvm/windows-vm.sh b/fold8-desktop/droidvm/windows-vm.sh
+index 0f03313..004d5de 100755
+--- a/fold8-desktop/droidvm/windows-vm.sh
++++ b/fold8-desktop/droidvm/windows-vm.sh
+@@ -177,6 +177,11 @@ case "${1:-status}" in
+         am start --display "${disp:-0}" -n cn.classfun.droidvm/.ui.vm.display.nativedisplay.display.VMNativeDisplayActivity \
+             --es vm_id "$id" --es vm_name "$VM_NAME_FULL" --es screen gpu-0 --ez input_enabled true \
+             --ei display_width 1920 --ei display_height 1200 >/dev/null 2>&1
++        # For the clipsync "Resolutie" menu (Schermeigen): the physical size of this screen, as "R <w> <h>" on
++        # clipsync's port 6202 (in the background: Windows may still be starting).
++        wh=$(wm size -d "${disp:-0}" 2>/dev/null | sed -n 's/^Physical size: \([0-9]*\)x\([0-9]*\).*/\1 \2/p' | head -n 1)
++        gip=$(guest_ip)
++        [ -n "$wh" ] && [ -n "$gip" ] && ( for i in $(seq 1 30); do echo "R $wh" | toybox nc -w 2 "$gip" 6202 >/dev/null 2>&1 && break; sleep 10; done ) </dev/null >/dev/null 2>&1 &
+         echo "Windows-scherm geopend op scherm ${disp:-0}" ;;
+     pauze)
+         # Sleep mode: stop the VM's processors (memory stays), or let them run again. Saves battery while

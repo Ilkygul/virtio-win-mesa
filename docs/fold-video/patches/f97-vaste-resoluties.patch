@@ -1,0 +1,37 @@
+commit c207153a760bc54bb82e57f18962e7d7aa630f94
+Author: Ilkay Gül <igul@Mac.localdomain>
+Date:   Mon Nov 16 03:17:47 2026 +0100
+
+    viogpu3d: F97 fixed resolutions (1080p, 1440p, Fold screens, 4K) + viogpuap fixed-size switch [skip ci]
+    
+    - Mode list gains 1920x1080, 2560x1440, the Fold's inner (2448x1848) and
+      cover (1248x1972) screens in both orientations, and 3840x2160, next to
+      the host window size (custom slot) - all in 60 and 120 Hz (F96).
+    - viogpuap (source now in this repo, as built for the Fold): while
+      C:\Users\Public\viogpu-vast exists (clipsync "Resolutie" with a fixed
+      size) the host window size is not followed; it polls every 2 s so
+      "Automatisch" follows the window again at once.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+diff --git a/viogpu/viogpu3d/viogpu_vidpn.cpp b/viogpu/viogpu3d/viogpu_vidpn.cpp
+index 4098e78..becc7fc 100644
+--- a/viogpu/viogpu3d/viogpu_vidpn.cpp
++++ b/viogpu/viogpu3d/viogpu_vidpn.cpp
+@@ -2388,6 +2388,16 @@ int VioGpuVidPN::AddEdidModes(void)
+     int modecount = 0;
+     UpdateModes(MIN_WIDTH_SIZE, MIN_HEIGHT_SIZE, modecount);
+     UpdateModes(NOM_WIDTH_SIZE, NOM_HEIGHT_SIZE, modecount);
++    // F97: fixed choices for the clipsync "Resolutie" menu (besides the host window size, the custom slot).
++    UpdateModes(1920, 1080, modecount);
++    UpdateModes(2560, 1440, modecount);
++    // The Fold's own screens in both orientations (inner 2448x1848, cover 1248x1972) and a 4K screen via DeX,
++    // for "Schermeigen" when the VM window is smaller than the screen.
++    UpdateModes(2448, 1848, modecount);
++    UpdateModes(1848, 2448, modecount);
++    UpdateModes(1972, 1248, modecount);
++    UpdateModes(1248, 1972, modecount);
++    UpdateModes(3840, 2160, modecount);
+     if (est_timing_1_2.Timing_800x600_60 || est_timing_1_2.Timing_800x600_56 || est_timing_1_2.Timing_800x600_75 ||
+         est_timing_1_2.Timing_800x600_72)
+     {
