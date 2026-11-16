@@ -52,7 +52,7 @@ delen=(); [ ${#umd[@]} -gt 0 ] && delen+=(umd); [ -n "$kmd" ] && delen+=(kmd)
 [ ${#delen[@]} -gt 0 ] || [ -n "$crosvm" ] || { echo "niets te installeren" >&2; exit 2; }
 gezond >/dev/null || { log "huidige stand is niet gezond: eerst herstellen, niets geïnstalleerd"; exit 1; }
 log "installeer: ${delen[*]} ${crosvm:+crosvm}"
-ps1 -Actie voorbereiden -Delen "'$(IFS=,; echo "${delen[*]}")'" || exit 1
+d=$(IFS=,; echo "${delen[*]}"); ps1 -Actie voorbereiden -Delen "'${d:-geen}'" || exit 1
 [ ${#umd[@]} -gt 0 ] && { scp -q -P 2222 -o BatchMode=yes "${umd[0]}" USER@127.0.0.1:$GDS/nieuw/neptune_umd.dll && scp -q -P 2222 -o BatchMode=yes "${umd[1]}" USER@127.0.0.1:$GDS/nieuw/neptune_umd_ec.dll || exit 1; }
 [ -n "$kmd" ] && { scp -q -P 2222 -o BatchMode=yes "$kmd" USER@127.0.0.1:$GDS/nieuw/viogpu3d-nativejob.sys || exit 1; }
 ps1 -Actie installeer || { ps1 -Actie terug -Reden plaatsen-mislukt; exit 1; }

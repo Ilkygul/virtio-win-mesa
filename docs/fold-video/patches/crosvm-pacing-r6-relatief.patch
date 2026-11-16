@@ -1,0 +1,46 @@
+--- crosvm_android_display_client.cpp.r4	2026-11-16 02:34:12.520998684 +0100
++++ crosvm_android_display_client.cpp	2026-11-16 02:44:05.608114565 +0100
+@@ -2338,10 +2338,24 @@
+         // itself requires.
+         const int64_t dt = now - mLastArrival;
+         mLastArrival = now;
+-        if (dt > 14000000 && dt < 19500000) mPeriodNs += (dt - mPeriodNs) / 64;
++        // The window is relative to the guest rate (60 Hz or, F96, 120 Hz): 0.84-1.17 x the nominal
++        // period. 32 arrivals in a row that fit the other rate switch the nominal period.
++        // Nominal rate = the one nearest the median of the last 15 arrival gaps (robust against jitter
++        // and the odd late frame); gaps over 40 ms (idle) are not counted.
++        if (dt > 0 && dt < 40000000) {
++            mGaps[mGapPos++ % kGaps] = dt;
++            if (mGapPos >= kGaps) {
++                int64_t g[kGaps];
++                std::copy(mGaps, mGaps + kGaps, g);
++                std::nth_element(g, g + kGaps / 2, g + kGaps);
++                const int64_t want = g[kGaps / 2] < 12500000 ? kPeriod120Ns : kPeriodNs;
++                if (want != mNominalNs) { mNominalNs = want; mPeriodNs = want; mLast = 0; }
++            }
++        }
++        if (dt > mNominalNs * 84 / 100 && dt < mNominalNs * 117 / 100) mPeriodNs += (dt - mPeriodNs) / 64;
+         int64_t target = mLast + mPeriodNs;
+         const int64_t lead = target - now;
+-        if (mLast == 0 || lead < 0 || lead > kMarginNs + kPeriodNs) {
++        if (mLast == 0 || lead < 0 || lead > kMarginNs + mNominalNs) {
+             target = now + kMarginNs;  // first frame, slower content/idle gap, or a missed slot
+         } else if (lead < kMinLeadNs) {
+             target += 500000;   // running late: slide the cadence later, never jump
+@@ -2354,11 +2368,16 @@
+ 
+ private:
+     static constexpr int64_t kPeriodNs = 16666667;  // nominal guest scanout period (60 Hz)
++    static constexpr int64_t kPeriod120Ns = 8333333; // F96: guest at 120 Hz
+     static constexpr int64_t kMarginNs = 15000000;  // SurfaceFlinger needs the buffer ~1-1.5 refreshes before its present + arrival jitter
+     static constexpr int64_t kMinLeadNs = 10000000;
+     int64_t mLast = 0;
+     int64_t mLastArrival = 0;
+     int64_t mPeriodNs = kPeriodNs;
++    int64_t mNominalNs = kPeriodNs;
++    static constexpr int kGaps = 15;
++    int64_t mGaps[kGaps] = {};
++    uint64_t mGapPos = 0;
+     uint64_t mFrames = 0;
+     bool mDisabled = false;
+ };

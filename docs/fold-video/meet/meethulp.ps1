@@ -44,12 +44,9 @@ switch ($mode) {
     $sw = [Diagnostics.Stopwatch]::StartNew()
     while ($sw.ElapsedMilliseconds -lt 3000) { $f = $sw.ElapsedMilliseconds / 3000; [M.C]::mouse_event(0x8001, [int](65535 * (300 + 1800 * $f) / $ScrW), [int](65535 * (500 + 300 * $f) / $ScrH), 0, [IntPtr]::Zero); Start-Sleep -Milliseconds 4 }
     'ok' }
-  'drag'     { # mouse drag of the test window's title bar (empty tab-strip area at 1300,112) to 1800,400 in 2.5 s, then back
-    Add-Type -Name C -Namespace M -MemberDefinition '[DllImport("user32.dll")] public static extern void mouse_event(uint f, int dx, int dy, uint d, IntPtr e);'
-    function MuisNaar($x, $y, $f) { [M.C]::mouse_event(0x8001 -bor $f, [int](65535 * $x / $ScrW), [int](65535 * $y / $ScrH), 0, [IntPtr]::Zero) }
-    MuisNaar 1300 112 0; Start-Sleep -m 100; MuisNaar 1300 112 2; $sw = [Diagnostics.Stopwatch]::StartNew()
-    while ($sw.ElapsedMilliseconds -lt 2500) { $f = $sw.ElapsedMilliseconds / 2500; MuisNaar (1300 + 500 * $f) (112 + 288 * $f) 0; Start-Sleep -m 4 }
-    MuisNaar 1800 400 4; Start-Sleep -m 100; MuisNaar 1800 400 2; MuisNaar 1300 112 0; MuisNaar 1300 112 4; 'ok' }
+  'drag'     { # drag of the test window's title bar (empty tab-strip area at 1300,112) to 1800,400 in 2.5 s and back:
+               # sleep.exe moves the mouse every 2 ms on a QPC clock (a PowerShell sleep loop only manages ~64 moves/s)
+    Start-Process "$d\sleep.exe" -ArgumentList '1300 112 1800 400 2500' -Wait; 'ok' }
   'apps'     { # visual check: Task Manager, Explorer and Windows Terminal side by side
     Start-Process taskmgr.exe; Start-Process conhost.exe 'cmd.exe /k dir C:\'; Start-Process explorer.exe 'C:\Users'; Start-Process 'shell:AppsFolder\Microsoft.WindowsTerminal_8wekyb3d8bbwe!App'
     Start-Sleep 5

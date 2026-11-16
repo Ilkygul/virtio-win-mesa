@@ -16,10 +16,11 @@ verzamel() { local dur=$1 l q=""; T=$(mktemp); while read -r l; do q="$q \"$l\""
   local best=$(awk -v t0=$T0 '$2>t0{c[$1]++} END{for(k in c) print c[k], k}' $T.all | sort -rn | head -1 | cut -d' ' -f2)
   awk -v b="$best" '$1==b{print $2}' $T.all | sort -n > $T; rm -f $T.all; }
 # stats VAN TOT: only frames between T0+VAN ms and T0+TOT ms (the moving part)
-stats() { awk -v from=$((T0+${1:-0}*1000000)) -v to=$((T0+${2:-60000}*1000000)) '$1>=from&&$1<=to{t[++c]=$1} END{ if(c<3){print "te weinig frames ("c")"; exit}
+# Rhythm window: RT±TOL ms (default 17±4 for 60 Hz; 120 Hz: RT=8.33 TOL=2)
+stats() { awk -v rt=${RT:-17} -v tol=${TOL:-4} -v from=$((T0+${1:-0}*1000000)) -v to=$((T0+${2:-60000}*1000000)) '$1>=from&&$1<=to{t[++c]=$1} END{ if(c<3){print "te weinig frames ("c")"; exit}
   d=(t[c]-t[1])/1e9; m=0; for(i=2;i<=c;i++){g=(t[i]-t[i-1])/1e6; if(g>m)m=g; if(g>35)b++}
-  for(i=2;i<=c;i++){g=(t[i]-t[i-1])/1e6; if(g>=13&&g<=21)k++}
-  printf "%.1f fps (%d frames/%.2fs), max gat %.0f ms, gaten>35ms %d, ritme 17±4ms %.0f%%\n",(c-1)/d,c,d,m,b+0,100*k/(c-1) }' $T; }
+  for(i=2;i<=c;i++){g=(t[i]-t[i-1])/1e6; if(g>=rt-tol&&g<=rt+tol)k++}
+  printf "%.1f fps (%d frames/%.2fs), max gat %.0f ms, gaten>35ms %d, ritme %s±%sms %.0f%%\n",(c-1)/d,c,d,m,b+0,rt,tol,100*k/(c-1) }' $T; }
 mono() { A "su -c \"awk '/now at/{print \\\$3; exit}' /proc/timer_list\"" | tr -d '\r'; }
 gast() { $G "Set-Content C:\\Users\\Public\\meet\\quality.txt '${QUALITY:-hd1080}'; Set-Content C:\\Users\\Public\\meet\\mode.txt '$1'; Set-Content C:\\Users\\Public\\meet\\video.txt '$VIDEO'; Remove-Item C:\\Users\\Public\\meet\\out.txt -EA 0; Start-ScheduledTask meethulp; Start-Sleep 1; for(\$i=0;\$i -lt 90 -and (Get-ScheduledTask meethulp).State -eq 'Running';\$i++){Start-Sleep -m 500}; Get-Content C:\\Users\\Public\\meet\\out.txt"; }
 tap() { A "input tap $(($1+OX)) $(($2+OY))"; }
