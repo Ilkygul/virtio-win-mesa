@@ -62,6 +62,14 @@ case $MODE in
   ritme) # 1080p60-video: frame-intervallen van de DroidVM-laag (paneel-Hz meegeven als label)
     gast video >/dev/null; sleep 8; gast play | tail -1; sleep 8; verzamel 15 "sleep 15"; echo "  video ritme: $(stats 0 15000)"
     awk '{if(p)printf "%d ", ($1-p)/1e6+0.5; p=$1}' $T | tr ' ' '\n' | sort -n | uniq -c | sort -k2 -n | awk '{printf "%sms:%s ",$2,$1}'; echo; rm -f $T; gast close >/dev/null;;
+  tdr) # GPU hang during 1080p60 video: frame gap and recovery time. TDRTYPE=hang uses the F94 test escape
+    # (needs Parameters\TestHangEscape=1 at boot); TDRTYPE=0 is D3DKMT TDRDBGCTRL (NOT_SUPPORTED in this Windows build)
+    gast video >/dev/null; sleep 8; gast play | tail -1; sleep 8
+    verzamel 25 "sleep 3; $G 'C:\\Users\\Public\\meet\\tdrtest.exe ${TDRTYPE:-0}' | grep Escape"
+    awk -v t0=$T0 '{t=($1-t0)/1e6; if(p && t-p>200) printf "  gat %.0f ms: van %.0f tot %.0f ms\n", t-p, p, t; p=t; if(t<3000)a++; if(t>15000)b++; last=t} END{printf "  fps voor TDR %.1f, fps 15-25 s erna %.1f, laatste frame %.0f ms\n", a/3, b/((last-15000)/1000), last}' $T; rm -f $T
+    echo "  $(gast quality | tail -1)"
+    $G 'Get-WinEvent -FilterHashtable @{LogName="System";StartTime=(Get-Date).AddMinutes(-2)} | ?{ $_.Id -in 4101,4097,4098,141,117 -or $_.ProviderName -like "*Display*" -or $_.ProviderName -like "*VioGpu*" } | % { "  ev " + $_.TimeCreated.ToString("HH:mm:ss.fff") + " " + $_.ProviderName + " " + $_.Id }'
+    gast close >/dev/null;;
   hist) verzamel $HISTDUR "$HISTACT"; awk -v t0=$T0 '{b=int(($1-t0)/2.5e8)*250; c[b]++} END{for(k in c) print k"ms:"c[k]}' $T | sort -n | tr '\n' ' '; echo; rm -f $T;;
   start) punt1;; sleep|scroll) punt2;; cursor) punt3;; video) punt4;;
   alles) echo "1 Start/flyout:"; punt1; echo "2 slepen/scrollen:"; punt2; echo "3 cursor:"; punt3; echo "4 video:"; punt4;;

@@ -1,0 +1,157 @@
+commit 1772f479be885caa57650653ed9a881451c85767
+Author: Ilkay Gül <igul@Mac.localdomain>
+Date:   Mon Nov 16 01:16:44 2026 +0100
+
+    viogpu3d: F94 safe VioGpuBuf::Close and TDR test hook [skip ci]
+    
+    - VioGpuBuf::Close no longer deletes vbufs owned by synchronous callers
+      (auto_release == FALSE): it only wakes them; their own ReleaseBuffer
+      frees them (exactly one release per buffer, no use-after-free).
+    - VIOGPU_TEST_HANG private escape (legacy route only, needs
+      Parameters\TestHangEscape=1 at boot): swallows one fence completion so
+      dxgkrnl recovers through TDR. Measured: desktop back in 3.3 s
+      (TdrDelay 2) and 6.3-8.6 s (TdrDelay 4), no VM restart, no bugcheck.
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+diff --git a/viogpu/common/viogpu_queue.cpp b/viogpu/common/viogpu_queue.cpp
+index 40fa255..2c79e1e 100644
+--- a/viogpu/common/viogpu_queue.cpp
++++ b/viogpu/common/viogpu_queue.cpp
+@@ -2040,14 +2040,50 @@ void VioGpuBuf::Close(void)
+     LIST_ENTRY drained;
+     InitializeListHead(&drained);
+ 
++    // F94: a vbuf with auto_release == FALSE belongs to a synchronous caller (Ask*, *Sync): the callback
++    // wakes it and it still reads the response before its own ReleaseBuffer. Deleting such a vbuf here was
++    // a use-after-free for that caller. Leave it on the in-use list (FreeBuf then works normally) and only
++    // wake its owner; anything still in use is reclaimed by the next Close (the destructor).
++    PGPU_VBUFFER *owned = NULL;
++    UINT nOwned = 0;
+     KeAcquireSpinLock(&m_SpinLock, &OldIrql);
+-    while (!IsListEmpty(&m_InUseBufs))
++    UINT cap = m_uCount;
++    KeReleaseSpinLock(&m_SpinLock, OldIrql);
++    if (cap)
++        owned = reinterpret_cast<PGPU_VBUFFER *>(new (NonPagedPoolNx) BYTE[sizeof(PGPU_VBUFFER) * cap]);
++
++    KeAcquireSpinLock(&m_SpinLock, &OldIrql);
++    PLIST_ENTRY le = m_InUseBufs.Flink;
++    while (le != &m_InUseBufs)
+     {
+-        PLIST_ENTRY entry = RemoveHeadList(&m_InUseBufs);
+-        InsertTailList(&drained, entry);
++        PLIST_ENTRY next = le->Flink;
++        PGPU_VBUFFER pv = CONTAINING_RECORD(le, GPU_VBUFFER, list_entry);
++        if (!pv->auto_release && pv->complete_cb && owned && nOwned < cap)
++        {
++            owned[nOwned++] = pv;
++        }
++        else
++        {
++            RemoveEntryList(le);
++            InsertTailList(&drained, le);
++        }
++        le = next;
+     }
+     KeReleaseSpinLock(&m_SpinLock, OldIrql);
+ 
++    // Wake the synchronous owners. Their vbufs are never deleted by FreeBuf (it moves them to the free
++    // list), so the pointers stay valid for this loop even if an owner releases one meanwhile.
++    for (UINT i = 0; i < nOwned; i++)
++    {
++        PGPU_VBUFFER pv = owned[i];
++        if (pv->complete_cb && InterlockedExchange(&pv->complete_fired, 1) == 0)
++        {
++            pv->complete_cb(pv->complete_ctx, pv->buf, pv->resp_buf);
++        }
++    }
++    if (owned)
++        delete[] reinterpret_cast<PBYTE>(owned);
++
+     while (!IsListEmpty(&drained))
+     {
+         PLIST_ENTRY entry = RemoveHeadList(&drained);
+@@ -2109,7 +2145,7 @@ void VioGpuBuf::Close(void)
+     }
+     KeReleaseSpinLock(&m_SpinLock, OldIrql);
+ 
+-    ASSERT(m_uCount == 0);
++    // F94: synchronous owners may still hold their vbufs (reclaimed by the next Close).
+ 
+     DbgPrint(TRACE_LEVEL_VERBOSE, ("<--- %s\n", __FUNCTION__));
+ }
+diff --git a/viogpu/shared/viogpum.h b/viogpu/shared/viogpum.h
+index 9251d2c..9ff417c 100644
+--- a/viogpu/shared/viogpum.h
++++ b/viogpu/shared/viogpum.h
+@@ -129,6 +129,7 @@ typedef struct _VIOGPU_ADAPTERINFO
+ #define VIOGPU_GET_CUSTOM_RESOLUTION 0x001
+ #define VIOGPU_GET_CAPS              0x002
+ #define VIOGPU_GET_PCI_INFO          0x003
++#define VIOGPU_TEST_HANG             0x0F0 // F94: swallow one fence completion (TDR test; needs Parameters\TestHangEscape=1 at boot)
+ 
+ #define VIOGPU_RES_INFO              0x100
+ #define VIOGPU_RES_BUSY              0x101
+diff --git a/viogpu/viogpu3d/viogpu_adapter.cpp b/viogpu/viogpu3d/viogpu_adapter.cpp
+index 6998883..3ca2491 100644
+--- a/viogpu/viogpu3d/viogpu_adapter.cpp
++++ b/viogpu/viogpu3d/viogpu_adapter.cpp
+@@ -243,6 +243,12 @@ static BOOLEAN ReportCompletedSyncRoutine(PVOID ctx_void)
+     }
+     else
+     {
++    if (a->m_TestHangArmed)
++    {
++        a->m_TestHangArmed = 0; // F94 TDR test: this completion is lost, everything after it waits for TDR
++        ctx->Raised = FALSE;
++        return TRUE;
++    }
+     const LONG last = a->m_LastCompletedFenceId;
+     if ((LONG)(ctx->FenceId - (UINT)last) <= 0)
+     {
+@@ -2057,6 +2063,17 @@ NTSTATUS VioGpuAdapter::Escape(_In_ CONST DXGKARG_ESCAPE *pEscape)
+             {
+                 return MarkThreadTokenPacketGate(PsGetCurrentThreadId()) ? STATUS_SUCCESS : STATUS_NOT_FOUND;
+             }
++        case VIOGPU_TEST_HANG:
++            {
++                // F94: simulate a host that stops answering: the next fence completion is swallowed, the
++                // contiguity window pins and dxgkrnl must recover through TDR (ResetFenceStateFromTimeout).
++                if (!m_TestHangAllowed || m_NativeGpuJobV1)
++                {
++                    return STATUS_NOT_SUPPORTED;
++                }
++                InterlockedExchange(&m_TestHangArmed, 1);
++                break;
++            }
+         default:
+             DbgPrint(TRACE_LEVEL_ERROR, ("%s: invalid Escape type 0x%x\n", __FUNCTION__, pVioGpuEscape->Type));
+             status = STATUS_INVALID_PARAMETER;
+@@ -3269,6 +3286,12 @@ NTSTATUS VioGpuAdapter::GetRegisterInfo(void)
+     NTSTATUS nativeStatus = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
+         L"VioGpu3D\\Parameters", nativeQuery, NULL, NULL);
+     m_NativeGpuJobV1 = (BOOLEAN)(NT_SUCCESS(nativeStatus) && nativeValue == 1);
++    ULONG hangValue = 0;
++    nativeQuery[0].Name = (PWSTR)L"TestHangEscape";
++    nativeQuery[0].EntryContext = &hangValue;
++    NTSTATUS hangStatus = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
++        L"VioGpu3D\\Parameters", nativeQuery, NULL, NULL);
++    m_TestHangAllowed = (BOOLEAN)(NT_SUCCESS(hangStatus) && hangValue == 1);
+     m_NativeModeRead = TRUE;
+     }
+ 
+diff --git a/viogpu/viogpu3d/viogpu_adapter.h b/viogpu/viogpu3d/viogpu_adapter.h
+index b17c561..7d49dd2 100644
+--- a/viogpu/viogpu3d/viogpu_adapter.h
++++ b/viogpu/viogpu3d/viogpu_adapter.h
+@@ -419,6 +419,9 @@ class VioGpuAdapter final : public HandleBase<"VIOGADAP"_M, VioGpuAdapter>, IVio
+     BOOLEAN m_NativeGpuJobV1 = FALSE;
+     BOOLEAN m_NativeModeRead = FALSE;
+     volatile LONG m_NativeGpuFault = 0;
++    // F94 TDR test hook (legacy route only): boot-read opt-in, armed by VIOGPU_TEST_HANG.
++    BOOLEAN m_TestHangAllowed = FALSE;
++    volatile LONG m_TestHangArmed = 0;
+     LIST_ENTRY m_NativeDmaList;
+     UINT m_NativeDmaCount = 0;
+     NTSTATUS NativeRegisterFence(NATIVE_DMA_RECORD *record, UINT node, UINT engine);
