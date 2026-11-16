@@ -1534,6 +1534,65 @@ void *npt_d3d11_texture_slot_ptr(const struct npt_d3d11_texture *t, uint32_t slo
    return aux ? npt_d3d_map_ring_slot_ptr(&aux->map_ring, slot) : NULL;
 }
 
+/* U50: the host's map pitches, learned per DXGI format.  A sync MAP_RESOURCE returns the host's RowPitch and
+ * DepthPitch; for STAGING and DYNAMIC textures DXVK hands out tightly packed rows (row bytes of the mip width,
+ * rows * RowPitch per slice).  Once two sync maps of a format matched that rule and none differed, the first Map
+ * of a NEW texture of that format can skip the round trip (Direct2D/XAML create a fresh small staging texture
+ * for nearly every glyph/mask upload).  One mismatch disables the prediction for that format for good. */
+static int npt_pitch_rule[256];   /* >0: packed matches seen; <0: a mismatch was seen */
+
+static bool
+npt_tex_packed_pitches(const struct npt_d3d11_texture_aux *aux, uint32_t subresource,
+                       uint32_t *rp, uint32_t *dp)
+{
+   if (aux->usage != D3D11_USAGE_STAGING && aux->usage != D3D11_USAGE_DYNAMIC)
+      return false;
+   const uint32_t mip = texture_subresource_mip(aux, subresource);
+   const uint32_t row = npt_dxgi_format_row_bytes(aux->format, mip_dim(aux->width, mip));
+   const uint32_t rows = npt_dxgi_format_subresource_rows(aux->format, mip_dim(aux->height, mip));
+   if (!row || !rows)
+      return false;
+   *rp = row;
+   *dp = row * rows;
+   return true;
+}
+
+void
+npt_d3d11_texture_note_host_pitch(const struct npt_d3d11_texture *t, uint32_t subresource,
+                                  uint32_t row_pitch, uint32_t depth_pitch)
+{
+   const struct npt_d3d11_texture_aux *aux = tex_aux(t);
+   uint32_t rp, dp;
+   if (!aux || (uint32_t)aux->format >= 256u || !npt_tex_packed_pitches(aux, subresource, &rp, &dp))
+      return;
+   int *rule = &npt_pitch_rule[aux->format];
+   const bool same = row_pitch == rp && (depth_pitch == dp || depth_pitch == 0);
+   if (!same) {
+      if (p_atomic_xchg(rule, -1) >= 0)
+         npt_log("U50 pitch rule off for format %u: host pitches %u/%u, packed %u/%u",
+                 (unsigned)aux->format, row_pitch, depth_pitch, rp, dp);
+   } else if (p_atomic_read(rule) >= 0) {
+      p_atomic_inc(rule);
+   }
+}
+
+bool
+npt_d3d11_texture_predict_pitch(const struct npt_d3d11_texture *t, uint32_t subresource,
+                                uint32_t *row_pitch, uint32_t *depth_pitch)
+{
+   const struct npt_d3d11_texture_aux *aux = tex_aux(t);
+   if (!aux || (uint32_t)aux->format >= 256u || p_atomic_read(&npt_pitch_rule[aux->format]) < 2)
+      return false;
+   return npt_tex_packed_pitches(aux, subresource, row_pitch, depth_pitch);
+}
+
+/* U50: the ring's current slot (the last mapped CPU copy) and whether the texture has one subresource. */
+uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t)
+{ const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux ? aux->map_ring.current_slot : 0; }
+
+bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t)
+{ const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux && aux->mip_levels <= 1 && aux->array_size <= 1; }
+
 bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
                                 const void *context, uint32_t subresource,
                                 enum npt_d3d_map_slot_choice choice,

@@ -381,6 +381,10 @@ void *npt_d3d11_texture_slot_ptr(const struct npt_d3d11_texture *t,
 /* A context's open Map of one subresource
  * (npt_d3d_map_ring_open/find/close).  Sync Maps land on slot 0; the
  * cached-pitch fast path rotates. */
+void npt_d3d11_texture_note_host_pitch(const struct npt_d3d11_texture *t, uint32_t subresource, uint32_t row_pitch, uint32_t depth_pitch);
+bool npt_d3d11_texture_predict_pitch(const struct npt_d3d11_texture *t, uint32_t subresource, uint32_t *row_pitch, uint32_t *depth_pitch);
+uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t);
+bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t);
 bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
                                 const void *context, uint32_t subresource,
                                 enum npt_d3d_map_slot_choice choice,

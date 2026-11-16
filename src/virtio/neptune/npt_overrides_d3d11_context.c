@@ -125,6 +125,9 @@ failed:
    return NPT_PRESENT_PAIR_FAILED;
 }
 
+/* triton/tritonQuery.c: C:\\Users\\Public\\<name> exists (re-checked every 5 s). */
+int tritonSwitch(const char *name);
+
 static uint32_t
 npt_d3d11_map_to_access_flags(D3D11_MAP map_type)
 {
@@ -357,8 +360,13 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
    const void *key = self;
    const uint32_t per_slot    = npt_d3d11_texture_get_slot_size(t);
    const uint32_t shmem_total = npt_d3d11_texture_get_shmem_size(t);
-   const uint32_t cached_rp   = npt_d3d11_texture_get_cached_row_pitch(t);
-   const uint32_t cached_dp   = npt_d3d11_texture_get_cached_depth_pitch(t);
+   uint32_t cached_rp   = npt_d3d11_texture_get_cached_row_pitch(t);
+   uint32_t cached_dp   = npt_d3d11_texture_get_cached_depth_pitch(t);
+   /* U50: first Map of a new texture: the host pitch learned for its format (see npt_resource.c). */
+   if (!cached_rp && MapType != D3D11_MAP_READ && MapType != D3D11_MAP_READ_WRITE &&
+       !tritonSwitch("triton-syncmapwrite") &&
+       npt_d3d11_texture_predict_pitch(t, Subresource, &cached_rp, &cached_dp))
+      npt_d3d11_texture_set_cached_pitches(t, cached_rp, cached_dp);
    const bool can_async = (cached_rp != 0) &&
       (MapType == D3D11_MAP_WRITE_DISCARD ||
        MapType == D3D11_MAP_WRITE_NO_OVERWRITE);
@@ -382,6 +390,36 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
       }
       /* Cached pitch implies a byte_size that overruns one slot
        * (defensive: shouldn't happen for 2D); fall through to sync. */
+   }
+
+   /* U50: a write-only Map (D3D11_MAP_WRITE) of a single-subresource texture renames onto the next
+    * slot and carries the current slot's bytes over, instead of a MAP_RESOURCE host round trip
+    * (1.5-3 ms each; Direct2D/XAML upload glyphs and masks this way, ~20 per frame).  Same contents as
+    * the sync path: for a write-only Map the host never reads the resource back into the slot (it
+    * fills the slot only for READ), so the current slot already is the authoritative CPU copy.  The
+    * Unmap takes the host's rename path (Map WRITE + memcpy of the slot + Unmap).
+    * Off with C:\Users\Public\triton-syncmapwrite. */
+   if (MapType == D3D11_MAP_WRITE && cached_rp != 0 &&
+       npt_d3d11_texture_single_subresource(t) && !tritonSwitch("triton-syncmapwrite")) {
+      const uint32_t byte_size =
+         npt_d3d11_texture_get_subresource_byte_size(t, Subresource,
+                                                     cached_rp, cached_dp);
+      if (byte_size && byte_size <= per_slot) {
+         const uint32_t prev = npt_d3d11_texture_current_slot(t);
+         if (!npt_d3d11_texture_map_open(t, key, Subresource,
+                                         NPT_D3D_MAP_SLOT_NEXT,
+                                         npt_d3d11_map_to_access_flags(MapType),
+                                         byte_size, &slot))
+            return NPT_E_OUTOFMEMORY;
+         uint8_t *dst = npt_d3d11_texture_slot_ptr(t, slot);
+         const uint8_t *src = npt_d3d11_texture_slot_ptr(t, prev);
+         if (dst && src && dst != src)
+            memcpy(dst, src, byte_size);
+         pMappedResource->pData = dst;
+         pMappedResource->RowPitch = cached_rp;
+         pMappedResource->DepthPitch = cached_dp;
+         return NPT_S_OK;
+      }
    }
 
    /* Sync MAP_RESOURCE, on slot 0 unless another subresource's open Map
@@ -437,6 +475,7 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
    /* RowPitch is stable per (resource, subresource); pitch drift
     * would trip the byte_size > per_slot guard above. */
    npt_d3d11_texture_set_cached_pitches(t, row_pitch, depth_pitch);
+   npt_d3d11_texture_note_host_pitch(t, Subresource, row_pitch, depth_pitch);
 
    pMappedResource->pData = npt_d3d11_texture_slot_ptr(t, slot);
    pMappedResource->RowPitch = row_pitch;
