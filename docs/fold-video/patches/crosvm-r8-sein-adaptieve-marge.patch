@@ -1,0 +1,122 @@
+--- a/crosvm_android_display_client.cpp
++++ b/crosvm_android_display_client.cpp
+@@ -29,6 +29,7 @@
+ #include <vndk/window.h>
+ #define VK_NO_PROTOTYPES
+ #include <dlfcn.h>
++#include <fcntl.h>
+ #include <poll.h>
+ #include <sys/stat.h>
+ #include <time.h>
+@@ -2321,27 +2322,38 @@
+ class FramePacer {
+ public:
+     int64_t next() {
++        struct timespec ts;
++        clock_gettime(CLOCK_MONOTONIC, &ts);
++        const int64_t now = int64_t(ts.tv_sec) * 1000000000LL + ts.tv_nsec;
+         if ((mFrames++ % 60) == 0) {
+             struct stat st;
+             mDisabled = stat("/data/adb/fold-vm/npt/pacing-uit", &st) == 0;
++            mFixed = stat("/data/adb/fold-vm/npt/pacing-vast", &st) == 0;
++            mNoSignal = stat("/data/adb/fold-vm/npt/boost-signaal-uit", &st) == 0;
++        }
++        // r8 (2a): activity signal for vloerhulp. Three frames within 100 ms (an animation, scrolling,
++        // video; not a blinking cursor or clock) touch npt/sein, at most once per 100 ms. vloerhulp waits
++        // on it with inotify and raises the GPU floor / uclamp of the VM threads.
++        mArr[mArrPos++ % 3] = now;
++        if (!mNoSignal && mArrPos >= 3 && now - mArr[mArrPos % 3] < 100000000 && now - mLastTouch >= 100000000) {
++            mLastTouch = now;
++            if (utimensat(AT_FDCWD, "/data/adb/fold-vm/npt/sein", nullptr, 0) != 0 && !mTouchWarned) {
++                mTouchWarned = true;
++                LOG(WARNING) << "fold r8: npt/sein not touchable: " << strerror(errno);
++            }
+         }
+         if (mDisabled) {
+             mLast = 0;
+             return NATIVE_WINDOW_TIMESTAMP_AUTO;
+         }
+-        struct timespec ts;
+-        clock_gettime(CLOCK_MONOTONIC, &ts);
+-        const int64_t now = int64_t(ts.tv_sec) * 1000000000LL + ts.tv_nsec;
+         // Follow the guest's real frame period (DWM delivers ~59.2 fps here, not 60): with a
+         // fixed 16.667 ms cadence the targets drift through the latch threshold every few
+         // frames; with the measured period they cross it only as often as the rate mismatch
+         // itself requires.
+         const int64_t dt = now - mLastArrival;
+         mLastArrival = now;
+-        // The window is relative to the guest rate (60 Hz or, F96, 120 Hz): 0.84-1.17 x the nominal
+-        // period. 32 arrivals in a row that fit the other rate switch the nominal period.
+-        // Nominal rate = the one nearest the median of the last 15 arrival gaps (robust against jitter
+-        // and the odd late frame); gaps over 40 ms (idle) are not counted.
++        // Nominal rate = the one nearest the median of the last 15 arrival gaps; gaps over 40 ms (idle)
++        // are not counted.
+         if (dt > 0 && dt < 40000000) {
+             mGaps[mGapPos++ % kGaps] = dt;
+             if (mGapPos >= kGaps) {
+@@ -2352,14 +2364,31 @@
+                 if (want != mNominalNs) { mNominalNs = want; mPeriodNs = want; mLast = 0; }
+             }
+         }
+-        if (dt > mNominalNs * 84 / 100 && dt < mNominalNs * 117 / 100) mPeriodNs += (dt - mPeriodNs) / 64;
++        if (dt > mNominalNs * 84 / 100 && dt < mNominalNs * 117 / 100) {
++            mPeriodNs += (dt - mPeriodNs) / 64;
++            // r8 (2c): adaptive margin = p95 of the arrival spread (|gap - period|) over the last
++            // 30 steady frames + 2 ms, clamped to 4-15 ms. npt/pacing-vast: fixed 15 ms (r7).
++            mJit[mJitPos++ % kJit] = dt > mPeriodNs ? dt - mPeriodNs : mPeriodNs - dt;
++            if (mJitPos >= kJit && (mJitPos % 10) == 0) {
++                int64_t j[kJit];
++                std::copy(mJit, mJit + kJit, j);
++                std::nth_element(j, j + kJit - 2, j + kJit);   // 29th of 30 = p95
++                mMarginNs = std::clamp<int64_t>(j[kJit - 2] + 2000000, 4000000, 15000000);
++            }
++        }
++        const int64_t margin = mFixed ? kMarginNs : mMarginNs;
++        const int64_t minLead = margin * 2 / 3;
++        if ((mFrames % 600) == 1) {
++            LOG(INFO) << "fold r8: pacer margin " << margin / 1000 << " us (adaptive " << mMarginNs / 1000
++                      << ", fixed=" << mFixed << ") period " << mPeriodNs / 1000 << " us";
++        }
+         int64_t target = mLast + mPeriodNs;
+         const int64_t lead = target - now;
+-        if (mLast == 0 || lead < 0 || lead > kMarginNs + mNominalNs) {
+-            target = now + kMarginNs;  // first frame, slower content/idle gap, or a missed slot
+-        } else if (lead < kMinLeadNs) {
++        if (mLast == 0 || lead < 0 || lead > margin + mNominalNs) {
++            target = now + margin;  // first frame, slower content/idle gap, or a missed slot
++        } else if (lead < minLead) {
+             target += 500000;   // running late: slide the cadence later, never jump
+-        } else if (lead > kMarginNs + 6000000) {
++        } else if (lead > margin + 6000000) {
+             target -= 250000;   // lead grew (e.g. after a slow frame): slide back slowly
+         }
+         mLast = target;
+@@ -2369,8 +2398,8 @@
+ private:
+     static constexpr int64_t kPeriodNs = 16666667;  // nominal guest scanout period (60 Hz)
+     static constexpr int64_t kPeriod120Ns = 8333333; // F96: guest at 120 Hz
+-    static constexpr int64_t kMarginNs = 15000000;  // SurfaceFlinger needs the buffer ~1-1.5 refreshes before its present + arrival jitter
+-    static constexpr int64_t kMinLeadNs = 10000000;
++    static constexpr int64_t kMarginNs = 15000000;  // r7 fixed margin (npt/pacing-vast)
++    int64_t mMarginNs = kMarginNs;
+     int64_t mLast = 0;
+     int64_t mLastArrival = 0;
+     int64_t mPeriodNs = kPeriodNs;
+@@ -2378,8 +2407,17 @@
+     static constexpr int kGaps = 15;
+     int64_t mGaps[kGaps] = {};
+     uint64_t mGapPos = 0;
++    static constexpr int kJit = 30;
++    int64_t mJit[kJit] = {};
++    uint64_t mJitPos = 0;
++    int64_t mArr[3] = {};
++    uint64_t mArrPos = 0;
++    int64_t mLastTouch = 0;
+     uint64_t mFrames = 0;
+     bool mDisabled = false;
++    bool mFixed = false;
++    bool mNoSignal = false;
++    bool mTouchWarned = false;
+ };
+ 
+ // Wrapper which contains the latest available Surface/ANativeWindow from the DisplayService, if

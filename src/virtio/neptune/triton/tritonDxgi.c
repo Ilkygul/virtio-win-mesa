@@ -512,6 +512,8 @@ tritonPresentFlushAndGate(PTRITON_DEVICE pD, BOOL arm, BOOL wait, BOOL pairPrese
             UINT64 maxAhead = pD->lastFlipChainLength;
             if (maxAhead == 0 || maxAhead > TRITON_PRESENT_MAX_AHEAD)
                maxAhead = TRITON_PRESENT_MAX_AHEAD;
+            if (pD->windowedAsync && maxAhead > 2)
+               maxAhead = 2;   /* U52 windowed: wait for frame n-2 */
             if ((UINT)maxAhead != pD->lastPaceDepthLogged) {
                pD->lastPaceDepthLogged = (UINT)maxAhead;
                TR_LOG("present pacing: depth %u (flip chain %u, cap %u)",
@@ -809,6 +811,19 @@ tritonPresentPublishSharedWrites(PTRITON_DEVICE pD)
    tritonSyncShared(pD, "ReleaseResourceGPU");
 }
 
+/* Wait for the frame on the host before returning from Present?  Primaries never (the KMD gates the
+ * flip on the token); composited windowed surfaces did always (U51b).  U52, switch
+ * C:\Users\Public\triton-presentgate: windowed surfaces no longer wait for their own frame but for
+ * frame n-2 (bounded run-ahead below), so the app's CPU and the host GPU overlap. */
+static BOOL
+tritonPresentMustWait(PTRITON_DEVICE pD, PTRITON_RESOURCE src)
+{
+   if (tritonSwitch("triton-primarypresentwait")) return TRUE;
+   if (src->IsPresentable) { InterlockedExchange(&pD->windowedAsync, 0); return FALSE; }
+   if (tritonSwitch("triton-presentgate")) { InterlockedExchange(&pD->windowedAsync, 1); return FALSE; }
+   return TRUE;
+}
+
 static HRESULT APIENTRY
 tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
 {
@@ -855,7 +870,7 @@ tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
       tritonPresentUnlock(pD);
    }
    HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
-      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */,
+      tritonPresentMustWait(pD, src) /* wait */,
       TRUE /* internal Present pair */);
    if (FAILED(gateHr)) {
       InterlockedDecrement(&pD->presentInFlight);
@@ -1672,7 +1687,7 @@ tritonDxgiPresent1(DXGI_DDI_ARG_PRESENT1 *pArgs)
       tritonPresentUnlock(pD);
    }
    HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
-      !src->IsPresentable || tritonSwitch("triton-primarypresentwait") /* wait */,
+      tritonPresentMustWait(pD, src) /* wait */,
       TRUE /* internal Present pair */);
    if (FAILED(gateHr)) {
       InterlockedDecrement(&pD->presentInFlight);

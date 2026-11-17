@@ -168,6 +168,9 @@ typedef struct TRITON_DEVICE {
     /* Last pacing depth reported to TR_LOG, so the depth line is emitted
      * only when it changes. */
     UINT                            lastPaceDepthLogged;
+    /* U52: set by a windowed Present under C:\Users\Public\triton-presentgate: the present does not
+     * wait for its own frame but paces at depth 2 (waits for frame n-2), like the primary path. */
+    volatile LONG                   windowedAsync;
     BOOL                            presentFenceReady;
     BOOL                            presentFenceDisabled;
     /* Reusable auto-reset events for the GPU-done waits, guarded by
