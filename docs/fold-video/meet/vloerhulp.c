@@ -1,4 +1,5 @@
 // vloerhulp: GPU floor + per-thread CPU uclamp for the Windows VM, driven by crosvm r8's activity signal.
+// Since 18-11-2026 the maintained copy lives in termux-x11 droidvm/ksu-module-src (KernelSU module fold-vm, bin/vloerhulp).
 // crosvm touches /data/adb/fold-vm/npt/sein (3 frames within 100 ms, at most every 100 ms). We wait on it with
 // inotify (no polling of crosvm), boost within a few ms, hold 2 s after the last touch, then drop back.
 //   boost: kgsl min_clock_mhz = BOOST_GPU; uclamp.min = UCLAMP on every thread of crosvm and its
