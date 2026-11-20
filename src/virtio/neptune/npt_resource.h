@@ -92,6 +92,7 @@ struct npt_d3d_map_ring {
    uint32_t max_slots;      /* growth cap, <= NPT_D3D_MAP_SLOT_MAX */
    uint32_t active_count;
    uint32_t current_slot;
+   bool ever_mapped;
    /* max_slots entries, allocated with the first shmem; NULL until then. */
    struct npt_d3d_map_slot *slots;
    /* Open Maps: record_count of record_cap entries. */
@@ -385,6 +386,11 @@ void npt_d3d11_texture_note_host_pitch(const struct npt_d3d11_texture *t, uint32
 bool npt_d3d11_texture_predict_pitch(const struct npt_d3d11_texture *t, uint32_t subresource, uint32_t *row_pitch, uint32_t *depth_pitch);
 uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t);
 bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t);
+bool npt_d3d11_texture_ever_mapped(const struct npt_d3d11_texture *t);
+void npt_d3d11_texture_guard_note_error(void);
+void npt_d3d11_texture_guard_note_success(void);
+uint64_t npt_d3d11_texture_guard_get_errors(void);
+uint64_t npt_d3d11_texture_guard_get_total(void);
 bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
                                 const void *context, uint32_t subresource,
                                 enum npt_d3d_map_slot_choice choice,

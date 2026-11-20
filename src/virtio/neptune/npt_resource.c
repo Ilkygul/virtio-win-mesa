@@ -81,6 +81,10 @@ static void *shmem_reaper_main(void *arg)
          struct shmem_reap_entry *e =
             list_first_entry(&batch, struct shmem_reap_entry, head);
          list_del(&e->head);
+         uint32_t pending = atomic_load_explicit(&e->shmem->pending_seqno, memory_order_acquire);
+         if (e->shmem->pending_ring && pending) {
+            npt_ring_wait_seqno(e->shmem->pending_ring, pending);
+         }
          e->renderer->shmem_ops.destroy(e->renderer, e->shmem);
          free(e);
       }
@@ -190,6 +194,10 @@ npt_renderer_shmem_reaper_drain(struct npt_renderer *renderer)
       struct shmem_reap_entry *e =
          list_first_entry(&mine, struct shmem_reap_entry, head);
       list_del(&e->head);
+      uint32_t pending = atomic_load_explicit(&e->shmem->pending_seqno, memory_order_acquire);
+      if (e->shmem->pending_ring && pending) {
+         npt_ring_wait_seqno(e->shmem->pending_ring, pending);
+      }
       e->renderer->shmem_ops.destroy(e->renderer, e->shmem);
       free(e);
    }
@@ -200,6 +208,7 @@ npt_d3d_map_ring_init(struct npt_d3d_map_ring *r, struct npt_com_base *com)
 {
    memset(r, 0, sizeof(*r));
    r->com = com;
+   r->ever_mapped = false;
    mtx_init(&r->lock, mtx_plain);
 }
 
@@ -306,8 +315,18 @@ npt_d3d_map_ring_fini(struct npt_d3d_map_ring *r)
     * the ring is going away.  Host-side ordering is covered by COM_RELEASE
     * (queued in npt_com_destroy before this fini runs). */
    for (uint32_t i = 0; i < r->active_count; i++) {
-      if (r->slots[i].shmem)
+      if (r->slots[i].shmem) {
+         if (r->slots[i].in_flight && r->slots[i].pending_ring && r->slots[i].pending_seqno) {
+            r->slots[i].shmem->pending_ring = r->slots[i].pending_ring;
+            uint32_t seq = r->slots[i].pending_seqno;
+            uint32_t prev_seq = atomic_load_explicit(&r->slots[i].shmem->pending_seqno, memory_order_relaxed);
+            while (seq > prev_seq &&
+                   !atomic_compare_exchange_weak_explicit(&r->slots[i].shmem->pending_seqno, &prev_seq, seq,
+                                                         memory_order_release, memory_order_relaxed)) {
+            }
+         }
          shmem_reaper_unref(rndr, r->slots[i].shmem);
+      }
    }
    free(r->slots);
    r->slots = NULL;
@@ -318,6 +337,7 @@ npt_d3d_map_ring_fini(struct npt_d3d_map_ring *r)
    r->aligned_slot_size = 0;
    r->max_slots = 0;
    r->current_slot = 0;
+   r->ever_mapped = false;
    atomic_store_explicit(&r->ready, false, memory_order_relaxed);
    mtx_destroy(&r->lock);
 }
@@ -443,6 +463,7 @@ npt_d3d_map_ring_open(struct npt_d3d_map_ring *r,
       break;
    }
    *slot_rec = *rec;
+   r->ever_mapped = true;
    /* The record holds the slot, so a rotate during the wait passes it. */
    if (wait)
       wait_slot_locked(r, rec->slot);
@@ -490,6 +511,14 @@ npt_d3d_map_ring_close(struct npt_d3d_map_ring *r, const void *context,
          s->pending_seqno = seqno;
          s->pending_ring = ring;
          s->in_flight = true;
+         if (s->shmem) {
+            s->shmem->pending_ring = ring;
+            uint32_t prev_seq = atomic_load_explicit(&s->shmem->pending_seqno, memory_order_relaxed);
+            while (seqno > prev_seq &&
+                   !atomic_compare_exchange_weak_explicit(&s->shmem->pending_seqno, &prev_seq, seqno,
+                                                         memory_order_release, memory_order_relaxed)) {
+            }
+         }
       }
       *rec = r->records[--r->record_count];
    }
@@ -1592,6 +1621,37 @@ uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t)
 
 bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t)
 { const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux && aux->mip_levels <= 1 && aux->array_size <= 1; }
+
+bool npt_d3d11_texture_ever_mapped(const struct npt_d3d11_texture *t)
+{ const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux ? aux->map_ring.ever_mapped : false; }
+
+static _Atomic uint64_t g_upload_guard_errors = 0;
+static _Atomic uint64_t g_upload_guard_total = 0;
+
+void npt_d3d11_texture_guard_note_error(void)
+{
+   atomic_fetch_add_explicit(&g_upload_guard_errors, 1, memory_order_relaxed);
+   atomic_fetch_add_explicit(&g_upload_guard_total, 1, memory_order_relaxed);
+}
+
+void npt_d3d11_texture_guard_note_success(void)
+{
+   uint64_t tot = atomic_fetch_add_explicit(&g_upload_guard_total, 1, memory_order_relaxed) + 1;
+   if ((tot & 0x7f) == 0) {
+      uint64_t err = atomic_load_explicit(&g_upload_guard_errors, memory_order_relaxed);
+      npt_log("U53 upload guard: total=%llu errors=%llu", (unsigned long long)tot, (unsigned long long)err);
+   }
+}
+
+uint64_t npt_d3d11_texture_guard_get_errors(void)
+{
+   return atomic_load_explicit(&g_upload_guard_errors, memory_order_relaxed);
+}
+
+uint64_t npt_d3d11_texture_guard_get_total(void)
+{
+   return atomic_load_explicit(&g_upload_guard_total, memory_order_relaxed);
+}
 
 bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
                                 const void *context, uint32_t subresource,

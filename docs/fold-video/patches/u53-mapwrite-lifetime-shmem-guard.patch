@@ -1,0 +1,265 @@
+diff --git a/src/virtio/neptune/npt_overrides_d3d11_context.c b/src/virtio/neptune/npt_overrides_d3d11_context.c
+index 3591b469ac7..0311564bb3d 100644
+--- a/src/virtio/neptune/npt_overrides_d3d11_context.c
++++ b/src/virtio/neptune/npt_overrides_d3d11_context.c
+@@ -405,19 +405,25 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
+          npt_d3d11_texture_get_subresource_byte_size(t, Subresource,
+                                                      cached_rp, cached_dp);
+       if (byte_size && byte_size <= per_slot) {
++         const bool had_prev = npt_d3d11_texture_ever_mapped(t);
+          const uint32_t prev = npt_d3d11_texture_current_slot(t);
+          if (!npt_d3d11_texture_map_open(t, key, Subresource,
+                                          NPT_D3D_MAP_SLOT_NEXT,
+                                          npt_d3d11_map_to_access_flags(MapType),
+-                                         byte_size, &slot))
++                                         byte_size, &slot)) {
++            npt_d3d11_texture_guard_note_error();
+             return NPT_E_OUTOFMEMORY;
++         }
+          uint8_t *dst = npt_d3d11_texture_slot_ptr(t, slot);
+-         const uint8_t *src = npt_d3d11_texture_slot_ptr(t, prev);
++         const uint8_t *src = had_prev ? npt_d3d11_texture_slot_ptr(t, prev) : NULL;
+          if (dst && src && dst != src)
+             memcpy(dst, src, byte_size);
++         else if (dst && !had_prev)
++            memset(dst, 0, byte_size);
+          pMappedResource->pData = dst;
+          pMappedResource->RowPitch = cached_rp;
+          pMappedResource->DepthPitch = cached_dp;
++         npt_d3d11_texture_guard_note_success();
+          return NPT_S_OK;
+       }
+    }
+@@ -464,6 +470,7 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
+               "region, exceeds per-slot %u (shmem %u) -- refusing",
+               row_pitch, byte_size, per_slot, shmem_total);
+       memset(pMappedResource, 0, sizeof(*pMappedResource));
++      npt_d3d11_texture_guard_note_error();
+       hr = NPT_E_FAIL;
+    }
+    if (NPT_FAILED(hr)) {
+diff --git a/src/virtio/neptune/npt_renderer.h b/src/virtio/neptune/npt_renderer.h
+index 84a5df3fe67..429ba2cbf31 100644
+--- a/src/virtio/neptune/npt_renderer.h
++++ b/src/virtio/neptune/npt_renderer.h
+@@ -66,6 +66,12 @@ struct npt_renderer_shmem {
+     * create (a WAIT_VIRTQUEUE_SEQNO the host decodes before anything
+     * later on that ring), or 0.  See npt_ring_ensure_shmem_visible. */
+    _Atomic uint64_t visible_ring;
++   /* U53: Latest ring and sequence number that dispatched an unmap using this
++    * shmem.  The reaper thread (npt_resource.c) waits for the ring to pass this
++    * sequence number before calling shmem_ops.destroy, so host-side blobs are
++    * never destroyed while in-flight Unmaps or Copies are still queued. */
++   struct npt_ring *pending_ring;
++   _Atomic uint32_t pending_seqno;
+ };
+ 
+ struct npt_renderer_info {
+@@ -371,7 +377,7 @@ npt_renderer_shmem_create(struct npt_renderer *renderer, size_t size)
+ {
+    struct npt_renderer_shmem *s = renderer->shmem_ops.create(renderer, size);
+    if (s != NULL || renderer->shmem_trim == NULL)
+-      return s;
++      goto done;
+    /* The store ran dry: reclaim unmapped heap windows and retry.  A
+     * second pass releases everything releasable -- the first pass frees
+     * `size` bytes but not necessarily `size` CONTIGUOUS bytes. */
+@@ -379,6 +385,11 @@ npt_renderer_shmem_create(struct npt_renderer *renderer, size_t size)
+       s = renderer->shmem_ops.create(renderer, size);
+    if (s == NULL && renderer->shmem_trim(renderer, UINT64_MAX) > 0)
+       s = renderer->shmem_ops.create(renderer, size);
++done:
++   if (s != NULL) {
++      s->pending_ring = NULL;
++      atomic_init(&s->pending_seqno, 0);
++   }
+    return s;
+ }
+ 
+diff --git a/src/virtio/neptune/npt_resource.c b/src/virtio/neptune/npt_resource.c
+index f56e187a55b..0abb10d5079 100644
+--- a/src/virtio/neptune/npt_resource.c
++++ b/src/virtio/neptune/npt_resource.c
+@@ -81,6 +81,10 @@ static void *shmem_reaper_main(void *arg)
+          struct shmem_reap_entry *e =
+             list_first_entry(&batch, struct shmem_reap_entry, head);
+          list_del(&e->head);
++         uint32_t pending = atomic_load_explicit(&e->shmem->pending_seqno, memory_order_acquire);
++         if (e->shmem->pending_ring && pending) {
++            npt_ring_wait_seqno(e->shmem->pending_ring, pending);
++         }
+          e->renderer->shmem_ops.destroy(e->renderer, e->shmem);
+          free(e);
+       }
+@@ -190,6 +194,10 @@ npt_renderer_shmem_reaper_drain(struct npt_renderer *renderer)
+       struct shmem_reap_entry *e =
+          list_first_entry(&mine, struct shmem_reap_entry, head);
+       list_del(&e->head);
++      uint32_t pending = atomic_load_explicit(&e->shmem->pending_seqno, memory_order_acquire);
++      if (e->shmem->pending_ring && pending) {
++         npt_ring_wait_seqno(e->shmem->pending_ring, pending);
++      }
+       e->renderer->shmem_ops.destroy(e->renderer, e->shmem);
+       free(e);
+    }
+@@ -200,6 +208,7 @@ npt_d3d_map_ring_init(struct npt_d3d_map_ring *r, struct npt_com_base *com)
+ {
+    memset(r, 0, sizeof(*r));
+    r->com = com;
++   r->ever_mapped = false;
+    mtx_init(&r->lock, mtx_plain);
+ }
+ 
+@@ -306,8 +315,18 @@ npt_d3d_map_ring_fini(struct npt_d3d_map_ring *r)
+     * the ring is going away.  Host-side ordering is covered by COM_RELEASE
+     * (queued in npt_com_destroy before this fini runs). */
+    for (uint32_t i = 0; i < r->active_count; i++) {
+-      if (r->slots[i].shmem)
++      if (r->slots[i].shmem) {
++         if (r->slots[i].in_flight && r->slots[i].pending_ring && r->slots[i].pending_seqno) {
++            r->slots[i].shmem->pending_ring = r->slots[i].pending_ring;
++            uint32_t seq = r->slots[i].pending_seqno;
++            uint32_t prev_seq = atomic_load_explicit(&r->slots[i].shmem->pending_seqno, memory_order_relaxed);
++            while (seq > prev_seq &&
++                   !atomic_compare_exchange_weak_explicit(&r->slots[i].shmem->pending_seqno, &prev_seq, seq,
++                                                         memory_order_release, memory_order_relaxed)) {
++            }
++         }
+          shmem_reaper_unref(rndr, r->slots[i].shmem);
++      }
+    }
+    free(r->slots);
+    r->slots = NULL;
+@@ -318,6 +337,7 @@ npt_d3d_map_ring_fini(struct npt_d3d_map_ring *r)
+    r->aligned_slot_size = 0;
+    r->max_slots = 0;
+    r->current_slot = 0;
++   r->ever_mapped = false;
+    atomic_store_explicit(&r->ready, false, memory_order_relaxed);
+    mtx_destroy(&r->lock);
+ }
+@@ -443,6 +463,7 @@ npt_d3d_map_ring_open(struct npt_d3d_map_ring *r,
+       break;
+    }
+    *slot_rec = *rec;
++   r->ever_mapped = true;
+    /* The record holds the slot, so a rotate during the wait passes it. */
+    if (wait)
+       wait_slot_locked(r, rec->slot);
+@@ -490,6 +511,14 @@ npt_d3d_map_ring_close(struct npt_d3d_map_ring *r, const void *context,
+          s->pending_seqno = seqno;
+          s->pending_ring = ring;
+          s->in_flight = true;
++         if (s->shmem) {
++            s->shmem->pending_ring = ring;
++            uint32_t prev_seq = atomic_load_explicit(&s->shmem->pending_seqno, memory_order_relaxed);
++            while (seqno > prev_seq &&
++                   !atomic_compare_exchange_weak_explicit(&s->shmem->pending_seqno, &prev_seq, seqno,
++                                                         memory_order_release, memory_order_relaxed)) {
++            }
++         }
+       }
+       *rec = r->records[--r->record_count];
+    }
+@@ -1593,6 +1622,37 @@ uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t)
+ bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t)
+ { const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux && aux->mip_levels <= 1 && aux->array_size <= 1; }
+ 
++bool npt_d3d11_texture_ever_mapped(const struct npt_d3d11_texture *t)
++{ const struct npt_d3d11_texture_aux *aux = tex_aux(t); return aux ? aux->map_ring.ever_mapped : false; }
++
++static _Atomic uint64_t g_upload_guard_errors = 0;
++static _Atomic uint64_t g_upload_guard_total = 0;
++
++void npt_d3d11_texture_guard_note_error(void)
++{
++   atomic_fetch_add_explicit(&g_upload_guard_errors, 1, memory_order_relaxed);
++   atomic_fetch_add_explicit(&g_upload_guard_total, 1, memory_order_relaxed);
++}
++
++void npt_d3d11_texture_guard_note_success(void)
++{
++   uint64_t tot = atomic_fetch_add_explicit(&g_upload_guard_total, 1, memory_order_relaxed) + 1;
++   if ((tot & 0x7f) == 0) {
++      uint64_t err = atomic_load_explicit(&g_upload_guard_errors, memory_order_relaxed);
++      npt_log("U53 upload guard: total=%llu errors=%llu", (unsigned long long)tot, (unsigned long long)err);
++   }
++}
++
++uint64_t npt_d3d11_texture_guard_get_errors(void)
++{
++   return atomic_load_explicit(&g_upload_guard_errors, memory_order_relaxed);
++}
++
++uint64_t npt_d3d11_texture_guard_get_total(void)
++{
++   return atomic_load_explicit(&g_upload_guard_total, memory_order_relaxed);
++}
++
+ bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
+                                 const void *context, uint32_t subresource,
+                                 enum npt_d3d_map_slot_choice choice,
+diff --git a/src/virtio/neptune/npt_resource.h b/src/virtio/neptune/npt_resource.h
+index a8e4c0202d1..b7c227caba7 100644
+--- a/src/virtio/neptune/npt_resource.h
++++ b/src/virtio/neptune/npt_resource.h
+@@ -92,6 +92,7 @@ struct npt_d3d_map_ring {
+    uint32_t max_slots;      /* growth cap, <= NPT_D3D_MAP_SLOT_MAX */
+    uint32_t active_count;
+    uint32_t current_slot;
++   bool ever_mapped;
+    /* max_slots entries, allocated with the first shmem; NULL until then. */
+    struct npt_d3d_map_slot *slots;
+    /* Open Maps: record_count of record_cap entries. */
+@@ -385,6 +386,11 @@ void npt_d3d11_texture_note_host_pitch(const struct npt_d3d11_texture *t, uint32
+ bool npt_d3d11_texture_predict_pitch(const struct npt_d3d11_texture *t, uint32_t subresource, uint32_t *row_pitch, uint32_t *depth_pitch);
+ uint32_t npt_d3d11_texture_current_slot(const struct npt_d3d11_texture *t);
+ bool npt_d3d11_texture_single_subresource(const struct npt_d3d11_texture *t);
++bool npt_d3d11_texture_ever_mapped(const struct npt_d3d11_texture *t);
++void npt_d3d11_texture_guard_note_error(void);
++void npt_d3d11_texture_guard_note_success(void);
++uint64_t npt_d3d11_texture_guard_get_errors(void);
++uint64_t npt_d3d11_texture_guard_get_total(void);
+ bool npt_d3d11_texture_map_open(struct npt_d3d11_texture *t,
+                                 const void *context, uint32_t subresource,
+                                 enum npt_d3d_map_slot_choice choice,
+diff --git a/src/virtio/neptune/triton/tritonDxgi.c b/src/virtio/neptune/triton/tritonDxgi.c
+index 07f0b2db45f..1effac5fa4e 100644
+--- a/src/virtio/neptune/triton/tritonDxgi.c
++++ b/src/virtio/neptune/triton/tritonDxgi.c
+@@ -889,6 +889,18 @@ tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
+    cb.hDstAllocation = dst ? dst->hKMAllocation : 0;
+    cb.pDXGIContext   = pArgs->pDXGIContext;
+    cb.hContext       = pD->hKMContext;
++   {
++      static volatile LONG s_guardFrameCount;
++      LONG f = InterlockedIncrement(&s_guardFrameCount);
++      if ((f % 120) == 0) {
++         extern uint64_t npt_d3d11_texture_guard_get_total(void);
++         extern uint64_t npt_d3d11_texture_guard_get_errors(void);
++         TR_LOG("U53 upload guard: frame=%ld total=%llu errors=%llu",
++                (long)f,
++                (unsigned long long)npt_d3d11_texture_guard_get_total(),
++                (unsigned long long)npt_d3d11_texture_guard_get_errors());
++      }
++   }
+    HRESULT hr = tritonPresentSubmitCb(pD, &cb);
+    tritonSyncShared(pD, "Present");
+    InterlockedDecrement(&pD->presentInFlight);
+@@ -1555,6 +1567,16 @@ tritonDxgiBltCommon(DXGI_DDI_HDEVICE hDevice,
+ {
+    HRESULT hr = tritonDxgiBltCommon0(hDevice, hDst, DstSubresource, DstLeft, DstTop, DstRight, DstBottom,
+                                      hSrc, SrcSubresource, SrcLeft, SrcTop, SrcRight, SrcBottom, Flags);
++   /* U48: a blit into a back buffer with a private copy must reach the companion DWM reads. */
++   {
++      PTRITON_DEVICE bd = (PTRITON_DEVICE)(uintptr_t)hDevice;
++      PTRITON_RESOURCE bdst = (PTRITON_RESOURCE)(uintptr_t)hDst;
++      if (SUCCEEDED(hr) && bd && bdst && bdst->pPresentCompanion && !bd->RuntimeStreamActive) {
++         tritonPresentLock(bd);
++         tritonResourceSyncPresentCompanion(bd, bdst);
++         tritonPresentUnlock(bd);
++      }
++   }
+    tritonSharedWriteDone((PTRITON_DEVICE)(uintptr_t)hDevice, (const void *)(uintptr_t)hDst, "DxgiBlt");
+    return hr;
+ }

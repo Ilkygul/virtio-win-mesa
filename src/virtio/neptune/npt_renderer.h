@@ -66,6 +66,12 @@ struct npt_renderer_shmem {
     * create (a WAIT_VIRTQUEUE_SEQNO the host decodes before anything
     * later on that ring), or 0.  See npt_ring_ensure_shmem_visible. */
    _Atomic uint64_t visible_ring;
+   /* U53: Latest ring and sequence number that dispatched an unmap using this
+    * shmem.  The reaper thread (npt_resource.c) waits for the ring to pass this
+    * sequence number before calling shmem_ops.destroy, so host-side blobs are
+    * never destroyed while in-flight Unmaps or Copies are still queued. */
+   struct npt_ring *pending_ring;
+   _Atomic uint32_t pending_seqno;
 };
 
 struct npt_renderer_info {
@@ -371,7 +377,7 @@ npt_renderer_shmem_create(struct npt_renderer *renderer, size_t size)
 {
    struct npt_renderer_shmem *s = renderer->shmem_ops.create(renderer, size);
    if (s != NULL || renderer->shmem_trim == NULL)
-      return s;
+      goto done;
    /* The store ran dry: reclaim unmapped heap windows and retry.  A
     * second pass releases everything releasable -- the first pass frees
     * `size` bytes but not necessarily `size` CONTIGUOUS bytes. */
@@ -379,6 +385,11 @@ npt_renderer_shmem_create(struct npt_renderer *renderer, size_t size)
       s = renderer->shmem_ops.create(renderer, size);
    if (s == NULL && renderer->shmem_trim(renderer, UINT64_MAX) > 0)
       s = renderer->shmem_ops.create(renderer, size);
+done:
+   if (s != NULL) {
+      s->pending_ring = NULL;
+      atomic_init(&s->pending_seqno, 0);
+   }
    return s;
 }
 

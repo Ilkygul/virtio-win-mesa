@@ -405,19 +405,25 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
          npt_d3d11_texture_get_subresource_byte_size(t, Subresource,
                                                      cached_rp, cached_dp);
       if (byte_size && byte_size <= per_slot) {
+         const bool had_prev = npt_d3d11_texture_ever_mapped(t);
          const uint32_t prev = npt_d3d11_texture_current_slot(t);
          if (!npt_d3d11_texture_map_open(t, key, Subresource,
                                          NPT_D3D_MAP_SLOT_NEXT,
                                          npt_d3d11_map_to_access_flags(MapType),
-                                         byte_size, &slot))
+                                         byte_size, &slot)) {
+            npt_d3d11_texture_guard_note_error();
             return NPT_E_OUTOFMEMORY;
+         }
          uint8_t *dst = npt_d3d11_texture_slot_ptr(t, slot);
-         const uint8_t *src = npt_d3d11_texture_slot_ptr(t, prev);
+         const uint8_t *src = had_prev ? npt_d3d11_texture_slot_ptr(t, prev) : NULL;
          if (dst && src && dst != src)
             memcpy(dst, src, byte_size);
+         else if (dst && !had_prev)
+            memset(dst, 0, byte_size);
          pMappedResource->pData = dst;
          pMappedResource->RowPitch = cached_rp;
          pMappedResource->DepthPitch = cached_dp;
+         npt_d3d11_texture_guard_note_success();
          return NPT_S_OK;
       }
    }
@@ -464,6 +470,7 @@ ctx_Map_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource,
               "region, exceeds per-slot %u (shmem %u) -- refusing",
               row_pitch, byte_size, per_slot, shmem_total);
       memset(pMappedResource, 0, sizeof(*pMappedResource));
+      npt_d3d11_texture_guard_note_error();
       hr = NPT_E_FAIL;
    }
    if (NPT_FAILED(hr)) {

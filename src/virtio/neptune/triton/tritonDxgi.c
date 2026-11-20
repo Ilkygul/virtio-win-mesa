@@ -889,6 +889,18 @@ tritonDxgiPresent(DXGI_DDI_ARG_PRESENT *pArgs)
    cb.hDstAllocation = dst ? dst->hKMAllocation : 0;
    cb.pDXGIContext   = pArgs->pDXGIContext;
    cb.hContext       = pD->hKMContext;
+   {
+      static volatile LONG s_guardFrameCount;
+      LONG f = InterlockedIncrement(&s_guardFrameCount);
+      if ((f % 120) == 0) {
+         extern uint64_t npt_d3d11_texture_guard_get_total(void);
+         extern uint64_t npt_d3d11_texture_guard_get_errors(void);
+         TR_LOG("U53 upload guard: frame=%ld total=%llu errors=%llu",
+                (long)f,
+                (unsigned long long)npt_d3d11_texture_guard_get_total(),
+                (unsigned long long)npt_d3d11_texture_guard_get_errors());
+      }
+   }
    HRESULT hr = tritonPresentSubmitCb(pD, &cb);
    tritonSyncShared(pD, "Present");
    InterlockedDecrement(&pD->presentInFlight);
@@ -1555,6 +1567,16 @@ tritonDxgiBltCommon(DXGI_DDI_HDEVICE hDevice,
 {
    HRESULT hr = tritonDxgiBltCommon0(hDevice, hDst, DstSubresource, DstLeft, DstTop, DstRight, DstBottom,
                                      hSrc, SrcSubresource, SrcLeft, SrcTop, SrcRight, SrcBottom, Flags);
+   /* U48: a blit into a back buffer with a private copy must reach the companion DWM reads. */
+   {
+      PTRITON_DEVICE bd = (PTRITON_DEVICE)(uintptr_t)hDevice;
+      PTRITON_RESOURCE bdst = (PTRITON_RESOURCE)(uintptr_t)hDst;
+      if (SUCCEEDED(hr) && bd && bdst && bdst->pPresentCompanion && !bd->RuntimeStreamActive) {
+         tritonPresentLock(bd);
+         tritonResourceSyncPresentCompanion(bd, bdst);
+         tritonPresentUnlock(bd);
+      }
+   }
    tritonSharedWriteDone((PTRITON_DEVICE)(uintptr_t)hDevice, (const void *)(uintptr_t)hDst, "DxgiBlt");
    return hr;
 }
