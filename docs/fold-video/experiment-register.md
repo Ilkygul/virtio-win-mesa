@@ -1347,3 +1347,10 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Resultaat: correct zichtbaar breadcrumb en kaarticonen bij eerste opening én na drie rondes. Display 33,1/43,2/37,0 fps met maximale gaten 399/133/316 ms. Geen consistente cadanswinst tegenover de ongewijzigde DXVK-host plus r2. De proef onderscheidt het effect op beeldcorrectheid niet van het effect van de behouden U53 r2.
 - Bewijs: `evidence/fold-display-used-srv-sync/{before.png,after.png,cadence.txt,guest.json,installation.txt,used-srv.patch}`.
 - Beslissing: terug naar de bekende Android-library `b964e836…39404de`, behoud U53 r2. Parkeer het filter op ongebruikte SRV-slots als verklaring voor de zichtbare hapering. Meet welk deel van de pieken in Windows-wachten, GPU-compositie of aanlevering aan Android ontstaat vóór een volgende functionele ingreep.
+
+### C33 teruggezet — beeldverificatie en tijdtrace op r2
+
+- Hypothese voor de volgende analyse: vergelijk de lange Android-presentatiegaten met de Windows GPU- en compositie-events om een zelfstandige driverwijziging te kunnen kiezen.
+- De Android-library is terug op `b964e836…39404de`. Windows startte met gesloten viewer en gaf lokaal beeld na Windows-SSH. VirtIO GPU Code 0 en de geladen UMD `A9176FA6` zijn bevestigd. De eerste opname toont correcte titel en iconen. RAM-doel 8192 MiB, deze boot door Android begrensd op 6528 MiB.
+- WPR GPU + DesktopComposition vastgelegd tijdens drie navigatierondes. Met WPR actief was de displaycadans 29,3/35,9/46,8 fps, grootste gaten 407/349/108 ms. Deze opname is voor tijdcorrelatie, niet voor een directe prestatievergelijking. Windows- en hostoorzaak zijn nog niet gescheiden.
+- Bewijs: `evidence/fold-display-used-srv-sync/{rollback.txt,rollback-guest.json,rollback.png,rollback-profile/}`. De r2-bron is gepubliceerd op `codex/fold-direct-shared-atlas-20261121` bij commit `a4b1e7e7723fe9faf212e77715ff6705ef1da6a7`. Geen promotie of release.
