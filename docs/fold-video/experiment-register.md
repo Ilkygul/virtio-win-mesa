@@ -1354,3 +1354,10 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - De Android-library is terug op `b964e836…39404de`. Windows startte met gesloten viewer en gaf lokaal beeld na Windows-SSH. VirtIO GPU Code 0 en de geladen UMD `A9176FA6` zijn bevestigd. De eerste opname toont correcte titel en iconen. RAM-doel 8192 MiB, deze boot door Android begrensd op 6528 MiB.
 - WPR GPU + DesktopComposition vastgelegd tijdens drie navigatierondes. Met WPR actief was de displaycadans 29,3/35,9/46,8 fps, grootste gaten 407/349/108 ms. Deze opname is voor tijdcorrelatie, niet voor een directe prestatievergelijking. Windows- en hostoorzaak zijn nog niet gescheiden.
 - Bewijs: `evidence/fold-display-used-srv-sync/{rollback.txt,rollback-guest.json,rollback.png,rollback-profile/}`. De r2-bron is gepubliceerd op `codex/fold-direct-shared-atlas-20261121` bij commit `a4b1e7e7723fe9faf212e77715ff6705ef1da6a7`. Geen promotie of release.
+
+### Tijdcorrelatie van de bestaande r2-trace
+
+- Hypothese: de gaten van honderden milliseconden ontstaan doordat Windows DWM tijdelijk volledig stopt met presenteren.
+- Resultaat: tijdens de eerste twee volledig gedekte Android-gaten (378 en 407 ms) voltooide de DWM present-taak respectievelijk 21 en 16 keren. Binnen beide gaten was de grootste interval tussen die taakrecords respectievelijk 33 en 66 ms. Klokuitlijning tussen gast en Fold is benaderd. Dit spreekt tegen een volledige DWM-pauze. Het bewijst niet dat de KMD flips met nieuwe inhoud aanvaardde.
+- Bewijs: `evidence/fold-display-used-srv-sync/rollback-profile/{dwm-events.csv,first-gap-correlation.txt,cadence.txt}`.
+- Beslissing: vergelijk eerst KMD-flips met de gemeten gaten. Houd de renderfix actief. Test het zwarte opstartscherm afzonderlijk met een vroege viewer zonder vroeg resize-verzoek om te beoordelen of attach en resize uit elkaar lopen.
