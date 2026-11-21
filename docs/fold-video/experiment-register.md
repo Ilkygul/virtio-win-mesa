@@ -1199,3 +1199,6 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 
 
 | Fold opnieuw bereikbaar, U53-nulmeting gestart | Wifi ADB op bevestigde Fold hersteld. DroidVM startte na bestaande geheugenhook met 7296 MiB effectief toegewezen, Windows meldt 6.840.049.664 B bruikbaar. GPU Code 0 en DWM laadt release-U53 SHA `327ab45a…f60f`. | Eerste animatiereeks levert voor twee Start-runs geen frames, derde 31,4 fps/max 54 ms. Herstel van argumentquoting voor SurfaceFlinger-lagen in lokale kopie van meet.sh, vervolgmeting loopt. | Kandidaat nog niet geïnstalleerd. Paginaroute en gepaarde vergelijking blijven open. Bij vergelijking effectieve RAM controleren omdat de hook dynamisch toewijst. |
+
+
+| U53 vooraf, Start-animatie met herstelde laagquoting | Productie release-U53, werkelijk 7296 MiB toegewezen, Windows bruikbaar 6840049664 B. Zelfde `meet.sh anim`, met SurfaceFlinger-laagnaam als één argument. | Start 36,1 / 48,3 / 26,0 fps, max gaten respectievelijk 62 / 54 / 75 ms. Flyout 19,1 / 22,6 / 21,6 fps. Minmax geen bruikbare frames. | Startdoel gemist. Alleen Start bruikbaar als indicatieve voor-meting: eerdere animatiereeks liep nog uit tijdens deze reeks. Geen paginatijdclaim. Installer lokaal aangepast aan normale crosvm-exit omdat oude vmreq.sh ontbreekt. |
