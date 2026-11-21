@@ -29,10 +29,29 @@ struct npt_ring;
 extern struct npt_ring *npt_com_object_ring_seqno(void *self, UINT32 *out_seqno);
 extern UINT32 npt_ring_wait_seqno(struct npt_ring *ring, UINT32 seqno);
 
+/* U48: on the legacy route a back buffer with a present companion draws into private storage that nobody else
+ * reads; DWM only sees the companion, filled with one copy per Present (tritonResourceSyncPresentCompanion) and
+ * gated by tritonPresentFlushAndGate. Writes to that private storage need no per-write host round trip. The runtime
+ * (Native1) route keeps its own rules. */
+BOOL tritonWritesVisible(PTRITON_DEVICE pD, const void *pRes)
+{
+    const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
+    if (!r) return FALSE;
+    if (r->IsShared || r->IsPresentable) return TRUE;
+    return r->pPresentCompanion && pD && pD->RuntimeStreamActive;
+}
+
+/* U48: every non-primary, single-sample back buffer presents through a private copy unless
+ * C:\Users\Public\triton-nopresentcopy exists (or the runtime route is active). */
+static BOOL tritonPresentCopyWanted(PTRITON_DEVICE pD)
+{
+    return pD && !pD->RuntimeStreamActive && !tritonSwitch("triton-nopresentcopy");
+}
+
 void tritonMarkSharedWrite(PTRITON_DEVICE pD, const void *pRes)
 {
     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
-    if (pD && r && (r->IsShared || r->IsPresentable || r->pPresentCompanion))
+    if (pD && r && tritonWritesVisible(pD, r))
         InterlockedOr(&pD->SharedDirty, tritonCanBatchPresentWrites(pD,r) ?
             TRITON_SHARED_QUALIFIED : TRITON_SHARED_STRICT);
 }
@@ -199,7 +218,7 @@ void tritonSharedWriteDone(PTRITON_DEVICE pD, const void *pRes, const char *op)
 {
     const TRITON_RESOURCE *r = (const TRITON_RESOURCE *)pRes;
     if (!pD) return;
-    if (pRes && !(r->IsShared || r->IsPresentable || r->pPresentCompanion)) return;
+    if (pRes && !tritonWritesVisible(pD, r)) return;
     /* Also covers legacy callsites such as GenerateMips/DxgiBlt that did not
      * call tritonMarkSharedWrite before this post-operation helper. */
     InterlockedOr(&pD->SharedDirty, r && tritonCanBatchPresentWrites(pD,r) ?
@@ -533,10 +552,17 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
     const BOOL exportableShape = pArgs->MipLevels <= 1 &&
                                  pArgs->ArraySize <= 1 &&
                                  pArgs->SampleDesc.Count <= 1;
-    BOOL isShared = is2D &&
+    /* U48: a swapchain back buffer (BIND_PRESENT, flip or blt model, with or without the runtime's DDI_SHARED)
+     * keeps private storage; the shared blob DWM opens is a companion filled at Present. Application-requested
+     * sharing without BIND_PRESENT stays direct. */
+    const BOOL presentCopy = is2D && exportableShape &&
+        (pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) != 0 &&
+        (pArgs->BindFlags & D3D11_DDI_BIND_UNORDERED_ACCESS) == 0 &&
+        tritonPresentCopyWanted(pD);
+    BOOL isShared = is2D && !presentCopy &&
                     ((pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED) != 0 ||
                      (presentOnly && exportableShape));
-    const BOOL needCompanion = presentOnly && !exportableShape;
+    const BOOL needCompanion = (presentOnly && !exportableShape) || presentCopy;
     /* Only directly exportable, non-MSAA buffers are covered. Companions must
      * be copied/resolved at every publication, so they stay on the strict path.
      * Whitelist original RTV/SRV/PRESENT binds: UAV and unknown binds are strict.
@@ -573,10 +599,10 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
     if ((pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) ||
         (pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED))
         TR_LOG("BATCH create res=%p %ux%u ddiBind=0x%x ddiMisc=0x%x "
-               "ddiShared=%u displayablePresent=%u primary=%u eligible=%u companion=%u",
+               "ddiShared=%u displayablePresent=%u primary=%u eligible=%u companion=%u (U48 private copy=%u)",
                (void *)r, r->Width, r->Height, pArgs->BindFlags, pArgs->MiscFlags,
                !!(pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED),
-               displayablePresent, !!pArgs->pPrimaryDesc, r->BatchPresentWrites, needCompanion);
+               displayablePresent, !!pArgs->pPrimaryDesc, r->BatchPresentWrites, needCompanion, presentCopy);
 
     /* A host create is asynchronous and reports nothing back, so a texture
      * whose format the host cannot make must be refused here: forwarded, the
@@ -675,6 +701,12 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
          * above does. */
         misc |= D3D11_RESOURCE_MISC_SHARED;
     }
+    /* U49: a private-copy back buffer (U48) is read by nobody but this device; only its companion is shared.
+     * Keeping the runtime's DDI_SHARED on the private storage made the host treat it as a shared surface
+     * and synchronise after every draw into it (DXVK NPT_SHARED_DRAW_SYNC): ~0.55 ms per draw. */
+    if (presentCopy && !tritonSwitch("triton-privatekeepshared"))
+        misc &= ~(UINT)(D3D11_RESOURCE_MISC_SHARED | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX |
+                        D3D11_RESOURCE_MISC_SHARED_NTHANDLE);
 
     BOOL initOom;
     D3D11_SUBRESOURCE_DATA *initData = tritonBuildInitData(pArgs, &initOom);
