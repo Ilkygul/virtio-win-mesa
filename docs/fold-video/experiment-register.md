@@ -1205,3 +1205,6 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 
 
 | U53 opt-in uploadtrace geladen | Alleen drie UMD-bestanden geplaatst. Normale gastafsluiting, nieuwe VM-start, effectieve 7424 MiB door bestaande geheugenhook, Windows bruikbaar 6.974.267.392 B (128 MiB meer dan nulmeting). | DWM laadt `8D5DC6C1…83D1`, GPU Code 0. Bestaande drawbench 50-draw gezondheidscontrole 454 fps, installer bevestigd. | Animatiemeting gestart na afloop installer met native Fold-scherm vooraan. Geen snelheidsclaim zonder routevergelijking; geheugendelta meewegen. |
+
+
+| U53 opt-in uploadtrace, korte fysieke animatieproef | Kandidaat werkelijk geladen, RAM effectief 7424 MiB, 6.974.267.392 B bruikbaar. Zelfde gecorrigeerde animatieverzamelaar en fysieke Fold-view. | Start 17,2 / 15,8 / 33,5 fps en max 141 / 137 / 42 ms. Flyout 38,6 / 23,7 / 23,2 fps. Twee geldige minmaxruns 53,2 en 51,9 fps. Nulmeting deels overlappend en effectief 128 MiB minder, dus verschillen niet causaal toeschrijven. Geen run haalt Start-doel. | Geen bruikbare prestatieverbetering aangetoond. Volgens plan release-U53 terugzetten. Geen ongewijzigde herhaling. Instellingen-paginadoel blijft onbewezen. |
