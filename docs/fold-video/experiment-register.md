@@ -1410,3 +1410,9 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Bewijs: `evidence/fold-scanout-joint/{joint-correlation.txt,correlation.txt,dxg-fast.csv,dxg.csv,cadence.txt,clock.txt,guest-clock.txt,host-clock.txt}`.
 
 **Werk dat tijdens de pauzes doorgaat.** In de binnenvensters meldt DxgKrnl respectievelijk 112/154/88/11 Render-events van SystemSettings PID 8500, met QueuePacket-submit en DMA-paketevents. In drie vensters is dezelfde Settings-thread 8572 herhaaldelijk aan het indienen, met voorbeelden circa 1,5–1,7 ms uit elkaar, terwijl de compositor geen nieuwe Flip meldt en VSyncDPC doorgaat. Dit past bij duur produceren van de nieuwe pagina/atlas, geen algehele GPU-stilstand. Onderzoek per-write handoffkosten op die producer, onderscheid host-ringwacht van gewone rendering en behoud publicatie- en eigendomsgaranties. Bewijs: `evidence/fold-scanout-joint/windows-activity.txt`.
+
+### U53 97b140d — eerste pollpauzes bij gedeelde writes verkorten
+
+- Hypothese: bij honderden opeenvolgende Settings-writes draagt de 1 ms-ondergrens van de guest-ringpoll bij aan de paginapauze. Proef verkort alleen de vroege slaapintervallen op het per-write-pad naar minimaal 500 µs; scheduler-yields, publicatie, het te bereiken volgnummer, timeout- en foutcontroles blijven in dezelfde volgorde actief. Latere backoff en overige paden behouden hun bestaande ondergrens.
+- Exacte r2-bouwbasis met bytecontrole op vier aangepaste bestanden. ARM64 en ARM64EC gebouwd. Native `943833886CFA4D120A57B8120A233EABDBCAE0D4B597A9DF83D429C5A1C369BD`, EC `A28D371F324419312A32790E4661226C3C84D67AC841DA465CEEB6211736D8E2`. Installer heeft de DLL's geplaatst, gaststart en praktijktest volgen. Opstartfix en hardwarepad blijven geselecteerd.
+- Bewijs: `evidence/fold-short-shared-wait/{short-wait.patch,build.log,install.txt}`.
