@@ -1382,3 +1382,11 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Bewijs: `evidence/fold-early-viewer-fixed-size/gfx/{gap-source.txt,cadence.txt,atrace.txt}`.
 
 **Herstel na de proef.** Tijdelijke voorkeur verwijderd; normale autoresize is weer actief. Windows opnieuw gestart met de viewer pas na Windows-SSH. Productie gebruikt r2 `A9176FA6`, GPU Code 0, met geheugenplafond 8192 MiB en effectief 7296 MiB. Foto op de fysieke Fold toont Systeem > Beeldscherm op 1848×1768 met de titel en alle zichtbare kaarticonen correct. Bewijs: `evidence/fold-early-viewer-fixed-size/{restore.txt,restored-guest.json,restored.png}`.
+
+### DroidVM d9961fe — vroege viewer, automatische late resize
+
+- Hypothese: de viewer kan in productie direct aankoppelen als de daemon de eigenlijke moduswissel op de Windows-SSH-banner laat wachten. Alleen het laatste gevraagde formaat wordt opnieuw geprobeerd. De Fold-VM gebruikt daarvoor haar bestaande NAT-adres; de voorkeur voor autoresize blijft standaard actief.
+- Kandidaat: DroidVM-bron `d9961fe3c64850626d77794c702a1f5b70588d33`, APK `3131256602d9…4267cfff`. Compile geslaagd. Het getekende proefpakket verschilt afgezien van de handtekening in twee DEX-bestanden; manifest, resources, prebuilts en native bibliotheken zijn bytegelijk. Uitgevoerde crosvm-file blijft `92e98c8c…fce6513`. R2 Windows-driver behouden.
+- Fold: viewer vroeg geopend. Scanout-oppervlak gekoppeld om 23:59:59.669, GPU-reset om 00:00:01.244, automatische resize naar 1848×1768 om 00:00:09.482. Windows bereikte het bureaublad. Geen geheugenfout in het vastgelegde venster. Na drie navigatierondes waren breadcrumb, zichtbare tekst en iconen correct. GPU Code 0. RAM-doel 8192 MiB, toegewezen 6784 MiB deze start.
+- Cadans bleef 29,9/39,7/43,7 fps, met gaten van 386/328/145 ms. Verwacht voor een wijziging aan opstartvolgorde. Beslissing: kandidaat actief laten voor de opstartwinst; herhalen bij koude start en daarna de al gelokaliseerde gaten vóór Android-bufferen onderzoeken. Nog geen release/merge.
+- Bewijs: `evidence/fold-resize-readiness/{build.log,apk-comparison.txt,resize-readiness.patch,install.txt,run.txt,crosvm.log,resize-log.txt,guest.json,boot.png,display.png,cadence.txt}`.
