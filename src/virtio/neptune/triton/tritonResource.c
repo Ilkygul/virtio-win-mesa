@@ -28,6 +28,7 @@ void APIENTRY tritonCheckFormatSupport(D3D10DDI_HDEVICE, DXGI_FORMAT, UINT *);
 struct npt_ring;
 extern struct npt_ring *npt_com_object_ring_seqno(void *self, UINT32 *out_seqno);
 extern UINT32 npt_ring_wait_seqno(struct npt_ring *ring, UINT32 seqno);
+extern UINT32 npt_ring_wait_shared_write(struct npt_ring *ring, UINT32 seqno);
 
 /* U48: on the legacy route a back buffer with a present companion draws into private storage that nobody else
  * reads; DWM only sees the companion, filled with one copy per Present (tritonResourceSyncPresentCompanion) and
@@ -166,7 +167,10 @@ static void tritonWaitHostNow(PTRITON_DEVICE pD, const char *op, BOOL perWrite)
     struct npt_ring *ring = npt_com_object_ring_seqno(pD->pCtx1, &seqno);
     if (!ring) return;
     const DWORD t0 = GetTickCount();
-    npt_ring_wait_seqno(ring, seqno);
+    if (perWrite)
+        npt_ring_wait_shared_write(ring, seqno);
+    else
+        npt_ring_wait_seqno(ring, seqno);
     static volatile LONG n;
     LONG k = InterlockedIncrement(&n);
     if (k <= 40 || (k % 2000) == 0) {

@@ -73,7 +73,7 @@ static _Atomic uint64_t npt_publish_generation_next;
  * wanted (pre-shmem-map paths).
  */
 static void
-npt_ring_relax(struct npt_ring *ring, uint32_t *iter)
+npt_ring_relax(struct npt_ring *ring, uint32_t *iter, bool short_shared_wait)
 {
    /* busy_wait_order=8 (256 yields) hides a virtio-gpu HOST3D blob
     * page-staleness race: each yield is a scheduler slice for the
@@ -90,7 +90,16 @@ npt_ring_relax(struct npt_ring *ring, uint32_t *iter)
       thrd_yield();
    } else {
       const uint32_t shift = util_last_bit(*iter) - busy_wait_order - 1;
-      npt_relax_sleep_us(base_sleep_us << shift);
+      const uint32_t sleep_us = base_sleep_us << shift;
+#ifdef _WIN32
+      if (short_shared_wait && shift < 3)
+         npt_relax_sleep_us_min(sleep_us, 500u);
+      else
+         npt_relax_sleep_us(sleep_us);
+#else
+      (void)short_shared_wait;
+      npt_relax_sleep_us(sleep_us);
+#endif
    }
 
    if (ring && *iter >= (1u << warn_order) &&
@@ -697,7 +706,7 @@ npt_ring_wait_space(struct npt_ring *ring, uint32_t size)
          npt_log("wait_space: ring %llu size=%u head=%u tail=%u cur=%u iter=%u",
                  (unsigned long long)ring->id, size, head, tail, ring->cur, iter);
       }
-      npt_ring_relax(ring, &iter);
+      npt_ring_relax(ring, &iter, false);
    }
 
    npt_profile_record_full_wait(&ring->profile, iter);
@@ -1039,7 +1048,7 @@ npt_ring_seqno_passed(const struct npt_ring *ring, uint32_t seqno)
 }
 
 static uint32_t
-npt_ring_wait_seqno_impl(struct npt_ring *ring, uint32_t seqno)
+npt_ring_wait_seqno_impl(struct npt_ring *ring, uint32_t seqno, bool short_shared_wait)
 {
    /* Each yield is a kernel scheduler slice for virtio-gpu page
     * bookkeeping that reconciles the guest VMA with the host memfd
@@ -1061,7 +1070,7 @@ npt_ring_wait_seqno_impl(struct npt_ring *ring, uint32_t seqno)
          npt_log("wait_seqno: ring %llu target=%u head=%u tail=%u cur=%u iter=%u",
                  (unsigned long long)ring->id, seqno, head, tail, ring->cur, iter);
       }
-      npt_ring_relax(ring, &iter);
+      npt_ring_relax(ring, &iter, short_shared_wait);
    }
    return iter;
 }
@@ -1072,7 +1081,15 @@ npt_ring_wait_seqno(struct npt_ring *ring, uint32_t seqno)
    /* Reply, shadow-slot reuse and Triton shared handoff/flush callers are
     * outside ring->lock. No CPU read/reuse may wait on unpublished bytes. */
    npt_ring_publish_pending(ring);
-   return npt_ring_wait_seqno_impl(ring, seqno);
+   return npt_ring_wait_seqno_impl(ring, seqno, false);
+}
+
+uint32_t
+npt_ring_wait_shared_write(struct npt_ring *ring, uint32_t seqno)
+{
+   /* Same publication and completion checks; shorten only early post-yield sleeps. */
+   npt_ring_publish_pending(ring);
+   return npt_ring_wait_seqno_impl(ring, seqno, true);
 }
 
 /* Wait for the host to consume past the last EXECUTE on this ring
@@ -1081,7 +1098,7 @@ static void
 npt_ring_wait_upload_drained_locked(struct npt_ring *ring)
 {
    npt_ring_flush_notify_locked(ring);
-   npt_ring_wait_seqno_impl(ring, ring->upload_horizon_seqno);
+   npt_ring_wait_seqno_impl(ring, ring->upload_horizon_seqno, false);
 }
 
 /* Caller holds ring->lock.  *out_fresh = a new upload_shmem was
