@@ -552,10 +552,13 @@ tritonCreateResource(D3D10DDI_HDEVICE hDevice,
     const BOOL exportableShape = pArgs->MipLevels <= 1 &&
                                  pArgs->ArraySize <= 1 &&
                                  pArgs->SampleDesc.Count <= 1;
-    /* U48: a swapchain back buffer (BIND_PRESENT, flip or blt model, with or without the runtime's DDI_SHARED)
-     * keeps private storage; the shared blob DWM opens is a companion filled at Present. Application-requested
-     * sharing without BIND_PRESENT stays direct. */
-    const BOOL presentCopy = is2D && exportableShape &&
+    /* A shared, non-displayable resource may be consumed without a Present
+     * on this resource. Export its real backing so all readers see its writes.
+     * Keep the private companion for displayable swapchain back buffers. */
+    const BOOL sharedOffscreen =
+        (pArgs->MiscFlags & D3D10_DDI_RESOURCE_MISC_SHARED) != 0 &&
+        (pArgs->MiscFlags & D3DWDDM2_0DDI_RESOURCE_MISC_DISPLAYABLE_SURFACE) == 0;
+    const BOOL presentCopy = is2D && exportableShape && !sharedOffscreen &&
         (pArgs->BindFlags & D3D10_DDI_BIND_PRESENT) != 0 &&
         (pArgs->BindFlags & D3D11_DDI_BIND_UNORDERED_ACCESS) == 0 &&
         tritonPresentCopyWanted(pD);
