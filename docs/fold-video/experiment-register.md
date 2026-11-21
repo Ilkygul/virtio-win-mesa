@@ -1185,3 +1185,8 @@ Stap 3 (privé-kopie bij Present) en 4 (hardware-cursor) zijn niet gebouwd: Pres
 | K4 zero-copy | CPU-kopie in beeldpad? | "CPU copy" alleen voor UEFI-bootbuffer res=2 (2D zonder blob → export_blob ongeldig); crosvm GPU/display-threads 7,0% bij 1080p60, 0,7% bij slepen; scanout-read-lease: 16137 van 16384 flushes via GPU-read met bron-fd | scanout is al zonder CPU-kopie; geen bouw, dus geen voor/na |
 | K6 schone run | volledige meet.sh na K1–K5, zelfde omstandigheden | Start 225–232 ms, flyout 339–358 ms, slepen 56 fps, scrollen 59, cursor 59, video 1,2% drops, ritme 89–98% | geen achteruitgang t.o.v. D3 |
 | K5 4K | 2160p60 VP9 hw-decode | Present-sync aan: 23,7% drops; uit: 2,0%, 58 fps SF; desktop visueel schoon | Present-sync uit (`legacy-route.ps1`) |
+
+
+### U53: diagnostiek uit het renderpad
+
+Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden standaard payload-hashes, dirty-range scans en log-I/O. [Driverwijziging](https://github.com/Ilkygul/virtio-win-mesa/commit/9893be6) maakt alle vijf trace-ingangen opt-in met `NPT_DEBUG=d3d11_upload_trace`. Upload- en synchronisatiegedrag blijft gelijk. `git diff --check` slaagt. Build en hardwarevergelijking staan open. Vergelijk de eerste seconden van dezelfde upload-intensieve taak, omdat de oude scans na honderden aanroepen stoppen. Fold read-only gecontroleerd: VM uit na normale shutdown; laatste hostlog meldt r7, dus de r8-releasebeschrijving is geen bewijs voor de actieve installatie.
