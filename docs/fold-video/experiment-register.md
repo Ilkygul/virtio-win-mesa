@@ -1392,3 +1392,11 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Bewijs: `evidence/fold-resize-readiness/{build.log,apk-comparison.txt,resize-readiness.patch,install.txt,run.txt,crosvm.log,resize-log.txt,guest.json,boot.png,display.png,cadence.txt}`.
 
 **Koude herhaling d9961fe.** Zelfde Fold-APK en VM-config, effectief 7424 MiB. In crosvm PID 6429: scanout koppelde om 00:03:39.012, firmware-reset om 00:03:41.687, host-resize automatisch om 00:03:51.196. SSH en het lokale bureaublad bereikten normale toestand. Geen `get_avail_index` of `lent memory` in het vastgelegde venster. Daarmee heeft de opstartcorrectie twee koude starts doorstaan. Bewijs: `evidence/fold-resize-readiness/repeat/{restart.txt,run.txt,resize-log.txt,crosvm.log,boot.png}`. Volgende proef betreft de bestaande crosvm-scanouttrace, los van de opstartwijziging.
+
+### Tijdmeting crosvm-scanout — pauzes beginnen vóór flush
+
+- Hypothese: de eerder gemeten Android-bufferpauzes kunnen ontstaan tijdens het uitvoeren van `RESOURCE_FLUSH` of doordat crosvm tijdelijk geen flush voor de actieve scanout verwerkt.
+- Kandidaat: productiedriver r2, DroidVM d9961fe, bestaande crosvm `92e98c8c…fce6513`, alleen de bestaande `GPU_SCANOUT_TRACE=1` tijdelijk geactiveerd. Ftrace op de bevestigd actieve `v_gpu`-thread gaf monotone tijden voor writes naar stderr. Volgorde en byteaantallen koppelden 2178 van 2180 writes aan consolemarkers (99,9%).
+- Resultaat: 242 scanout-flushes gingen via `flip_to`; in elk van de zes langste gemeten navigatiepauzes ontbrak ook een `flush_resource.enter` in het binnenvenster. Android-gat 166–457 ms, gepaarde flush-gaten 163–463 ms. Binnen de flushes direct vóór en na de gaten duurt entry → flip-einde minder dan circa 1,5 ms. Er was geen indicatie van een langdurige blokkade binnen de scanout-flush zelf. De opt-in logger kan de absolute cadans beïnvloeden.
+- Beslissing: verwijder de tijdelijke trace en behoud de opstart- en renderfix. Meet gast-KMD `RESOURCE_FLUSH`-submit en crosvm queue-dispatch op dezelfde ronde. De vorige Windows MMIO-trace was uit een aparte run en sluit de KMD-gate, virtqueue of eerder werk op `v_gpu` nog niet uit.
+- Bewijs: `evidence/fold-scanout-timeline/{correlation.txt,ftrace.txt,scanout.log,cadence.txt,guest.json}`.
