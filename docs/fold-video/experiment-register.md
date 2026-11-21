@@ -1202,3 +1202,6 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 
 
 | U53 vooraf, Start-animatie met herstelde laagquoting | Productie release-U53, werkelijk 7296 MiB toegewezen, Windows bruikbaar 6840049664 B. Zelfde `meet.sh anim`, met SurfaceFlinger-laagnaam als één argument. | Start 36,1 / 48,3 / 26,0 fps, max gaten respectievelijk 62 / 54 / 75 ms. Flyout 19,1 / 22,6 / 21,6 fps. Minmax geen bruikbare frames. | Startdoel gemist. Alleen Start bruikbaar als indicatieve voor-meting: eerdere animatiereeks liep nog uit tijdens deze reeks. Geen paginatijdclaim. Installer lokaal aangepast aan normale crosvm-exit omdat oude vmreq.sh ontbreekt. |
+
+
+| U53 opt-in uploadtrace geladen | Alleen drie UMD-bestanden geplaatst. Normale gastafsluiting, nieuwe VM-start, effectieve 7424 MiB door bestaande geheugenhook, Windows bruikbaar 6.974.267.392 B (128 MiB meer dan nulmeting). | DWM laadt `8D5DC6C1…83D1`, GPU Code 0. Bestaande drawbench 50-draw gezondheidscontrole 454 fps, installer bevestigd. | Animatiemeting gestart na afloop installer met native Fold-scherm vooraan. Geen snelheidsclaim zonder routevergelijking; geheugendelta meewegen. |
