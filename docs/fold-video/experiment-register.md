@@ -1339,3 +1339,11 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Resultaat: in de laatste opname staan zowel de titel Systeem > Beeldscherm als alle zichtbare kaarticonen correct. De cadans bleef onder de oude referentie: 30,6/37,0/43,0 fps en maximale gaten van 370/270/162 ms, tegenover 54,3/47,4/46,2 fps en 33/67/54 ms. Opstartbelasting verklaart de vertraging niet afdoende.
 - Bewijs: `evidence/fold-display-direct-atlas/warm/{after.png,cadence.txt,sync.log}`; Settings PID 9008 gebruikte directe backing voor de gedeelde atlas. De logs tonen circa 2.000 gedeelde schrijfwachtaanroepen in de eerste 43 seconden van de processessie, met steekproeven van 15–16 ms.
 - Beslissing: behoud r2 tijdelijk voor de beeldwinst. Onderzoek de kosten van synchronisatie bij gedeelde writes vóór promotie of release.
+
+### DXVK c763bce — gedeelde readbacks voor actieve shaderbindings
+
+- Hypothese: gedeelde shader-resourceviews blijven gebonden wanneer een nieuwe shader ze niet gebruikt. De bestaande consumer guard doorloopt alle gebonden views en kan daardoor onnodig de GPU laten wachten.
+- Kandidaat: c763bce bovenop het exacte C33-bronbeeld b7e4b74, gebruikt het bestaande SRV-masker van de pixel- en vertexshader. Schrijfbeveiliging en de readback voor gebruikte gedeelde views blijven actief. Gebouwde Android ARM64 D3D11-library `f4984124…ccd500`, Windows U53 r2 `A9176FA6`, effectief 7296 MiB. De viewer ging pas open na werkende Windows-SSH, met beeld op 1848×1768.
+- Resultaat: correct zichtbaar breadcrumb en kaarticonen bij eerste opening én na drie rondes. Display 33,1/43,2/37,0 fps met maximale gaten 399/133/316 ms. Geen consistente cadanswinst tegenover de ongewijzigde DXVK-host plus r2. De proef onderscheidt het effect op beeldcorrectheid niet van het effect van de behouden U53 r2.
+- Bewijs: `evidence/fold-display-used-srv-sync/{before.png,after.png,cadence.txt,guest.json,installation.txt,used-srv.patch}`.
+- Beslissing: terug naar de bekende Android-library `b964e836…39404de`, behoud U53 r2. Parkeer het filter op ongebruikte SRV-slots als verklaring voor de zichtbare hapering. Meet welk deel van de pieken in Windows-wachten, GPU-compositie of aanlevering aan Android ontstaat vóór een volgende functionele ingreep.
