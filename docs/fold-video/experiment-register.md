@@ -1196,3 +1196,6 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 
 
 | Start voor U53-vergelijking (21-11) | Productie met bestaande driver en 8192 MiB geconfigureerd starten via standaard geheugenhook. Fold via DX Manager gewekt, Android bevestigde ontgrendeling. | Hook kwam tot 3750 van 8704 MiB en weigerde de start. Daemon bevestigde STOPPED, pool terug naar 2 MiB. Daarna één herstart via Fold-module aangevraagd. Bestaande wifi-ADB-poorten offline en DX Manager kon de Fold nog niet terugvinden. | Geen nieuwe DLL geïnstalleerd, geen gastmeting of RAM-wijziging uitgevoerd. Eerst bereikbaarheid herstellen, daarna dezelfde korte route. |
+
+
+| Fold opnieuw bereikbaar, U53-nulmeting gestart | Wifi ADB op bevestigde Fold hersteld. DroidVM startte na bestaande geheugenhook met 7296 MiB effectief toegewezen, Windows meldt 6.840.049.664 B bruikbaar. GPU Code 0 en DWM laadt release-U53 SHA `327ab45a…f60f`. | Eerste animatiereeks levert voor twee Start-runs geen frames, derde 31,4 fps/max 54 ms. Herstel van argumentquoting voor SurfaceFlinger-lagen in lokale kopie van meet.sh, vervolgmeting loopt. | Kandidaat nog niet geïnstalleerd. Paginaroute en gepaarde vergelijking blijven open. Bij vergelijking effectieve RAM controleren omdat de hook dynamisch toewijst. |
