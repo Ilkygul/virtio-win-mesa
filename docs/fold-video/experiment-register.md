@@ -1247,3 +1247,6 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 
 
 | Display, verse synchrone Map WRITE-controle en extra build | Gebruiker geeft expliciet akkoord. Nieuwe SystemSettings PID2424, bevestigd driverflag actief, Display native gefotografeerd. | Pictogrammen en kaarten zichtbaar, paginatitel blijft weg. De eerdere als volledig hersteld beschreven historische `a2_after_2_display.jpg` mist ook de titel. Tijdelijke taak en marker verwijderd. | Geen permanente sync-omweg. Extra [DXVK-build 4818dc5](https://github.com/Ilkygul/dxvk/commit/4818dc5156fcfe9ca5a34d6db56891708f534e5b) gestart op bouw-pc. Geactiveerd via bestaande hostdiagnose: maximaal acht GPU-pixelhashes per worker/per zijde in passende gedeelde A8/R8-texturen. Niet geschikt voor snelheidsvergelijking. Bewijs `fresh-sync-display-verified.png`, `fresh-sync-activation.txt`. |
+
+
+| Extra C33 alpha-atlasbuild afgerond | 4818dc5, bestaande C33 Android-toolchain en opties, 264/264. | D3D11 SHA `21264aac594beaca108d5eeb2a86a700d852c9f6db8001a1e44e5ecb5017729a`, DXGI bitgelijk aan oorspronkelijke C33. SHA en AArch64 gecontroleerd. | Eenmalige hostdriverwissel na normale gastafsluiting gestart, geen Windows-driver of instellingen vervangen. De build meet beeldinhoud en bevat geen gevalideerde fix. |
