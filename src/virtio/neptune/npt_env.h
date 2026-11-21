@@ -58,6 +58,9 @@ enum npt_debug {
     * queues.  Recovers the async-compute overlap at the cost of the
     * ordering an app's unobservable Wait() would have given it. */
    NPT_DEBUG_NO_D3D12_XQUEUE_ORDER   = 1ull << 7,
+
+   /* Trace D3D11 upload payloads and dirty ranges for render debugging. */
+   NPT_DEBUG_D3D11_UPLOAD_TRACE      = 1ull << 8,
 };
 
 struct npt_env {

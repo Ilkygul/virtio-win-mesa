@@ -27,6 +27,7 @@ static const struct debug_control npt_debug_options[] = {
    { "wddm2_0_only",             NPT_DEBUG_WDDM2_0_ONLY },
    { "d3d12_list_migration",     NPT_DEBUG_D3D12_LIST_MIGRATION },
    { "no_d3d12_xqueue_order",    NPT_DEBUG_NO_D3D12_XQUEUE_ORDER },
+   { "d3d11_upload_trace",       NPT_DEBUG_D3D11_UPLOAD_TRACE },
    { NULL, 0 },
 };
 

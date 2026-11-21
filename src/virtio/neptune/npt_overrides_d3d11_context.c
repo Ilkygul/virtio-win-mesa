@@ -13,6 +13,7 @@
 #include "npt_overrides_d3d11_feedback.h"
 #include "npt_device.h"
 #include "npt_dispatch.h"
+#include "npt_env.h"
 #include "npt_overrides.h"
 #include "npt_resource.h"
 #include "npt_ring.h"
@@ -544,7 +545,7 @@ ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
       return;
    }
 
-   if (npt_trace_buf_wanted(b)) {
+   if (NPT_DEBUG(D3D11_UPLOAD_TRACE) && npt_trace_buf_wanted(b)) {
       uint64_t h; uint32_t nz, last; char hex[40];
       const uint32_t n = npt_d3d11_buffer_get_byte_width(b);
       npt_trace_buf_summary(npt_d3d11_buffer_slot_ptr(b, rec.slot), n, &h, &nz, &last, hex);
@@ -556,7 +557,8 @@ ctx_Unmap_buffer(void *self, struct npt_d3d11_buffer *b, UINT Subresource)
    struct npt_ring *ring = npt_com_self_ring(self);
    npt_d3d11_buffer_slot_visible(b, rec.slot, ring);
    uint32_t seqno = 0;
-   const bool vbtrace = npt_trace_vb_wanted(b);
+   const bool vbtrace = NPT_DEBUG(D3D11_UPLOAD_TRACE) &&
+                        npt_trace_vb_wanted(b);
    uint32_t vb_dirty_lo = 0, vb_dirty_hi = 0; uint64_t vb_fnv = 1469598103934665603ull;
    if (vbtrace) {
       const uint8_t *sp = npt_d3d11_buffer_slot_ptr(b, rec.slot);
@@ -631,7 +633,8 @@ ctx_Unmap_texture(void *self, struct npt_d3d11_texture *t, UINT Subresource)
    if (!npt_d3d11_texture_map_find(t, key, Subresource, &rec))
       return;
 
-   npt_trace_guest_unmap(t, rec.subresource, &rec);
+   if (NPT_DEBUG(D3D11_UPLOAD_TRACE))
+      npt_trace_guest_unmap(t, rec.subresource, &rec);
 
    /* A sync Map's slot goes in flight too: the host copies out of it
     * at Unmap, after this returns. */
@@ -803,7 +806,8 @@ ctx_UpdateSubresource_override(void *self, ID3D11Resource *pDstResource,
       }
    }
 
-   if (b && byte_size && npt_trace_buf_wanted(b)) {
+   if (NPT_DEBUG(D3D11_UPLOAD_TRACE) && b && byte_size &&
+       npt_trace_buf_wanted(b)) {
       uint64_t h; uint32_t nz, last; char hex[40];
       npt_trace_buf_summary(pSrcData, (uint32_t)copy_size, &h, &nz, &last, hex);
       npt_log("FMT guest buf-update res=0x%llx box=%s[%u,%u) payload n=%llu fnv=%016llx nonzero=%u lastNonzero=%u first16=%s",
@@ -944,7 +948,7 @@ ctx_UpdateSubresource1_override(void *self, ID3D11Resource *pDstResource,
                                 const void *pSrcData, UINT SrcRowPitch,
                                 UINT SrcDepthPitch, UINT CopyFlags)
 {
-   {
+   if (NPT_DEBUG(D3D11_UPLOAD_TRACE)) {
       static volatile LONG n;
       struct npt_d3d11_buffer *b = npt_d3d11_buffer_cast(pDstResource);
       D3D11_BUFFER_DESC bd;
