@@ -1373,3 +1373,10 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Beslissing: toets een resize na een geverifieerde Windows-boot en herstel de oorspronkelijke appvoorkeur. Eén geslaagde boot toont nog geen permanente oorzaak of oplossing.
 
 **Late resize in dezelfde boot.** crosvm accepteerde 1848×1768 pas na succesvolle Windows-SSH. De Fold toonde op die resolutie de volledige pagina Systeem > Beeldscherm met correcte titel en zichtbare iconen. Apparaatcode 0 en UMD `A9176FA6` gemeten. Geen `get_avail_index`-fout gezien bij die resize. Daarmee is de combinatie vroeg kijken en laat resizen praktisch aangetoond; een automatische readiness-overgang en herhaalvalidatie ontbreken. Bewijs: `evidence/fold-early-viewer-fixed-size/{late-resize.txt,late-resize.png,late-resize-guest.json}`.
+
+### Android gfx-trace — waar de late frames blijven
+
+- Hypothese: SurfaceFlinger of BLAST houdt tijdig aangeleverde DroidVM-frames honderden milliseconden tegen.
+- Op de productie-r2-driver na de late resize: Android `atrace gfx` en de bestaande drie navigatierondes meten dezelfde monotone klok. Bij vijf Android-presentatiegaten van 137/270/349/274/283 ms had de crosvm `v_gpu`-thread voor de relevante DroidVM-laag even grote gaten tussen `dequeueBuffer`-aanvragen (145/263/355/268/279 ms). `onFrameAvailable` en `setBuffer` vertonen dezelfde gaten. Buiten die gaten volgden ontvangst en overdracht kort op de aanvraag.
+- Beslissing: begin vóór de Android-bufferwachtrij. De eerdere Windows-trace wijst op doorlopende MMIOFlip-events; de volgende directe vergelijking moet `RESOURCE_FLUSH` en de aanroep van de scanout-post in dezelfde navigatieronde koppelen. Wijzig SurfaceFlinger-pacing niet op basis van deze meting.
+- Bewijs: `evidence/fold-early-viewer-fixed-size/gfx/{gap-source.txt,cadence.txt,atrace.txt}`.
