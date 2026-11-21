@@ -1363,3 +1363,11 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Beslissing: vergelijk eerst KMD-flips met de gemeten gaten. Houd de renderfix actief. Test het zwarte opstartscherm afzonderlijk met een vroege viewer zonder vroeg resize-verzoek om te beoordelen of attach en resize uit elkaar lopen.
 
 **Aanvulling KMD-correlatie.** Het beperkte DxgKrnl-extract dekt drie volledige Android-gaten van 378, 407 en 307 ms. Daarbinnen vallen respectievelijk 17, 14 en 18 MMIOFlip-events (naast DWM- en Flip-events). De grootste overlappende flip-pauze die 60 ms overschreed was 86 ms. De Windows-fliproute blijft dus actief in deze vensters; dit bewijst nog geen verse pixels per flip. Volgende snelheidsmeting moet GPU-scanout en aanlevering aan Android onderscheiden. Bewijs: `evidence/fold-display-used-srv-sync/rollback-profile/{dxg-events.csv,kmd-gap-correlation.txt}`. De extractie is na 150 s afgekapt en de drie latere Android-gaten vallen geheel of deels buiten haar dekking.
+
+### Zwart opstartscherm — vroege viewer zonder autoresize
+
+- Hypothese: het vroege resize-verzoek veroorzaakt de slechte boot; alleen het Android-oppervlak aankoppelen hoeft de boot niet te breken.
+- Proef: bestaande productie-APK en r2 Windows-driver. Tijdelijk `display_auto_resize=false` gezet; viewer geopend aan firmwarekant, vóór GPU-reset en circa 19 s vóór succesvolle Windows-SSH. Geheugendoel 8192 MiB, werkelijk 6400 MiB, gelijk aan een eerdere mislukte boot met vroege autoresize.
+- Resultaat: crosvm koppelde de scanout aan vóór de firmware-reset. Geen host-resize en geen fout over lent memory in het bootvenster. Windows bereikte de login en de Fold toonde het welkomstscherm op 2560×1440. De vroege viewer alleen was in deze proef dus onvoldoende om het falen op te wekken.
+- Bewijs: `evidence/fold-early-viewer-fixed-size/{run.txt,crosvm.log,early-viewer.png}`.
+- Beslissing: toets een resize na een geverifieerde Windows-boot en herstel de oorspronkelijke appvoorkeur. Eén geslaagde boot toont nog geen permanente oorzaak of oplossing.
