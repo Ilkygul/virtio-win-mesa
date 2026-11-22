@@ -1,0 +1,57 @@
+--- a/src/d3d11/d3d11_fence.h
++++ b/src/d3d11/d3d11_fence.h
+@@ -41,6 +41,8 @@
+ 
+     UINT64 STDMETHODCALLTYPE GetCompletedValue();
+ 
++    void TraceTransfer(const char* operation, const void* context, UINT64 value) const;
++
+     Rc<DxvkFence> GetFence() const {
+       return m_fence;
+     }
+--- a/src/d3d11/d3d11_fence.cpp
++++ b/src/d3d11/d3d11_fence.cpp
+@@ -66,6 +66,25 @@
+       }
+     }
+ #endif
++    TraceTransfer(hFence && hFence != INVALID_HANDLE_VALUE ? "open" : "create", pDevice, InitialValue);
++  }
++
++
++  void D3D11Fence::TraceTransfer(const char* operation, const void* context, UINT64 value) const {
++#ifdef __ANDROID__
++    static const bool enabled = env::getEnvVar("NPT_D3D11_FENCE_TRANSFER_TRACE") == "1";
++    if (!enabled)
++      return;
++
++    // Bound per-process output. Object addresses are local to the renderer.
++    static std::atomic<uint32_t> records { 0 };
++    if (records.fetch_add(1, std::memory_order_relaxed) >= 256)
++      return;
++
++    Logger::warn(str::format("NPT-D3D11-FENCE-TRANSFER pid=", getpid(),
++      " op=", operation, " context=", context, " fence=", static_cast<const void*>(this),
++      " flags=", uint32_t(m_flags), " value=", value));
++#endif
+   }
+ 
+ 
+--- a/src/d3d11/d3d11_context_imm.cpp
++++ b/src/d3d11/d3d11_context_imm.cpp
+@@ -234,6 +234,7 @@
+     ] (DxvkContext* ctx) {
+       ctx->signalFence(cFence, cValue);
+     });
++    fence->TraceTransfer("signal", this, Value);
+ 
+     if (unlikely(m_device->debugFlags().test(DxvkDebugFlag::Capture)))
+       m_flushReason = "Fence signal";
+@@ -263,6 +264,7 @@
+     ] (DxvkContext* ctx) {
+       ctx->waitFence(cFence, cValue);
+     });
++    fence->TraceTransfer("wait", this, Value);
+ 
+     return S_OK;
+   }
