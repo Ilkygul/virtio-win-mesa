@@ -1697,3 +1697,10 @@ Bronbasis release-U53 (`080cc417`). D3D11 Unmap en UpdateSubresource deden stand
 - Resultaat: consumer liep na circa tien seconden vast op de EVENT-query in `shader_load_imported_srv` (0x80070102). Producer zag de consumer vóór Ack stoppen. DeviceRemovedReason bleef 0 aan beide kanten. De proef valideert activatie en indiening. Afronding, pixelcorrectheid en snelheidswinst voor dit pad zijn nog open.
 - Bewijs: `evidence/fold-dmabuf-windows-fixture/admission-r2/live/`, met de twee JSON-rapporten en de host- en DXVK-traces. Originele productieconfiguratie teruggezet (SHA-256 `d3187dc2db3e7a8c81bfce5afb580a6ee09af5f749a0356e871bb6a3a0cd9ae8`).
 - Volgende beslissing: volg de queue-waits en signaalvolgorde rond de shader-read. Een ownership-submit alleen bewijst geen afronding. De experimentele configuratie blijft buiten productie.
+
+### 22 november — oorzaak tweede Windows-shaderlijst
+
+- Hypothese: de timeout volgt op een door DXVK geweigerde command list. Diagnosebuild `a09b4393843a` voegt per afwijzing de reden en layoutstatus toe. De hostbuild bleef `b94e1c3f107f`.
+- Scenario: dezelfde hardwarematige Windows D3D11-proef over wifi op de Fold, 960×640, vier gevraagde generaties. De eerste consumer-submit op inode 116103 werd ingediend. De daaropvolgende lijst (PID 27304) had één image en één command list, fase E, geen transferqueue, eindlayout GENERAL, maar startlayout MAX_ENUM en geen acquire/release. DXVK weigerde deze lijst met `unsupported-command-list` en meldde `VK_ERROR_DEVICE_LOST`. De Windows-proef stopte met code 1.
+- Bewijs: `evidence/fold-dmabuf-windows-fixture/admission-r3/{rejection-trace.patch,r2-device-lost.txt,live/dxvk-trace.txt}`. Geen gemeten snelheidswinst of geslaagde pixelvergelijking voor deze kandidaat.
+- Volgende beslissing: leg bij het eerste Shader Resource View-gebruik ook de actuele startlayout vast als geen layouttransitie nodig is. Behoud de vroegere vastlegging wanneer er wel een transitie is. Valideer opnieuw op dezelfde Windows-proef voordat het pad ruimer wordt ingezet.
