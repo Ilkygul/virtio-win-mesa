@@ -1,0 +1,21 @@
+--- a/bin/windows-vm.sh
++++ b/bin/windows-vm.sh
+@@ -184,11 +184,16 @@
+     [ "$max_mb" -gt 0 ] 2>/dev/null && [ "$mem" -gt "$max_mb" ] && mem=$max_mb
+     load_kmods
+     touch "$HERE/pool-bezig"     # the pool guard (wacht) leaves a pool alone while a start prepares it
+-    if [ -d "$P" ] && [ $(( $(cat "$P/pool_avail") * 2 )) -ge $(( mem + gpu )) ]; then
+-        # already there: a guest reboot, or the pool "herstart" claimed early in boot
++    available=$(awk '/^MemAvailable:/{print int($2/1024)}' /proc/meminfo)
++    if [ -d "$P" ] && [ $(( $(cat "$P/pool_avail") * 2 )) -ge $(( mem + gpu )) ] &&
++        { [ "${available:-0}" -ge "$android_reserve_mb" ] ||
++            ps -A -o NAME | grep -qx crosvm; }; then
++        # Reuse a prepared pool if Android still has room, or a crosvm is already using the pool.
+         echo "Geheugen staat al klaar: $(( $(cat "$P/pool_avail") * 2 )) MiB." >&2
+         echo "$mem"; return 0
+     fi
++    # Android may have grown since a cold-start pool was filled. The preparation
++    # script rechecks the margin and returns unused pages before crosvm starts.
+     echo "Geheugen vrijmaken voor de VM (wens $mem MiB)..." >&2
+     sh "$B/vm-geheugen.sh" "$(( mem + gpu ))M" 2>&1 | tee "$HERE/geheugen.log" >&2
+     have=0; [ -d "$P" ] && have=$(( $(cat "$P/pool_avail") * 2 ))
