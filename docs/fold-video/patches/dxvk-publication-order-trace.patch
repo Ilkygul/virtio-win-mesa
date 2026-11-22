@@ -1,0 +1,57 @@
+--- a/src/dxvk/dxvk_cmdlist.cpp
++++ b/src/dxvk/dxvk_cmdlist.cpp
+@@ -1,4 +1,5 @@
+ #ifdef __ANDROID__
++#include <time.h>
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <linux/dma-buf.h>
+@@ -502,7 +503,10 @@
+     struct LockedPublication {
+       OwnedFd lock;
+       OwnedFd dma;
++      uint64_t committedNs = 0;
+     };
++    static const bool traceOrder = env::getEnvVar("NPT_DMABUF_PUBLICATION_ORDER") == "1";
++    static thread_local unsigned traceRecords = 0;
+     std::vector<const PublicationImage*> ownedImages;
+     std::vector<LockedPublication> publications;
+     bool executePublication = false;
+@@ -748,6 +752,12 @@
+       for (auto& publication : publications) {
+         if (pwrite(publication.lock.fd, "E", 1, 0) != 1)
+           return failOwnership("mark-external");
++
++        if (traceOrder && traceRecords < 32768) {
++          struct timespec now = { };
++          if (!clock_gettime(CLOCK_MONOTONIC, &now))
++            publication.committedNs = uint64_t(now.tv_sec) * 1000000000 + now.tv_nsec;
++        }
+       }
+       static thread_local unsigned verified = 0;
+       if (verified++ < 24) {
+@@ -755,6 +765,24 @@
+           Logger::warn(str::format("NPT-DMABUF-OWNERSHIP-SUBMITTED pid=", getpid(),
+             " inode=", entry->image->dmabufPublicationInode(), " write=", entry->write,
+             " acquire=", bool(m_syncFileWait), " images=", ownedImages.size()));
++      }
++
++      if (traceOrder && traceRecords < 32768) {
++        // Keep the lock-ordered timestamps and log only after all companions are unlocked.
++        for (auto& publication : publications) {
++          close(publication.lock.fd);
++          publication.lock.fd = -1;
++        }
++        for (size_t i = 0; i < publications.size() && traceRecords < 32768; i++) {
++          const auto& entry = *ownedImages[i];
++          const uint64_t committedNs = publications[i].committedNs;
++          if (!committedNs)
++            continue;
++          Logger::warn(str::format("NPT-DMABUF-ORDER ", getpid(), ' ', committedNs,
++            ' ', entry.image->dmabufPublicationInode(), ' ', entry.read, ' ', entry.write,
++            ' ', int(entry.image->info().sharing.mode), ' ', publications.size()));
++          traceRecords++;
++        }
+       }
+     }
+ #endif
