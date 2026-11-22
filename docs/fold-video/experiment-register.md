@@ -2501,3 +2501,15 @@ Beslissing: voor de afgebakende proef het bestaande demand-faultpad gebruiken, m
 ### Beslissing — private balloon-ontwikkeling geparkeerd
 
 Het Windows ARM64-component voor één MDL compileerde los met nul fouten. De crosvm-bouw op de bouw-pc is stopgezet na een automatische veiligheidscontrole. Er was geen uitvoerbare host/gast-combinatie, geen gewijzigde productie-driver en geen live unlock- of reclaimproef. De productie-pVM bleef actief op 5632 MiB. Beslissing: geen verdere driverproef. De vervolgvraag is afzonderlijke meting van normale DeX en de bestaande ondersteunde geheugenconfiguratie.
+
+### 22 november 2026 — DeX-geheugenvergelijking met bestaande productie-instellingen
+
+Hypothese: de reeds geladen KernelSU-pool kan onder normale NexDock/DeX-belasting genoeg fysiek RAM dragen voor 10.240 MiB totaal. Eén normale Windows-stop en warme start op dezelfde Fold. PVM, productiedriver en configuratie-hashes 7639ffb2…47b0 en aa2bf71a…9119 behouden. Geen grotere cap ingesteld. DeX-scherm 1920×1200 bleef aangesloten. Geen Android-apps handmatig afgesloten.
+
+Voor stop: crosvm 5632 MiB, Windows eerder 4859,18 MiB zichtbaar. Android 1649 MiB MemAvailable, 943 MiB MemFree. crosvm en renderer samen 6058 MiB PSS (waarvan 5966 MiB gedeelde backing). Poolserved en Windows RAM zitten in diezelfde backing. Geen optelling van GPU-cap, GPU-geheugencijfers of poolserved bij PSS.
+
+VM uit: scores na normale pool-release 8104 en 8145 MiB MemAvailable, 6626 en 6666 MiB MemFree. Circa 6,3 GiB MemAvailable terug; active_vms=0, served=0, pool_avail=1 folio (2 MiB), free_reclaim=1. pool_cma=3664 folio's (7328 MiB uitleenbaar), onderdeel van dezelfde fysieke RAM-voorraad en niet optelbaar bij MemAvailable. Vaste poolcap 4500 folio's = 9000 MiB, met systeemreserveparameter 5601 MiB. De ingestelde afzonderlijke Android-marge bij vullen is 3072 MiB. Off-meting minus die marge geeft circa 5070 MiB momentruimte; actieve compressie en refill maken dat geen harde allocatiegrens.
+
+Warme start met bestaand DeX-plafond 5632 MiB: hook stopte werkelijk bij 5464 MiB pool en circa 3072 MiB Android. De hook gaf 4736 MiB aan crosvm. Windows meldt 3963,18 MiB zichtbaar, GPU Code 0; Windows-bureaublad opnieuw zichtbaar op de NexDock. Android kort na boot 2783 MiB beschikbaar. crosvm, renderer, DroidVM-UI en daemon samen 5529 MiB proportioneel resident; geen tweede optelling van gast-RAM, GPU of pool. PSS is procesresidentie en sluit losse kernelallocaties uit. Geen actieve GPU-boostmarker. Bewijs evidence/fold-dex-memory/config-comparison/{compare.txt,restored-host.txt,restored-windows.json,restored-pss.txt,restored-nexdock.png}.
+
+Beslissing: behoud het bestaande automatische profiel. De warm-startlimiet was in deze sessie Android-headroom, vóór het bereiken van de aparte 9000-MiB poolcap. De 7328 MiB uitleenbare CMA-capaciteit bleek geen extra veilig vast te zetten voorraad. Geen grotere toekenning geprobeerd en geen 10-GiB-claim.
