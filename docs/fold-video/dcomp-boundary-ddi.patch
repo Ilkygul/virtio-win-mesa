@@ -1,0 +1,133 @@
+--- a/src/virtio/neptune/triton/triton.h
++++ b/src/virtio/neptune/triton/triton.h
+@@ -251,6 +251,10 @@
+     /* OR-only provenance until a locked publication boundary consumes it. */
+ #define TRITON_SHARED_QUALIFIED 1L
+ #define TRITON_SHARED_STRICT    2L
++    /* Diagnostic snapshot of the most recent valid OM binding. */
++    UINT                            BoundaryRtvCount;
++    void                           *BoundaryRtv;
++    UINT                            BoundaryUavCount;
+     volatile LONG                   SharedDirty;
+     BOOL                            OmShared;
+     BOOL                            OmSharedNeedsWriteSync; /* any strict shared RTV or exported UAV */
+@@ -583,5 +587,7 @@
+ void tritonSharedDrawDone(PTRITON_DEVICE pD, const char *op);
+ BOOL tritonCanBatchPresentWrites(PTRITON_DEVICE pD, const void *pResource);
+ void tritonPresentPublishSharedWrites(PTRITON_DEVICE pD);
++BOOL tritonBoundaryTraceEnabled(void);
++void tritonBoundaryTrace(PTRITON_DEVICE pD, const char *op, const void *dst, const void *src);
+ 
+ #endif /* TRITON_H_INCLUDED */
+--- a/src/virtio/neptune/triton/tritonDxgi.c
++++ b/src/virtio/neptune/triton/tritonDxgi.c
+@@ -807,6 +807,7 @@
+ tritonPresentPublishSharedWrites(PTRITON_DEVICE pD)
+ {
+    if (!pD) return;
++   tritonBoundaryTrace(pD, "ReleaseResourceGPU", NULL, NULL);
+    tritonPresentFlushAndGate(pD, TRUE /* arm */, TRUE /* GPU complete */, FALSE /* pair */);
+    tritonSyncShared(pD, "ReleaseResourceGPU");
+ }
+@@ -869,6 +870,7 @@
+       tritonResourceSyncPresentCompanion(pD, src);
+       tritonPresentUnlock(pD);
+    }
++   tritonBoundaryTrace(pD, "Present", src, NULL);
+    HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
+       tritonPresentMustWait(pD, src) /* wait */,
+       TRUE /* internal Present pair */);
+@@ -1708,6 +1710,7 @@
+       tritonResourceSyncPresentCompanion(pD, src);
+       tritonPresentUnlock(pD);
+    }
++   tritonBoundaryTrace(pD, "Present1", src, NULL);
+    HRESULT gateHr = tritonPresentFlushAndGate(pD, TRUE /* arm */,
+       tritonPresentMustWait(pD, src) /* wait */,
+       TRUE /* internal Present pair */);
+--- a/src/virtio/neptune/triton/tritonResource.c
++++ b/src/virtio/neptune/triton/tritonResource.c
+@@ -157,6 +157,41 @@
+      * old CPU-head wait. This is not a GPU completion or global async switch. */
+     if (dirty && !qualified) tritonWaitSharedSeqno(ring,seqno,why);
+     return TRUE;
++}
++
++BOOL tritonBoundaryTraceEnabled(void)
++{
++    static volatile LONG state;
++    LONG value = InterlockedCompareExchange(&state, 0, 0);
++    if (!value) {
++        char path[MAX_PATH];
++        DWORD length = GetModuleFileNameA(NULL, path, sizeof(path));
++        const char *name = length && length < sizeof(path) ? strrchr(path, '\\') : NULL;
++        const BOOL enabled = name && !_stricmp(name + 1, "msedge.exe") &&
++            tritonSwitch("triton-boundary-trace");
++        value = enabled ? 2 : 1;
++        InterlockedCompareExchange(&state, value, 0);
++    }
++    return value == 2;
++}
++
++void tritonBoundaryTrace(PTRITON_DEVICE pD, const char *op, const void *dst, const void *src)
++{
++    if (!tritonBoundaryTraceEnabled()) return;
++    static volatile LONG count;
++    if (InterlockedIncrement(&count) > 4096) return;
++
++    const TRITON_RESOURCE *d = !strncmp(op, "StrictDraw", 10) ? NULL : dst;
++    const TRITON_RESOURCE *s = src;
++    LARGE_INTEGER qpc;
++    QueryPerformanceCounter(&qpc);
++    TR_LOG("DCompBoundary op=%s pid=%lu tid=%lu qpc=%lld dev=%p dst=%p dstAlloc=0x%x "
++           "dstImport=0x%x dstBind=0x%x dstMisc=0x%x dstSize=%ux%u src=%p srcAlloc=0x%x srcImport=0x%x",
++           op, (unsigned long)GetCurrentProcessId(), (unsigned long)GetCurrentThreadId(),
++           (long long)qpc.QuadPart, (void *)pD, dst, d ? (unsigned)d->hKMAllocation : 0,
++           d ? (unsigned)d->hImportAlloc : 0, d ? (unsigned)d->BindFlags : 0,
++           d ? (unsigned)d->MiscFlags : 0, d ? d->Width : 0, d ? d->Height : 0,
++           src, s ? (unsigned)s->hKMAllocation : 0, s ? (unsigned)s->hImportAlloc : 0);
+ }
+ 
+ static void tritonWaitHostNow(PTRITON_DEVICE pD, const char *op, BOOL perWrite)
+@@ -1286,6 +1321,7 @@
+     if (!trRuntimeWriteResourceBegin(pD,d)) return;
+     ID3D11DeviceContext1_CopyResource(pD->pCtx1, d->pResource, s->pResource);
+     trRuntimeWriteEnd(pD);
++    tritonBoundaryTrace(pD, "CopyResource", d, s);
+     tritonSharedWriteDone(pD, d, "CopyResource");
+ }
+ 
+@@ -1311,6 +1347,7 @@
+         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
+         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox));
+     trRuntimeWriteEnd(pD);
++    tritonBoundaryTrace(pD, "CopySubresourceRegion", d, s);
+     tritonSharedWriteDone(pD, d, "CopySubresourceRegion");
+ }
+ 
+@@ -1336,6 +1373,7 @@
+         pD->pCtx1, d->pResource, DstSubresource, DstX, DstY, DstZ,
+         s->pResource, SrcSubresource, (const D3D11_BOX *)(pSrcBox), CopyFlags);
+     trRuntimeWriteEnd(pD);
++    tritonBoundaryTrace(pD, "CopySubresourceRegion1", d, s);
+     tritonSharedWriteDone(pD, d, "CopySubresourceRegion1");
+ }
+ 
+--- a/src/virtio/neptune/triton/tritonView.c
++++ b/src/virtio/neptune/triton/tritonView.c
+@@ -448,6 +448,15 @@
+     if (UAVStartSlot > D3D11_1_UAV_SLOT_COUNT ||
+         NumUAVs > D3D11_1_UAV_SLOT_COUNT - UAVStartSlot)
+         return;
++    if (tritonBoundaryTraceEnabled()) {
++        pD->BoundaryRtvCount = NumRTVs;
++        pD->BoundaryUavCount = NumUAVs;
++        void *resource = NumRTVs == 1 && !NumUAVs && phRTVs && phRTVs[0].pDrvPrivate
++            ? ((PTRITON_RTVIEW)phRTVs[0].pDrvPrivate)->pResource : NULL;
++        if (resource != pD->BoundaryRtv)
++            tritonBoundaryTrace(pD, "BindRtv", resource, NULL);
++        pD->BoundaryRtv = resource;
++    }
+     ID3D11UnorderedAccessView *aUAV[D3D11_1_UAV_SLOT_COUNT] = {};
+     for (UINT i = 0; i < NumUAVs; ++i) {
+         PTRITON_UAVIEW u = phUAVs
