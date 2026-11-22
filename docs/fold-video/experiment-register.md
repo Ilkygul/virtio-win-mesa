@@ -1777,3 +1777,9 @@ Aanvullend bewijs binnen dezelfde proef: `identity/unnamed-contexts.txt` en de h
 - Bewijs: `evidence/fold-atlas-regression/candidate/` bevat beide werklasten, screenshots en de kandidaat-traces. Volgende beslissing: zorg dat Edge vrij op de voorgrond is en registreer een vergelijkbare videoreeks. Behoud de atlaspatch als kandidaat wegens correcte hardware-rendering, met bescheiden of nog onzekere snelheidswinst. Geen productiepromotie in deze run.
 
 Afsluiting en herstel bij dezelfde proef: Windows-SSH sloot na het afsluitverzoek, maar crosvm bleef actief en logde fouten over uitgeleend gastgeheugen. De bestaande DroidVM-stopfunctie stuurde daarna een succesvolle crosvm Exit. `android-stop.txt` toont status STOPPED. Productieconfiguratie `d3187dc2…9ae8` hersteld, Windows-viewer opnieuw geopend, A551/GPU-code 0 bevestigd in `restored.json`. De volgende run gebruikt de DroidVM-stopfunctie en maakt Edge vóór en na de videometing zichtbaar op een fysieke opname.
+
+### 22 november — korte videoproef op de voorgrond
+
+- Productie: Edge zichtbaar zonder Instellingen ervoor, bevestigd met twee Fold-opnames. YouTube 1920×1080 op 60 fps, Qualcomm-component `c2.qti.av1.decoder` bevestigd in de startlog, 42,6 fysieke fps en 31,3% Chromium-drops. Videoafspelen is dus hardwareversneld en heeft nog zichtbare cadansruimte.
+- Dezelfde kandidaat `f7410776becd` startte en opende de Windows-viewer, maar het meetproces ging vóór Edge naar de herstelroute. De kandidaatmap bevatte geen videometing. De run levert geen nieuw kandidaatverschil op.
+- Bewijs: `evidence/fold-atlas-regression/foreground/`. Beslissing na gebruikersfeedback: stop met herhaling zonder aantoonbare meerwaarde. Behoud de bestaande productieversie en de experimentele patch. De zichtbare 3D-proef met kandidaat bleef rond 60 fps; verdere promotie vraagt concrete gebruikerswinst.
