@@ -1,0 +1,14 @@
+--- a/src/virtio/neptune/triton/tritonResource.c
++++ b/src/virtio/neptune/triton/tritonResource.c
+@@ -167,10 +167,7 @@
+     struct npt_ring *ring = npt_com_object_ring_seqno(pD->pCtx1, &seqno);
+     if (!ring) return;
+     const DWORD t0 = GetTickCount();
+-    if (perWrite)
+-        npt_ring_wait_shared_write(ring, seqno);
+-    else
+-        npt_ring_wait_seqno(ring, seqno);
++    npt_ring_wait_seqno(ring, seqno);
+     static volatile LONG n;
+     LONG k = InterlockedIncrement(&n);
+     if (k <= 40 || (k % 2000) == 0) {
