@@ -1,0 +1,71 @@
+diff --git a/src/d3d11/d3d11_context.cpp b/src/d3d11/d3d11_context.cpp
+index c8622593..3309cb7e 100644
+--- a/src/d3d11/d3d11_context.cpp
++++ b/src/d3d11/d3d11_context.cpp
+@@ -4437,13 +4437,50 @@ namespace dxvk {
+   }
+ 
+ 
++#ifdef __ANDROID__
++  static void nptTraceColorWrites(const D3D11ContextStateOM& om, const char* kind) {
++    static const bool enabled = env::getEnvVar("NPT_SHARED_COLOR_WRITES_TRACE") == "1";
++    if (!enabled)
++      return;
++
++    struct Counts { unsigned draws = 0; unsigned masked = 0; };
++    static thread_local Counts batches[2];
++    auto& counts = batches[kind[0] == 'i'];
++    const auto* blend = om.cbState.ptr();
++    if (blend && om.minUav >= om.maxUav && !om.dsv) {
++      const auto& desc = blend->Desc();
++      bool canWriteShared = false;
++      for (UINT i = 0; i < om.rtvs.size(); i++) {
++        if (om.rtvs[i]) {
++          const auto& view = om.rtvs[i]->GetImageView();
++          if (view && view->image()->info().sharing.mode != DxvkSharedHandleMode::None)
++            canWriteShared |= desc.RenderTarget[desc.IndependentBlendEnable ? i : 0].RenderTargetWriteMask != 0;
++        }
++      }
++      counts.masked += !canWriteShared;
++    }
++    if (++counts.draws == 256) {
++      Logger::warn(str::format("NPT-SHARED-COLOR-WRITES pid=", getpid(),
++        " kind=", kind, " draws=", counts.draws, " masked_without_dsv_or_uav=", counts.masked));
++      counts = {};
++    }
++  }
++#endif
++
++
+   template<typename ContextType>
+   void D3D11CommonContext<ContextType>::BatchDraw(
+     const VkDrawIndirectCommand&            draw) {
+     if (unlikely(HasDirtyGraphicsBindings()))
+       ApplyDirtyGraphicsBindings();
+ 
+-    if (unlikely(m_nptOmShared)) m_nptSharedDirty = true;
++    if (unlikely(m_nptOmShared)) {
++      m_nptSharedDirty = true;
++#ifdef __ANDROID__
++      if constexpr (!IsDeferred)
++        nptTraceColorWrites(m_state.om, "draw");
++#endif
++    }
+ 
+     // Batch consecutive draws if there are no state changes
+     if (m_csDataType == D3D11CmdType::Draw) {
+@@ -4470,7 +4507,13 @@ namespace dxvk {
+     if (unlikely(HasDirtyGraphicsBindings()))
+       ApplyDirtyGraphicsBindings();
+ 
+-    if (unlikely(m_nptOmShared)) m_nptSharedDirty = true;
++    if (unlikely(m_nptOmShared)) {
++      m_nptSharedDirty = true;
++#ifdef __ANDROID__
++      if constexpr (!IsDeferred)
++        nptTraceColorWrites(m_state.om, "indexed");
++#endif
++    }
+ 
+     // Batch consecutive draws if there are no state changes
+     if (m_csDataType == D3D11CmdType::DrawIndexed) {
