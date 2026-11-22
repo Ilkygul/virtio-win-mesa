@@ -2157,3 +2157,9 @@ De venster-/fullscreenopname bevat respectievelijk 322/27 geslaagde gesamplede p
 Beslissing: geen wijziging uitsluitend aan de wake of dxvk-submit-wachtrij. In venster zit de vertraging verspreid over dispatch en echte submit, terwijl het aantal samples ongeveer twaalf keer hoger ligt. Dit ondersteunt het reduceren van het aantal strikte publicaties via een echte producergrens, niet een nieuwe timer- of prioriteitsvariant.
 
 Productie na de proef opnieuw actief: configuratiehash 1c08b3c4…20e7b, Android-reserve 3072, Beeldscherm GPU Code 0 met UMD A551AD8F. Bewijs `evidence/fold-edge-context/guest-cpu-path/publication-queue-timing/{restored.json,run.log}`.
+
+### Functionele kandidaat — DMA-BUF-reserveringsdescriptor per image behouden
+
+Hypothese: de submitfase bevat overbodige descriptoroperaties op elke onderhandelde draw. DXVK vroeg voor elke schrijfpublicatie een nieuwe Vulkan memory-FD op en dupliceerde voor elke geïmporteerde image een reeds gehouden FD. Kandidaat 9d2c09e6e8e7 vanaf 23656488 bewaart bij onderhandelde export in beginfase L één FD voor de levensduur van de image en leent de bestaande import-FD. De command-list houdt een Rc naar de image. Bij ontbrekende cache blijft de bestaande tijdelijke descriptorroute gelden. Reserveringsioctls lenen de FD; hun fence-FDs blijven afzonderlijk. Bestaande companionlock, fases, GPU-acquire/release en fallback blijven actief. Legacy C-exports krijgen geen extra blijvende descriptor. De wijziging beperkt vaste kosten per publicatie en laat het aantal publicaties intact.
+
+ARM64-build geslaagd, drie bouwbestanden exact hersteld. Bronpatch naast dit register en log `evidence/fold-edge-context/guest-cpu-path/borrow-reservation-fd-final-build.log`. Eén korte Edge-proef venster/fullscreen tegen de vorige fysieke referentie. Alleen promoten bij zichtbare winst of een afzonderlijk gemeten relevante kostenvermindering. Nog geen installatie of winstclaim.
