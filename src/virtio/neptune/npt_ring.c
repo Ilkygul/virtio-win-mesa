@@ -93,7 +93,8 @@ npt_ring_relax(struct npt_ring *ring, uint32_t *iter, bool short_shared_wait)
       const uint32_t sleep_us = base_sleep_us << shift;
 #ifdef _WIN32
       if (short_shared_wait && shift < 3)
-         npt_relax_sleep_us_min(sleep_us, 500u);
+         npt_relax_sleep_us_min(sleep_us,
+            *iter < (1u << busy_wait_order) + 8u ? base_sleep_us : 500u);
       else
          npt_relax_sleep_us(sleep_us);
 #else
