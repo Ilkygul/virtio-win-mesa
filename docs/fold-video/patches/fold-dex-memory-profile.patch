@@ -1,0 +1,103 @@
+--- a/bin/config.sh
++++ b/bin/config.sh
+@@ -11,6 +11,8 @@
+ min_mb=3584               # Windows gets less than this: do not start, a Fold restart gives more
+ max_mb=0                  # at most this much for Windows (0 = the memory set in DroidVM)
+ vul_max_s=90              # at most this many seconds filling the pool (after round 1 the gains are small)
++dex_max_mb=0             # guest allocation cap while the DeX profile is enabled
++dex_bewaar_apps=0         # opt-in for the Windows DeX memory profile
+ dieet=1                   # heavy background apps restricted while Windows runs (geheugendieet.sh)
+ zram_vooraf=1             # push idle app memory into zram before the pool fills
+ zram_mb=0                 # zram size at boot in MiB (0 = Android's own size)
+--- a/bin/vm-geheugen.sh
++++ b/bin/vm-geheugen.sh
+@@ -167,8 +167,10 @@
+     echo 1 > $Z/writeback_limit_enable; echo 0 > $Z/writeback_limit
+ fi
+ # Background apps first: Android would kill them under pressure anyway, but the pool fills from free memory.
+-sh "$B/geheugendieet.sh" aan 2>/dev/null   # heavy background apps restricted while the VM runs
+-am kill-all >/dev/null 2>&1
++if [ "${FOLD_DEX_BEWAAR_APPS:-0}" != 1 ]; then
++    sh "$B/geheugendieet.sh" aan 2>/dev/null
++    am kill-all >/dev/null 2>&1
++fi
+ # Then push idle app memory into zram before the pool fills (proactive reclaim on the cgroup v2 root: Android
+ # itself only does this once memory is short, which is exactly where the fill stops). zram compresses ~4:1, so
+ # 2 GB of app memory costs ~0.5 GB of RAM there. Only before a VM exists: the root group also holds the VM's
+@@ -186,8 +188,11 @@
+     done
+     echo "vooraf naar zram: Android van $a0 naar $(avail) MiB beschikbaar"
+ fi
+-old=$(cat /proc/sys/vm/compaction_proactiveness 2>/dev/null)
+-echo 100 > /proc/sys/vm/compaction_proactiveness 2>/dev/null
++old=
++if [ "${FOLD_DEX_BEWAAR_APPS:-0}" != 1 ]; then
++    old=$(cat /proc/sys/vm/compaction_proactiveness 2>/dev/null)
++    [ -z "$old" ] || echo 100 > /proc/sys/vm/compaction_proactiveness 2>/dev/null
++fi
+ echo 1 > "$P/acquire_drop_slab" 2>/dev/null
+ # Room to push more app memory into zram during the fill (only before a VM exists, see above)
+ zram_meer() {
+--- a/bin/windows-vm.sh
++++ b/bin/windows-vm.sh
+@@ -200,7 +200,9 @@
+     give=$mem
+     # Up to 256 MiB short is fine (Windows booted with a 7676 MiB pool for 7680 MiB); otherwise what the pool
+     # holds, in steps of 128 MiB.
+-    [ "$have" -lt $(( mem + gpu - 256 )) ] && give=$(( (have - 128 - gpu) / 128 * 128 ))
++    tolerance=256
++    [ "${FOLD_DEX_BEWAAR_APPS:-0}" != 1 ] || tolerance=0
++    [ "$have" -lt $(( mem + gpu - tolerance )) ] && give=$(( (have - 128 - gpu) / 128 * 128 ))
+     [ "$give" -gt "$mem" ] && give=$mem
+     lo=$min_mb; [ "$mem" -lt "$lo" ] && lo=$mem    # a VM that asks for less than min_mb only needs what it asks
+     [ "$give" -lt "$lo" ] && give=0
+@@ -375,6 +377,7 @@
+                 # Pool is back with Android. Now DroidVM itself: off as soon as no VM runs and its app is not on
+                 # screen (screen off counts as not on screen); after 2 minutes also with only its VM list open.
+                 # A VM that starts again in the meantime keeps everything on; give up after 30 minutes.
++                [ "${FOLD_DEX_BEWAAR_APPS:-0}" != 1 ] || exit 0
+                 t0=${t0:-$(date +%s)}
+                 f=; [ $(( $(date +%s) - t0 )) -ge 120 ] && f=force
+                 if droidvm_uit $f; then storm; echo "$(date '+%F %T') DroidVM helemaal uit, bewaker stopt"; exit 0; fi
+@@ -414,8 +417,24 @@
+         case "${2:-}" in
+             prepare)    # hook prepare <vm_id> <memory_mb> <extra_mb>: before crosvm starts; answer MEMORY_MB=<n>
+                 touch "$HERE/hook-ok"
+-                give=$(prepare_memory "${4:-6144}" "${5:-0}")
+-                if [ "${give:-0}" -gt 0 ]; then vm_extras; echo "MEMORY_MB=$give"
++                wish=${4:-6144}
++                if [ "$dex_bewaar_apps" = 1 ] && [ -n "${3:-}" ] && [ "$3" = "$(vm_id)" ] &&
++                    dumpsys display | awk '/mBaseDisplayInfo=.*FLAG_EXTERNAL_DEX_HOSTING/ && /state ON/ { active=1 } END { exit !active }'; then
++                    if [ "$dex_max_mb" -gt 0 ] && [ "$wish" -gt "$dex_max_mb" ]; then
++                        wish=$dex_max_mb
++                    fi
++                    # The existing memory hook still applies the configured Android floor.
++                    export FOLD_DEX_BEWAAR_APPS=1
++                fi
++                give=$(prepare_memory "$wish" "${5:-0}")
++                if [ "${FOLD_DEX_BEWAAR_APPS:-0}" = 1 ] &&
++                    [ "$(awk '/^MemAvailable:/{ print int($2/1024) }' /proc/meminfo)" -lt "$android_reserve_mb" ]; then
++                    echo "DeX: Android-geheugenmarge te laag; start geweigerd." >&2
++                    give=0
++                fi
++                if [ "${give:-0}" -gt 0 ]; then
++                    [ "${FOLD_DEX_BEWAAR_APPS:-0}" = 1 ] || vm_extras
++                    echo "MEMORY_MB=$give"
+                 else sh "$B/vm-geheugen.sh" uit >/dev/null 2>&1; echo "MEMORY_MB=-1"; fi ;;
+             release)    # hook release <vm_id>: the VM has stopped for good; pool back to Android now
+                 for i in 1 2 3 4 5 6 7 8 9 10; do running || break; sleep 1; done
+@@ -439,12 +458,12 @@
+         pidof shizuku_server >/dev/null && echo "shizuku_draait=1" || echo "shizuku_draait=0"
+         echo "laatste=$(cat "$HERE/laatste-start" 2>/dev/null)"
+         echo "uptime_min=$(awk '{print int($1/60)}' /proc/uptime)"
+-        for k in android_reserve_mb min_mb max_mb vul_max_s dieet zram_vooraf zram_mb reservoir_mb gpu_vloer oom_adj shizuku shizuku_interval; do
++        for k in android_reserve_mb min_mb max_mb vul_max_s dex_bewaar_apps dex_max_mb dieet zram_vooraf zram_mb reservoir_mb gpu_vloer oom_adj shizuku shizuku_interval; do
+             eval "echo set_$k=\$$k"
+         done ;;
+     config)     # config <name> <number>: change a setting (the WebUI uses this)
+         k=${2:-}; v=${3:-}
+-        case "$k" in android_reserve_mb|min_mb|max_mb|vul_max_s|dieet|zram_vooraf|zram_mb|reservoir_mb|gpu_vloer|oom_adj|shizuku|shizuku_interval) ;;
++        case "$k" in android_reserve_mb|min_mb|max_mb|vul_max_s|dex_bewaar_apps|dex_max_mb|dieet|zram_vooraf|zram_mb|reservoir_mb|gpu_vloer|oom_adj|shizuku|shizuku_interval) ;;
+             *) echo "error=onbekende instelling '$k'"; exit 1 ;; esac
+         case "$v" in ''|*[!0-9-]*) echo "error=geen getal: '$v'"; exit 1 ;; esac
+         [ -f "$CONF" ] || printf '# Windows VM (fold-vm) - instellingen. Wijzigen via KernelSU > Modules > Windows VM (openen).\n' > "$CONF"
