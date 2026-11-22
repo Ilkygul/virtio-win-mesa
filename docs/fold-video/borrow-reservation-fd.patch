@@ -1,0 +1,101 @@
+diff --git a/src/dxvk/dxvk_cmdlist.cpp b/src/dxvk/dxvk_cmdlist.cpp
+index 6c7eab7d..ba9b8465 100644
+--- a/src/dxvk/dxvk_cmdlist.cpp
++++ b/src/dxvk/dxvk_cmdlist.cpp
+@@ -501,7 +501,8 @@ namespace dxvk {
+ 
+     struct LockedPublication {
+       OwnedFd lock;
+-      OwnedFd dma;
++      OwnedFd fallbackDma;
++      int dma = -1;
+     };
+     std::vector<const PublicationImage*> ownedImages;
+     std::vector<LockedPublication> publications;
+@@ -554,15 +555,21 @@ namespace dxvk {
+           char phase = 0;
+           if (pread(publication.lock.fd, &phase, 1, 0) != 1 ||
+               phase != (localStart ? 'L' : 'E') ||
+-              (!localStart && !m_publicationAcquire) ||
+-              entry.image->dupDmabufFd(&publication.dma.fd) != VK_SUCCESS)
++              (!localStart && !m_publicationAcquire))
+             return failOwnership("validate-locked-phase");
++
++          publication.dma = entry.image->dmabufReservationFd();
++          if (publication.dma < 0) {
++            if (entry.image->dupDmabufFd(&publication.fallbackDma.fd) != VK_SUCCESS)
++              return failOwnership("open-reservation-fd");
++            publication.dma = publication.fallbackDma.fd;
++          }
+           if (phase != 'E')
+             continue;
+ 
+           // External ownership is exclusive even for shader reads.
+           dma_buf_export_sync_file snapshot { DMA_BUF_SYNC_WRITE, -1 };
+-          if (ioctl(publication.dma.fd, DMA_BUF_IOCTL_EXPORT_SYNC_FILE, &snapshot) < 0)
++          if (ioctl(publication.dma, DMA_BUF_IOCTL_EXPORT_SYNC_FILE, &snapshot) < 0)
+             return failOwnership("snapshot-reservation");
+           OwnedFd next { snapshot.fd };
+           if (dependency.fd < 0) {
+@@ -741,7 +748,7 @@ namespace dxvk {
+         static const bool inject = env::getEnvVar("NPT_DMABUF_TEST_FAIL_PUBLICATION") == "1";
+         dma_buf_import_sync_file publish { DMA_BUF_SYNC_WRITE, inject ? -1 : fence.fd };
+         for (auto& publication : publications) {
+-          if (ioctl(publication.dma.fd, DMA_BUF_IOCTL_IMPORT_SYNC_FILE, &publish) < 0)
++          if (ioctl(publication.dma, DMA_BUF_IOCTL_IMPORT_SYNC_FILE, &publish) < 0)
+             return failOwnership("publish-reservation");
+         }
+       }
+diff --git a/src/dxvk/dxvk_image.cpp b/src/dxvk/dxvk_image.cpp
+index 2f72cb54..122e1234 100644
+--- a/src/dxvk/dxvk_image.cpp
++++ b/src/dxvk/dxvk_image.cpp
+@@ -271,6 +271,15 @@ namespace dxvk {
+       close(m_dmabufPublicationFd);
+ 
+     m_dmabufPublicationFd = fd;
++    // Shared storage cannot relocate. Keep the exporter FD for reservation
++    // ioctls, which borrow it and never pass ownership to Vulkan.
++    char phase = 0;
++    if (fd >= 0 && m_info.sharing.mode == DxvkSharedHandleMode::Export
++     && m_dmabufReservationFd < 0 && pread(fd, &phase, 1, 0) == 1 && phase == 'L') {
++      int reservationFd = -1;
++      if (dupDmabufFd(&reservationFd) == VK_SUCCESS)
++        m_dmabufReservationFd = reservationFd;
++    }
+     struct stat identity;
+     m_dmabufPublicationInode = fd >= 0 && fstat(fd, &identity) == 0 ? identity.st_ino : 0;
+   }
+@@ -278,6 +287,8 @@ namespace dxvk {
+ 
+   DxvkImage::~DxvkImage() {
+ #ifdef __ANDROID__
++    if (m_dmabufReservationFd >= 0)
++      close(m_dmabufReservationFd);
+     if (m_dmabufPublicationFd >= 0)
+       close(m_dmabufPublicationFd);
+ #endif
+diff --git a/src/dxvk/dxvk_image.h b/src/dxvk/dxvk_image.h
+index 16398278..1e13e382 100644
+--- a/src/dxvk/dxvk_image.h
++++ b/src/dxvk/dxvk_image.h
+@@ -677,6 +677,11 @@ namespace dxvk {
+     VkResult dupDmabufFd(int* fd) const;
+ #ifdef __ANDROID__
+     void setDmabufPublicationFd(int fd);
++    // Borrowed by command lists that retain this image.
++    int dmabufReservationFd() const {
++      return m_info.sharing.mode == DxvkSharedHandleMode::Import
++        ? m_dmabufImportFd : m_dmabufReservationFd;
++    }
+     int dmabufPublicationFd() const { return m_dmabufPublicationFd; }
+     uint64_t dmabufPublicationInode() const { return m_dmabufPublicationInode; }
+ #endif
+@@ -901,6 +906,7 @@ namespace dxvk {
+     int                         m_dmabufImportFd = -1;
+ #ifdef __ANDROID__
+     int                         m_dmabufPublicationFd = -1;
++    int                         m_dmabufReservationFd = -1;
+     uint64_t                    m_dmabufPublicationInode = 0;
+ #endif
+     bool                        m_dmabufUseModifiers = false;
