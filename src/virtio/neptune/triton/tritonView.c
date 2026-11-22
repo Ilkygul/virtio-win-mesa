@@ -420,7 +420,7 @@ tritonSetRenderTargets(D3D10DDI_HDEVICE hDevice,
     pD->OmSharedNeedsWriteSync = FALSE;
     for (UINT i = 0; i < NumRTVs; ++i) {
         PTRITON_RTVIEW v = phRTVs ? (PTRITON_RTVIEW)(phRTVs[i].pDrvPrivate) : NULL;
-        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion)) {
+        if (v && v->pResource && tritonWritesVisible(pD, v->pResource)) {
             pD->OmShared = TRUE;
             if (!tritonCanBatchPresentWrites(pD, v->pResource))
                 pD->OmSharedNeedsWriteSync = TRUE;
@@ -428,7 +428,7 @@ tritonSetRenderTargets(D3D10DDI_HDEVICE hDevice,
     }
     for (UINT i = 0; i < NumUAVs; ++i) {
         PTRITON_UAVIEW v = phUAVs ? (PTRITON_UAVIEW)(phUAVs[i].pDrvPrivate) : NULL;
-        if (v && v->pResource && (v->pResource->IsShared || v->pResource->IsPresentable || v->pResource->pPresentCompanion)) {
+        if (v && v->pResource && tritonWritesVisible(pD, v->pResource)) {
             pD->OmShared = TRUE;
             pD->OmSharedNeedsWriteSync = TRUE; /* UAV batching is outside scope. */
         }
