@@ -1,0 +1,96 @@
+diff --git a/src/d3d11/d3d11_cmdlist.h b/src/d3d11/d3d11_cmdlist.h
+index 83456e1d..ce6e1078 100644
+--- a/src/d3d11/d3d11_cmdlist.h
++++ b/src/d3d11/d3d11_cmdlist.h
+@@ -24,6 +24,14 @@ namespace dxvk {
+     
+     UINT STDMETHODCALLTYPE GetContextFlags() final;
+     
++    void MarkSharedWrites() {
++      m_sharedWrites = true;
++    }
++
++    bool HasSharedWrites() const {
++      return m_sharedWrites;
++    }
++
+     void AddQuery(
+             D3D11Query*         pQuery);
+     
+@@ -59,6 +67,7 @@ namespace dxvk {
+     };
+ 
+     UINT m_contextFlags = 0u;
++    bool m_sharedWrites = false;
+ 
+     std::vector<ChunkEntry>             m_chunks;
+     std::vector<Com<D3D11Query, false>> m_queries;
+diff --git a/src/d3d11/d3d11_context_def.cpp b/src/d3d11/d3d11_context_def.cpp
+index d58774c3..a9c2ef6c 100644
+--- a/src/d3d11/d3d11_context_def.cpp
++++ b/src/d3d11/d3d11_context_def.cpp
+@@ -160,6 +160,8 @@ namespace dxvk {
+     // current command list and deal with context state
+     auto commandList = static_cast<D3D11CommandList*>(pCommandList);
+     m_chunkId = m_commandList->AddCommandList(commandList);
++    if (commandList->HasSharedWrites())
++      m_commandList->MarkSharedWrites();
+     
+     // Restore deferred context state
+     if (RestoreContextState)
+@@ -185,6 +187,10 @@ namespace dxvk {
+     // Make sure all commands are visible to the command list
+     FlushCsChunk();
+     
++    if (m_nptSharedDirty)
++      m_commandList->MarkSharedWrites();
++    m_nptSharedDirty = false;
++
+     if (ppCommandList)
+       *ppCommandList = m_commandList.ref();
+ 
+diff --git a/src/d3d11/d3d11_context_imm.cpp b/src/d3d11/d3d11_context_imm.cpp
+index f37c22e3..70274d29 100644
+--- a/src/d3d11/d3d11_context_imm.cpp
++++ b/src/d3d11/d3d11_context_imm.cpp
+@@ -274,6 +274,7 @@ namespace dxvk {
+     D3D10DeviceLock lock = LockContext();
+ 
+     auto commandList = static_cast<D3D11CommandList*>(pCommandList);
++    m_deferredSharedWritesPending |= commandList->HasSharedWrites();
+ 
+     // Reset dirty binding tracking before submitting any CS chunks.
+     // This is needed so that any submission that might occur during
+@@ -1493,13 +1494,18 @@ namespace dxvk {
+     // If we're in tiler mode and a render pass hasn't been resolved yet,
+     // ignore explicit flushes. This is a very dirty heuristic to work
+     // around some Unity Engine performance issues.
+-    if (m_hasPendingUnresolvedPass && !m_parent->Is11on12Device())
++    static const bool waitForDeferredPublication =
++      env::getEnvVar("NPT_DMABUF_DEFERRED_FLUSH_PUBLICATION") == "1"
++      && env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
++    const bool waitForPublication = waitForDeferredPublication && m_deferredSharedWritesPending;
++    if (m_hasPendingUnresolvedPass && !m_parent->Is11on12Device() && !waitForPublication)
+       return;
+ 
+     if (unlikely(m_device->debugFlags().test(DxvkDebugFlag::Capture)))
+       m_flushReason = "Explicit Flush";
+ 
+-    ExecuteFlush(GpuFlushType::ExplicitFlush, hEvent, true);
++    ExecuteFlush(GpuFlushType::ExplicitFlush, hEvent, true, nullptr, waitForPublication);
++    m_deferredSharedWritesPending = false;
+ 
+     // Shared resources were written since the last explicit flush: the GPU work must be complete before the guest
+     // (and so a consumer in another process) is told this flush happened.
+diff --git a/src/d3d11/d3d11_context_imm.h b/src/d3d11/d3d11_context_imm.h
+index bc6e146a..da55e943 100644
+--- a/src/d3d11/d3d11_context_imm.h
++++ b/src/d3d11/d3d11_context_imm.h
+@@ -142,6 +142,7 @@ namespace dxvk {
+     std::string             m_flushReason;
+ 
+     bool                    m_hasPendingUnresolvedPass = false;
++    bool                    m_deferredSharedWritesPending = false;
+ 
+     HRESULT MapBuffer(
+             D3D11Buffer*                pResource,
