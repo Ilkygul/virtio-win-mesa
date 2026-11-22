@@ -84,11 +84,11 @@ static inline unsigned util_last_bit(unsigned v) {
  * ever relaxes is a bounded leak, and closing at thread exit isn't
  * worth an FLS callback.  Falls back to Sleep when creation fails
  * (kernels predating the flag). */
-static inline void npt_relax_sleep_us(unsigned us) {
+static inline void npt_relax_sleep_us_min(unsigned us, unsigned minimum_us) {
    static NPT_TLS HANDLE npt_relax_timer;
    static NPT_TLS bool npt_relax_timer_failed;
-   if (us < 1000u)
-      us = 1000u;
+   if (us < minimum_us)
+      us = minimum_us;
    if (!npt_relax_timer && !npt_relax_timer_failed) {
       npt_relax_timer =
          CreateWaitableTimerExW(NULL, NULL,
@@ -106,7 +106,10 @@ static inline void npt_relax_sleep_us(unsigned us) {
          return;
       }
    }
-   Sleep(us / 1000u);
+   Sleep(us < 1000u ? 1u : us / 1000u);
+}
+static inline void npt_relax_sleep_us(unsigned us) {
+   npt_relax_sleep_us_min(us, 1000u);
 }
 #else
 #include "c11/threads.h"

@@ -408,6 +408,9 @@ void npt_ring_publish_pending(struct npt_ring *ring);
 uint32_t
 npt_ring_wait_seqno(struct npt_ring *ring, uint32_t seqno);
 
+uint32_t
+npt_ring_wait_shared_write(struct npt_ring *ring, uint32_t seqno);
+
 /* Non-blocking twin of npt_ring_wait_seqno: true once head is past
  * seqno (the host has run everything submitted before it). */
 bool
