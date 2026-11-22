@@ -1,0 +1,392 @@
+--- a/src/dxvk/dxvk_cmdlist.cpp
++++ b/src/dxvk/dxvk_cmdlist.cpp
+@@ -474,7 +474,7 @@
+ 
+     OwnedFd publicationLock;
+     OwnedFd publicationDma;
+-    uint32_t publicationAccess = 0;
++    bool publicationWritesImage = false;
+     bool executePublication = false;
+     uint64_t publicationInode = 0;
+     static const bool execute = env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
+@@ -520,12 +520,15 @@
+         if (m_syncFileWait || m_syncFileSignal)
+           return failOwnership("conflicting-sync-file");
+ 
+-        publicationAccess = entry.write ? DMA_BUF_SYNC_WRITE : DMA_BUF_SYNC_READ;
++        publicationWritesImage = entry.write;
++        // Queue-family ownership is exclusive even for a shader read.
++        // Wait for prior readers as well as writers, and publish this
++        // release as a dependency of every subsequent acquire.
+         if (phase == 'E') {
+           m_syncFileWait = new DxvkSyncFileSignal(m_device);
+           if (!m_syncFileWait->handle())
+             return failOwnership("create-wait-semaphore");
+-          dma_buf_export_sync_file snapshot { publicationAccess, -1 };
++          dma_buf_export_sync_file snapshot { DMA_BUF_SYNC_WRITE, -1 };
+           if (ioctl(publicationDma.fd, DMA_BUF_IOCTL_EXPORT_SYNC_FILE, &snapshot) < 0)
+             return failOwnership("snapshot-reservation");
+           OwnedFd dependency { snapshot.fd };
+@@ -687,7 +690,7 @@
+         return failOwnership("export-signal-semaphore");
+       if (fence.fd >= 0) {
+         static const bool inject = env::getEnvVar("NPT_DMABUF_TEST_FAIL_PUBLICATION") == "1";
+-        dma_buf_import_sync_file publish { publicationAccess, inject ? -1 : fence.fd };
++        dma_buf_import_sync_file publish { DMA_BUF_SYNC_WRITE, inject ? -1 : fence.fd };
+         if (ioctl(publicationDma.fd, DMA_BUF_IOCTL_IMPORT_SYNC_FILE, &publish) < 0) {
+           Logger::err(str::format("NPT-DMABUF-PUBLISH-FAILED pid=", getpid(), " errno=", errno));
+           return failOwnership("publish-reservation");
+@@ -699,7 +702,7 @@
+       if (verified++ < 24)
+         Logger::warn(str::format("NPT-DMABUF-OWNERSHIP-SUBMITTED pid=", getpid(),
+           " inode=", publicationInode,
+-          " write=", publicationAccess == DMA_BUF_SYNC_WRITE, " acquire=", bool(m_syncFileWait)));
++          " write=", publicationWritesImage, " acquire=", bool(m_syncFileWait)));
+     }
+ #endif
+     return VK_SUCCESS;
+--- a/src/dxvk/dxvk_cmdlist.cpp
++++ b/src/dxvk/dxvk_cmdlist.cpp
+@@ -2,6 +2,7 @@
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <linux/dma-buf.h>
++#include <linux/sync_file.h>
+ #include <sys/file.h>
+ #include <sys/ioctl.h>
+ #include "../util/util_env.h"
+@@ -80,7 +81,7 @@
+           return;
+         if (phase == 'C' || phase == 'R' || phase == 'D')
+           continue;
+-        if ((phase != 'L' && phase != 'E' && phase != 'X') || !releaseBarriers.empty())
++        if (phase != 'L' && phase != 'E' && phase != 'X')
+           return;
+       }
+ 
+@@ -472,76 +473,98 @@
+       return VK_ERROR_DEVICE_LOST;
+     };
+ 
+-    OwnedFd publicationLock;
+-    OwnedFd publicationDma;
+-    bool publicationWritesImage = false;
++    struct LockedPublication {
++      OwnedFd lock;
++      OwnedFd dma;
++    };
++    std::vector<const PublicationImage*> ownedImages;
++    std::vector<LockedPublication> publications;
+     bool executePublication = false;
+-    uint64_t publicationInode = 0;
+     static const bool execute = env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
+-    // L/E/X belong to negotiated ownership. The legacy C/R/D protocol never
+-    // makes a texture eligible for Vulkan queue-family execution.
+     if (execute) {
+       for (const auto& entry : m_publicationImages) {
+         if (!entry.read && !entry.write)
+           continue;
+ 
+-        const int companion = entry.image->dmabufPublicationFd();
+         char phase = 0;
+-        if (pread(companion, &phase, 1, 0) != 1)
++        if (pread(entry.image->dmabufPublicationFd(), &phase, 1, 0) != 1)
+           return failOwnership("read-phase");
+         if (phase == 'C' || phase == 'R' || phase == 'D')
+           continue;
+-
+-        if ((phase != 'L' && phase != 'E' && phase != 'X') || executePublication ||
+-            !m_publicationRelease || (phase == 'E' && !m_publicationAcquire)) {
+-          Logger::err(str::format("NPT-DMABUF-OWNERSHIP-LIST pid=", getpid(),
+-            " inode=", entry.image->dmabufPublicationInode(), " phase=", phase,
+-            " images=", m_publicationImages.size(), " lists=", m_cmdSubmissions.size(),
+-            " acquire=", bool(m_publicationAcquire), " release=", bool(m_publicationRelease),
+-            " start=", int(entry.startLayout),
+-            " end=", int(entry.image->queryLayout(entry.image->getAvailableSubresources())),
+-            " transfer=", m_device->hasDedicatedTransferQueue()));
++        if ((phase != 'L' && phase != 'E' && phase != 'X') || !m_publicationRelease)
+           return failOwnership("unsupported-command-list");
+-        }
++        ownedImages.push_back(&entry);
++      }
+ 
+-        const auto path = str::format("/proc/self/fd/", companion);
+-        publicationLock.fd = open(path.c_str(), O_RDWR | O_CLOEXEC);
+-        if (publicationLock.fd < 0 || flock(publicationLock.fd, LOCK_EX) < 0)
+-          return failOwnership("lock-companion");
+-
+-        if (pread(publicationLock.fd, &phase, 1, 0) != 1 ||
+-            (phase != 'L' && phase != 'E') ||
+-            (phase == 'L' && (!entry.localInitialization ||
+-                              entry.image->info().sharing.mode != DxvkSharedHandleMode::Export)) ||
+-            (phase == 'E' && !m_publicationAcquire) ||
+-            entry.image->dupDmabufFd(&publicationDma.fd) != VK_SUCCESS)
+-          return failOwnership("validate-locked-phase");
+-
++      if (!ownedImages.empty()) {
+         if (m_syncFileWait || m_syncFileSignal)
+           return failOwnership("conflicting-sync-file");
+ 
+-        publicationWritesImage = entry.write;
+-        // Queue-family ownership is exclusive even for a shader read.
+-        // Wait for prior readers as well as writers, and publish this
+-        // release as a dependency of every subsequent acquire.
+-        if (phase == 'E') {
+-          m_syncFileWait = new DxvkSyncFileSignal(m_device);
+-          if (!m_syncFileWait->handle())
+-            return failOwnership("create-wait-semaphore");
+-          dma_buf_export_sync_file snapshot { DMA_BUF_SYNC_WRITE, -1 };
+-          if (ioctl(publicationDma.fd, DMA_BUF_IOCTL_EXPORT_SYNC_FILE, &snapshot) < 0)
++        // Every worker locks the companion descriptors in the same order.
++        const auto inode = [] (const PublicationImage* entry) {
++          return entry->image->dmabufPublicationInode();
++        };
++        std::sort(ownedImages.begin(), ownedImages.end(),
++          [&] (const auto* a, const auto* b) { return inode(a) < inode(b); });
++        for (size_t i = 1; i < ownedImages.size(); i++) {
++          if (inode(ownedImages[i-1]) == inode(ownedImages[i]))
++            return failOwnership("duplicate-publication-identity");
++        }
++
++        publications = std::vector<LockedPublication>(ownedImages.size());
++        OwnedFd dependency;
++        for (size_t i = 0; i < ownedImages.size(); i++) {
++          const auto& entry = *ownedImages[i];
++          auto& publication = publications[i];
++          const auto path = str::format("/proc/self/fd/", entry.image->dmabufPublicationFd());
++          publication.lock.fd = open(path.c_str(), O_RDWR | O_CLOEXEC);
++          if (publication.lock.fd < 0 || flock(publication.lock.fd, LOCK_EX) < 0)
++            return failOwnership("lock-companion");
++
++          const bool localStart = entry.localInitialization &&
++            entry.image->info().sharing.mode == DxvkSharedHandleMode::Export &&
++            (entry.startLayout == VK_IMAGE_LAYOUT_UNDEFINED ||
++             entry.startLayout == VK_IMAGE_LAYOUT_PREINITIALIZED);
++          char phase = 0;
++          if (pread(publication.lock.fd, &phase, 1, 0) != 1 ||
++              phase != (localStart ? 'L' : 'E') ||
++              (!localStart && !m_publicationAcquire) ||
++              entry.image->dupDmabufFd(&publication.dma.fd) != VK_SUCCESS)
++            return failOwnership("validate-locked-phase");
++          if (phase != 'E')
++            continue;
++
++          // External ownership is exclusive even for shader reads.
++          dma_buf_export_sync_file snapshot { DMA_BUF_SYNC_WRITE, -1 };
++          if (ioctl(publication.dma.fd, DMA_BUF_IOCTL_EXPORT_SYNC_FILE, &snapshot) < 0)
+             return failOwnership("snapshot-reservation");
+-          OwnedFd dependency { snapshot.fd };
+-          if (m_syncFileWait->importFd(dependency.fd) != VK_SUCCESS)
++          OwnedFd next { snapshot.fd };
++          if (dependency.fd < 0) {
++            dependency.fd = std::exchange(next.fd, -1);
++          } else {
++            sync_merge_data merge = {};
++            merge.fd2 = next.fd;
++            if (ioctl(dependency.fd, SYNC_IOC_MERGE, &merge) < 0)
++              return failOwnership("merge-reservations");
++            close(dependency.fd);
++            dependency.fd = merge.fence;
++          }
++        }
++
++        if (dependency.fd >= 0) {
++          m_syncFileWait = new DxvkSyncFileSignal(m_device);
++          if (!m_syncFileWait->handle() || m_syncFileWait->importFd(dependency.fd) != VK_SUCCESS)
+             return failOwnership("import-wait-semaphore");
+           dependency.fd = -1;
+         }
+ 
+         m_syncFileSignal = new DxvkSyncFileSignal(m_device);
+-        if (!m_syncFileSignal->handle() || pwrite(publicationLock.fd, "X", 1, 0) != 1)
+-          return failOwnership("mark-in-flight");
+-
+-        publicationInode = entry.image->dmabufPublicationInode();
++        if (!m_syncFileSignal->handle())
++          return failOwnership("create-release-semaphore");
++        for (auto& publication : publications) {
++          if (pwrite(publication.lock.fd, "X", 1, 0) != 1)
++            return failOwnership("mark-in-flight");
++        }
+         executePublication = true;
+       }
+     }
+@@ -691,18 +714,22 @@
+       if (fence.fd >= 0) {
+         static const bool inject = env::getEnvVar("NPT_DMABUF_TEST_FAIL_PUBLICATION") == "1";
+         dma_buf_import_sync_file publish { DMA_BUF_SYNC_WRITE, inject ? -1 : fence.fd };
+-        if (ioctl(publicationDma.fd, DMA_BUF_IOCTL_IMPORT_SYNC_FILE, &publish) < 0) {
+-          Logger::err(str::format("NPT-DMABUF-PUBLISH-FAILED pid=", getpid(), " errno=", errno));
+-          return failOwnership("publish-reservation");
++        for (auto& publication : publications) {
++          if (ioctl(publication.dma.fd, DMA_BUF_IOCTL_IMPORT_SYNC_FILE, &publish) < 0)
++            return failOwnership("publish-reservation");
+         }
+       }
+-      if (pwrite(publicationLock.fd, "E", 1, 0) != 1)
+-        return failOwnership("mark-external");
++      for (auto& publication : publications) {
++        if (pwrite(publication.lock.fd, "E", 1, 0) != 1)
++          return failOwnership("mark-external");
++      }
+       static thread_local unsigned verified = 0;
+-      if (verified++ < 24)
+-        Logger::warn(str::format("NPT-DMABUF-OWNERSHIP-SUBMITTED pid=", getpid(),
+-          " inode=", publicationInode,
+-          " write=", publicationWritesImage, " acquire=", bool(m_syncFileWait)));
++      if (verified++ < 24) {
++        for (const auto* entry : ownedImages)
++          Logger::warn(str::format("NPT-DMABUF-OWNERSHIP-SUBMITTED pid=", getpid(),
++            " inode=", entry->image->dmabufPublicationInode(), " write=", entry->write,
++            " acquire=", bool(m_syncFileWait), " images=", ownedImages.size()));
++      }
+     }
+ #endif
+     return VK_SUCCESS;
+--- a/src/d3d11/d3d11_texture.cpp
++++ b/src/d3d11/d3d11_texture.cpp
+@@ -1013,7 +1013,15 @@
+         && m_desc.MipLevels == 1 && m_desc.ArraySize == 1
+         && m_desc.SampleDesc.Count == 1 && m_desc.CPUAccessFlags == 0
+         && m_desc.Usage == D3D11_USAGE_DEFAULT;
+-      m_image->setDmabufPublicationFd(createDmabufPublication(fixture || atlas ? 'L' : 'C'));
++      static const bool videoOwnership = env::getEnvVar("NPT_DMABUF_VIDEO_HANDOFF") == "1";
++      const bool video = videoOwnership && info.format == VK_FORMAT_B8G8R8A8_UNORM
++        && m_desc.Width == 1856 && m_desc.Height == 1728
++        && m_desc.MipLevels == 1 && m_desc.ArraySize == 1
++        && m_desc.SampleDesc.Count == 1 && m_desc.CPUAccessFlags == 0
++        && m_desc.Usage == D3D11_USAGE_DEFAULT
++        && m_desc.MiscFlags == D3D11_RESOURCE_MISC_SHARED
++        && m_desc.BindFlags == (D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
++      m_image->setDmabufPublicationFd(createDmabufPublication(fixture || atlas || video ? 'L' : 'C'));
+       if (dmabufPublicationFd() >= 0)
+         descriptor.reserved = DmabufPublicationTag | uint32_t(dmabufPublicationFd());
+     }
+--- a/src/d3d11/d3d11_context.cpp
++++ b/src/d3d11/d3d11_context.cpp
+@@ -568,9 +568,14 @@
+         const auto sharing = t->GetImage()->info().sharing.mode;
+         const bool gpuAtlas = producer ? gpuProducer && sharing == DxvkSharedHandleMode::Export
+                                        : gpuConsumer && sharing == DxvkSharedHandleMode::Import;
+-        if (executeOwnership && gpuAtlas &&
+-            t->GetImage()->info().format == VK_FORMAT_R8_UNORM &&
+-            d->Width == 1248 && d->Height == 1344 && t->dmabufPublicationFd() >= 0) {
++        static const bool gpuVideo = env::getEnvVar("NPT_DMABUF_VIDEO_HANDOFF") == "1";
++        const auto format = t->GetImage()->info().format;
++        const bool atlas = gpuAtlas && format == VK_FORMAT_R8_UNORM &&
++          d->Width == 1248 && d->Height == 1344;
++        const bool video = gpuVideo && format == VK_FORMAT_B8G8R8A8_UNORM &&
++          d->Width == 1856 && d->Height == 1728 &&
++          sharing == (producer ? DxvkSharedHandleMode::Export : DxvkSharedHandleMode::Import);
++        if (executeOwnership && (atlas || video) && t->dmabufPublicationFd() >= 0) {
+           char phase = 0;
+           if (pread(t->dmabufPublicationFd(), &phase, 1, 0) == 1 &&
+               (phase == 'L' || phase == 'E' || phase == 'X')) {
+@@ -581,7 +586,7 @@
+               static thread_local unsigned loggedPublishes = 0;
+               if (status != VK_SUCCESS || loggedPublishes++ < 4)
+                 Logger::warn(str::format("NPT-ATLAS-GPU-PRODUCER pid=", getpid(),
+-                  " inode=", t->GetImage()->dmabufPublicationInode(), " result=", int(status)));
++                  " inode=", t->GetImage()->dmabufPublicationInode(), " video=", video, " result=", int(status)));
+               // Resubmitting a staging copy after a queue error cannot restore
+               // a failed handoff. Queue status already invalidates the device.
+               return true;
+@@ -590,7 +595,7 @@
+             static thread_local unsigned logged = 0;
+             if (logged++ < 4)
+               Logger::warn(str::format("NPT-ATLAS-GPU-CONSUMER pid=", getpid(),
+-                " inode=", t->GetImage()->dmabufPublicationInode()));
++                " inode=", t->GetImage()->dmabufPublicationInode(), " video=", video));
+             return true;
+           }
+         }
+--- a/src/dxvk/dxvk_cmdlist.cpp
++++ b/src/dxvk/dxvk_cmdlist.cpp
+@@ -55,12 +55,34 @@
+   void DxvkCommandList::recordPublicationOwnership() {
+     static const bool execute = env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
+     static const bool trace = env::getEnvVar("NPT_DMABUF_RECORD_OWNERSHIP") == "1";
+-    if ((!execute && !trace) || m_publicationImages.empty() || m_device->hasDedicatedTransferQueue())
++    if ((!execute && !trace) || m_publicationImages.empty())
+       return;
++
++    const auto skip = [&] (const char* reason) {
++      if (!execute)
++        return;
++      for (const auto& entry : m_publicationImages) {
++        char phase = 0;
++        if (!entry.read && !entry.write)
++          continue;
++        if (pread(entry.image->dmabufPublicationFd(), &phase, 1, 0) == 1 &&
++            (phase == 'C' || phase == 'R' || phase == 'D'))
++          continue;
++        Logger::err(str::format("NPT-DMABUF-OWNERSHIP-RECORD-SKIP pid=", getpid(),
++          " reason=", reason, " inode=", entry.image->dmabufPublicationInode(),
++          " phase=", int(phase), " start=", int(entry.startLayout),
++          " end=", int(entry.image->queryLayout(entry.image->getAvailableSubresources())),
++          " local_init=", entry.localInitialization, " read=", entry.read, " write=", entry.write,
++          " lists=", m_cmdSubmissions.size()));
++      }
++    };
++
++    if (m_device->hasDedicatedTransferQueue())
++      return skip("dedicated-transfer");
+ 
+     for (const auto& submission : m_cmdSubmissions) {
+       if (submission.sparseBind || submission.syncSdma)
+-        return;
++        return skip(submission.sparseBind ? "sparse-bind" : "sdma-sync");
+     }
+ 
+     // These are recorded for validation only. Execution additionally needs a
+@@ -78,11 +100,11 @@
+       if (execute) {
+         char phase = 0;
+         if (pread(image.dmabufPublicationFd(), &phase, 1, 0) != 1)
+-          return;
++          return skip("read-phase");
+         if (phase == 'C' || phase == 'R' || phase == 'D')
+           continue;
+         if (phase != 'L' && phase != 'E' && phase != 'X')
+-          return;
++          return skip("phase");
+       }
+ 
+       const bool localStart = entry.localInitialization &&
+@@ -96,11 +118,13 @@
+         && info.extent.width >= 1600 && info.extent.height >= 1000;
+       const bool atlas = atlasOwnership && info.format == VK_FORMAT_R8_UNORM
+         && info.extent.width == 1248 && info.extent.height == 1344;
+-      if ((!localStart && entry.startLayout != VK_IMAGE_LAYOUT_GENERAL) || (!fixture && !largeBgra && !atlas)
+-       || info.mipLevels != 1 || info.numLayers != 1
+-       || info.layout != VK_IMAGE_LAYOUT_GENERAL
+-       || image.queryLayout(image.getAvailableSubresources()) != VK_IMAGE_LAYOUT_GENERAL)
+-        return;
++      if (!localStart && entry.startLayout != VK_IMAGE_LAYOUT_GENERAL)
++        return skip("start-layout");
++      if ((!fixture && !largeBgra && !atlas) || info.mipLevels != 1 || info.numLayers != 1)
++        return skip("image-shape");
++      if (info.layout != VK_IMAGE_LAYOUT_GENERAL ||
++          image.queryLayout(image.getAvailableSubresources()) != VK_IMAGE_LAYOUT_GENERAL)
++        return skip("end-layout");
+ 
+       VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
+       barrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+@@ -136,7 +160,7 @@
+         acquire = m_graphicsPool->getCommandBuffer(DxvkCmdBuffer::Count);
+         vk->vkCmdPipelineBarrier2(acquire, &dependency);
+         if (vk->vkEndCommandBuffer(acquire) != VK_SUCCESS)
+-          return;
++          return skip("end-acquire-buffer");
+       }
+ 
+       dependency.imageMemoryBarrierCount = releaseBarriers.size();
+@@ -145,7 +169,7 @@
+       vk->vkCmdPipelineBarrier2(release, &dependency);
+       const VkResult releaseStatus = vk->vkEndCommandBuffer(release);
+       if (releaseStatus != VK_SUCCESS)
+-        return;
++        return skip("end-release-buffer");
+ 
+       m_publicationAcquire = acquire;
+       m_publicationRelease = release;
