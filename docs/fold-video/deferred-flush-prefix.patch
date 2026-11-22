@@ -1,0 +1,47 @@
+diff --git a/src/d3d11/d3d11_context_imm.cpp b/src/d3d11/d3d11_context_imm.cpp
+index f37c22e3..676a7adf 100644
+--- a/src/d3d11/d3d11_context_imm.cpp
++++ b/src/d3d11/d3d11_context_imm.cpp
+@@ -274,6 +274,9 @@ namespace dxvk {
+     D3D10DeviceLock lock = LockContext();
+ 
+     auto commandList = static_cast<D3D11CommandList*>(pCommandList);
++    // Some deferred operations, including indirect draws, do not set the
++    // immediate-context shared-write guard. Preserve the entire prefix.
++    m_deferredWorkPending = true;
+ 
+     // Reset dirty binding tracking before submitting any CS chunks.
+     // This is needed so that any submission that might occur during
+@@ -1493,13 +1496,18 @@ namespace dxvk {
+     // If we're in tiler mode and a render pass hasn't been resolved yet,
+     // ignore explicit flushes. This is a very dirty heuristic to work
+     // around some Unity Engine performance issues.
+-    if (m_hasPendingUnresolvedPass && !m_parent->Is11on12Device())
++    static const bool waitForDeferredPublication =
++      env::getEnvVar("NPT_DMABUF_DEFERRED_FLUSH_PUBLICATION") == "1"
++      && env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
++    const bool waitForPublication = waitForDeferredPublication && m_deferredWorkPending;
++    if (m_hasPendingUnresolvedPass && !m_parent->Is11on12Device() && !waitForPublication)
+       return;
+ 
+     if (unlikely(m_device->debugFlags().test(DxvkDebugFlag::Capture)))
+       m_flushReason = "Explicit Flush";
+ 
+-    ExecuteFlush(GpuFlushType::ExplicitFlush, hEvent, true);
++    ExecuteFlush(GpuFlushType::ExplicitFlush, hEvent, true, nullptr, waitForPublication);
++    m_deferredWorkPending = false;
+ 
+     // Shared resources were written since the last explicit flush: the GPU work must be complete before the guest
+     // (and so a consumer in another process) is told this flush happened.
+diff --git a/src/d3d11/d3d11_context_imm.h b/src/d3d11/d3d11_context_imm.h
+index bc6e146a..e2710fc2 100644
+--- a/src/d3d11/d3d11_context_imm.h
++++ b/src/d3d11/d3d11_context_imm.h
+@@ -142,6 +142,7 @@ namespace dxvk {
+     std::string             m_flushReason;
+ 
+     bool                    m_hasPendingUnresolvedPass = false;
++    bool                    m_deferredWorkPending = false;
+ 
+     HRESULT MapBuffer(
+             D3D11Buffer*                pResource,
