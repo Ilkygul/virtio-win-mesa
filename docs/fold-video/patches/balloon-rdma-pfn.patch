@@ -1,0 +1,129 @@
+diff --git a/Balloon/sys/Device.c b/Balloon/sys/Device.c
+index 081273fa..34d2165b 100644
+--- a/Balloon/sys/Device.c
++++ b/Balloon/sys/Device.c
+@@ -229,6 +229,12 @@ BalloonEvtDevicePrepareHardware(IN WDFDEVICE Device,
+         return status;
+     }
+ 
++    if (!devCtx->VDevice.RdmaPoolActive)
++    {
++        TraceEvents(TRACE_LEVEL_ERROR, DBG_POWER, "Balloon requires the restricted DMA pool");
++        return STATUS_DEVICE_NOT_READY;
++    }
++
+     if (NT_SUCCESS(status))
+     {
+         devCtx->MemStats = (PBALLOON_STAT)VirtIOWdfDeviceAllocDmaMemory(&devCtx->VDevice.VIODevice,
+@@ -249,9 +255,9 @@ BalloonEvtDevicePrepareHardware(IN WDFDEVICE Device,
+     /* use BALLOON_MGMT_POOL_TAG also for tagging common memory blocks */
+     if (NT_SUCCESS(status))
+     {
+-        devCtx->pfns_table = (PPFN_NUMBER)VirtIOWdfDeviceAllocDmaMemory(&devCtx->VDevice.VIODevice,
+-                                                                        PAGE_SIZE,
+-                                                                        BALLOON_MGMT_POOL_TAG);
++        devCtx->pfns_table = (PULONG)VirtIOWdfDeviceAllocDmaMemory(&devCtx->VDevice.VIODevice,
++                                                                   PAGE_SIZE,
++                                                                   BALLOON_MGMT_POOL_TAG);
+     }
+ 
+     if (devCtx->pfns_table == NULL)
+@@ -280,7 +286,10 @@ BalloonEvtDeviceReleaseHardware(IN WDFDEVICE Device, IN WDFCMRESLIST ResourcesTr
+ 
+     devCtx = GetDeviceContext(Device);
+ 
+-    VirtIOWdfDeviceFreeDmaMemoryByTag(&devCtx->VDevice.VIODevice, BALLOON_MGMT_POOL_TAG);
++    if (devCtx->MemStats)
++        VirtIOWdfDeviceFreeDmaMemory(&devCtx->VDevice.VIODevice, devCtx->MemStats);
++    if (devCtx->pfns_table)
++        VirtIOWdfDeviceFreeDmaMemory(&devCtx->VDevice.VIODevice, devCtx->pfns_table);
+     devCtx->MemStats = NULL;
+     devCtx->pfns_table = NULL;
+ 
+diff --git a/Balloon/sys/ProtoTypes.h b/Balloon/sys/ProtoTypes.h
+index 8e842e6e..a46513b6 100644
+--- a/Balloon/sys/ProtoTypes.h
++++ b/Balloon/sys/ProtoTypes.h
+@@ -41,6 +41,9 @@
+ #define VIRTIO_BALLOON_F_MUST_TELL_HOST 0 /* Tell before reclaiming pages */
+ #define VIRTIO_BALLOON_F_STATS_VQ       1 /* Memory status virtqueue */
+ 
++/* Size of a PFN in the balloon interface. */
++#define VIRTIO_BALLOON_PFN_SHIFT        12
++
+ typedef struct _VIRTIO_BALLOON_CONFIG
+ {
+     u32 num_pages;
+@@ -81,7 +84,8 @@ typedef struct _DEVICE_CONTEXT
+ 
+     volatile ULONG num_pages;
+     ULONG num_pfns;
+-    PPFN_NUMBER pfns_table;
++    /* 32-bit PFNs, as required by the virtio spec (5.5.6) */
++    PULONG pfns_table;
+     NPAGED_LOOKASIDE_LIST LookAsideList;
+     BOOLEAN bListInitialized;
+     SINGLE_LIST_ENTRY PageListHead;
+diff --git a/Balloon/sys/balloon.c b/Balloon/sys/balloon.c
+index 95fafb31..c43819eb 100644
+--- a/Balloon/sys/balloon.c
++++ b/Balloon/sys/balloon.c
+@@ -128,6 +128,25 @@ BalloonInit(IN WDFOBJECT WdfDevice)
+     return status;
+ }
+ 
++/*
++ * The virtio spec (5.5.6) defines the inflate and deflate buffers as arrays
++ * of 32-bit PFNs (guest physical address >> 12), while PFN_NUMBER is 64 bits
++ * wide on 64-bit Windows. Convert the MDL's PFN array into the device format.
++ */
++C_ASSERT(PAGE_SIZE == (1 << VIRTIO_BALLOON_PFN_SHIFT));
++
++static VOID BalloonCopyPfns(IN PDEVICE_CONTEXT ctx, IN PMDL pPageMdl)
++{
++    PPFN_NUMBER pfns = MmGetMdlPfnArray(pPageMdl);
++    ULONG i;
++
++    for (i = 0; i < ctx->num_pfns; i++)
++    {
++        ASSERT(pfns[i] <= MAXULONG);
++        ctx->pfns_table[i] = (ULONG)pfns[i];
++    }
++}
++
+ NTSTATUS
+ BalloonFill(IN WDFOBJECT WdfDevice, IN size_t num)
+ {
+@@ -151,11 +170,12 @@ BalloonFill(IN WDFOBJECT WdfDevice, IN size_t num)
+     }
+ #endif // !BALLOON_INFLATE_IGNORE_LOWMEM
+ 
+-    num = min(num, PAGE_SIZE / sizeof(PFN_NUMBER));
++    num = min(num, PAGE_SIZE / sizeof(ctx->pfns_table[0]));
+     TraceEvents(TRACE_LEVEL_INFORMATION, DBG_HW_ACCESS, "Inflate balloon with %d pages.\n", num);
+ 
+     LowAddress.QuadPart = 0;
+-    HighAddress.QuadPart = (ULONGLONG)-1;
++    // Only pages whose PFN fits in 32 bits can be reported to the device.
++    HighAddress.QuadPart = ((ULONGLONG)MAXULONG << VIRTIO_BALLOON_PFN_SHIFT) | (PAGE_SIZE - 1);
+     SkipBytes.QuadPart = 0;
+ 
+     pPageMdl = MmAllocatePagesForMdlEx(LowAddress,
+@@ -199,7 +219,7 @@ BalloonFill(IN WDFOBJECT WdfDevice, IN size_t num)
+     ctx->num_pfns = (ULONG)num;
+     ctx->num_pages += ctx->num_pfns;
+ 
+-    RtlCopyMemory(ctx->pfns_table, MmGetMdlPfnArray(pPageMdl), ctx->num_pfns * sizeof(PFN_NUMBER));
++    BalloonCopyPfns(ctx, pPageMdl);
+ 
+     status = BalloonTellHost(WdfDevice, ctx->InfVirtQueue);
+ 
+@@ -232,7 +252,7 @@ BalloonLeak(IN WDFOBJECT WdfDevice, IN size_t num)
+     ctx->num_pfns = (ULONG)num;
+     ctx->num_pages -= ctx->num_pfns;
+ 
+-    RtlCopyMemory(ctx->pfns_table, MmGetMdlPfnArray(pPageMdl), ctx->num_pfns * sizeof(PFN_NUMBER));
++    BalloonCopyPfns(ctx, pPageMdl);
+ 
+     MmFreePagesFromMdl(pPageMdl);
+     ExFreePool(pPageMdl);
