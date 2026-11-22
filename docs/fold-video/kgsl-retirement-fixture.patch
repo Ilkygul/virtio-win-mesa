@@ -1,0 +1,247 @@
+diff --git a/src/d3d11/d3d11_context_imm.cpp b/src/d3d11/d3d11_context_imm.cpp
+index f37c22e3..676a7adf 100644
+--- a/src/d3d11/d3d11_context_imm.cpp
++++ b/src/d3d11/d3d11_context_imm.cpp
+@@ -274,6 +274,9 @@ namespace dxvk {
+     D3D10DeviceLock lock = LockContext();
+ 
+     auto commandList = static_cast<D3D11CommandList*>(pCommandList);
++    // Some deferred operations, including indirect draws, do not set the
++    // immediate-context shared-write guard. Preserve the entire prefix.
++    m_deferredWorkPending = true;
+ 
+     // Reset dirty binding tracking before submitting any CS chunks.
+     // This is needed so that any submission that might occur during
+@@ -1493,13 +1496,18 @@ namespace dxvk {
+     // If we're in tiler mode and a render pass hasn't been resolved yet,
+     // ignore explicit flushes. This is a very dirty heuristic to work
+     // around some Unity Engine performance issues.
+-    if (m_hasPendingUnresolvedPass && !m_parent->Is11on12Device())
++    static const bool waitForDeferredPublication =
++      env::getEnvVar("NPT_DMABUF_DEFERRED_FLUSH_PUBLICATION") == "1"
++      && env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
++    const bool waitForPublication = waitForDeferredPublication && m_deferredWorkPending;
++    if (m_hasPendingUnresolvedPass && !m_parent->Is11on12Device() && !waitForPublication)
+       return;
+ 
+     if (unlikely(m_device->debugFlags().test(DxvkDebugFlag::Capture)))
+       m_flushReason = "Explicit Flush";
+ 
+-    ExecuteFlush(GpuFlushType::ExplicitFlush, hEvent, true);
++    ExecuteFlush(GpuFlushType::ExplicitFlush, hEvent, true, nullptr, waitForPublication);
++    m_deferredWorkPending = false;
+ 
+     // Shared resources were written since the last explicit flush: the GPU work must be complete before the guest
+     // (and so a consumer in another process) is told this flush happened.
+diff --git a/src/d3d11/d3d11_context_imm.h b/src/d3d11/d3d11_context_imm.h
+index bc6e146a..e2710fc2 100644
+--- a/src/d3d11/d3d11_context_imm.h
++++ b/src/d3d11/d3d11_context_imm.h
+@@ -142,6 +142,7 @@ namespace dxvk {
+     std::string             m_flushReason;
+ 
+     bool                    m_hasPendingUnresolvedPass = false;
++    bool                    m_deferredWorkPending = false;
+ 
+     HRESULT MapBuffer(
+             D3D11Buffer*                pResource,
+diff --git a/src/dxvk/dxvk_cmdlist.cpp b/src/dxvk/dxvk_cmdlist.cpp
+index 6c7eab7d..be6d7f43 100644
+--- a/src/dxvk/dxvk_cmdlist.cpp
++++ b/src/dxvk/dxvk_cmdlist.cpp
+@@ -15,6 +15,81 @@
+ namespace dxvk {
+ 
+ #ifdef __ANDROID__
++  // KGSL timeline UAPI, matching msm_kgsl.h. Kept local to the Android fixture.
++  namespace {
++    struct KgslTimelineCreate { uint64_t seqno; uint32_t id, padding; };
++    struct KgslTimelineFence { uint64_t seqno; uint32_t id; int32_t fd; };
++    struct KgslTimelinePoint { uint64_t seqno; uint32_t id, padding; };
++    struct KgslTimelineSignal { uint64_t points; uint32_t count, stride; };
++    constexpr auto KgslCreateTimeline = _IOWR(0x09, 0x58, KgslTimelineCreate);
++    constexpr auto KgslGetTimelineFence = _IOWR(0x09, 0x5c, KgslTimelineFence);
++    constexpr auto KgslSignalTimeline = _IOW(0x09, 0x5b, KgslTimelineSignal);
++    constexpr auto KgslDestroyTimeline = _IOW(0x09, 0x5d, uint32_t);
++  }
++
++  struct DxvkCommandList::FuturePublication {
++    int device = -1;
++    int fence = -1;
++    uint32_t timeline = 0;
++    std::vector<int> slots;
++
++    ~FuturePublication() {
++      if (timeline)
++        ioctl(device, KgslDestroyTimeline, &timeline);
++      if (fence >= 0)
++        close(fence);
++      if (device >= 0)
++        close(device);
++      for (int fd : slots)
++        close(fd);
++    }
++
++    bool create() {
++      device = open("/dev/kgsl-3d0", O_RDWR | O_CLOEXEC);
++      KgslTimelineCreate create = {};
++      if (device < 0 || ioctl(device, KgslCreateTimeline, &create) < 0)
++        return false;
++      timeline = create.id;
++      KgslTimelineFence get = { 1, timeline, -1 };
++      if (ioctl(device, KgslGetTimelineFence, &get) < 0)
++        return false;
++      fence = get.fd;
++      return fence >= 0;
++    }
++  };
++
++  void DxvkCommandList::completeFuturePublication(bool completed) {
++    auto publication = std::move(m_futurePublication);
++    if (!publication)
++      return;
++
++    bool valid = completed;
++    for (int slot : publication->slots) {
++      if (flock(slot, LOCK_EX) < 0) {
++        Logger::err("NPT-FUTURE-PUBLICATION: retirement lock failed");
++        return; // Destroying the pending KGSL timeline wakes readers with a failure.
++      }
++      char state = 0;
++      if (pread(slot, &state, 1, 0) != 1 || state != 'P')
++        valid = false;
++    }
++    if (valid) {
++      for (int slot : publication->slots)
++        valid &= pwrite(slot, "E", 1, 0) == 1;
++      if (valid) {
++        KgslTimelinePoint point = { 1, publication->timeline, 0 };
++        KgslTimelineSignal signal = { reinterpret_cast<uintptr_t>(&point), 1, sizeof(point) };
++        valid = ioctl(publication->device, KgslSignalTimeline, &signal) == 0;
++      }
++    }
++    if (!valid) {
++      for (int slot : publication->slots)
++        pwrite(slot, "X", 1, 0);
++    }
++    Logger::warn(str::format("NPT-FUTURE-PUBLICATION pid=", getpid(),
++      " retired=", valid, " images=", publication->slots.size()));
++  }
++
+   void DxvkCommandList::trackPublicationImage(DxvkImage* image, DxvkAccess access) {
+     static const bool enabled = env::getEnvVar("NPT_DMABUF_TRACE_COMMAND_LIST") == "1" ||
+       env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
+@@ -506,6 +581,8 @@ namespace dxvk {
+     std::vector<const PublicationImage*> ownedImages;
+     std::vector<LockedPublication> publications;
+     bool executePublication = false;
++    std::unique_ptr<FuturePublication> future;
++    static const bool futureFixture = env::getEnvVar("NPT_DMABUF_FUTURE_FENCE_FIXTURE") == "1";
+     static const bool execute = env::getEnvVar("NPT_DMABUF_EXECUTE_OWNERSHIP") == "1";
+     if (execute) {
+       for (const auto& entry : m_publicationImages) {
+@@ -591,6 +668,21 @@ namespace dxvk {
+           if (pwrite(publication.lock.fd, "X", 1, 0) != 1)
+             return failOwnership("mark-in-flight");
+         }
++        if (futureFixture && ownedImages.size() == 2 && m_syncFileWait
++         && std::all_of(ownedImages.begin(), ownedImages.end(), [] (const auto* entry) {
++              return entry->write && !entry->read && !entry->localInitialization &&
++                entry->image->info().sharing.mode == DxvkSharedHandleMode::Export;
++            })) {
++          future = std::make_unique<FuturePublication>();
++          if (!future->create())
++            return failOwnership("create-future-fence");
++          for (auto& publication : publications) {
++            dma_buf_import_sync_file reserve = { DMA_BUF_SYNC_WRITE, future->fence };
++            if (ioctl(publication.dma.fd, DMA_BUF_IOCTL_IMPORT_SYNC_FILE, &reserve) < 0)
++              return failOwnership("reserve-future-fence");
++          }
++          Logger::warn(str::format("NPT-FUTURE-PUBLICATION pid=", getpid(), " reserved=2"));
++        }
+         executePublication = true;
+       }
+     }
+@@ -737,7 +829,7 @@ namespace dxvk {
+       OwnedFd fence;
+       if (m_syncFileSignal->exportFd(&fence.fd) != VK_SUCCESS)
+         return failOwnership("export-signal-semaphore");
+-      if (fence.fd >= 0) {
++      if (fence.fd >= 0 && !future) {
+         static const bool inject = env::getEnvVar("NPT_DMABUF_TEST_FAIL_PUBLICATION") == "1";
+         dma_buf_import_sync_file publish { DMA_BUF_SYNC_WRITE, inject ? -1 : fence.fd };
+         for (auto& publication : publications) {
+@@ -746,9 +838,17 @@ namespace dxvk {
+         }
+       }
+       for (auto& publication : publications) {
+-        if (pwrite(publication.lock.fd, "E", 1, 0) != 1)
++        if (pwrite(publication.lock.fd, future ? "P" : "E", 1, 0) != 1)
+           return failOwnership("mark-external");
+       }
++      if (future) {
++        for (auto& publication : publications) {
++          if (flock(publication.lock.fd, LOCK_UN) < 0)
++            return failOwnership("unlock-future");
++          future->slots.push_back(std::exchange(publication.lock.fd, -1));
++        }
++        m_futurePublication = std::move(future);
++      }
+       static thread_local unsigned verified = 0;
+       if (verified++ < 24) {
+         for (const auto* entry : ownedImages)
+@@ -868,6 +968,7 @@ namespace dxvk {
+     m_syncFileSignal = nullptr;
+     m_syncFileWait = nullptr;
+ #ifdef __ANDROID__
++    completeFuturePublication(false);
+     m_publicationImages.clear();
+     m_publicationAcquire = VK_NULL_HANDLE;
+     m_publicationRelease = VK_NULL_HANDLE;
+diff --git a/src/dxvk/dxvk_cmdlist.h b/src/dxvk/dxvk_cmdlist.h
+index 91b6856e..37190fe7 100644
+--- a/src/dxvk/dxvk_cmdlist.h
++++ b/src/dxvk/dxvk_cmdlist.h
+@@ -1,5 +1,8 @@
+ #pragma once
+ 
++#include <memory>
++
++
+ #include <limits>
+ 
+ #include "dxvk_bind_mask.h"
+@@ -407,6 +410,10 @@ namespace dxvk {
+     /**
+      * \brief Notifies resources and signals
+      */
++#ifdef __ANDROID__
++    void completeFuturePublication(bool completed);
++#endif
++
+     void notifyObjects() {
+       m_objectTracker.clear();
+       m_signalTracker.notify();
+@@ -1322,6 +1329,8 @@ namespace dxvk {
+     small_vector<PublicationImage, 4> m_publicationImages;
+     VkCommandBuffer m_publicationAcquire = VK_NULL_HANDLE;
+     VkCommandBuffer m_publicationRelease = VK_NULL_HANDLE;
++    struct FuturePublication;
++    std::unique_ptr<FuturePublication> m_futurePublication;
+ 
+     void recordPublicationOwnership();
+ #endif
+diff --git a/src/dxvk/dxvk_queue.cpp b/src/dxvk/dxvk_queue.cpp
+index 18c14c27..ea04b3cd 100644
+--- a/src/dxvk/dxvk_queue.cpp
++++ b/src/dxvk/dxvk_queue.cpp
+@@ -274,6 +274,9 @@ namespace dxvk {
+             entry.latency.tracker->notifyGpuExecutionEnd(entry.latency.frameId);
+         }
+ 
++#ifdef __ANDROID__
++        entry.submit.cmdList->completeFuturePublication(status == VK_SUCCESS);
++#endif
+         if (status != VK_SUCCESS) {
+           m_lastError = status;
+ 
