@@ -1879,3 +1879,10 @@ Korte voorgrondproef bij geverifieerde schaal 175% met DXVK `f8f404a6b797` en ho
 - Resultaat: fysieke presentatie van 43,6 naar 46,3 fps, intervallen boven 35 ms van 153 naar 94 in circa 20 seconden. Langste interval van 75 naar 96 ms. Chromium rapporteerde 54,8% gemiste videoframes tegenover 55,7% bij de referentie. Qualcomm AV1-hardwaredecodering actief, Windows GPU-statuscode 0. GPU-trace toont gedeeld oppervlak 1856×1504.
 - Bewijs: `evidence/fold-edge-context/production/` met `run.log`, `candidate/video.txt`, `candidate/decoder.txt`, `active-workers.txt` en screenshot van Beeldscherm.
 - Beslissing: kandidaat actief houden in productie. De resterende haperingen blijven zichtbaar in de framemeting. Onderzoek daarvan vraagt een afzonderlijke hypothese.
+
+### 2026-11-22 — Oude diagnosetraces en Edge-framedrops
+
+- Hypothese: het uitschakelen van vier overgebleven diagnostiekopties vermindert de Edge-framedrops meetbaar. Zelfde DXVK `f8f404a6b797`, virgl-server `69ad2404b4e8`, 175% schaling en YouTube 1080p60 op het Fold-binnenscherm. Kandidaatconfiguratie `33e2e6e57fb3` verwijdert `NPT_SHARED_GUARD_TRACE`, `NPT_NATIVE_JOB_TRACE_FILE`, `NPT_PS_CAPTURE_DIR` en `NPT_CAPTION_TRACE_FILE`.
+- Resultaat: 46,7 fysieke fps, 89 intervallen boven 35 ms en maximaal 79 ms, tegenover 46,3 fps, 94 en 96 ms in de productiemeting. Chromium-drops 55,2% tegenover 54,8%. Qualcomm AV1 actief en GPU-statuscode 0. Windows had tijdens de proef 5,25 GiB in plaats van 6,00 GiB bruikbaar RAM door de bestaande automatische toewijzing. Eén korte meting met dit RAM-verschil toont geen causale winst.
+- Bewijs: `evidence/fold-edge-context/quiet/` met `run.log`, `candidate/video.txt`, `candidate/decoder.txt` en Beeldscherm-opname.
+- Beslissing: herstel de productieconfiguratie. De eerdere gekoppelde decoder/Edge-proef vond ongeveer 60 decodercompletions per seconde en een p95 van 3,57 ms in CompleteFrame. De huidige productielog telt circa 60 aanvragen per seconde. Voor verder onderzoek zijn Edge-presentatie en DWM bij de actuele 175%-weergave relevanter dan opnieuw algemene diagnoseopties wijzigen.
