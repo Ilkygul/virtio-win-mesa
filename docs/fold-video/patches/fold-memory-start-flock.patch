@@ -1,0 +1,44 @@
+--- a/vm-geheugen.sh
++++ b/vm-geheugen.sh
+@@ -33,17 +33,18 @@
+     for i in $(seq 1 60); do grep -q acquire_active=0 "$P/refill_stat" 2>/dev/null && return 0; sleep 2; done
+ }
+ [ "$(id -u)" = 0 ] || { echo "Als root draaien: su -c 'sh $0'" >&2; exit 1; }
+-# One run at a time: two starts at once (DeX button twice, herstart plus a manual start) raced on 16 November -
+-# one run's "uit" unloaded the module under the other's fill. A second run waits up to 10 minutes.
+-LOCK=$D/vm-geheugen.lock
+-for n in $(seq 1 300); do
+-    mkdir "$LOCK" 2>/dev/null && break
+-    # a lock left by a run that died: take it over
+-    [ -n "$(find "$LOCK" -maxdepth 0 -mmin +15 2>/dev/null)" ] && { rmdir "$LOCK"; continue; }
++# Keep fills and releases exclusive. The kernel releases the lock if
++# Android terminates the shell during a VM restart.
++{
++n=0
++until /system/bin/flock -xn 9; do
++    n=$((n + 1))
++    if [ "$n" -ge 300 ]; then
++        echo "vm-geheugen.sh draait al; later opnieuw" >&2
++        exit 1
++    fi
+     sleep 2
+ done
+-[ -d "$LOCK" ] || { echo "vm-geheugen.sh draait al; later opnieuw" >&2; exit 1; }
+-trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+ avail() { awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo; }
+ vm_users() {  # VMs the module still serves (refill_stat active_vms); 0 when the module is not loaded
+     [ -d "$P" ] || { echo 0; return; }
+@@ -150,7 +151,7 @@
+ fi
+ max=$(cat "$P/pool_size_max")
+ # The pool guard lives exactly as long as the pool: start it now (it ends itself once the pool is back).
+-setsid sh "$B/windows-vm.sh" wacht </dev/null >/dev/null 2>&1 &
++setsid sh "$B/windows-vm.sh" wacht </dev/null >/dev/null 2>&1 9>&- &
+ [ "$max" -lt "$want" ] && echo "let op: module-plafond pool_size_max $((max * 2)) MiB < doel $need MiB"
+ # Android must keep this much (MiB). At about 2.5 GB the phone froze or dropped off USB three times on
+ # 2026-11-10/11; 3 GB is the default margin.
+@@ -273,3 +274,4 @@
+ echo "Hugepage-pool: $((have * 2)) MiB beschikbaar (doel $((want * 2)) MiB); Android heeft nog $(awk '/MemAvailable/{print int($2/1024)}' /proc/meminfo) MiB"
+ # Up to 256 MiB short is fine: Windows booted with a 7676 MiB pool and 7680 MiB of VM memory.
+ [ "$have" -ge $((want - 128)) ]
++} 9>"$D/vm-geheugen.flock"
