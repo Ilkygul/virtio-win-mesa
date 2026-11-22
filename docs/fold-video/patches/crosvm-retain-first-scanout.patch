@@ -1,0 +1,173 @@
+diff --git a/crosvm_android_display_client.cpp b/crosvm_android_display_client.cpp
+index e49ea3c..c7e039a 100644
+--- a/crosvm_android_display_client.cpp
++++ b/crosvm_android_display_client.cpp
+@@ -2444,7 +2444,9 @@ public:
+             auto& sc = SurfaceControl::GetInstance();
+             if (sc.IsSupported()) {
+                 mSurfaceControl = sc.ASurfaceControl_createFromWindow(anw, mName.c_str());
++                showRetainedFrameLocked(anw);
+             }
++            mHasAttached = true;
+         }
+ 
+         mNativeSurfaceReady.notify_one();
+@@ -2478,6 +2480,11 @@ public:
+         std::unique_lock lk(mSurfaceMutex);
+ 
+         LOG(INFO) << "display surface " << mName << " configure " << width << "x" << height;
++        if (mRequestedSurfaceDimensions &&
++            (mRequestedSurfaceDimensions->width != width ||
++             mRequestedSurfaceDimensions->height != height)) {
++            clearRetainedFrameLocked();
++        }
+         mRequestedSurfaceDimensions = Rect{
+                 .width = width,
+                 .height = height,
+@@ -2535,9 +2542,7 @@ public:
+ 
+         Surface* surface = mNativeSurface.get();
+         if (surface == nullptr) {
+-            // The display service can temporarily lose its Surface while the launcher is
+-            // backgrounded. Keep the source import alive and drop the frame in that interval.
+-            return -1;
++            return retainFrameBeforeFirstAttachLocked(bridge, importId);
+         }
+         if (mVulkanTargetGeneration != mNativeSurfaceGeneration) {
+             if (auto ret = bridge.resetTargetsForSurfaceChange(); !ret.ok()) {
+@@ -2667,6 +2672,7 @@ public:
+                                                   : "Failed to queue display buffer: ")
+                            << result;
+         }
++        clearRetainedFrameLocked();
+         return sourceCompletionFd;
+     }
+ 
+@@ -2693,6 +2699,7 @@ public:
+         if (ANativeWindow_unlockAndPost(anw) != 0) {
+             return Error() << "Failed to unlock and post window";
+         }
++        clearRetainedFrameLocked();
+         return {};
+     }
+ 
+@@ -2762,6 +2769,95 @@ public:
+     const std::string& name() const { return mName; }
+ 
+ private:
++    int retainFrameBeforeFirstAttachLocked(VulkanDisplayBridge& bridge, int64_t importId) {
++        static const bool enabled = envFlagEnabled("CROSVM_ANDROID_DISPLAY_RETAIN_FIRST_FRAME", false);
++        if (!enabled || mName != "scanout" || mHasAttached || !mRequestedSurfaceDimensions)
++            return -1;
++
++        if (!mRetainedFrame) {
++            const auto& size = *mRequestedSurfaceDimensions;
++            AHardwareBuffer_Desc desc = {
++                    .width = size.width,
++                    .height = size.height,
++                    .layers = 1,
++                    .format = AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
++                    .usage = AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT |
++                             AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
++                             AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY,
++            };
++            AHardwareBuffer* buffer = nullptr;
++            if (AHardwareBuffer_allocate(&desc, &buffer) != 0 || !buffer) return -1;
++            mRetainedFrame.reset(buffer);
++        }
++
++        // The previous write must retire before this private target can be reused.
++        int targetAcquireFd = -1;
++        if (mRetainedFrameFence.get() >= 0) {
++            if (bridge.canImportAcquireFence()) targetAcquireFd = dup(mRetainedFrameFence.get());
++            if (targetAcquireFd < 0) {
++                const int waitFd = dup(mRetainedFrameFence.get());
++                if (waitFd < 0 || !waitForFence(waitFd).ok()) return -1;
++            }
++        }
++        auto completion = bridge.blit(importId, mRetainedFrame.get(), targetAcquireFd);
++        if (!completion.ok()) {
++            LOG(WARNING) << "Failed to retain startup scanout: " << completion.error();
++            mRetainedFrame.reset();
++            mRetainedFrameFence = ndk::ScopedFileDescriptor();
++            return -1;
++        }
++
++        // The virtio driver still receives the original source-read dependency.
++        int replayFence = *completion >= 0 ? dup(*completion) : -1;
++        if (*completion >= 0 && replayFence < 0) {
++            mRetainedFrame.reset();
++        } else {
++            mHasRetainedFrame = true;
++        }
++        mRetainedFrameFence = ndk::ScopedFileDescriptor(replayFence);
++        return *completion;
++    }
++
++    void showRetainedFrameLocked(ANativeWindow* window) {
++        if (!mHasRetainedFrame || !mRetainedFrame) return;
++        auto& sc = SurfaceControl::GetInstance();
++        ASurfaceControl* layer = sc.ASurfaceControl_createFromWindow(window, "retained-scanout");
++        if (!layer) return;
++        auto* transaction = sc.ASurfaceTransaction_create();
++        if (!transaction) {
++            sc.ASurfaceControl_release(layer);
++            return;
++        }
++
++        int fence = mRetainedFrameFence.get() < 0 ? -1 : dup(mRetainedFrameFence.get());
++        if (mRetainedFrameFence.get() >= 0 && fence < 0) {
++            sc.ASurfaceTransaction_delete(transaction);
++            sc.ASurfaceControl_release(layer);
++            return;
++        }
++        sc.ASurfaceTransaction_setBuffer(transaction, layer, mRetainedFrame.get(), fence);
++        sc.ASurfaceTransaction_apply(transaction);
++        sc.ASurfaceTransaction_delete(transaction);
++        mRetainedFrameLayer = layer;
++        LOG(INFO) << "Replayed retained startup scanout on first viewer attach";
++    }
++
++    void clearRetainedFrameLocked() {
++        if (mRetainedFrameLayer) {
++            auto& sc = SurfaceControl::GetInstance();
++            auto* transaction = sc.ASurfaceTransaction_create();
++            if (!transaction) return;
++            sc.ASurfaceTransaction_setBuffer(transaction, mRetainedFrameLayer, nullptr, -1);
++            sc.ASurfaceTransaction_apply(transaction);
++            sc.ASurfaceTransaction_delete(transaction);
++            sc.ASurfaceControl_release(mRetainedFrameLayer);
++            mRetainedFrameLayer = nullptr;
++        }
++        mRetainedFrame.reset();
++        mRetainedFrameFence = ndk::ScopedFileDescriptor();
++        mHasRetainedFrame = false;
++    }
++
+     void clearNativeSurfaceLocked(bool disconnect) {
+         const bool hadSurface = mNativeSurface != nullptr;
+         if (disconnect) {
+@@ -2777,6 +2873,10 @@ private:
+             if (sc.IsSupported()) sc.ASurfaceControl_release(mSurfaceControl);
+             mSurfaceControl = nullptr;
+         }
++        if (mRetainedFrameLayer) {
++            sc.ASurfaceControl_release(mRetainedFrameLayer);
++            mRetainedFrameLayer = nullptr;
++        }
+         mNativeSurface = nullptr;
+         mNativeSurfaceNeedsConfiguring = true;
+         mGpuUsageConfigured = false;
+@@ -2907,6 +3007,12 @@ private:
+     std::mutex mSurfaceMutex;
+     std::unique_ptr<Surface> mNativeSurface;
+     ASurfaceControl* mSurfaceControl = nullptr;
++    ASurfaceControl* mRetainedFrameLayer = nullptr;
++    std::unique_ptr<AHardwareBuffer, decltype(&AHardwareBuffer_release)>
++            mRetainedFrame{nullptr, AHardwareBuffer_release};
++    ndk::ScopedFileDescriptor mRetainedFrameFence;
++    bool mHasRetainedFrame = false;
++    bool mHasAttached = false;
+     std::condition_variable mNativeSurfaceReady;
+     bool mNativeSurfaceNeedsConfiguring = true;
+     int mConnectedNativeWindowApi = 0;
