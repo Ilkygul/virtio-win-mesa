@@ -1,0 +1,22 @@
+--- a/src/neptune/npt_library.c
++++ b/src/neptune/npt_library.c
+@@ -168,10 +168,17 @@
+ #ifndef __APPLE__
+          /* Optional: a dxvk without them leaves the guest's DYNAMIC
+           * buffers on the copying map ring. */
++         /* Both export names use the same FD, length and cookie ABI.
++          * Older hosts named the function after the DMA-BUF they pass;
++          * directx-native DXVK exports it as bind_external_fd. */
++         void *bind_external = dlsym(lib->d3d11_module,
++                                     "dxvk_d3d11_buffer_bind_external_dmabuf");
++         if (!bind_external)
++            bind_external = npt_library_sym(lib->d3d11_module,
++                                            "dxvk_d3d11_buffer_bind_external_fd");
+          lib->pfn_d3d11_buffer_bind_external_fd =
+             ((union { void *p; PFN_npt_lib_d3d11_buffer_bind_external_fd f; }){
+-               .p = npt_library_sym(lib->d3d11_module,
+-                                    "dxvk_d3d11_buffer_bind_external_dmabuf")
++               .p = bind_external
+             }).f;
+          lib->pfn_d3d11_buffer_external_cookie =
+             ((union { void *p; PFN_npt_lib_d3d11_buffer_external_cookie f; }){
