@@ -1,0 +1,96 @@
+diff --git a/src/d3d11/d3d11_context_imm.cpp b/src/d3d11/d3d11_context_imm.cpp
+index f37c22e3..2afbe92d 100644
+--- a/src/d3d11/d3d11_context_imm.cpp
++++ b/src/d3d11/d3d11_context_imm.cpp
+@@ -927,6 +927,28 @@ namespace dxvk {
+ 
+ 
+   VkResult D3D11ImmediateContext::NptWaitForAtlasPublication() {
++#ifdef __ANDROID__
++    static const bool trace = env::getEnvVar("NPT_DMABUF_PUBLICATION_TIMING") == "1";
++    static thread_local unsigned publications = 0;
++    if (trace && (++publications & 63u) == 0) {
++      using Clock = std::chrono::steady_clock;
++      const auto startedAt = Clock::now();
++      m_submitStatus.tracePublication = true;
++      ExecuteFlush(GpuFlushType::ExplicitFlush, nullptr, false, nullptr, true);
++      const auto returnedAt = Clock::now();
++      m_submitStatus.tracePublication = false;
++      const auto elapsed = [](auto first, auto last) {
++        return std::chrono::duration_cast<std::chrono::microseconds>(last - first).count();
++      };
++      Logger::warn(str::format("NPT-PUBLICATION-TIMING pid=", getpid(),
++        " dispatch_us=", elapsed(startedAt, m_submitStatus.queuedAt),
++        " queue_us=", elapsed(m_submitStatus.queuedAt, m_submitStatus.dequeuedAt),
++        " submit_us=", elapsed(m_submitStatus.dequeuedAt, m_submitStatus.completedAt),
++        " wake_us=", elapsed(m_submitStatus.completedAt, returnedAt),
++        " result=", int(m_submitStatus.result.load())));
++      return m_submitStatus.result;
++    }
++#endif
+     ExecuteFlush(GpuFlushType::ExplicitFlush, nullptr, false, nullptr, true);
+     return m_submitStatus.result;
+   }
+diff --git a/src/dxvk/dxvk_queue.cpp b/src/dxvk/dxvk_queue.cpp
+index 18c14c27..1ee5d558 100644
+--- a/src/dxvk/dxvk_queue.cpp
++++ b/src/dxvk/dxvk_queue.cpp
+@@ -57,6 +57,10 @@ namespace dxvk {
+     entry.submit = std::move(submitInfo);
+     entry.latency = std::move(latencyInfo);
+ 
++#ifdef __ANDROID__
++    if (status && status->tracePublication)
++      status->queuedAt = std::chrono::steady_clock::now();
++#endif
+     m_submitQueue.push(std::move(entry));
+     m_appendCond.notify_all();
+   }
+@@ -147,6 +151,12 @@ namespace dxvk {
+         entry = std::move(m_submitQueue.front());
+       }
+ 
++#ifdef __ANDROID__
++      const bool tracePublication = entry.status && entry.status->tracePublication;
++      if (tracePublication)
++        entry.status->dequeuedAt = std::chrono::steady_clock::now();
++#endif
++
+       // Submit command buffer to device
+       if (m_lastError != VK_ERROR_DEVICE_LOST) {
+         std::lock_guard<dxvk::mutex> lock(m_mutexQueue);
+@@ -189,6 +199,10 @@ namespace dxvk {
+         entry.result = VK_ERROR_DEVICE_LOST;
+       }
+ 
++#ifdef __ANDROID__
++      if (tracePublication)
++        entry.status->completedAt = std::chrono::steady_clock::now();
++#endif
+       if (entry.status)
+         entry.status->result = entry.result;
+       
+diff --git a/src/dxvk/dxvk_queue.h b/src/dxvk/dxvk_queue.h
+index 4cc63ef6..9a33e6c5 100644
+--- a/src/dxvk/dxvk_queue.h
++++ b/src/dxvk/dxvk_queue.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include <chrono>
+ #include <condition_variable>
+ #include <mutex>
+ #include <queue>
+@@ -22,6 +23,12 @@ namespace dxvk {
+    */
+   struct DxvkSubmitStatus {
+     std::atomic<VkResult> result = { VK_SUCCESS };
++#ifdef __ANDROID__
++    bool tracePublication = false;
++    std::chrono::steady_clock::time_point queuedAt;
++    std::chrono::steady_clock::time_point dequeuedAt;
++    std::chrono::steady_clock::time_point completedAt;
++#endif
+   };
+ 
+ 
