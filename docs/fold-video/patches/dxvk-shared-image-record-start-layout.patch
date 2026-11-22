@@ -1,0 +1,28 @@
+--- a/src/dxvk/dxvk_context.cpp
++++ b/src/dxvk/dxvk_context.cpp
+@@ -9370,6 +9370,12 @@
+           DxvkImage&                image,
+     const VkImageSubresourceRange&  subresources,
+           bool                      keepAttachments) {
++    // Record the layout before tracking creates the publication entry.
++#ifdef __ANDROID__
++    if (image.dmabufPublicationInode())
++      m_cmd->capturePublicationImageLayout(&image,
++        image.queryLayout(image.getAvailableSubresources()), false);
++#endif
+     // Note that this method does not flush layout transitions
+     m_cmd->track(&image, DxvkAccess::Read);
+ 
+@@ -9794,6 +9800,12 @@
+           VkPipelineStageFlags2     dstStages,
+           VkAccessFlags2            dstAccess,
+           DxvkAccessOp              accessOp) {
++#ifdef __ANDROID__
++    // Some accesses use an in-place barrier and never call transitionImageLayout.
++    if (image.dmabufPublicationInode())
++      m_cmd->capturePublicationImageLayout(&image,
++        image.queryLayout(image.getAvailableSubresources()), false);
++#endif
+     auto& batch = getBarrierBatch(cmdBuffer);
+ 
+     VkImageMemoryBarrier2 barrier = { VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2 };
