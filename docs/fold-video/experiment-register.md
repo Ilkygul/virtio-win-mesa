@@ -2669,3 +2669,11 @@ Een strikt eenmalige kandidaat toegevoegd aan de bestaande Fold-service, gecontr
 De oorspronkelijke boot-helper is byte-identiek teruggezet (SHA256 3baefba526871cf067222762950d264515a2a5ad37a2a613d90e2fd77efa0986) en de eenmalige proefbestanden zijn verwijderd. Omdat de compressor niet wijzigde was een tweede Fold-herstart voor herstel overbodig.
 
 Na herstel lezen zowel de RAM Plus-property als Android Settings 0, met backing_dev=none. Een afwijking op het moment van de vroege gate is niet bewezen. De kernel bevestigt de verwachte 4 GiB vóór de normale resize. Zonder afzonderlijke gate-uitkomst geen gerichte herhaling. Windows draait zichtbaar op NexDock met het bestaande 6400 MiB plafond en Venus 384. Deze koude start viel terug tot 5248 MiB met 3210 MiB voor Android; Windows ziet 4713656 KiB bruikbaar en GPU Code 0. Lokaal bewijs evidence/fold-dex-memory/zstd-once/.
+
+### DeX — zstd-boot met diagnose op de werkelijke resizegrens
+
+Eén vervolgboot met de one-shot na de normale resizevoorwaarden. Op de grens: RUNNING_LOCKED, CE-property nog leeg, 4294967296 bytes zram0, actieve /dev/block/zram0 met 0 KiB in gebruik en prioriteit −2, lzo-rle, backing none, beide RAM Plus-readbacks 0, resizetarget 8192 MiB. De blokkade was de brede pidof crosvm-controle. Het gemelde proces kwam uit de Android Virtualization APEX en draaide als crosvm_trustedvm, afzonderlijk van DroidVM/Windows. Deze systeem-VM is ongemoeid gelaten. De stock resize maakte zoals voorzien 8192 MiB actieve lzo-rle aan. Het zstd-pad werd overgeslagen; er is dus geen zstd-winst of Brave-vergelijking gemeten.
+
+Originele helper byte-identiek hersteld en proefverzoek verwijderd. Geen extra Fold-herstart in deze ronde, omdat zstd nooit actief was. Een eventuele volgende kandidaat moet de DroidVM-processen exact identificeren en de Samsung Trusted VM ongemoeid laten. Lokaal bewijs evidence/fold-dex-memory/zstd-r2/.
+
+Na herstel zichtbaar Windows op NexDock, 5376 MiB toegewezen bij 3083 MiB Android-startmarge, 4844728 KiB bruikbaar, GPU Code 0. Live identiteit voor vervolg bevestigd: exacte Android Virtualization APEX-executable en early_virtmgr-ouder voor de Samsung-VM; DroidVM beheert zijn eigen crosvm-executable onder zijn apppad en een afzonderlijke procesboom. De kandidaatguard is afzonderlijk alleen-lezen geverifieerd met beide procesbomen tegelijk.
